@@ -1,0 +1,48 @@
+---
+title: Quickstart
+---
+
+# Tangle CLI Quickstart
+
+## Pre-requisites
+
+* [git](https://git-scm.org)
+* Tangle CLI, see [installation](./installation)
+
+## Creating a New Project
+
+1. Open your terminal and run:
+
+```shell
+$ cargo tangle blueprint create --name <blueprint-name>
+```
+
+2. Follow the prompts to set up your project.
+
+{/* TODO: Add a GIF */}
+
+### Project Structure
+
+After creation, your project will have the following structure:
+
+```
+<blueprint-name>/
+├── src/
+│    ├── lib.rs
+│    └── main.rs
+├── Cargo.toml
+├── README.md
+└── ...
+```
+
+## Deploying your Blueprint
+
+Once you're ready to deploy your blueprint, simply:
+
+```shell
+export SIGNER="//Alice"
+export EVM_SIGNER="0xcb6df9de1efca7a3998a8ead4e02159d5fa99c3e0d4fd6432667390bb4726854"
+cargo tangle blueprint deploy
+```
+
+See [deploy command reference](./reference#deploy) for all options.
