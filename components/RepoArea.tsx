@@ -31,7 +31,7 @@ export const StatsdApp = () => {
       <DetailedFeatureLink
         feature={{
           Icon: GitHubIcon,
-          description: "Monorepo for Webb dApps",
+          description: "Monorepo for Webb DApps",
           name: "webb-dapp",
         }}
         href="https://github.com/tangle-network/webb-dapp"
