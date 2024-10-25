@@ -1,54 +1,52 @@
 ## How to Join a Liquid Staking Pool Using PolkadotJS
 
-Joining a liquid staking pool on the Tangle Network using PolkadotJS is a simple process. Follow these steps:
-
 ### Step 1: Access the PolkadotJS Interface
 
 - Open [PolkadotJS Apps](https://polkadot.js.org/apps/).
 - Connect to the Tangle Network by selecting the appropriate network from the dropdown list.
 
-Alternatively, you can access it via direct link:
+For convenience, here are the PolkadotJS direct links for Tangle Testnet and Mainnet:
 
-- The Tangle Testnet is available at: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet-rpc.tangle.tools#/explorer
-- The Tangle Mainnet is available at: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer
+- Tangle Testnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet-rpc.tangle.tools#/explorer
+- Tangle Mainnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer
 
 ### Step 2: Navigate to LST Tab
 
-- Click on the **Extrinsics** tab from the top menu.
+- Click on the **Developer** → **Extrinsics** tab from the top menu.
 
-![PolkadotJS Extrinsics](./images/extrinsic.png)
+![PolkadotJS Extrinsics](/images/extrinsic.png)
 
-- Scroll down to the **Lst** section where you will see the `join` option.
+- Select the **lst** section where you will see the `join` option.
 
-![PolkadotJS Join](./images/join.png)
+![PolkadotJS Join](/images/liquid-staking/join-pool-polkadotjs/join.png)
 
 ### Step 3: Choose a Pool
 
 - Review the list of available staking pools, including details such as performance, commission rates, and validator selections.
 - Select a pool that suits your preferences based on performance, operator reputation, and commission fees.
 
-You can view all pools by clicking on the **ChainState** tab and navigating to the **Lst** section and selecting **bondedPools**.
+You can view all pools by clicking on the **Developer** → **Chain state** tab and navigating to the **lst** section and selecting **bondedPools**.
 
-![PolkadotJS Bonded Pools](./images/bondedpools.png)
+![PolkadotJS Bonded Pools](/images/liquid-staking/join-pool-polkadotjs/bondedpools.png)
 
 ### Step 4: Join the Pool
 
 - Enter the amount of tokens you wish to stake in the pool and the pool ID.
 
-![PolkadotJS Join Pool](./images/lst-join.png)
+![PolkadotJS Join Pool](/images/liquid-staking/join-pool-polkadotjs/lst-join.png)
 
 - Confirm the transaction by signing it with your wallet, and your tokens will be bonded to the pool.
 
-![PolkadotJS Sign](./images/sign.png)
+![PolkadotJS Sign](/images/liquid-staking/join-pool-polkadotjs/sign.png)
 
 ### Step 5: Confirmation
 
-- If successful, you should see the following screen:
+- If successful, you should see the following confirmation toast notification:
 
-![PolkadotJS Pool Joined](./images/success.png)
+![PolkadotJS Pool Joined](/images/liquid-staking/join-pool-polkadotjs/success.png)
 
 - You can navigate to the **Network** tab to view the events.
 
-![PolkadotJS Events](./images/events.png)
+![PolkadotJS Events](/images/liquid-staking/join-pool-polkadotjs/events.png)
 
-- Finally, you should have the `LST` tokens in your account.
+- Finally, you should have the LST tokens in your account.

@@ -2,23 +2,23 @@
 
 ## Introduction
 
-Liquid staking on Tangle Network allows users to participate in staking while still maintaining liquidity of their staked assets. This mechanism is implemented via delegation pools, enabling participants to stake their tokens in a pool, earn rewards, and retain the ability to unbond or transfer staked assets without waiting for the traditional staking lock-up periods.
+Liquid staking on Tangle allows users to participate in staking while still maintaining liquidity of their staked assets. This mechanism is implemented via delegation pools, enabling participants to stake their tokens in a pool, earn rewards, and retain the ability to unbond or transfer staked assets _without_ waiting for the traditional staking lock-up periods.
 
-![Liquid Staking Introduction](/images/lst-intro.png)
+![Liquid Staking Introduction](/images/liquid-staking/lst-intro.png)
 
 ## Key Components of Liquid Staking
 
 ### 1. **Pools and Roles**
 
-- **Pools** are the fundamental unit of staking on Tangle. Pools are managed by specific roles:
+- **Pools**: The fundamental unit of liquid staking on Tangle. Pools are managed by specific roles:
 - **Root**: The administrator who has full control over the pool and can update roles.
 - **Nominator**: An account responsible for nominating validators on behalf of the pool.
-- **Bouncer**: An account that can change the state of the pool.
+- **Bouncer**: An account that can change the state of the pool (eg. open or close it, limiting whether new users can join the pool).
 - **Depositor**: The user who creates the pool and deposits the initial bond.
 
 ### 2. **Bonding and Staking**
 
-- Users can **bond** their assets to a pool using the `join` function, effectively staking their tokens in exchange for pool rewards. The bond amount is transferred to the pool's account and increases the pool's total bond and the user receives pool tokens (LST) in return.
+- Users can **bond** their assets to a pool using the `join` function, effectively staking their tokens in exchange for pool rewards. The bond amount is transferred to the pool's account increasing the pool's total bond and the user receives pool tokens (LST) in return.
 - Additional funds can be **bonded** using the `bond_extra` function. This allows users to add more tokens to their existing stake, either from free balance or pending rewards.
 
 ### 3. **Unbonding**

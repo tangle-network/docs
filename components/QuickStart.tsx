@@ -62,7 +62,7 @@ export const DappsArea = () => {
         feature={{
           Icon: CubeIcon,
           description: `Private cross-chain bridge. Dedicated UI for moving digital assets privately cross-chain.`,
-          name: "Hubble Bridge dApp",
+          name: "Hubble Bridge DApp",
         }}
         href="https://app.webb.tools"
       />
@@ -70,7 +70,7 @@ export const DappsArea = () => {
         feature={{
           Icon: BeakerIcon,
           description: `Our easy-to-use testnet faucet allows you to claim test tokens with just a few clicks. Start experimenting with Hubble Bridge today.`,
-          name: "Faucet dApp",
+          name: "Faucet DApp",
         }}
         href="https://faucet.tangle.tools"
       /> */}
@@ -78,7 +78,7 @@ export const DappsArea = () => {
         feature={{
           Icon: ChartSquareBarIcon,
           description: `Monitor Hubble Bridge activities and the growth of Webb's cross-chain private transaction system.`,
-          name: "Hubble Stats dApp",
+          name: "Hubble Stats DApp",
         }}
         href="https://hubble-stats.webb.tools"
       />
@@ -100,7 +100,7 @@ export const DappsAreaBridge = () => {
       <DetailedFeatureLink
         feature={{
           Icon: GitHubIcon,
-          description: "Monorepo for Webb dApps",
+          description: "Monorepo for Webb DApps",
           name: "webb-dapp",
         }}
         href="https://github.com/tangle-network/webb-dapp"

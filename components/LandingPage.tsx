@@ -1,5 +1,4 @@
 import Image from "next/image";
-import DocsLandingGraphic from "../public/images/DocsLandingGraphic.png";
 import { SiBlueprint } from "react-icons/si";
 import { GiToken } from "react-icons/gi";
 import { FaWallet } from "react-icons/fa";
@@ -57,8 +56,8 @@ const resourcesCards = [
   },
   {
     icon: <MdAppShortcut />,
-    title: "Tangle App",
-    description: "Nominate your TNT at Tangle App",
+    title: "Tangle DApp",
+    description: "Nominate your TNT at Tangle DApp",
     link: "http://app.tangle.tools/",
   },
   {

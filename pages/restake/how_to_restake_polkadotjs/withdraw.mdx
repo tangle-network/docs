@@ -1,0 +1,53 @@
+import Callout from "/components/Callout";
+
+## Withdraw Using PolkadotJS
+
+<Callout type="info">
+You can only withdraw your "undelegated" (unstaked) assets. Make sure you have undelegated your assets before withdrawing. See the [Unstake page](./unstake.mdx) for more information.
+</Callout>
+
+Withdrawing is the process of releasing assets from the multiasset delegation vault.
+
+Similar to unstaking, it is composed of two steps:
+
+1. A withdrawal request is **scheduled**, which will be available for execution after its unstake period.
+2. After the unstake period, you can **execute** the withdrawal to actually release the assets.
+
+### Accessing the PolkadotJS Interface
+
+- Open [PolkadotJS Apps](https://polkadot.js.org/apps/).
+- Connect to the Tangle network by selecting the appropriate network from the dropdown list.
+
+For convenience, here are the PolkadotJS direct links for Tangle Testnet and Mainnet:
+
+- Tangle Testnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet-rpc.tangle.tools#/explorer
+- Tangle Mainnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer
+
+### Schedule Withdraw
+
+The first step to complete a withdraw is to schedule a withdrawal. This is done by calling the `schedule_withdraw` function.
+
+- Navigate to the **Developer** → **Extrinsics** tab on PolkadotJS.
+
+![PolkadotJS Extrinsics](/images/extrinsic.png)
+
+- Under the **multiAssetDelegation** section, select **scheduleWithdraw(...)** and enter the asset ID along with the amount of assets to withdraw.
+
+![PolkadotJS ScheduleWithdraw](/images/restake/how-to-restake-polkadotjs/schedulewithdraw.png)
+
+- Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee.
+
+### Execute Withdraw
+
+The second step to complete a withdraw is to execute the withdrawal. This is done by calling the `execute_withdraw` function.
+
+- Navigate to the **Developer** → **Extrinsics** tab on PolkadotJS.
+
+![PolkadotJS Extrinsics](/images/extrinsic.png)
+
+- Under the **multiAssetDelegation** section, select **executeWithdraw()**.
+- Notice that there aren't any inputs for this function. This is because calling the function will execute **all** pending withdraw requests that have reached their maturity.
+
+![PolkadotJS ExecuteWithdraw](/images/restake/how-to-restake-polkadotjs/executewithdraw.png)
+
+- Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee.

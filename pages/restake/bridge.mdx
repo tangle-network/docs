@@ -1,0 +1,61 @@
+import Callout from "/components/Callout";
+
+# Bridge
+
+In order to participate in Tangle's restaking infrastructure, users need to first bridge in their assets from connected networks such as Ethereum. For this, we have a dedicated bridge DApp that allows users to easily bring their assets to Tangle and transfer them out.
+
+[Access Tangle DApp's Bridge page here](https://app.tangle.tools/bridge)
+
+## Supported Assets
+
+As of the time of writing of this page, the bridge only supports WETH for testnet transfers between Holesky and Tangle.
+
+Soon, users will be able to create and deploy a Hyperlane Warp Route blueprint instance to support additional assets. [Learn more about Blueprints here](/developers/blueprints).
+
+More information about adding support for additional assets will be provided in the near future. For now, make sure you've joined our Discord server & Telegram channel to stay updated.
+
+## How the Bridge Works
+
+Bridging from EVM-based blockchains into Tangle EVM works by leveraging Hyperlane, a permissionless interoperability layer that allows smart contract developers to send arbitrary data between blockchains. [Learn more about Hyperlane here](https://docs.hyperlane.xyz/docs/protocol/protocol-overview).
+
+## How to Use the Bridge
+
+### Step 1: Access Tangle DApp & Connect Wallet
+
+- Open [Tangle DApp's Bridge page](https://app.tangle.tools/bridge).
+- Connect your wallet to the DApp by clicking on the **Connect Wallet** button on the top right and selecting your preferred wallet provider.
+
+### Step 2: Select the Source & Destination Networks
+
+In this example, we'll be bridging in WETH from Holesky to Tangle Testnet EVM. Select the source network as Holesky and the destination network as Tangle Testnet EVM.
+
+![Select Source & Destination Networks](/images/restake/bridge/select-networks.png)
+
+### Step 3: Fill in Details
+
+- Enter the amount of WETH you'd like to bridge in.
+- Enter the recipient address. This is the address on Tangle where the bridged assets will be deposited. If transferring into Tangle EVM (like in this example), this should be an EVM address.
+
+<Callout type="default">
+Ensure that the recipient address entered is correct to avoid losing your funds. We recommend sending a small amount first to get comfortable with the process.
+</Callout>
+
+- Click on the **Transfer** button.
+
+### Step 4: Perform the Transaction
+
+- After clicking on the **Transfer** button, a confirmation dialog will appear. Review the details & fees, and click on the **Confirm** button to initiate the transaction.
+- After a few seconds, the transaction dialog from your wallet provider (such as MetaMask) will appear. The bridging process consists of two transations: one to approve the bridge contract to spend your WETH, and the other to interact with the bridge contract. Review all details and confirm the first transaction to continue.
+
+![MetaMask Transaction 1 - Approve Spending](/images/restake/bridge/metamask-tx-1.png)
+
+- After the first transaction is confirmed, a second transaction confirmation dialog will automatically appear. This is the transaction used to interact with the bridge smart contract. Review all details and confirm the transaction to complete the bridging process.
+
+![MetaMask Transaction 2 - Interact with the Smart Contract](/images/restake/bridge/metamask-tx-2.png)
+
+### Step 5: Monitor Transaction Progress
+
+- Once the second transaction is confirmed, you can monitor the progress of the bridging process right from the DApp. A small toast notification will automatically appear on the top right of the screen with the transaction details.
+- Once you see the **Executed** status, the bridging process is complete. You can also use the [Tangle Testnet's EVM explorer](https://testnet-explorer.tangle.tools/) to find and track the transaction. Check the [Resources and Tools page](/resources) for other explorers.
+
+![Transaction Status Toast Notification](/images/restake/bridge/tx-status-toast.png)

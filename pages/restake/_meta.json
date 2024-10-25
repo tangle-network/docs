@@ -7,15 +7,17 @@
   "staking-intro": "Introduction to Staking",
   "nominator": "Nominating your TNT",
   "restake-concepts": "Restaking core concepts",
+  "bridge": "Bridge",
   "-- restaking": {
     "type": "separator",
     "title": "Restaking"
   },
   "restake-introduction": "Introduction to Restaking",
   "incentives": "Incentives",
-  "join_operator": "Operator Docs",
-  "how_to_restake": "How to Restake",
   "assets": "Supported Assets",
+  "join_operator": "Operator Docs",
+  "how_to_restake_tangle": "How to Restake: Tangle DApp",
+  "how_to_restake_polkadotjs": "How to Restake: PolkadotJS",
   "restake_developers": "Developer Docs",
   "-- liquid staking": {
     "type": "separator",

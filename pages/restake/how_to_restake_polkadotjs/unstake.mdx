@@ -1,0 +1,89 @@
+## Unstake Using PolkadotJS
+
+The first step to exit restake is to unstake your tokens. This is done by calling the `unstake` function, which releases the locked assets and returns them to the deposit vault.
+
+Then, you can withdraw your assets from the deposit vault. See the [Withdraw page](./withdraw.mdx) for more information.
+
+Unstaking is a two step process:
+
+1. Call the `schedule_unstake` function to schedule the unstake request.
+2. Call the `execute_unstake` function to execute the unstake request and release the funds after the unstake period has elapsed.
+
+### Schedule Unstake
+
+To unstake, you need to call the `schedule_unstake` function. This function schedules the unstake.
+
+### Step 1: Access the PolkadotJS Interface
+
+- Open [PolkadotJS Apps](https://polkadot.js.org/apps/).
+- Connect to the Tangle Network by selecting the appropriate network from the dropdown list.
+
+For convenience, here are the PolkadotJS direct links for Tangle Testnet and Mainnet:
+
+- Tangle Testnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet-rpc.tangle.tools#/explorer
+- Tangle Mainnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer
+
+### Step 2: Schedule Unstake
+
+- Navigate to the **Developer** → **Extrinsics** tab on PolkadotJS.
+
+![PolkadotJS Extrinsics](/images/extrinsic.png)
+
+- Under the **MultiAssetDelegation** section, select **ScheduleUnstake** and enter the amount of assets to unstake.
+
+![PolkadotJS Schedule Unstake](/images/restake/delegate/scheduleunstake.png)
+
+Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee.
+
+### Cancel Delegator Unstake
+
+To cancel the unstake, you need to call the `cancel_delegator_unstake` function. This function cancels the unstake.
+
+### Step 1: Access the PolkadotJS Interface
+
+- Open [PolkadotJS Apps](https://polkadot.js.org/apps/).
+- Connect to the Tangle Network by selecting the appropriate network from the dropdown list.
+
+For convenience, here are the PolkadotJS direct links for Tangle Testnet and Mainnet:
+
+- Tangle Testnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet-rpc.tangle.tools#/explorer
+- Tangle Mainnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer
+
+### Step 2: Cancel Delegator Unstake
+
+- Navigate to the **Developer** → **Extrinsics** tab on PolkadotJS.
+
+![PolkadotJS Extrinsics](/images/extrinsic.png)
+
+- Under the **MultiAssetDelegation** section, select **CancelDelegatorUnstake** and enter the amount of assets to unstake.
+
+![PolkadotJS Cancel Delegator Unstake](/images/restake/delegate/canceldelegatorunstake.png)
+
+Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee.
+
+### Execute Delegator Unstake
+
+To execute the unstake, you need to call the `execute_unstake` function. This function executes the unstake. This function can only be called after the unstake period.
+
+### Step 1: Access the PolkadotJS Interface
+
+- Open [PolkadotJS Apps](https://polkadot.js.org/apps/).
+- Connect to the Tangle network by selecting the appropriate network from the dropdown list.
+
+For convenience, here are the PolkadotJS direct links for Tangle Testnet and Mainnet:
+
+- Tangle Testnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet-rpc.tangle.tools#/explorer
+- Tangle Mainnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer
+
+### Step 2: Execute Delegator Unstake
+
+- Navigate to the **Developer** → **Extrinsics** tab on PolkadotJS.
+
+![PolkadotJS Extrinsics](/images/extrinsic.png)
+
+- Under the **multiAssetDelegation** section, select **executeDelegatorUnstake()**.
+- Notice that there aren't any inputs for this function. This is because calling the function will execute **all** pending unstake requests that have reached their maturity.
+
+![PolkadotJS Execute Delegator Unstake](/images/restake/delegate/executedelegatorUnstake.png)
+
+- Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee.

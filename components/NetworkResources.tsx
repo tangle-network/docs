@@ -14,19 +14,19 @@ const NETWORK_DATA = {
   mainnet: [
     { property: "Interfaces and Apps", value: "" },
     {
-      property: "Tangle App",
+      property: "Tangle DApp",
       value: {
         type: "link",
         url: "https://app.tangle.tools",
-        text: "Tangle App",
+        text: "app.tangle.tools",
       },
     },
     {
-      property: "Polkadot Apps",
+      property: "PolkadotJS Apps",
       value: {
         type: "link",
         url: "https://polkadot.js.org/apps/?rpc=wss://rpc.tangle.tools#/explorer",
-        text: "Tangle on Polkadot Apps",
+        text: "polkadot.js.org/apps/?rpc=wss://rpc.tangle.tools",
       },
     },
     { property: "Block Explorers", value: "" },
@@ -35,7 +35,7 @@ const NETWORK_DATA = {
       value: {
         type: "link",
         url: "https://explorer.tangle.tools",
-        text: "Explorer.Tangle.Tools",
+        text: "explorer.tangle.tools",
       },
     },
     {
@@ -43,7 +43,7 @@ const NETWORK_DATA = {
       value: {
         type: "link",
         url: "https://tangle.statescan.io/",
-        text: "Tangle on Statescan",
+        text: "tangle.statescan.io",
       },
     },
     { property: "Asset Details", value: "" },
@@ -87,7 +87,7 @@ const NETWORK_DATA = {
       value: {
         type: "link",
         url: "https://github.com/tangle-network/tangle",
-        text: "Tangle Repository",
+        text: "github.com/tangle-network/tangle",
       },
     },
   ],
@@ -98,7 +98,7 @@ const NETWORK_DATA = {
       value: {
         type: "link",
         url: "https://app.tangle.tools",
-        text: "App.Tangle.Tools",
+        text: "app.tangle.tools",
       },
     },
     { property: "Block Explorers", value: "" },
@@ -107,7 +107,7 @@ const NETWORK_DATA = {
       value: {
         type: "link",
         url: "https://testnet-explorer.tangle.tools",
-        text: "Testnet-Explorer.Tangle.Tools",
+        text: "testnet-explorer.tangle.tools",
       },
     },
     {
@@ -115,7 +115,7 @@ const NETWORK_DATA = {
       value: {
         type: "link",
         url: "https://tangle-testnet.statescan.io/",
-        text: "Tangle Testnet on Statescan",
+        text: "tangle-testnet.statescan.io",
       },
     },
     { property: "Asset Details", value: "" },
@@ -156,7 +156,7 @@ const NETWORK_DATA = {
       value: {
         type: "link",
         url: "https://github.com/tangle-network/tangle",
-        text: "Tangle Repository",
+        text: "github.com/tangle-network/tangle",
       },
     },
   ],

@@ -14,7 +14,7 @@
 
 ❗ **Note:** This is a fork of [Vercel Docs](https://github.com/vercel/turbo/tree/main/docs).
 
-This repository serves as the **documentation** for the **[Tangle Network](https://www.Tangle.tools/)** . The docs are written in [MDX](https://mdxjs.com/) format an extension of [markdown](https://www.markdownguide.org/), processed by [Nextra](https://github.com/shuding/nextra/tree/main), and published to Webb Docs. For support on using Nextra see [https://nextra.site/docs].(https://nextra.site/docs)
+This repository serves as the **documentation** for the **[Tangle Network](https://www.tangle.tools/)** . The docs are written in [MDX](https://mdxjs.com/) format an extension of [markdown](https://www.markdownguide.org/), processed by [Nextra](https://github.com/shuding/nextra/tree/main), and published to Webb Docs. For support on using Nextra see [https://nextra.site/docs].(https://nextra.site/docs)
 
 ### Directory structure
 

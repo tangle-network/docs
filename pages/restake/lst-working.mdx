@@ -4,43 +4,48 @@ import ExpandableImage from "../../components/ExpandableImage";
 
 ## Liquid Staking Workflow
 
-<ExpandableImage src="/images/lst-workflow.png" alt="Liquid Staking Workflow" />
+<ExpandableImage src="/images/liquid-staking/lst-workflow.png" alt="Liquid Staking Workflow" />
 
 ### **Creating a Pool**
 
-The inital step is to create a pool, this is permissionless and can be done by anyone. The pool is created with an initial deposit, this can be any amount of tokens, but must be greater than the minimum bond amount.
-If you are simply looking to liquid stake your assets, you dont have to create a pool, you can use the pool id of an existing pool when bonding.
+The first step is to create a pool, this is permissionless and can be done by anyone. The pool is created with an initial deposit, which can be any amount of tokens, but must be greater than the minimum bond amount.
+
+If you are simply looking to liquid stake your assets, you don't have to create a pool. Instead, you can join an existing pool by using its unique id when bonding.
+
+More detailed instructions can be found at the [How to Create a Liquid Staking Pool](./create_a_pool/lst-pool-create-tangle.mdx) page.
 
 #### Who can create a pool?
 
-Pool creation is a permissionless process, anyone can create a pool. The only requirement is that the initial deposit must be greater than the minimum bond amount.
+Pool creation is a permissionless process, which means that anyone can create a pool. The only requirement is that the initial deposit must be greater than the minimum bond amount.
 
-#### Why do I create a pool?
+#### Why should I create my own pool?
 
-You can create a pool to nominate validators on behalf of your users. By creating a pool, you are responsible for the rewards of the assets in the pool.
-You will need to nominate validators and ensure that the pool users are getting the best possible returns. In return for this service, you can set a commission rate for the pool.
-If you are providing the best reward rates of all pools, you will be able to attract more users to your pool, and earn a higher commission.
+- **Choose Your Own Validators**: You can create a pool to nominate validators on behalf of your users. By creating a pool, you are responsible for the rewards of the assets in the pool. Always remember to always do due diligence on the validators you nominate.
+- **Ongoing Maintenance**: You will need to nominate validators and ensure that the pool users are getting the best possible returns. In return for this service, you can set a commission rate for the pool. This means that you may need to regularly monitor the performance of the validators and update nominations.
+- **Earn Commission**: If your pool is providing competitive reward rates, it will naturally attract more users, leading to higher liquidity, and thus increasing your commission earnings.
 
 ### **Joining a Pool**
 
 A user initiates liquid staking by joining an open pool using the `join` function. This transfers the specified bond amount to the pool and allows the user to start earning rewards.
-When you join a pool, you receive LST tokens in return. The amount of LST tokens you receive is based on the pool's reward rate and the amount of tokens you bond.
+
+When you join a pool, you receive liquid staking tokens (LSTs) in return. The amount of LST tokens you receive is based on the pool's reward rate and the amount of tokens you bond.
 
 #### Are all LST tokens the same?
 
-No, all LST tokens are not the same. Each pool is a separate entity, and the LST token of a pool is only valid for the pool it was created in. This means that the LST token of one pool is not accepted by another pool.
+No, all LST tokens are not the same. Each pool is a separate entity with an associated LST, and the LST token of a pool is only valid for the pool it was created in. This means that the LST token of one pool is not accepted by another pool.
+
 This also means rewards are captured by the pool, and are not shared with other pools.
 
 ### **Bonding Extra**
 
-Users can add additional tokens to their stake using the `bond_extra` function. This can be done from free balance or from pending rewards.
+Users can add additional tokens to their stake using the `bond_extra` function. The amount to be bonded can originate from free balance or from pending rewards.
 
 ### **Unbonding and Withdrawing**
 
 When a user wants to exit the pool or reduce their stake, they can use the `unbond` function to unbond a portion of their stake.
-At the time of unbonding, the LST tokens are burned. There is a 28 day unbonding period for all unbonds.
+
+At the time of unbonding, the LST tokens are burned. There is a 28 day unbonding period for all unbonds. During this period, the unbonding tokens are locked and will not earn rewards.
+
 At the end of the unbonding period, you can withdraw your unbonded tokens. This is done using the `withdraw_unbonded` function.
 
-Learn more about how to execute these functions in [Join a Liquid Staking Pool](./join_a_pool/polkadotjs.mdx).
-
-For detailed instructions on creating a pool, visit the [Creating a Liquid Staking Pool](./create_a_pool/lst-pool-create.mdx).
+Learn more about how to execute these functions at the [Join a Liquid Staking Pool](./join_a_pool/tangle.mdx) page.

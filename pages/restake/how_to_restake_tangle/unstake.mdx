@@ -1,0 +1,47 @@
+## Unstake Using Tangle DApp
+
+The first step to exit restake is to unstake your tokens. This is done by calling the `unstake` function internally, which releases the locked assets and returns them to the deposit vault.
+
+Then, you can withdraw your assets from the deposit vault. See the [Withdraw page](./withdraw.mdx) for more information.
+
+The unstake is a two step process:
+
+1. Schedule the unstake to release the assets after the unstake period.
+2. Execute the unstake request to release the assets.
+
+### Step 1: Access Tangle DApp & Connect Wallet
+
+- Open [Tangle DApp's Restaking: Unstake page](https://app.tangle.tools/restake/unstake).
+- Connect your wallet to the DApp by clicking on the **Connect Wallet** button on the top right and selecting your preferred wallet provider.
+
+### Step 2: Schedule Unstake
+
+Once you're at the **Unstake** tab, you'll see a table on the right listing the unstaking requests that you've previously made. To schedule a new unstake request, follow these steps:
+
+1. Click on the **Select** dropdown and choose an operator and asset to unstake from the modal. The same operator may have multiple assets available to unstake.
+2. Enter the amount of assets that you'd like to unstake.
+3. Review fees and unstake period before proceeding.
+4. Click on the **Schedule Unstake** button to initiate the transaction.
+
+![Unstake Steps](/images/restake/unstake/steps.png)
+
+### Step 3: Sign and Submit the Transaction
+
+- Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee.
+- If successful, you should see the following confirmation toast notification:
+
+![Unstake Transaction Confirmation Toast](/images/restake/unstake/unstake-tx-confirmation.png)
+
+### Cancel an Unstaking Request
+
+If you've scheduled an unstake request, you can choose to **cancel** it if you change your mind. To cancel an unstake request, use the unstake requests table on the right side of the page. Note that you can cancel an unstake request even if it has reached its maturity, but as long as it hasn't been executed yet.
+
+Simply select the unstake request(s) that you'd like to cancel, then click on the **Cancel Unstake** button to initiate the transaction.
+
+![Unstake Requests Table: Cancel Unstake](/images/restake/unstake/cancel-unstake.png)
+
+### Execute an Unstaking Request
+
+Once an unstake request has reached its maturity, you can **execute** it to actually unstake and release the assets.
+
+Tangle DApp makes this process easy by simply clicking on the **Execute All** button. There's no need to select specific unstake requests, as this action will execute all unstake requests that have reached their maturity within a single transaction. If the button is disabled, it means that there are no unstake requests that have reached their maturity yet.

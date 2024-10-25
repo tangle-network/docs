@@ -1,0 +1,39 @@
+import Callout from "/components/Callout";
+
+## Delegate Using PolkadotJS
+
+<Callout type="info">
+You should have deposited your tokens to the multiasset delegation vault before you can delegate. See the [Deposit Using PolkadotJS page](./deposit.mdx) for more information.
+</Callout>
+
+Delegators are similar to stakers in a consensus system like nominated proof of stake (NPoS), but they delegate their tokens to an operator, and participate in the rewards and risks similar to staking on a validator.
+
+To delegate, you need to call the `delegate` function. This function allocates assets to the chosen operator.
+
+### Step 1: Access the PolkadotJS Interface
+
+- Open [PolkadotJS Apps](https://polkadot.js.org/apps/).
+- Connect to the Tangle Network by selecting the appropriate network from the dropdown list.
+
+For convenience, here are the PolkadotJS direct links for Tangle Testnet and Mainnet:
+
+- Tangle Testnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet-rpc.tangle.tools#/explorer
+- Tangle Mainnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer
+
+### Step 2: Delegate
+
+- Navigate to the **Developer** → **Extrinsics** tab on PolkadotJS.
+
+![PolkadotJS Extrinsics](/images/extrinsic.png)
+
+- Under the **multiAssetDelegation** section, select **delegate(...)** and enter the operator's address, asset ID, and the amount of assets to delegate.
+
+![PolkadotJS Delegate](/images/restake/delegate/delegate.png)
+
+- Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee.
+
+![PolkadotJS Delegate](/images/restake/delegate/delegatesign.png)
+
+- If successful, you should see the following confirmation toast notification:
+
+![PolkadotJS Delegate Success](/images/restake/delegate/delegateinblock.png)
