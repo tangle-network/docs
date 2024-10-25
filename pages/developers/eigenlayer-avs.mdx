@@ -85,7 +85,7 @@ Create an HTTP provider to connect to the Ethereum network:
 let http_provider = ProviderBuilder::new()
     .with_recommended_fillers()
     .wallet(wallet.clone())
-    .on_http(self.env.rpc_endpoint.parse()?)
+    .on_http(self.env.http_rpc_endpoint.parse()?)
     .root()
     .clone()
     .boxed();
