@@ -1,0 +1,33 @@
+---
+title: Installation
+---
+
+# Tangle CLI Installation
+
+There are multiple sources to install the CLI from:
+
+1. Using the installation script (stable)
+
+> The script supports Linux, MacOS, and Windows (WSL2)
+
+```shell
+$ curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tangle-network/gadget/releases/download/cargo-tangle/v0.1.1-beta.7/cargo-tangle-installer.sh | sh
+```
+
+2. From [crates.io](https://crates.io) (stable)
+
+```shell
+$ cargo install cargo-tangle --force
+```
+
+3. From source (nightly)
+
+```shell
+$ cargo install cargo-tangle --git https://github.com/tangle-network/gadget --force
+```
+
+You can verify your installation with:
+
+```shell
+$ cargo tangle --version
+```
