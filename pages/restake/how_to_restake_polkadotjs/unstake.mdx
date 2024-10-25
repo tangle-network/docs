@@ -4,10 +4,10 @@ The first step to exit restake is to unstake your tokens. This is done by callin
 
 Then, you can withdraw your assets from the deposit vault. See the [Withdraw page](./withdraw.mdx) for more information.
 
-The unstake is a two step process:
+Unstaking is a two step process:
 
-1. Call the `schedule_unstake` function to schedule the unstake.
-2. Call the `execute_unstake` function to execute the unstake after the unstake period.
+1. Call the `schedule_unstake` function to schedule the unstake request.
+2. Call the `execute_unstake` function to execute the unstake request and release the funds after the unstake period has elapsed.
 
 ### Schedule Unstake
 
@@ -81,8 +81,9 @@ For convenience, here are the PolkadotJS direct links for Tangle Testnet and Mai
 
 ![PolkadotJS Extrinsics](/images/extrinsic.png)
 
-- Under the **MultiAssetDelegation** section, select **ExecuteDelegatorUnstake** and enter the amount of assets to unstake.
+- Under the **multiAssetDelegation** section, select **executeDelegatorUnstake()**.
+- Notice that there aren't any inputs for this function. This is because calling the function will execute **all** pending unstake requests that have reached their maturity.
 
 ![PolkadotJS Execute Delegator Unstake](/images/restake/delegate/executedelegatorUnstake.png)
 
-Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee.
+- Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee.

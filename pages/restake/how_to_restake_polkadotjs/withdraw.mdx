@@ -45,7 +45,8 @@ The second step to complete a withdraw is to execute the withdrawal. This is don
 
 ![PolkadotJS Extrinsics](/images/extrinsic.png)
 
-- Under the **multiAssetDelegation** section, select **executeWithdraw**.
+- Under the **multiAssetDelegation** section, select **executeWithdraw()**.
+- Notice that there aren't any inputs for this function. This is because calling the function will execute **all** pending withdraw requests that have reached their maturity.
 
 ![PolkadotJS ExecuteWithdraw](/images/restake/how-to-restake-polkadotjs/executewithdraw.png)
 
