@@ -5,6 +5,7 @@
   },
   "blueprints": "Blueprints",
   "services": "Use Cases",
+  "cli": "Tangle CLI",
   "-- gadget-tutorial": {
     "type": "separator",
     "title": "Blueprint (AVS) Tutorials"

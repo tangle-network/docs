@@ -13,47 +13,15 @@ Before you begin, ensure you have the following installed:
 - [Rust](https://www.rust-lang.org/tools/install)
 - [Forge](https://getfoundry.sh)
 - [Tangle](https://github.com/tangle-network/tangle?tab=readme-ov-file#-getting-started-)
-- `cargo-tangle` CLI tool
+- [`cargo-tangle`](./cli/installation.mdx) CLI tool
 
-To install the Tangle CLI, run:
+## Creating my First Blueprint
 
-```bash
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tangle-network/gadget/releases/download/cargo-tangle/v0.1.1-beta.7/cargo-tangle-installer.sh | sh
-```
+See the [CLI Quickstart](./cli/quickstart.mdx) for instructions on creating a [blueprint](./blueprints.mdx).
 
-Alternatively, install from source:
+### Key Files
 
-```bash
-cargo install cargo-tangle --git https://github.com/tangle-network/gadget --force
-```
-
-## Creating a New Project
-
-1. Open your terminal and run:
-
-   ```bash
-   cargo tangle blueprint create --name hello-world-blueprint
-   ```
-
-2. Follow the prompts to set up your project.
-
-## Project Structure
-
-After creation, your project will have the following structure:
-
-```
-hello-world-blueprint/
-├── src/
-│ ├── lib.rs
-│ └── main.rs
-├── Cargo.toml
-├── README.md
-└── <other files>
-```
-
-Let's look at the key files:
-
-### src/lib.rs
+#### src/lib.rs
 
 This file contains the core logic of your Blueprint, including job definitions, report structures, and event listeners. Here's an example of a simple "Hello World" job:
 
@@ -82,7 +50,7 @@ pub fn say_hello(who: Option<String>) -> Result<String, Infallible> {
 
 This job takes an optional `who` parameter and returns a greeting.
 
-### src/main.rs
+#### src/main.rs
 
 This file serves as the entry point for your Actively Validated Service (AVS) node. It sets up the runtime environment, initializes the necessary components, and starts the event watcher. Here's a breakdown of its key responsibilities:
 
@@ -151,15 +119,9 @@ cargo build
 
 This command compiles your Rust code and checks for any errors.
 
-## Deploying Your Blueprint
+### Deploying Your Blueprint
 
-To deploy your Blueprint to the Tangle network, use:
-
-```bash
-cargo tangle gadget deploy
-```
-
-This command will package your Blueprint and deploy it to the Tangle network test environment.
+See [deploying your blueprint](./cli/quickstart.mdx#deploying-your-blueprint).
 
 ## Next Steps
 
