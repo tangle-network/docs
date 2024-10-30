@@ -19,7 +19,7 @@ const nextConfig = {
       },
       {
         source: "/developers",
-        destination: "/developers/blueprints/",
+        destination: "/developers/blueprints/introduction",
         permanent: true,
       },
       {

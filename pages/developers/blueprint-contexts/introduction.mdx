@@ -1,0 +1,109 @@
+---
+title: Introduction to Contexts
+---
+
+## What is a Context?
+
+import TableOfContentCards from "../../../components/TableOfContentCards";
+
+<TableOfContentCards 
+  items={[
+    {
+      title: "Introduction to Contexts",
+      href: "/developers/blueprint-contexts/introduction",
+      subItems: [
+        {
+          title: "What is a Context?",
+          description: "Understanding the basics of Contexts in Gadget SDK"
+        },
+        {
+          title: "Why do we need Contexts?", 
+          description: "Benefits and use cases of the Context pattern"
+        },
+        {
+          title: "Built-in Contexts",
+          description: "Overview of provided Context implementations"
+        }
+      ]
+    },
+    {
+      title: "Keystore Context",
+      href: "/developers/blueprint-contexts/keystore-context",
+      subItems: [
+        {
+          title: "GenericKeyStore",
+          description: "Managing cryptographic keys and secrets"
+        }
+      ]
+    },
+    {
+      title: "EVM Provider Context",
+      href: "/developers/blueprint-contexts/evm-provider-context",
+      subItems: [
+        {
+          title: "EVM RPC Client",
+          description: "Interacting with EVM-compatible blockchains"
+        }
+      ]
+    },
+    {
+      title: "Tangle Client Context", 
+      href: "/developers/blueprint-contexts/tangle-client-context",
+      subItems: [
+        {
+          title: "Subxt Client",
+          description: "Interacting with the Tangle network"
+        }
+      ]
+    },
+    {
+      title: "Tangle Services Context",
+      href: "/developers/blueprint-contexts/services-context", 
+      subItems: [
+        {
+          title: "Service Properties",
+          description: "Accessing service instance details"
+        }
+      ]
+    },
+    {
+      title: "Eigenlayer Context",
+      href: "/developers/blueprint-contexts/eigenlayer-context",
+      subItems: [
+        {
+          title: "Eigenlayer Integration",
+          description: "Working with Eigenlayer services"
+        }
+      ]
+    }
+  ]}
+/>
+
+In the Gadget SDK, a Context holds utilities and dependencies that a job may need that aren't direct inputs. Think of it as a container for all the external resources and services your job requires to function.
+
+A Context can include various elements such as:
+
+- HTTP clients for making network requests
+- Access to a keystore
+- Smart contract bindings and wrappers
+- Database connections for data persistence
+- Loggers for recording application events
+- Configuration objects for environment-specific settings
+- Authentication tokens or credentials
+- Caches or in-memory data stores
+
+The Context pattern is closely related to the Dependency Injection (DI) design pattern, which is a technique for achieving Inversion of Control (IoC) between classes and their dependencies.
+
+## Why do we need Contexts?
+
+The Context pattern offers several significant benefits in software design and development:
+
+1. **Decoupling**: By passing dependencies through a Context, we decouple the job implementation from the specific implementations of its dependencies. This makes the code more modular and easier to maintain.
+
+2. **Testability**: With a Context, it's easier to mock or stub dependencies during unit testing, allowing for more comprehensive and isolated tests.
+
+3. **Flexibility**: Contexts allow for easy swapping of implementations, which is particularly useful when adapting to different environments (e.g., development, staging, production).
+
+4. **Separation of Concerns**: The Context pattern helps separate the configuration and setup of dependencies from their usage, leading to cleaner, more focused code.
+
+5. **Reusability**: Jobs that rely on a Context can be more easily reused in different scenarios by simply providing a different Context.

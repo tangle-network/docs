@@ -1,0 +1,40 @@
+import GithubFileReaderDisplay from '../../../components/GithubFileReaderDisplay';
+
+# EVM Provider Context
+
+The `EvmProviderContext` trait provides a standardized [alloy-rs](https://github.com/alloy-rs) EVM provider for interacting with EVM-compatible blockchain networks in your Blueprint.
+
+## Overview
+
+The `EvmProviderContext` trait provides access to an EVM provider:
+
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/sdk/src/ctx.rs"
+  fromLine={62}
+  toLine={71}
+  title="EvmProviderContext Trait Definition"
+/>
+
+## Using the Context
+
+### 1. Define Your Context
+
+First, define your context struct that implements the `EvmProviderContext` trait:
+
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/macros/context-derive/tests/ui/01_basic.rs"
+  fromLine={4}
+  toLine={9}
+  title="EVM Provider Context Definition"
+/>
+
+### 2. Access Provider Parameters
+
+You can then use this context to access EVM provider parameters:
+
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/macros/context-derive/tests/ui/01_basic.rs"
+  fromLine={18}
+  toLine={18}
+  title="Accessing EVM Provider Parameters"
+/>

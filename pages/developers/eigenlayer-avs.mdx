@@ -1,13 +1,15 @@
----
-title: Build an Eigenlayer AVS
+import GithubFileReaderDisplay from "../../components/GithubFileReaderDisplay";
+
 ---
 
-# Building EVM Event Listeners for Eigenlayer Support
+## title: Build an Eigenlayer AVS
+
+# Building EVM Event Listeners for Eigenlayer AVS
 
 ## Introduction
 
-This will guide you through setting up and using EVM event listeners for Eigenlayer support, using examples from the
-incredible squaring implementation.
+This will guide you through setting up and using EVM event listeners for Eigenlayer AVSes, using examples from the
+[incredible squaring implementation](https://github.com/tangle-network/gadget/tree/main/blueprints/incredible-squaring-eigenlayer).
 
 EVM event listeners are crucial for interacting with smart contracts on Ethereum-compatible networks.
 In the context of Eigenlayer and the blueprint macro system, these listeners allow your Gadget to respond to specific
@@ -17,63 +19,37 @@ events emitted by Eigenlayer contracts.
 
 ### 1. Contract Definition
 
-First, define the contract interface using the `sol!` macro. This generates Rust bindings for your smart contract.
+First, define the contract interface using the `sol!` and `load_abi!` macros. This generates Rust bindings for your smart contract.
+import GithubFileReaderDisplay from "../../components/GithubFileReaderDisplay";
 
-```rust
-sol!(
-    #[allow(missing_docs)]
-    #[sol(rpc)]
-    IncredibleSquaringTaskManager,
-    "contracts/out/IncredibleSquaringTaskManager.sol/IncredibleSquaringTaskManager.json"
-);
-```
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/lib.rs"
+  fromLine={11}
+  toLine={22}
+  title="incredible-squaring-eigenlayer/src/lib.rs"
+/>
 
 ### 2. Job Definition with Event Handler
 
 Use the [`#[job]`](./blueprint-macros/jobs.mdx) macro to define a function that will handle specific events. Include the `event_listener` attribute to specify the event details:
 
-```rust
-#[job(
-    id = 1,
-    params(number_to_be_squared, task_created_block, quorum_numbers, quorum_threshold_percentage),
-    result(_),
-    event_listener(
-        instance = IncredibleSquaringTaskManager,
-        event = IncredibleSquaringTaskManager::NewTaskCreated,
-        event_converter = convert_event_to_inputs,
-        callback = IncredibleSquaringTaskManager::IncredibleSquaringTaskManagerCalls::respondToTask
-    ),
-)]
-pub async fn xsquare(
-    number_to_be_squared: U256,
-    task_created_block: u32,
-    quorum_numbers: Bytes,
-    quorum_threshold_percentage: u32,
-) -> Result<respondToTaskCall, Infallible> {
-    // Implementation details...
-}
-```
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
+  fromLine={12}
+  toLine={55}
+  title="incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
+/>
 
 ### 3. Event Converter Function
 
 Implement a function to convert the event data into the format expected by your job function:
 
-```rust
-pub fn convert_event_to_inputs(
-    event: IncredibleSquaringTaskManager::NewTaskCreated,
-) -> (U256, u32, Bytes, u32) {
-    let number_to_be_squared = event.task.numberToBeSquared;
-    let task_created_block = event.task.taskCreatedBlock;
-    let quorum_numbers = event.task.quorumNumbers;
-    let quorum_threshold_percentage = event.task.quorumThresholdPercentage;
-    (
-        number_to_be_squared,
-        task_created_block,
-        quorum_numbers,
-        quorum_threshold_percentage,
-    )
-}
-```
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
+  fromLine={57}
+  toLine={68}
+  title="incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
+/>
 
 ## Implementing the Event Listener
 
@@ -100,18 +76,16 @@ let contract: IncredibleSquaringTaskManager::IncredibleSquaringTaskManagerInstan
     IncredibleSquaringTaskManager::IncredibleSquaringTaskManagerInstance::new(contract_address, provider);
 ```
 
-### 3. Set Up the Event Watcher
+### 3. Set up the BlueprintRunner
 
 Use the `EventWatcher` to listen for and handle events:
 
-```rust
-EventWatcher::run(
-    &EigenlayerEventWatcher,
-    contract,
-    vec![Box::new(x_square_eigen)],
-)
-.await?;
-```
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/main.rs"
+  fromLine={89}
+  toLine={96}
+  title="incredible-squaring-eigenlayer/src/main.rs"
+/>
 
 ## Best Practices and Considerations
 

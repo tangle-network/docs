@@ -1,0 +1,55 @@
+import GithubFileReaderDisplay from '../../../components/GithubFileReaderDisplay';
+
+# Eigenlayer Context
+
+The `EigenlayerContext` trait provides a standardized interface for interacting with Eigenlayer services and utilities in your Blueprint.
+
+## Overview
+
+The `EigenlayerContext` trait provides access to core Eigenlayer services:
+
+- AVS Registry Reader/Writer - For interacting with the AVS registry contracts
+- Operator Info Service - For managing operator information and state
+- BLS Aggregation Service - For handling BLS signature aggregation
+
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/sdk/src/ctx.rs"
+  fromLine={108}
+  toLine={140}
+  title="EigenlayerContext Trait Definition"
+/>
+
+## Using the Context
+
+### 1. Define Your Context
+
+First, define your context struct that implements the `EigenlayerContext` trait:
+
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/contexts/aggregator.rs"
+  fromLine={45}
+  toLine={57}
+  title="Aggregator Context Definition"
+/>
+
+### 2. Use the Context in Jobs
+
+You can then use this context in your jobs to access Eigenlayer functionality:
+
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
+  fromLine={13}
+  toLine={55}
+  title="Using EigenlayerContext in Jobs"
+/>
+
+### 3. Instantiate the Context
+
+Finally, instantiate your context in your main runner:
+
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/main.rs"
+  fromLine={71}
+  toLine={84}
+  title="Instantiating the Context"
+/>

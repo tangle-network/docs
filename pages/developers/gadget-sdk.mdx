@@ -1,0 +1,228 @@
+# Gadget SDK
+
+The Blueprint Gadget SDK is a powerful toolkit designed to streamline the development of offchain components for Actively Validated Services (AVS) and Tangle Blueprints. It provides a comprehensive set of features and tools that make building complex multi-party services faster, easier, and more secure.
+
+## Core Value Propositions
+
+import PrettyListDisplay from '../../components/PrettyListDisplay';
+
+<PrettyListDisplay items={[
+  {
+    title: "Accelerated Development",
+    description: "The SDK dramatically speeds up offchain service development by providing:",
+    subItems: [
+      { title: "Pre-built components for common functionality" },
+      { title: "Standardized interfaces and patterns" },
+      { title: "Rich documentation and examples" },
+      { title: "Battle-tested implementations" }
+    ]
+  },
+  {
+    title: "Rich Feature Set",
+    description: "Developers have access to a comprehensive suite of tools:",
+    subItems: [
+      { title: "Keystores", description: "Secure key management and cryptographic operations w/ ECDSA, ED25519, BLS381, BN254 key types." },
+      { title: "Context System", description: "Structured access to onchain data, API services, and common utilities" },
+      { title: "P2P Networking", description: "Built-in networking capabilities for distributed systems" },
+      { title: "Event Listeners", description: "React to onchain events across multiple chains, cron-jobs, API calls, and more" },
+      { title: "Cryptographic Modules", description: "Advanced cryptographic primitives and protocols" }
+    ]
+  },
+  {
+    title: "Standardized Blueprint Runner",
+    description: "The SDK includes a standardized `BlueprintRunner` that:",
+    subItems: [
+      { title: "Provides a consistent execution runner" },
+      { title: "Makes distribution to operators simple and reliable" },
+      { title: "Handles job scheduling and management" },
+      { title: "Implements standard monitoring and logging" }
+    ]
+  },
+  {
+    title: "Streamlined Operations", 
+    description: "The SDK simplifies the operational aspects of running services:",
+    subItems: [
+      { title: "Easy deployment workflows" },
+      { title: "Built-in monitoring and metrics" },
+      { title: "Comprehensive documentation" },
+      { title: "Standard operational procedures" }
+    ]
+  },
+  {
+    title: "Network Effects",
+    description: "As more developers adopt the SDK:",
+    subItems: [
+      { title: "The codebase becomes more battle-tested" },
+      { title: "Operators gain confidence in running Blueprint services" },
+      { title: "Developers can leverage shared components and libraries" },
+      { title: "Improvements benefit the entire ecosystem" },
+      { title: "Best practices emerge and evolve" }
+    ]
+  },
+  {
+    title: "Blueprint Templates",
+    description: "Ready-to-use templates for common use cases:",
+    subItems: [
+      { title: "Obol DVT Blueprint", description: "Distributed validator cluster implementation", href: "https://github.com/tangle-network/obol-dvt-blueprint" },
+      { title: "TLS Notary Blueprint", description: "Zero-knowledge TLS proofs", href: "https://github.com/tangle-network/tls-notary-blueprint" },
+      { title: "FROST Blueprint", description: "Threshold Schnorr signatures using FROST protocol", href: "https://github.com/tangle-network/frost-blueprint" },
+      { title: "Hyperlane Blueprint", description: "Hyperlane bridges as a service", href: "https://github.com/tangle-network/hyperlane-blueprint-template" },
+      { title: "LayerZero DVN Blueprint", description: "Decentralized Verifier Network for LayerZero", href: "https://github.com/tangle-network/layerzero-dvn-blueprint" },
+      { title: "LayerZero Executor Blueprint", description: "LayerZero Executor implementation", href: "https://github.com/tangle-network/layerzero-executor-blueprint-template" }
+    ]
+  }
+]} />
+
+## Getting Started
+
+import TableOfContentCards from "../../components/TableOfContentCards.tsx"
+
+<TableOfContentCards items={[
+  {
+    title: "Getting Started",
+    href: "/developers/tangle-avs",
+    subItems: [
+      {
+        title: "Installation & Setup",
+        description: "Install dependencies and create your first Blueprint"
+      },
+      {
+        title: "Building & Deploying",
+        description: "Build and deploy your Blueprint to Tangle Network"
+      }
+    ]
+  },
+  {
+    title: "CLI Tools", 
+    href: "/developers/cli",
+    subItems: [
+      {
+        title: "Installation",
+        href: "/developers/cli/installation",
+        description: "Install the Tangle CLI tools"
+      },
+      {
+        title: "Quickstart",
+        href: "/developers/cli/quickstart", 
+        description: "Get started with basic CLI commands"
+      },
+      {
+        title: "Reference",
+        href: "/developers/cli/reference",
+        description: "Complete CLI command reference"
+      }
+    ]
+  },
+    {
+    title: "Build Eigenlayer AVS",
+    href: "/developers/eigenlayer-avs",
+    subItems: [
+      {
+        title: "Setting Up Event Listeners",
+        description: "Configure EVM event listeners"
+      },
+      {
+        title: "Implementing AVS Logic",
+        description: "Build your AVS business logic"
+      }
+    ]
+  },
+  {
+    title: "Blueprint Macros",
+    href: "/developers/blueprint-macros",
+    subItems: [
+      {
+        title: "Job Macro",
+        href: "/developers/blueprint-macros/jobs",
+        description: "Define computational tasks"
+      },
+      {
+        title: "Report Macro",
+        href: "/developers/blueprint-macros/reports",
+        description: "Implement reporting logic"
+      },
+      {
+        title: "Context & Extensions",
+        href: "/developers/blueprint-macros/context",
+        description: "Manage dependencies and state"
+      },
+      {
+        title: "Event Listeners",
+        href: "/developers/blueprint-macros/event-listeners",
+        description: "React to events and triggers"
+      },
+      {
+        title: "Testing",
+        href: "/developers/blueprint-macros/testing",
+        description: "Test your Blueprint components"
+      }
+    ]
+  },
+  {
+    title: "Event Listeners",
+    href: "/developers/blueprint-event-listeners",
+    subItems: [
+      {
+        title: "Introduction",
+        href: "/developers/blueprint-event-listeners/introduction",
+        description: "Overview of event listener system"
+      },
+      {
+        title: "Tangle Job Calls",
+        href: "/developers/blueprint-event-listeners/tangle-job-calls",
+        description: "Listen for job execution events"
+      },
+      {
+        title: "EVM Contracts",
+        href: "/developers/blueprint-event-listeners/evm-contracts",
+        description: "Listen for smart contract events"
+      },
+      {
+        title: "Periodic Listeners",
+        href: "/developers/blueprint-event-listeners/periodic-listeners",
+        description: "Schedule recurring tasks"
+      },
+      {
+        title: "Custom Listeners",
+        href: "/developers/blueprint-event-listeners/custom-listeners",
+        description: "Build custom event triggers"
+      }
+    ]
+  },
+  {
+    title: "Blueprint Contexts",
+    href: "/developers/blueprint-contexts",
+    subItems: [
+      {
+        title: "Introduction",
+        href: "/developers/blueprint-contexts/introduction",
+        description: "Overview of context system"
+      },
+      {
+        title: "Keystore Context",
+        href: "/developers/blueprint-contexts/keystore-context",
+        description: "Secure key management"
+      },
+      {
+        title: "EVM Provider Context",
+        href: "/developers/blueprint-contexts/evm-provider-context",
+        description: "Interact with EVM chains"
+      },
+      {
+        title: "Tangle Client Context",
+        href: "/developers/blueprint-contexts/tangle-client-context",
+        description: "Interact with Tangle Network"
+      },
+      {
+        title: "Services Context",
+        href: "/developers/blueprint-contexts/services-context",
+        description: "Access Tangle services"
+      },
+      {
+        title: "Eigenlayer Context",
+        href: "/developers/blueprint-contexts/eigenlayer-context",
+        description: "Eigenlayer integration utilities"
+      }
+    ]
+  },
+]} />

@@ -4,21 +4,22 @@
     "title": "Introduction"
   },
   "blueprints": "Blueprints",
-  "services": "Use Cases",
-  "cli": "Tangle CLI",
+  "cli": "Tangle Blueprint CLI",
   "-- gadget-tutorial": {
     "type": "separator",
-    "title": "Blueprint (AVS) Tutorials"
+    "title": "Blueprint Developers"
   },
-  "getting-started": "Hello World Blueprint",
-  "blueprint-macros": "Understanding Blueprint Macros",
-  "blueprint-event-listeners": "Blueprint Event Listeners",
+  "gadget-sdk": "Blueprint Gadget SDK",
+  "blueprint-macros": "Blueprint SDK Macros",
+  "blueprint-event-listeners": "Blueprint SDK Event Listeners",
+  "blueprint-contexts": "Blueprint SDK Contexts",
+  "tangle-avs": "Build a Tangle Blueprint AVS",
   "eigenlayer-avs": "Build an Eigenlayer AVS",
   "-- solution-developers": {
     "type": "separator",
     "title": "Solution Developers"
   },
-  "integrate": "Endpoints and Integration",
+  "endpoints": "Endpoints and Integration",
   "technicals": "EVM Development",
   "-- contribute": {
     "type": "separator",

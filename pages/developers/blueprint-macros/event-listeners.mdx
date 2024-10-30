@@ -6,22 +6,61 @@ title: Event Listeners for Blueprints and AVS
 
 Event listeners are a crucial component of Blueprints and AVS (Actively Validated Services) in the Tangle ecosystem. They allow your service to react to various events and trigger appropriate actions. Here are the main types of event listeners you can use:
 
-1. [Introduction to Event Listeners](/developers/blueprint-event-listeners/introduction)
-   Learn about the basics of event listeners and their role in Blueprints and AVS.
+import TableOfContentCards from "../../../components/TableOfContentCards";
 
-2. [Tangle Job Call Listener](/developers/blueprint-event-listeners/tangle-job-calls)
-   Understand how to listen for and respond to job calls on the Tangle network.
-
-3. [EVM Contract Listeners](/developers/blueprint-event-listeners/evm-contracts)
-   Discover how to interact with and listen to events from EVM-compatible smart contracts.
-
-4. [Periodic Listeners](/developers/blueprint-event-listeners/periodic-listeners)
-   Implement time-based listeners for recurring tasks and scheduled operations.
-
-5. [Custom Listeners](/developers/blueprint-event-listeners/custom-listeners)
-   Create your own specialized listeners for unique use cases and requirements.
-
-6. [Multiple Listeners](/developers/blueprint-event-listeners/multiple-listeners)
-   Learn how to combine and manage multiple event listeners in your Blueprint or AVS.
+<TableOfContentCards 
+  items={[
+    {
+      title: "Introduction to Event Listeners",
+      href: "/developers/blueprint-event-listeners/introduction",
+      subItems: [
+        {
+          title: "Event Listener Basics",
+          description: "Learn about the basics of event listeners and their role in Blueprints and AVS"
+        }
+      ]
+    },
+    {
+      title: "Tangle Job Call Listener",
+      href: "/developers/blueprint-event-listeners/tangle-job-calls", 
+      subItems: [
+        {
+          title: "Job Call Handling",
+          description: "Understand how to listen for and respond to job calls on the Tangle network"
+        }
+      ]
+    },
+    {
+      title: "EVM Contract Listeners",
+      href: "/developers/blueprint-event-listeners/evm-contracts",
+      subItems: [
+        {
+          title: "Smart Contract Events",
+          description: "Discover how to interact with and listen to events from EVM-compatible smart contracts"
+        }
+      ]
+    },
+    {
+      title: "Periodic Listeners",
+      href: "/developers/blueprint-event-listeners/periodic-listeners",
+      subItems: [
+        {
+          title: "Time-based Operations",
+          description: "Implement time-based listeners for recurring tasks and scheduled operations"
+        }
+      ]
+    },
+    {
+      title: "Custom Listeners",
+      href: "/developers/blueprint-event-listeners/custom-listeners",
+      subItems: [
+        {
+          title: "Specialized Event Handling",
+          description: "Create your own specialized listeners for unique use cases and requirements"
+        }
+      ]
+    }
+  ]}
+/>
 
 These event listeners provide a powerful toolset for creating responsive and dynamic services on the Tangle network. Explore each type to find the best fit for your project's needs.

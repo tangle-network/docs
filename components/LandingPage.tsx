@@ -16,7 +16,7 @@ const getStartedCards = [
     title: "Get started building Blueprints",
     description:
       "Blueprints are the template object implemented as software in the Tangle codebase.",
-    link: "../developers/blueprints",
+    link: "../developers/blueprints/introduction",
   },
   {
     icon: <GiToken />,
@@ -52,7 +52,7 @@ const resourcesCards = [
     icon: <RiToolsLine />,
     title: "Developer Tools",
     description: "RPCs, faucets, and block explorers.",
-    link: "../developers/integrate",
+    link: "../developers/endpoints",
   },
   {
     icon: <MdAppShortcut />,

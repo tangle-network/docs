@@ -1,0 +1,27 @@
+import ExpandableImage from '../../../components/ExpandableImage';
+
+## Blueprint Manager
+
+<ExpandableImage src="/images/blueprint-manager-diagram.png" alt="Blueprint Manager Diagram" />
+
+On Tangle, Blueprints have an offchain and an onchain lifecycle. The offchain component is managed by what we call the **Blueprint Manager**. The **Blueprint Manager** can be considered **_Tangle's Operator Node_**. We even plan to run the Blueprint Manager as an AVS on other restaking infrastructures in order to aggregate operators and assets around Tangle Blueprints.
+
+This onchain and offchain logic functions as follows:
+
+1. Operators must register for Blueprints onchain. This indicates an operators willingness to accept requests for Blueprint Instances of that type.
+2. Operators upon registering for Blueprints onchain, download the Blueprint's binary and metadata from the Tangle Network. This is handled by the Blueprint Manager, which listens for new registrations.
+3. Operators upon accepting Blueprint Instance requests, execute the Blueprint's binary. This is where the target environment of the Blueprint is important. The Blueprint Manager is responsible for executing the Blueprint's binary in the correct environment be it natively or in Docker or an alternative VM.
+
+### Blueprint and Service Instance Lifecycle
+
+<ExpandableImage src="/images/ServiceInstanceFlow.png" alt="Service Instance Flow" />
+
+Blueprints interact with the Tangle Network in several key ways:
+
+1. Blueprints are deployed to Tangle, with their metadata and smart contracts stored and deployed on-chain.
+2. Blueprints are instantiated, triggering the creation of an Instance, which represents a single AVS. The Instance runs for some period of time.
+3. Blueprints are destroyed once they reach their time-to-live (TTL) or run out of funds to incentivize operators to run their service.
+
+Blueprints provide a useful abstraction, allowing developers to create reusable service infrastructures as if they were smart contracts. This enables developers to monetize their work and align long-term incentives with the success of their creations, benefiting proportionally to their Blueprint's usage.
+
+The Blueprint object is the core restaking object in Tangle, implemented primarily in the `pallet-services` module of the Tangle codebase. Assets are viewed as being restaked on Blueprints, with Operators running Instances of Blueprints and users restaking/staking their assets with those Operators.

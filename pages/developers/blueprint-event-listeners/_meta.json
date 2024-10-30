@@ -3,6 +3,5 @@
   "tangle-job-calls": "Tangle Job Call Listener",
   "evm-contracts": "EVM Contract Listeners",
   "periodic-listeners": "Periodic Listeners",
-  "custom-listeners": "Custom Listeners",
-  "multiple-listeners": "Multiple Listeners"
+  "custom-listeners": "Custom Listeners"
 }
