@@ -16,7 +16,9 @@ interface NonuniformTableOfContentCardsProps {
   items: TOCItem[];
 }
 
-const NonuniformTableOfContentCards: React.FC<NonuniformTableOfContentCardsProps> = ({ items }) => {
+const NonuniformTableOfContentCards: React.FC<
+  NonuniformTableOfContentCardsProps
+> = ({ items }) => {
   return (
     <div className="columns-1 md:columns-2 lg:columns-3 gap-4 my-6">
       {items.map((item, index) => (
