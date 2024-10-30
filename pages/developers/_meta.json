@@ -15,6 +15,7 @@
   "blueprint-contexts": "Blueprint SDK Contexts",
   "tangle-avs": "Build a Tangle Blueprint AVS",
   "eigenlayer-avs": "Build an Eigenlayer AVS",
+  "testing-with-tangle": "Testing with Tangle",
   "-- solution-developers": {
     "type": "separator",
     "title": "Solution Developers"
