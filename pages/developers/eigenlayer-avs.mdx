@@ -1,28 +1,27 @@
-import GithubFileReaderDisplay from "../../components/GithubFileReaderDisplay";
-
+---
+title: Build an EigenLayer AVS
 ---
 
-## title: Build an Eigenlayer AVS
+import GithubFileReaderDisplay from "../../components/GithubFileReaderDisplay";
 
-# Building EVM Event Listeners for Eigenlayer AVS
+# Building EVM Event Listeners for EigenLayer AVS
 
 ## Introduction
 
-This will guide you through setting up and using EVM event listeners for Eigenlayer AVSes, using examples from the
+This will guide you through setting up and using EVM event listeners for EigenLayer AVSes, using examples from the
 [incredible squaring implementation](https://github.com/tangle-network/gadget/tree/main/blueprints/incredible-squaring-eigenlayer).
 
 EVM event listeners are crucial for interacting with smart contracts on Ethereum-compatible networks.
-In the context of Eigenlayer and the blueprint macro system, these listeners allow your Gadget to respond to specific
-events emitted by Eigenlayer contracts.
+In the context of EigenLayer and the blueprint macro system, these listeners allow your Gadget to respond to specific
+events emitted by EigenLayer contracts.
 
 ## Setting Up EVM Event Listeners
 
 ### 1. Contract Definition
 
 First, define the contract interface using the `sol!` and `load_abi!` macros. This generates Rust bindings for your smart contract.
-import GithubFileReaderDisplay from "../../components/GithubFileReaderDisplay";
 
-<GithubFileReaderDisplay 
+<GithubFileReaderDisplay
   url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/lib.rs"
   fromLine={11}
   toLine={22}
@@ -33,7 +32,7 @@ import GithubFileReaderDisplay from "../../components/GithubFileReaderDisplay";
 
 Use the [`#[job]`](./blueprint-macros/jobs.mdx) macro to define a function that will handle specific events. Include the `event_listener` attribute to specify the event details:
 
-<GithubFileReaderDisplay 
+<GithubFileReaderDisplay
   url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
   fromLine={12}
   toLine={55}
@@ -44,7 +43,7 @@ Use the [`#[job]`](./blueprint-macros/jobs.mdx) macro to define a function that 
 
 Implement a function to convert the event data into the format expected by your job function:
 
-<GithubFileReaderDisplay 
+<GithubFileReaderDisplay
   url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
   fromLine={57}
   toLine={68}
@@ -80,7 +79,7 @@ let contract: IncredibleSquaringTaskManager::IncredibleSquaringTaskManagerInstan
 
 Use the `EventWatcher` to listen for and handle events:
 
-<GithubFileReaderDisplay 
+<GithubFileReaderDisplay
   url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/main.rs"
   fromLine={89}
   toLine={96}
