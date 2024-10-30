@@ -42,7 +42,7 @@ cargo build --release --features manual-seal,txpool,testnet
 If successful, you should see output indicating that the node is running:
 
 ```bash
-./target/release/tangle --tmp --dev --validator -linfo --alice --rpc-cors all --rpc-methods=unsafe --rpc-external --rpc-port 9944 --auto-insert-keys -levm=debug -lgadget=trace --sealing instant
+./target/release/tangle --tmp --dev --validator -linfo --alice --rpc-cors all --rpc-methods=unsafe --rpc-external --rpc-port 9944 -levm=debug -lgadget=trace --sealing instant
     ++++++++++++++++++++++++
 	+++++++++++++++++++++++++++
 	+++++++++++++++++++++++++++
