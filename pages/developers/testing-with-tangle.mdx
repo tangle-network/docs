@@ -1,0 +1,86 @@
+# Testing with Tangle
+
+## How to test your blueprint with Tangle
+
+This guide will walk you through the process of setting and running Tangle node locally to test your blueprint with Tangle.
+
+### Prerequisites
+
+First install and configure `rustup`:
+
+```bash
+# Install
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# Configure
+source ~/.cargo/env
+```
+
+### Clone the tangle node
+
+```bash
+git clone https://github.com/tangle-network/tangle
+cd tangle
+```
+
+### Build the node for instant-seal
+
+This is different from the production tangle runtime which produces a block every 6 seconds. The instant-seal node produces a block only when a transaction is available.
+This allows for faster testing cycles.
+
+```bash
+cargo build --release --features manual-seal,txpool,testnet
+```
+
+### Run the node
+
+```bash
+./target/release/tangle --tmp --dev --validator -linfo \
+--alice --rpc-cors all --rpc-methods=unsafe --rpc-external \
+--rpc-port 9944 -levm=debug -lgadget=trace --sealing instant
+```
+
+If successful, you should see output indicating that the node is running:
+
+```bash
+./target/release/tangle --tmp --dev --validator -linfo --alice --rpc-cors all --rpc-methods=unsafe --rpc-external --rpc-port 9944 --auto-insert-keys -levm=debug -lgadget=trace --sealing instant
+    ++++++++++++++++++++++++
+	+++++++++++++++++++++++++++
+	+++++++++++++++++++++++++++
+	+++        ++++++      +++         @%%%%%%%%%%%                                     %%%
+	++++++      ++++      +++++        %%%%%%%%%%%%                                     %%%@
+	++++++++++++++++++++++++++            %%%%      %%%%@     %%% %%@       @%%%%%%%   %%%@    %%%%@
+	       ++++++++                       %%%%    @%%%%%%%@   %%%%%%%%%   @%%%%%%%%%   %%%@  %%%%%%%%%
+	       ++++++++                       %%%%    %%%%%%%%%   %%%% @%%%@  %%%%  %%%%   %%%@  %%%%%%%%%%
+	++++++++++++++++++++++++++            %%%%    %%%%%%%%%   %%%   %%%%  %%%   @%%%   %%%@ @%%%%%  %%%%%
+	++++++      ++++      ++++++          %%%%    %%%%%%%%%   %%%   %%%%  %%%%%%%%%%   %%%@  %%%%%%%%%@
+	+++        ++++++        +++          %%%%    %%%%%%%%%   %%%   %%%@   %%%%%%%%%   %%%    %%%%%%%@
+	++++      +++++++++      +++                                           %%%%  %%%%
+	++++++++++++++++++++++++++++                                           %%%%%%%%%
+	  +++++++++++++++++++++++                                                 %%%%%
+
+2024-10-30 16:00:54.306  INFO main sc_cli::runner: Tangle Node
+2024-10-30 16:00:54.306  INFO main sc_cli::runner: ✌️  version 1.2.0-cedde5d83a0
+2024-10-30 16:00:54.306  INFO main sc_cli::runner: ❤️  by Webb Technologies Inc., 2023-2024
+2024-10-30 16:00:54.306  INFO main sc_cli::runner: 📋 Chain specification: Local Testnet
+2024-10-30 16:00:54.306  INFO main sc_cli::runner: 🏷  Node name: Alice
+2024-10-30 16:00:54.306  INFO main sc_cli::runner: 👤 Role: AUTHORITY
+2024-10-30 16:00:54.306  INFO main sc_cli::runner: 💾 Database: RocksDb at /var/folders/ht/41y18g597_9_1035dlw0m3700000gn/T/substrateGSJexb/chains/local_testnet/db/full
+2024-10-30 16:00:55.347  INFO main runtime::staking: [0] 💸 generated 5 npos voters, 5 from validators and 0 nominators
+2024-10-30 16:00:55.347  INFO main runtime::staking: [0] 💸 generated 5 npos targets
+```
+
+### How to build testnet runtime (without instant-seal)
+
+To build tangle node, without instant-seal, you can run:
+
+```bash
+cargo build --release --features txpool,testnet
+```
+
+And use the following command to run the node:
+
+```bash
+./target/release/tangle --tmp --dev --validator -linfo \
+--alice --rpc-cors all --rpc-methods=unsafe --rpc-external \
+--rpc-port 9944 -levm=debug -lgadget=trace
+```
