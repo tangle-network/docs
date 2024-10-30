@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import { FaGithub, FaLink, FaSpinner } from "react-icons/fa";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
-  nightOwl,
+  oneDark,
   oneLight,
 } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { useTheme } from "next-themes";
 
 let lightTheme = oneLight;
-let darkTheme = nightOwl;
+let darkTheme = oneDark;
 
 interface GithubFileReaderDisplayProps {
   url: string;

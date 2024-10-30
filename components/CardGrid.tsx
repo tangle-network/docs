@@ -2,28 +2,17 @@ import React from "react";
 import Link from "next/link";
 import { FaChevronRight } from "react-icons/fa";
 
-const BlueprintIntroCards = () => {
-  const cards = [
-    {
-      title: "Tangle's Blueprint Gadget SDK",
-      description:
-        "Learn about the Gadget SDK and how to get started building your own gadgets.",
-      link: "/developers/gadget-sdk",
-    },
-    {
-      title: "Hello World Blueprint",
-      description:
-        "Get started with a simple Hello World example using Tangle Blueprints.",
-      link: "/developers/tangle-avs",
-    },
-    {
-      title: "Build an Eigenlayer AVS",
-      description:
-        "Build an Eigenlayer AVS with the Tangle Blueprint SDK and hook into a variety of EVM compatible utilities for task automation, slashing, and more.",
-      link: "/developers/eigenlayer-avs",
-    },
-  ];
+interface Card {
+  title: string;
+  description: string;
+  link: string;
+}
 
+interface CardGridProps {
+  cards: Card[];
+}
+
+const CardGrid: React.FC<CardGridProps> = ({ cards }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 my-6">
       {cards.map((card, index) => (
@@ -65,4 +54,4 @@ const BlueprintIntroCards = () => {
   );
 };
 
-export default BlueprintIntroCards;
+export default CardGrid;
