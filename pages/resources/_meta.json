@@ -1,3 +1,21 @@
 {
-  "network-information-configuration": "Resources and Tools"
+  "-- intro": {
+    "type": "separator",
+    "title": "Introduction"
+  },
+  "resources": "Resources and Tools",
+  "-- bridges": {
+    "type": "separator",
+    "title": "Bridges"
+  },
+  "hyperlane": "Hyperlane",
+  "router": "Router",
+  "chainport": "Chainport",
+  "-- developer-tools": {
+    "type": "separator",
+    "title": "Developer Tools"
+  },
+  "biconomy": "Biconomy",
+  "sablier": "Sablier",
+  "safe": "Gnosis Safe"
 }
