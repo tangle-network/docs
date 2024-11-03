@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaGithub, FaLink, FaSpinner } from "react-icons/fa";
-import { getHighlighter, type Highlighter, bundledLanguages } from 'shiki';
-import { useTheme } from 'next-themes';
+import { getHighlighter, type Highlighter, bundledLanguages } from "shiki";
+import { useTheme } from "next-themes";
 
 interface GithubFileReaderDisplayProps {
   url: string;
@@ -17,7 +17,7 @@ let highlighterPromise: Promise<Highlighter> | null = null;
 const getShikiHighlighter = () => {
   if (!highlighterPromise) {
     highlighterPromise = getHighlighter({
-      themes: ['github-dark', 'github-light'],
+      themes: ["github-dark", "github-light"],
       langs: Object.keys(bundledLanguages),
     });
   }
@@ -61,7 +61,7 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
 
         const [response, highlighter] = await Promise.all([
           fetch(rawUrl),
-          getShikiHighlighter()
+          getShikiHighlighter(),
         ]);
 
         if (!response.ok) {
@@ -72,17 +72,17 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
         const lines = text.split("\n");
         const selectedLines = lines.slice(fromLine - 1, toLine || lines.length);
         const codeContent = selectedLines.join("\n");
-        
+
         // Set the theme based on current theme
-        const theme = currentTheme === 'dark' ? 'github-dark' : 'github-light';
-        
+        const theme = currentTheme === "dark" ? "github-dark" : "github-light";
+
         // Highlight the code with the current theme and line numbers
         const highlightedCode = highlighter.codeToHtml(codeContent, {
           lang: getLanguage(url),
           theme: theme,
           lineOptions: Array.from({ length: selectedLines.length }, (_, i) => ({
             line: i + 1,
-            classes: [`line-${i + fromLine}`]
+            classes: [`line-${i + fromLine}`],
           })),
         });
 
@@ -91,7 +91,7 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
         setContent(wrappedCode);
         setLoading(false);
       } catch (err) {
-        console.error('Highlighting error:', err);
+        console.error("Highlighting error:", err);
         setError(err instanceof Error ? err.message : "An error occurred");
         setLoading(false);
       }
@@ -142,7 +142,7 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
       </div>
 
       <div className="nextra-code-block nx-relative">
-        <div 
+        <div
           className="nx-bg-primary-700/5 nx-overflow-x-auto nx-font-medium nx-subpixel-antialiased dark:nx-bg-primary-300/10 nx-text-[.9em]"
           dangerouslySetInnerHTML={{ __html: content }}
         />
