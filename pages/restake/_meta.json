@@ -6,8 +6,7 @@
   "introduction": "Overview",
   "staking-intro": "Introduction to Staking",
   "nominator": "Nominating your TNT",
-  "restake-concepts": "Restaking core concepts",
-  "bridge": "Bridge",
+  "restake-concepts": "Core concepts",
   "-- restaking": {
     "type": "separator",
     "title": "Restaking"

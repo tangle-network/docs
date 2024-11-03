@@ -1,14 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { FaGithub, FaLink, FaSpinner } from "react-icons/fa";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import {
-  oneDark,
-  oneLight,
-} from "react-syntax-highlighter/dist/cjs/styles/prism";
-import { useTheme } from "next-themes";
-
-let lightTheme = oneLight;
-let darkTheme = oneDark;
 
 interface GithubFileReaderDisplayProps {
   url: string;
@@ -26,7 +17,6 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { theme } = useTheme();
 
   const getLanguage = (url: string) => {
     const extension = url.split(".").pop()?.toLowerCase();
@@ -158,23 +148,11 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
         </div>
       </div>
 
-      <SyntaxHighlighter
-        language={getLanguage(url)}
-        style={theme === "light" ? lightTheme : darkTheme}
-        customStyle={{
-          margin: 0,
-          padding: "1rem",
-          background: "transparent",
-          fontSize: "0.875rem",
-          lineHeight: "1.5",
-        }}
-        showLineNumbers
-        startingLineNumber={fromLine}
-        wrapLines
-        wrapLongLines
-      >
-        {content}
-      </SyntaxHighlighter>
+      <div className="p-4">
+        <pre><code className={`language-${getLanguage(url)}`}>
+{content}
+        </code></pre>
+      </div>
     </div>
   );
 };
