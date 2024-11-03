@@ -1,3 +1,4 @@
+import { useTheme } from "next-themes";
 import React, { useEffect, useState } from "react";
 import { FaGithub, FaLink, FaSpinner } from "react-icons/fa";
 
@@ -17,6 +18,7 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { theme } = useTheme();
 
   const getLanguage = (url: string) => {
     const extension = url.split(".").pop()?.toLowerCase();
@@ -29,53 +31,6 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
       case "js":
       case "jsx":
         return "javascript";
-      case "sol":
-        return "solidity";
-      case "md":
-      case "mdx":
-        return "markdown";
-      case "toml":
-        return "toml";
-      case "yaml":
-      case "yml":
-        return "yaml";
-      case "json":
-        return "json";
-      case "sh":
-        return "bash";
-      case "py":
-        return "python";
-      case "go":
-        return "go";
-      case "cpp":
-      case "c++":
-      case "cc":
-        return "cpp";
-      case "c":
-        return "c";
-      case "java":
-        return "java";
-      case "php":
-        return "php";
-      case "rb":
-        return "ruby";
-      case "swift":
-        return "swift";
-      case "kt":
-        return "kotlin";
-      case "cs":
-        return "csharp";
-      case "html":
-        return "html";
-      case "css":
-        return "css";
-      case "scss":
-        return "scss";
-      case "sql":
-        return "sql";
-      case "graphql":
-      case "gql":
-        return "graphql";
       default:
         return "text";
     }
@@ -96,7 +51,8 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
         const text = await response.text();
         const lines = text.split("\n");
         const selectedLines = lines.slice(fromLine - 1, toLine || lines.length);
-        setContent(selectedLines.join("\n"));
+        const codeContent = selectedLines.join("\n");
+        setContent(codeContent);
         setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -123,6 +79,8 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
     );
   }
 
+  const language = getLanguage(url);
+
   return (
     <div className="my-6 overflow-hidden border border-gray-200 dark:border-gray-800 rounded-lg">
       <div className="flex justify-between items-center px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
@@ -148,10 +106,16 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
         </div>
       </div>
 
-      <div className="p-4">
-        <pre><code className={`language-${getLanguage(url)}`}>
-{content}
-        </code></pre>
+      <div className="nextra-code-block nx-relative">
+        <pre className="nx-bg-primary-700/5 nx-overflow-x-auto nx-font-medium nx-subpixel-antialiased dark:nx-bg-primary-300/10 nx-text-[.9em]">
+          <code 
+            className={`language-${getLanguage(url)} nx-cdx`}
+            data-language={getLanguage(url)}
+            data-theme={theme}
+          >
+            {content}
+          </code>
+        </pre>
       </div>
     </div>
   );
