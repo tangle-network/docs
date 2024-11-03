@@ -1,6 +1,7 @@
-import { useTheme } from "next-themes";
 import React, { useEffect, useState } from "react";
 import { FaGithub, FaLink, FaSpinner } from "react-icons/fa";
+import { getHighlighter, type Highlighter, bundledLanguages } from 'shiki';
+import { useTheme } from 'next-themes';
 
 interface GithubFileReaderDisplayProps {
   url: string;
@@ -8,6 +9,37 @@ interface GithubFileReaderDisplayProps {
   toLine?: number;
   title?: string;
 }
+
+// Create a singleton promise for the highlighter
+let highlighterPromise: Promise<Highlighter> | null = null;
+
+// Singleton function to get or create the highlighter
+const getShikiHighlighter = () => {
+  if (!highlighterPromise) {
+    highlighterPromise = getHighlighter({
+      themes: ['github-dark', 'github-light'],
+      langs: Object.keys(bundledLanguages),
+    });
+  }
+  return highlighterPromise;
+};
+
+// Language detection utility
+const getLanguage = (url: string) => {
+  const extension = url.split(".").pop()?.toLowerCase();
+  switch (extension) {
+    case "rs":
+      return "rust";
+    case "ts":
+    case "tsx":
+      return "typescript";
+    case "js":
+    case "jsx":
+      return "javascript";
+    default:
+      return "plaintext";
+  }
+};
 
 const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
   url,
@@ -18,32 +50,20 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { theme } = useTheme();
-
-  const getLanguage = (url: string) => {
-    const extension = url.split(".").pop()?.toLowerCase();
-    switch (extension) {
-      case "rs":
-        return "rust";
-      case "ts":
-      case "tsx":
-        return "typescript";
-      case "js":
-      case "jsx":
-        return "javascript";
-      default:
-        return "text";
-    }
-  };
+  const { theme: currentTheme } = useTheme();
 
   useEffect(() => {
-    const fetchGithubContent = async () => {
+    const fetchAndHighlightContent = async () => {
       try {
         const rawUrl = url
           .replace("github.com", "raw.githubusercontent.com")
           .replace("/blob/", "/");
 
-        const response = await fetch(rawUrl);
+        const [response, highlighter] = await Promise.all([
+          fetch(rawUrl),
+          getShikiHighlighter()
+        ]);
+
         if (!response.ok) {
           throw new Error("Failed to fetch file content");
         }
@@ -52,16 +72,33 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
         const lines = text.split("\n");
         const selectedLines = lines.slice(fromLine - 1, toLine || lines.length);
         const codeContent = selectedLines.join("\n");
-        setContent(codeContent);
+        
+        // Set the theme based on current theme
+        const theme = currentTheme === 'dark' ? 'github-dark' : 'github-light';
+        
+        // Highlight the code with the current theme and line numbers
+        const highlightedCode = highlighter.codeToHtml(codeContent, {
+          lang: getLanguage(url),
+          theme: theme,
+          lineOptions: Array.from({ length: selectedLines.length }, (_, i) => ({
+            line: i + 1,
+            classes: [`line-${i + fromLine}`]
+          })),
+        });
+
+        // Wrap the highlighted code with a div that sets the starting line number
+        const wrappedCode = `<div style="--start-line: ${fromLine}">${highlightedCode}</div>`;
+        setContent(wrappedCode);
         setLoading(false);
       } catch (err) {
+        console.error('Highlighting error:', err);
         setError(err instanceof Error ? err.message : "An error occurred");
         setLoading(false);
       }
     };
 
-    fetchGithubContent();
-  }, [url, fromLine, toLine]);
+    fetchAndHighlightContent();
+  }, [url, fromLine, toLine, currentTheme]);
 
   if (loading) {
     return (
@@ -78,8 +115,6 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
       </div>
     );
   }
-
-  const language = getLanguage(url);
 
   return (
     <div className="my-6 overflow-hidden border border-gray-200 dark:border-gray-800 rounded-lg">
@@ -107,15 +142,10 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
       </div>
 
       <div className="nextra-code-block nx-relative">
-        <pre className="nx-bg-primary-700/5 nx-overflow-x-auto nx-font-medium nx-subpixel-antialiased dark:nx-bg-primary-300/10 nx-text-[.9em]">
-          <code 
-            className={`language-${getLanguage(url)} nx-cdx`}
-            data-language={getLanguage(url)}
-            data-theme={theme}
-          >
-            {content}
-          </code>
-        </pre>
+        <div 
+          className="nx-bg-primary-700/5 nx-overflow-x-auto nx-font-medium nx-subpixel-antialiased dark:nx-bg-primary-300/10 nx-text-[.9em]"
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
       </div>
     </div>
   );
