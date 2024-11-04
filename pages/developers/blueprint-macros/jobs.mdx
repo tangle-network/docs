@@ -1,6 +1,8 @@
+import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
+
 ---
-title: Jobs Macro
----
+
+## title: Jobs Macro
 
 # Blueprint Jobs Macro System Documentation
 
@@ -20,32 +22,19 @@ We welcome you to share feature requests and PRs on [our github](https://github.
 
 The `#[job]` macro is used to define individual tasks or jobs within a blueprint. It allows you to specify various parameters and metadata for each job.
 
-```rust
-#[job(
-    id = <job_id>,
-    params(<param_list>),
-    result(<result_type>),
-    event_listener(TangleJobCallListener)
-    verifier(evm = "<contract_name>")
-)]
-pub fn job_name(<parameters>) -> Result<<return_type>, <error_type>> {
-    // Job implementation
-}
-```
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/blueprint-template/blob/main/src/lib.rs"
+  fromLine={16}
+  toLine={32}
+  title="Example Job Macro Usage"
+/>
 
 - **_`id`_**: A unique identifier for the job.
 - **_`params`_**: A list of parameters that the job accepts.
 - **_`result`_**: The type of result the job produces (often represented by an underscore \_).
 - **_`event_listener`_**: Specifies the event listener that triggers the job.
-- **_`verifier`_**: Specifies an EVM contract for job verification (for use w/ Tangle).
 
-### Tangle Blueprint Jobs
-
-The default implementation targets deployment on Tangle and specifies an EVM contract for verification specified with
-the **_`verifier`_** parameter.
-
-The contract name is cross-referenced with the name of a contract in a [`foundry`](https://book.getfoundry.sh/) project
-and should be identical in order to integrate seamlessly to Tangle.
+### Non-Tangle Blueprint Jobs
 
 For other restaking protocols and job verification mechanisms, developers should use or implement custom handlers.
 
@@ -65,41 +54,42 @@ impl EventListener for CustomJobCallListener {
     id = <job_id>,
     params(<param_list>),
     result(<result_type>),
-    event_listener(CustomTangleJobCallListener)
+    event_listener(
+        listener = CustomTangleJobCallListener,
+    )
 )]
 pub fn job_name(<parameters>) -> Result<<return_type>, <error_type>> {
     // Job implementation
 }
 ```
 
-### Examples
+## Examples
 
-#### Keygen Job
+### Incredible Squaring Simple
 
-```rust
-#[job(id = 0, params(n, t), result(_))]
-pub fn keygen(ctx: &MyContext, n: u16, t: u16) -> Result<Vec<u8>, Error> {
-    let _ = (n, t, ctx);
-    Ok(vec![0; 33])
-}
-```
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring/src/lib.rs"
+  fromLine={9}
+  toLine={21}
+  title="Example Simple Squaring Job"
+/>
 
-#### Sign Job
+### Incredible Squaring Eigenlayer
 
-```rust
-#[job(id = 1, params(keygen_id, data), result(_))]
-pub async fn sign(keygen_id: u64, data: Vec<u8>) -> Result<Vec<u8>, Error> {
-    let _ = (keygen_id, data);
-    Ok(vec![0; 65])
-}
-```
+### MPC Keygen
 
-#### Run Gaia Node Job
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/frost-blueprint/blob/main/src/keygen.rs"
+  fromLine={49}
+  toLine={122}
+  title="Example FROST Keygen Job"
+/>
 
-```rust
-#[sdk::job(id = 1, params(data), result(_), verifier(evm = "GaiaAiAgentBlueprint"))]
-pub async fn run_gaia_node_job(data: Vec<u8>) -> Result<String, Infallible> {
-    let (_, outputs) = runner::run_gaia_node().await?;
-    Ok(serde_json::to_string(&outputs)?)
-}
-```
+### MPC Threshold Signature
+
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/frost-blueprint/blob/main/src/sign.rs"
+  fromLine={54}
+  toLine={123}
+  title="Example FROST Signing Job"
+/>
