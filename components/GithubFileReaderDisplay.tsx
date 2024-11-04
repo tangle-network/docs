@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaGithub, FaLink, FaSpinner } from "react-icons/fa";
-import { getHighlighter, type Highlighter, bundledLanguages } from "shiki";
 import { useTheme } from "next-themes";
+import { dedentCode, getLanguage, getShikiHighlighter } from "@/pages/shiki";
 
 interface GithubFileReaderDisplayProps {
   url: string;
@@ -10,42 +10,12 @@ interface GithubFileReaderDisplayProps {
   title?: string;
 }
 
-// Create a singleton promise for the highlighter
-let highlighterPromise: Promise<Highlighter> | null = null;
-
-// Singleton function to get or create the highlighter
-const getShikiHighlighter = () => {
-  if (!highlighterPromise) {
-    highlighterPromise = getHighlighter({
-      themes: ["github-dark", "github-light"],
-      langs: Object.keys(bundledLanguages),
-    });
-  }
-  return highlighterPromise;
-};
-
-// Language detection utility
-const getLanguage = (url: string) => {
-  const extension = url.split(".").pop()?.toLowerCase();
-  switch (extension) {
-    case "rs":
-      return "rust";
-    case "ts":
-    case "tsx":
-      return "typescript";
-    case "js":
-    case "jsx":
-      return "javascript";
-    default:
-      return "plaintext";
-  }
-};
-
 const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
   url,
   fromLine = 1,
   toLine,
   title,
+  dedent = true,
 }) => {
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -71,7 +41,12 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
         const text = await response.text();
         const lines = text.split("\n");
         const selectedLines = lines.slice(fromLine - 1, toLine || lines.length);
-        const codeContent = selectedLines.join("\n");
+        let codeContent = selectedLines.join("\n");
+
+        // Apply dedentation if enabled
+        if (dedent) {
+          codeContent = dedentCode(codeContent);
+        }
 
         // Set the theme based on current theme
         const theme = currentTheme === "dark" ? "github-dark" : "github-light";
@@ -80,10 +55,6 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
         const highlightedCode = highlighter.codeToHtml(codeContent, {
           lang: getLanguage(url),
           theme: theme,
-          lineOptions: Array.from({ length: selectedLines.length }, (_, i) => ({
-            line: i + 1,
-            classes: [`line-${i + fromLine}`],
-          })),
         });
 
         // Wrap the highlighted code with a div that sets the starting line number

@@ -7,6 +7,7 @@ import type { ReactElement, ReactNode } from "react";
 import "../globals.css";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { AskCookbook } from "../components/AskCookbook";
+import { getShikiHighlighter } from "./shiki";
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -23,6 +24,9 @@ if (typeof window !== "undefined" && !("requestIdleCallback" in window)) {
   // @ts-ignore
   window.cancelIdleCallback = (id) => clearTimeout(id);
 }
+
+// Initialize the highlighter when the app starts
+getShikiHighlighter();
 
 export default function Nextra({ Component, pageProps }: NextraAppProps) {
   // Define a layout if it doesn't exist in the page component
