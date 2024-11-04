@@ -8,6 +8,7 @@ interface GithubFileReaderDisplayProps {
   fromLine?: number;
   toLine?: number;
   title?: string;
+  dedent?: boolean;
 }
 
 const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
