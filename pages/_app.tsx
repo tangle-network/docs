@@ -7,7 +7,7 @@ import type { ReactElement, ReactNode } from "react";
 import "../globals.css";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { AskCookbook } from "../components/AskCookbook";
-import { getShikiHighlighter } from "./shiki";
+import { getShikiHighlighter } from "../components/shiki";
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
