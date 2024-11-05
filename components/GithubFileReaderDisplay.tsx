@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { FaGithub, FaLink, FaSpinner } from "react-icons/fa";
 import { useTheme } from "next-themes";
-import { dedentCode, getLanguage, getShikiHighlighter } from "@/components/shiki";
+import {
+  dedentCode,
+  getLanguage,
+  getShikiHighlighter,
+} from "@/components/shiki";
 
 interface GithubFileReaderDisplayProps {
   url: string;
