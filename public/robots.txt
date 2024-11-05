@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://docs.tangle.tools
+
+# Sitemaps
+Sitemap: https://docs.tangle.tools/sitemap.xml
