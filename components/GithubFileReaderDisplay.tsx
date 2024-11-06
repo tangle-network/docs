@@ -74,7 +74,7 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
     };
 
     fetchAndHighlightContent();
-  }, [url, fromLine, toLine, currentTheme]);
+  }, [url, fromLine, toLine, currentTheme, dedent]);
 
   if (loading) {
     return (
