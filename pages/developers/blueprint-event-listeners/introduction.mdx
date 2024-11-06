@@ -1,28 +1,104 @@
----
-title: Introduction to Event listeners
----
+## use GithubFileReaderDisplay from '@/components/GithubFileReaderDisplay';
 
-# Event Listeners
+## title: Introduction to Event listeners
+
+## Event Listeners
 
 When building a blueprint, your application may require to listen to events. Events can be of any type, and handling those events is entirely up to your discretion.
 
-In general, when defining your job, you must register any event listeners and provide a context as such:
+In general, when defining your job, you must register an event listeners and provide a context as such:
+
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/blueprint-template/blob/main/src/lib.rs"
+  fromLine={11}
+  toLine={32}
+  title="Example Blueprint Job with Tangle JobCalled Event Listener"
+/>
+
+In order to understand how to build an event listener, begin with a custom implementation [here](./custom-listeners.mdx)
+
+## Event Listener Lifecycle
+
+Event listeners in the SDK are designed to be flexible and allow developers to customize the behavior of their applications. Event listeners must implement the `EventListener` trait, which defines the following methods:
+
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/sdk/src/event_listener/mod.rs"
+  fromLine={12}
+  toLine={21}
+  title="Event Listener Trait Definition"
+/>
+
+### Initialization
+
+When a blueprint instance runs, the event listeners are constructed and executed as part of the job handler. Executing the listeners is handled by the `BlueprintRunner`
+
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring/src/main.rs"
+  fromLine={8}
+  toLine={26}
+  title="Example Blueprint Runner execution"
+/>
+
+### Processing (pre/job/post)
+
+The SDK supports pre-processors and post-processors to handle event data before and after job execution. This allows developers to customize the behavior of their applications based on the event data and reuse code across projects, reducing development time and complexity.
+
+1. **Pre-Processing Stage**
+
+   - Event listener's `next_event()` retrieves the next event
+   - Optional pre-processor transforms raw event data:
+
+   ```rust
+   #[job(
+       id = 0,
+       event_listener(
+           listener = TangleEventListener<MyContext>,
+           pre_processor = transform_event, // Pre-process raw event
+       ),
+   )]
+   ```
+
+2. **Job Execution Stage**
+
+   - Job function executes with the processed event data
+   - Core business logic processes the event:
+
+   ```rust
+   #[job(
+       id = 0,
+       params(x),
+       event_listener(
+           listener = TangleEventListener<MyContext, JobCalled>,
+       ),
+   )]
+   pub fn execute(
+       x: u64,
+       ctx: Context,
+   ) -> Result<u64, Infallible> {
+       Ok(x.saturating_pow(2u32))
+   }
+   ```
+
+3. **Post-Processing Stage**
+   - Optional post-processor handles job output
+   - Performs cleanup or additional processing:
+   ```rust
+   #[job(
+       id = 0,
+       event_listener(
+           listener = TangleEventListener<MyContext>,
+           post_processor = handle_result, // Process job output
+       ),
+   )]
+   ```
+
+When no processors are specified, events flow directly from listener to job and output is ignored:
 
 ```rust
 #[job(
     id = 0,
-    params(x),
-    result(_),
-    event_listener(TangleEventListener, MyEventListener1, MyEventListener2, ...), // <-- Register all event listeners here
-    verifier(evm = "MyVerifier")
+    event_listener(
+        listener = TangleEventListener<MyContext>,
+    ),
 )]
-pub fn hello_event_listener(
-    x: u64,
-    context: MyContext, // <-- The context type must be the first additional parameter
-    env: GadgetConfiguration<parking_lot::RawRwLock>,
-) -> Result<u64, Infallible> {
-    Ok(x.saturating_pow(2u32))
-}
 ```
-
-In order to understand how to build an event listener, begin with a custom implementation [here](./custom-listeners.mdx)

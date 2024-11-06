@@ -37,6 +37,8 @@ For other restaking protocols and job verification mechanisms, developers should
 An example of doing this to replicate Tangle's default implementation is as follows:
 
 ```rust
+struct Context;
+
 struct CustomTangleJobCallListener {
     instance: <contract_instance>,
 }
@@ -48,13 +50,13 @@ impl EventListener for CustomJobCallListener {
 
 #[job(
     id = <job_id>,
-    params(<param_list>),
+    params(<parameters>),
     result(<result_type>),
     event_listener(
         listener = CustomTangleJobCallListener,
     )
 )]
-pub fn job_name(<parameters>) -> Result<<return_type>, <error_type>> {
+pub fn job_name(<parameters>, ctx: Context) -> Result<<return_type>, <error_type>> {
     // Job implementation
 }
 ```
@@ -72,12 +74,30 @@ pub fn job_name(<parameters>) -> Result<<return_type>, <error_type>> {
 
 ### Incredible Squaring Eigenlayer
 
+#### Squaring Job
+
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/jobs/compute_x_square.rs"
+  fromLine={18}
+  toLine={77}
+  title="Example Eigenlayer Squaring Job"
+/>
+
+#### Initialize Task Job
+
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
+  fromLine={13}
+  toLine={52}
+  title="Example Eigenlayer Initialize Task Job"
+/>
+
 ### MPC Keygen
 
 <GithubFileReaderDisplay 
   url="https://github.com/tangle-network/frost-blueprint/blob/main/src/keygen.rs"
-  fromLine={49}
-  toLine={122}
+  fromLine={54}
+  toLine={126}
   title="Example FROST Keygen Job"
 />
 
@@ -85,7 +105,7 @@ pub fn job_name(<parameters>) -> Result<<return_type>, <error_type>> {
 
 <GithubFileReaderDisplay 
   url="https://github.com/tangle-network/frost-blueprint/blob/main/src/sign.rs"
-  fromLine={54}
-  toLine={123}
+  fromLine={64}
+  toLine={133}
   title="Example FROST Signing Job"
 />

@@ -1,3 +1,5 @@
+import GithubFileReaderDisplay from "@/components/GithubFileReaderDisplay";
+
 # Getting Started with Tangle Blueprints
 
 Welcome to the Tangle Blueprint tutorial! This guide will walk you through creating a simple `Hello World` Blueprint for Tangle. By the end of this tutorial, you'll have a basic understanding of how to create, build, and deploy a Tangle Blueprint.
@@ -33,20 +35,12 @@ This file contains the core logic of your Blueprint, including job definitions, 
 
 Here's a basic example incorporating these elements:
 
-```rust
-use gadget_sdk as sdk;
-use sdk::job;
-use std::convert::Infallible;
-
-/// Returns "Hello World!" if who is None, otherwise returns "Hello, <who>!"
-#[job(id = 0, params(who), result(), verifier(evm = "HelloBlueprint"))]
-pub fn say_hello(who: Option<String>) -> Result<String, Infallible> {
-    match who {
-        Some(who) => Ok(format!("Hello, {}!", who)),
-        None => Ok("Hello World!".to_string()),
-    }
-}
-```
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint-template/blob/main/src/lib.rs"
+  fromLine={16}
+  toLine={32}
+  title="Example Blueprint Job with Tangle JobCalled Event Listener"
+/>
 
 This job takes an optional `who` parameter and returns a greeting.
 
@@ -60,53 +54,12 @@ This file serves as the entry point for your Actively Validated Service (AVS) no
 4. **Event Handler Creation**: It instantiates the event handler for the `say_hello` job.
 5. **Event Watcher**: It starts the Substrate event watcher, which listens for relevant events on the Tangle Network.
 
-```rust
-use color_eyre::Result;
-use gadget_sdk as sdk;
-use hello_world_blueprint as blueprint;
-use sdk::{
-    config::ContextConfig, events_watcher::substrate::SubstrateEventWatcher,
-    events_watcher::tangle::TangleEventsWatcher, tangle_subxt::,
-};
-use structopt::StructOpt;
-
-#[tokio::main]
-async fn main() -> Result<()> {
-    init_logger();
-    color_eyre::install()?;
-    // Initialize the environment
-    let config = ContextConfig::from_args();
-    let env = sdk::config::load(config)?;
-    let signer = env.first_sr25519_signer()?;
-    let client = subxt::OnlineClient::from_url(&env.http_rpc_endpoint).await?;
-    if env.should_run_registration() {
-        todo!();
-    }
-
-    let service_id = env.service_id.expect("should exist");
-
-    // Create the event handler from the job
-    let say_hello_job = blueprint::SayHelloEventHandler { service_id, signer };
-    tracing::info!("Starting the event watcher ...");
-    SubstrateEventWatcher::run(
-        &TangleEventsWatcher {
-        span: env.span.clone(),
-        },
-        client,
-        vec![Box::new(say_hello_job)],
-    ).await?;
-    Ok(())
-}
-
-fn init_logger() {
-    let env_filter = tracing_subscriber::EnvFilter::from_default_env();
-    tracing_subscriber::fmt()
-    .compact()
-    .with_target(true)
-    .with_env_filter(env_filter)
-    .init();
-}
-```
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint-template/blob/main/src/main.rs"
+  fromLine={8}
+  toLine={41}
+  title="Example Blueprint `main.rs` Entry Point"
+/>
 
 This sets up the AVS node, initializes the environment, and starts the event watcher.
 

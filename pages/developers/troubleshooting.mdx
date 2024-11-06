@@ -1,0 +1,46 @@
+import GithubFileReaderDisplay from "@/components/GithubFileReaderDisplay";
+
+# Troubleshooting Guide
+
+This guide helps developers troubleshoot common issues when working with Tangle Network blueprints and AVS development.
+
+## Common Issues
+
+### Blueprint Metadata Build Failures
+
+If you encounter build failures when developing blueprints:
+
+```bash
+error: failed to run custom build command for `<YOUR_BLUEPRINT> v0.1.0 (<PATH_TO_YOUR_BLUEPRINT>)`
+
+Caused by:
+  process didn't exit successfully: `<PATH_TO_YOUR_BLUEPRINT>/target/release/build/<YOUR_BLUEPRINT>-<ID>/build-script-build` (exit status: 101)
+  --- stdout
+  cargo:rerun-if-changed=src/main.rs
+
+  --- stderr
+      Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.75s
+     Generated <PATH_TO_YOUR_BLUEPRINT>/target/blueprint/doc/<YOUR_BLUEPRINT>.json
+  Reading JSON from <PATH_TO_YOUR_BLUEPRINT>/target/blueprint/doc/<YOUR_BLUEPRINT>.json
+  thread 'main' panicked at /Users/drew/.cargo/registry/src/index.crates.io-6f17d22bba15001f/blueprint-metadata-0.1.6/src/lib.rs:410:59:
+  Failed to parse rustdoc JSON: Error("invalid type: string \"0:0:2495\", expected u32", line: 1, column: 18)
+  note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+```
+
+1. Verify your `gadget` version and compare your `rust_toolchain.toml` against the [Blueprint Template](https://github.com/tangle-network/blueprint-template) repository.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint-template/blob/main/rust-toolchain.toml"
+  startLine={1}
+  endLine={8}
+    title="Blueprint Template rust_toolchain.toml"
+/>
+
+2. Verify that your blueprint's jobs and reports are implemented correctly. Occasionally, our SDK may have breaking changes to the error reporting. You will want to consider commenting out metadata generation and then rebuilding to check for errors in the blueprint.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint-template/blob/main/build.rs"
+  startLine={3}
+  endLine={3}
+  title="Comment out metadata generation to assess blueprint implementation errors"
+/>

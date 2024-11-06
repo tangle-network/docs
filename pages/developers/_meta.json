@@ -16,6 +16,7 @@
   "tangle-avs": "Build a Tangle Blueprint AVS",
   "eigenlayer-avs": "Build an Eigenlayer AVS",
   "testing-with-tangle": "Testing with Tangle",
+  "troubleshooting": "Troubleshooting",
   "-- solution-developers": {
     "type": "separator",
     "title": "Solution Developers"

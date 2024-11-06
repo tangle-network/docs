@@ -66,13 +66,11 @@ Finally, register the event listener inside the `job` macro using `event_listene
     id = 0,
     params(x),
     result(_),
-    event_listener(Ticker::<6000>), // <-- Register the event listener here
-    verifier(evm = "IncredibleSquaringBlueprint")
+    event_listener(listener = Ticker::<6000>), // <-- Register the event listener here
 )]
 pub fn hello_event_listener(
     x: u64,
     context: MyContext, // <-- The context type must be the first additional parameter
-    env: GadgetConfiguration<parking_lot::RawRwLock>,
 ) -> Result<u64, Infallible> {
     Ok(x.saturating_pow(2u32))
 }

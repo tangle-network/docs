@@ -13,13 +13,15 @@ Reports are crucial for maintaining the integrity and security of the AVS by ide
 The `#[report]` macro is used to define individual reporting functions within a blueprint. It allows you to specify various parameters and metadata for each report.
 
 ```rust
+struct Context;
+
 #[report(
     id = <report_id>,
-    params(<param_list>),
+    params(<parameters>),
     result(<result_type>),
-    event_listener(<EventListenerType>),
+    event_listener(listener = <EventListenerType>),
 )]
-pub fn report_name(<parameters>) -> Result<<return_type>, <error_type>> {
+pub fn report_name(<parameters>, ctx: Context) -> Result<<return_type>, <error_type>> {
     // Report implementation
 }
 ```
@@ -48,34 +50,47 @@ For more information on implementing custom event listeners, refer to the [Event
 1. Job-specific Slashing Report:
 
 ```rust
+use my_special_slashing_context::Context;
+
 #[report(
     id = 0,
-    params(job_id, operator_address),
+    params(submission, job_id, operator_address),
     result(),
-    event_listener(JobSpecificListener),
+    event_listener(TangleEventListener<Context, JobResultSubmitted>),
 )]
-pub fn job_failure_report(job_id: u64, operator_address: Address) -> Result<(), Error> {
-    // Implementation to generate and submit a report for a failed job
-    println!("Generating report for failed job {} by operator {}", job_id, operator_address);
+pub fn job_failure_report(submission: Vec<u8>, job_id: u64, operator_address: Address, ctx: Context) -> Result<(), Error> {
     // Submit report to Tangle protocol
-    Ok(())
+    let (proof, valid)) = ctx.validate_submission(submission, job_id, operator_address)?;
+
+    if valid {
+        Ok(())
+    } else {
+        ctx.submit_slashing_report(submission, proof, job_id, operator_address)
+    }
 }
 ```
 
 2. Periodic Uptime Report:
 
 ```rust
+use my_special_web_polling_context::Context;
+
 #[report(
     id = 1,
-    params(),
-    result(),
-    event_listener(PeriodicListener),
+    params(value),
+    result(_),
+    event_listener(
+        listener = PeriodicEventListener<2000, WebPoller, serde_json::Value, reqwest::Client>
+    ),
 )]
-pub async fn uptime_report() -> Result<(), Error> {
-    // Implementation to generate and submit a periodic uptime report
-    let uptime_data = collect_uptime_data().await?;
-    println!("Submitting uptime report: {:?}", uptime_data);
-    // Submit report to Eigenlayer protocol
+pub async fn uptime_report(url: String, ctx: Context) -> Result<(), Error> {
+    let response = ctx.client.get(url.parse()?).send().await?;
+    let status = response.status();
+    if !status.is_success() {
+        let epoch = ctx.get_current_epoch();
+        let signature = ctx.sign_report(url, epoch)?;
+        ctx.submit_report(url, status, epoch, signature)?;
+    }
     Ok(())
 }
 ```
@@ -83,48 +98,30 @@ pub async fn uptime_report() -> Result<(), Error> {
 3. EVM Contract Event Report:
 
 ```rust
-#[report(
-    id = 2,
-    params(event_data),
-    result(),
-    event_listener(EVMContractEventListener),
+use my_math_verification_context::Context;
+use IncredibleSquaringTaskManager::{TaskResponded, TaskResponse, TaskResponseMetadata, Task};
+
+#[job(
+    id = 1,
+    params(task, task_index),
+    event_listener(
+        listener = EvmContractEventListener<TaskResponded>,
+        instance = IncredibleSquaringTaskManager,
+        abi = INCREDIBLE_SQUARING_TASK_MANAGER_ABI_STRING,
+        pre_processor = convert_event_to_inputs,
+    ),
 )]
-pub async fn contract_violation_report(event_data: Vec<u8>) -> Result<(), Error> {
-    // Implementation to generate and submit a report based on a contract event
-    let violation = parse_contract_event(event_data)?;
-    println!("Reporting contract violation: {:?}", violation);
-    // Submit report to Tangle protocol
+pub async fn contract_violation_report(task: Task, task_response: TaskResponse, metadata: TaskResponseMetadata, ctx: Context) -> Result<(), Error> {
+    if task.numberToBeSquared * task.numberToBeSquared != task_response.numberSquared {
+        let signature = ctx.sign_invalid_square_result(task.numberToBeSquared, task_response.numberSquared, metadata.submitter)?;
+        ctx.submit_report(task, task_response, metadata, epoch, signature)?;
+    }
     Ok(())
 }
+
+
 ```
 
 ## Integration with Jobs
 
 Reports can be closely integrated with the [Jobs system](./jobs.mdx) to provide comprehensive monitoring and slashing capabilities. For example, you can create reports that are triggered by specific job outcomes or that monitor the overall performance of your AVS jobs.
-
-## Custom Protocol Integration
-
-While the examples above use Tangle and Eigenlayer as the target protocols, the report macro system is designed to be flexible. Developers can implement custom protocol handlers to submit reports to other systems or to handle report data in specific ways.
-
-```rust
-struct CustomProtocolHandler;
-impl ProtocolHandler for CustomProtocolHandler {
-    fn submit_report(&self, report_data: ReportData) -> Result<(), Error> {
-        // Custom implementation for submitting reports
-    }
-}
-
-#[report(
-    id = 3,
-    params(custom_data),
-    result(),
-    event_listener(CustomEventListener),
-)]
-pub fn custom_protocol_report(custom_data: CustomData) -> Result<(), Error> {
-    // Implementation using a custom protocol handler
-    let report = generate_custom_report(custom_data)?;
-    CustomProtocolHandler.submit_report(report)
-}
-```
-
-By leveraging the report macro system, developers can create robust and flexible reporting mechanisms for their AVS, ensuring the integrity and security of their service across various protocols and use cases.
