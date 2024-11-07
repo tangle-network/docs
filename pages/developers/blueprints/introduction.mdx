@@ -1,10 +1,30 @@
 import { Callout } from 'nextra/components'
-import BlueprintIntroCards from "../../../components/BlueprintIntroCards.tsx"
+import CardGrid from "../../../components/CardGrid.tsx"
 import ExpandableImage from "../../../components/ExpandableImage.tsx"
 
 # Blueprints
 
-## <BlueprintIntroCards />
+## Getting Started
+
+<CardGrid
+  cards={[
+    {
+      title: "Tangle's Blueprint Gadget SDK",
+      description: "Learn about the Gadget SDK and how to get started building your own gadgets.",
+      link: "/developers/gadget-sdk"
+    },
+    {
+      title: "Hello World Blueprint", 
+      description: "Get started with a simple Hello World example using Tangle Blueprints.",
+      link: "/developers/tangle-avs"
+    },
+    {
+      title: "Build an Eigenlayer AVS",
+      description: "Build an Eigenlayer AVS with the Tangle Blueprint SDK and hook into a variety of EVM compatible utilities for task automation, slashing, and more.",
+      link: "/developers/eigenlayer-avs"
+    }
+  ]}
+/>
 
 **Blueprints** are specifications for Actively Validated Services (AVS) or **Instances** on the Tangle Network. Developers build blueprints using our [Gadget SDK](https://github.com/tangle-network/gadget) and deploy them to the Tangle Network. Once deployed, users can create Instances of the Blueprint, which are run by Tangle Operators. The Tangle Network incentivizes operators to run these instances by rewarding them with TNT tokens and fees from instancing and instance exeuction. Developers incentivize operators to run instances by specifying additional rewards for operators in the Blueprint.
 

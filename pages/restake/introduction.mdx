@@ -1,10 +1,26 @@
-import StakingIntroCards from "../../components/StakingIntroCards";
+import CardGrid from "../../components/CardGrid";
 
 # Staking & Restaking
 
 Tangle's core staking infrastructure is composed of three major pieces. The first is the base nominator proof of stake (NPos) mechanism for validator selection. The second is a native liquid staking protocol for validator specific staking operations and liquid staked tokens (LSTs). The third is the shared security restaking infrastructure for Tangle Blueprints that leverages any asset, especially the LSTs.
 
-<StakingIntroCards />
+<CardGrid cards={[
+  {
+    title: "Validator Staking",
+    description: "Learn about Tangle's Nominated Proof of Stake (NPoS) system for validator selection and rewards.",
+    link: "../restake/staking-intro"
+  },
+  {
+    title: "Restaking", 
+    description: "Discover Tangle's permissionless and asset-configurable restaking system for Blueprints and shared security.",
+    link: "../restake/restake-introduction"
+  },
+  {
+    title: "Liquid Staking",
+    description: "Explore Tangle's liquid staking protocols for validator-specific staking operations and liquid staked tokens (LSTs).",
+    link: "../restake/lst-concepts"
+  }
+]} />
 
 ## Nominated Staking
 

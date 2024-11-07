@@ -1,6 +1,8 @@
+import GithubFileReaderDisplay from '@/components/GithubFileReaderDisplay'
+
 ---
-title: EVM Contract Listeners
----
+
+## title: EVM Contract Listeners
 
 # EVM Contract Listeners
 
@@ -20,22 +22,20 @@ The `EvmContractEventListener` is a type that listens to the Ethereum Virtual Ma
 
 Like the `TangleEventListener`, the `EvmContractEventListener` is already implemented and ready to use. Simply register it in the `job` macro, and your application will automatically work with the EVM.
 
-```rust
-/// Returns x^2 saturating to [`u64::MAX`] if overflow occurs.
-#[job(
-    id = 0,
-    params(x),
-    result(_),
-    event_listener(EvmContractEventListener(
-        instance = IncredibleSquaringTaskManager,
-        event = IncredibleSquaringTaskManager::NewTaskCreated,
-        event_converter = convert_event_to_inputs,
-        callback = IncredibleSquaringTaskManager::IncredibleSquaringTaskManagerCalls::respondToTask
-    )),
-)]
-pub fn xsquare(
-    x: u64,
-) -> Result<u64, Infallible> {
-    Ok(x.saturating_pow(2u32))
-}
-```
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
+  fromLine={14}
+  toLine={52}
+  title="Example Blueprint Job with EVM Contract Event Listener"
+/>
+
+## Pre-processor
+
+EVM Contract events benefit from a simple pre-processor that extracts the parameters you need from the raw event data. An example of this is shown below:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
+  fromLine={59}
+  toLine={67}
+  title="Example EVM Contract Event Pre-processor"
+/>

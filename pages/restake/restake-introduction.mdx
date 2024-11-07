@@ -8,8 +8,10 @@ Tangle provides permissionless asset restaking to developers and customers build
 
 The restaking infrastructure divides assets into pools, which can be created to represent a single asset or a basket of similarly valued assets. Pools of assets are used to secure Tangle Blueprint service instances and are rewarded collectively as pools. This is beneficial when integrating many liquid staked tokens of a single protocol, such as validator-specific liquid staking protocols, or when bundling lots of different LSTs of a single ecosystem such as a basket of ETH LSTs.
 
-## Benefits of restaking include:
+## Benefits of Tangle Restaking include:
 
+- Restaking any asset
+- On-demand service instances
 - Increased efficiency of staked capital by sharing it across instances
 - Additional revenue streams for stakers and operators
 - Boosted security for protocols leveraging new assets as security capital
@@ -23,14 +25,13 @@ Tangle Network has implemented a unique restaking system to allow its validator 
 
 Tangle noderunners can opt-in to restake a portion of their staked TNT tokens to provide AVS instances such as oracles, privacy-preserving computation, and more. In return, they earn service fees and additional inflation rewards on top of their base validation rewards.
 
-### Here's how it works:
+### Lifecycle of an AVS Instance
 
 1. Developers create blueprints that define the specifications and requirements for AVS instances.
-2. Operators create a restaking profile by allocating their restaked TNT to specific blueprints they want to support.
-3. Users can request AVS instances from Tangle's restaked Operators for a fee. Requested instances are assigned to restaked operators based on the blueprint's criteria.
-4. Operators must execute the AVS instances they are assigned. Failure to do so may result in penalties or reduced rewards.
-5. Participating operators earn the service fees and proportional inflation rewards based on their restaked amounts and instances executed.
+2. Operators create a restaking profile and register to blueprints they want to operate.
+3. Users instance Tangle Blueprints and select from the set of registered operators and restaked assets.
+4. Operators then execute the AVS instances they approve and earn rewards. Failure to do so may result in penalties or reduced rewards.
 
-This restaking model allows Tangle to offer unique AVS instances powered by its decentralized validator set. Developers can leverage these services to easily deploy advanced decentralized applications like trustless cross-chain bridges, privacy solutions, identity systems, and more.
+This restaking model allows Tangle to offer unique AVS instances powered by its decentralized validator and operator set. Developers can leverage these services to easily deploy advanced decentralized applications like trustless cross-chain bridges, privacy solutions, identity systems, and more.
 
-By restaking, Tangle noderunners gain additional revenue, the network gains efficiency from its staked supply, and the ecosystem gains access to powerful new primitives to fuel innovation. Restaking helps align incentives and harness the security of the underlying proof-of-stake blockchain for exciting new use cases.
+By restaking, Tangle operators gain additional revenue, the network gains efficiency from its staked supply, and the ecosystem gains access to powerful new primitives to fuel innovation. Restaking helps align incentives and harness the security of the underlying proof-of-stake blockchain for exciting new use cases.

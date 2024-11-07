@@ -1,6 +1,8 @@
+import GithubFileReaderDisplay from "../../../components/GithubFileReaderDisplay";
+
 ---
-title: Periodic Listeners
----
+
+## title: Periodic Listeners
 
 # Periodic Listeners
 
@@ -21,7 +23,7 @@ Periodic Listeners are particularly useful for tasks such as:
 - Periodic health checks
 - Automated reporting at set intervals
 
-### PeriodicEventListener
+# PeriodicEventListener
 
 Some programs may only be interested in checking for events at regular intervals. In this case, the `PeriodicEventListener` can be used to simplify the process.
 
@@ -29,82 +31,43 @@ A `PeriodicEventListener` is a wrapper that takes 4 type parameters:
 
 - `MSEC`: The number of milliseconds between each event check.
 - `T`: The inner event listener type
-- `Event`: The event type
 - `Ctx`: The context type
+- `Event`: The event type
 
-```rust
-pub struct PeriodicEventListener<const MSEC: usize, T, Event, Ctx>
-```
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/sdk/src/event_listener/periodic.rs"
+  fromLine={6}
+  toLine={10}
+  title="PeriodicEventListener Definition"
+/>
 
-We can make a `PeriodicEventListener` that ticks every 5000ms to check the status of a web server using [reqwest](https://crates.io/crates/reqwest).
+We can make a `PeriodicEventListener` that ticks every 6000ms to check the status of a web server using [reqwest](https://crates.io/crates/reqwest).
 
-Start by defining our inner event listener (`T` = `WebPoller`, in this case)
+Start by defining our inner event listener (`T` = `WebPoller`, in this case), and implement the `EventListener` trait.
 
-```rust
-use gadget_sdk::event_listener::periodic::PeriodicEventListener;
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/examples/src/examples/periodic_web_poller.rs"
+  fromLine={48}
+  toLine={83}
+  title="Example WebPoller `EventListener` Implementation"
+/>
 
-/// Define an event listener that polls a webserver
-pub struct WebPoller {
-    pub client: reqwest::Client,
-}
-```
+## Using it in a Blueprint
 
-Then, implement `EventListener` for `WebPoller`:
+Implement the pre-processor and post-processors for the event listener:
 
-```rust
-// We don't need a context here, so use ()
-pub type MyContext = ();
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/examples/src/examples/periodic_web_poller.rs#L29-L46"
+  fromLine={29}
+  toLine={46}
+  title="Example WebPoller Pre-Processor and Post-Processor"
+/>
 
-impl EventListener<serde_json::Value, MyContext> for WebPoller {
-    /// Build the event listener. Note that this time, we don't necessarily need the context
-    async fn new(_context: &MyContext) -> Result<Self, Error>
-    where
-        Self: Sized,
-    {
-        let client = reqwest::Client::new();
-        Ok(Self { client })
-    }
+Integrate the event listener inside the `job`:
 
-    /// Implement the logic that polls the web server
-    async fn next_event(&mut self) -> Option<serde_json::Value> {
-        // Send a GET request to the JSONPlaceholder API
-        let response = self.client
-            .get("https://jsonplaceholder.typicode.com/todos/1")
-            .send()
-            .await?;
-
-        // Check if the request was successful
-        if response.status().is_success() {
-            // Parse the JSON response
-            let resp: serde_json::Value = response.json().await?;
-            Some(resp)
-        } else {
-            None
-        }
-    }
-
-    /// Implement any handler logic when an event is received
-    async fn handle_event(&mut self, _event: serde_json::Value) -> Result<(), Error> {
-        Ok(())
-    }
-}
-```
-
-Finally, register the event listener inside the `job` macro using `event_listener`:
-
-```rust
-#[job(
-    id = 0,
-    params(x),
-    result(_),
-    event_listener(PeriodicEventListener::<6000, WebPoller, serde_json::Value, MyContext>), // <-- Register the event listener here
-    verifier(evm = "IncredibleSquaringBlueprint")
-)]
-pub fn hello_event_listener(
-    x: u64,
-    context: MyContext,
-    env: GadgetConfiguration<parking_lot::RawRwLock>,
-) -> Result<u64, Infallible> {
-    Ok(x.saturating_pow(2u32))
-}
-```
+<GithubFileReaderDisplay 
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/examples/src/examples/periodic_web_poller.rs#L14-L27"
+  fromLine={14}
+  toLine={27}
+  title="Example Job with Periodic Web Poller Listener"
+/>

@@ -1,6 +1,8 @@
+import GithubFileReaderDisplay from '@/components/GithubFileReaderDisplay';
+
 ---
-title: Tangle Job Call Listeners
----
+
+## title: Tangle Job Call Listeners
 
 # Tangle Job Call Listeners
 
@@ -30,18 +32,43 @@ The `TangleEventListener` is a type that listens to the Tangle network for event
 The `TangleEventListener` is already implemented and ready to use. Simply register it in the `job` macro, and your application
 will automatically work with the Tangle network.
 
-```rust
-/// Returns x^2 saturating to [`u64::MAX`] if overflow occurs.
-#[job(
-    id = 0,
-    params(x),
-    result(_),
-    event_listener(TangleEventListener),
-    verifier(evm = "IncredibleSquaringBlueprint")
-)]
-pub fn xsquare(
-    x: u64,
-) -> Result<u64, Infallible> {
-    Ok(x.saturating_pow(2u32))
-}
-```
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint-template/blob/main/src/lib.rs#L11-L32"
+  fromLine={11}
+  toLine={32}
+  title="Example Blueprint Job with Tangle JobCalled Event Listener"
+/>
+
+## Service pre/post processors
+
+The SDK also provides a ready-to-use pre-processor and post-processor for the JobCalled event on Tangle. The pre-processor destructures the arguments of blueprint jobs so that jobs can be executed with the arguments they are defined with. The post-processors
+
+### Pre-processor
+
+The pre-processor for Tangle job calls handles the following tasks:
+
+1. Extracts and validates the job parameters from the raw event data
+2. Deserializes the parameters into the expected types
+3. Prepares the data for processing by the job handler
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/gadget/blob/main/sdk/src/event_listener/tangle/jobs.rs#L7-L51"
+  fromLine={7}
+  toLine={51}
+  title="Tangle Job Call Pre-processor Implementation"
+/>
+
+### Post-processor
+
+The post-processor for Tangle job calls handles the following tasks:
+
+1. Takes the output from the job execution
+2. Formats and prepares the result for on-chain storage
+3. Handles any cleanup or finalization required after job execution
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/gadget/blob/main/sdk/src/event_listener/tangle/jobs.rs#L54-L73"
+  fromLine={54}
+  toLine={73}
+  title="Tangle Job Call Post-processor Implementation"
+/>

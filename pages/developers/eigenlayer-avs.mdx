@@ -23,8 +23,8 @@ First, define the contract interface using the `sol!` and `load_abi!` macros. Th
 
 <GithubFileReaderDisplay
   url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/lib.rs"
-  fromLine={11}
-  toLine={22}
+  fromLine={10}
+  toLine={21}
   title="incredible-squaring-eigenlayer/src/lib.rs"
 />
 
@@ -34,56 +34,55 @@ Use the [`#[job]`](./blueprint-macros/jobs.mdx) macro to define a function that 
 
 <GithubFileReaderDisplay
   url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
-  fromLine={12}
-  toLine={55}
+  fromLine={13}
+  toLine={52}
   title="incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
 />
 
-### 3. Event Converter Function
+### 3. Event Converter Preprocessor Function
 
-Implement a function to convert the event data into the format expected by your job function:
+Implement a preprocessor function to convert the event data into the format expected by your job function:
 
 <GithubFileReaderDisplay
   url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
-  fromLine={57}
-  toLine={68}
-  title="incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
+  fromLine={54}
+  toLine={67}
+  title="Event converter pre processor function"
 />
 
 ## Implementing the Event Listener
 
 ### 1. Set Up the Provider
 
-Create an HTTP provider to connect to the Ethereum network:
-
-```rust
-let http_provider = ProviderBuilder::new()
-    .with_recommended_fillers()
-    .wallet(wallet.clone())
-    .on_http(self.env.rpc_endpoint.parse()?)
-    .root()
-    .clone()
-    .boxed();
-```
-
-### 2. Create the Contract Instance
-
-Instantiate the contract using the generated bindings:
-
-```rust
-let contract: IncredibleSquaringTaskManager::IncredibleSquaringTaskManagerInstance =
-    IncredibleSquaringTaskManager::IncredibleSquaringTaskManagerInstance::new(contract_address, provider);
-```
-
-### 3. Set up the BlueprintRunner
-
-Use the `EventWatcher` to listen for and handle events:
+Create an HTTP provider to connect to the Ethereum network w/ a wallet enabled for transacting:
 
 <GithubFileReaderDisplay
   url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/main.rs"
-  fromLine={89}
-  toLine={96}
-  title="incredible-squaring-eigenlayer/src/main.rs"
+  fromLine={21}
+  toLine={25}
+  title="Provider setup"
+/>
+
+### 2. Create the Contract Instances and Event Listeners
+
+Instantiate the contract using the generated bindings:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/main.rs"
+  fromLine={37}
+  toLine={52}
+  title="Contract creation and event listener setup"
+/>
+
+### 3. Set up the BlueprintRunner
+
+Use the `BlueprintRunner` to execute the jobs and background services:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/main.rs"
+  fromLine={54}
+  toLine={61}
+  title="BlueprintRunner setup"
 />
 
 ## Best Practices and Considerations

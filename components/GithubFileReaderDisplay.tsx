@@ -1,20 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { FaGithub, FaLink, FaSpinner } from "react-icons/fa";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import {
-  nightOwl,
-  oneLight,
-} from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { useTheme } from "next-themes";
-
-let lightTheme = oneLight;
-let darkTheme = nightOwl;
+import {
+  dedentCode,
+  getLanguage,
+  getShikiHighlighter,
+} from "@/components/shiki";
 
 interface GithubFileReaderDisplayProps {
   url: string;
   fromLine?: number;
   toLine?: number;
   title?: string;
+  dedent?: boolean;
 }
 
 const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
@@ -22,83 +20,25 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
   fromLine = 1,
   toLine,
   title,
+  dedent = true,
 }) => {
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { theme } = useTheme();
-
-  const getLanguage = (url: string) => {
-    const extension = url.split(".").pop()?.toLowerCase();
-    switch (extension) {
-      case "rs":
-        return "rust";
-      case "ts":
-      case "tsx":
-        return "typescript";
-      case "js":
-      case "jsx":
-        return "javascript";
-      case "sol":
-        return "solidity";
-      case "md":
-      case "mdx":
-        return "markdown";
-      case "toml":
-        return "toml";
-      case "yaml":
-      case "yml":
-        return "yaml";
-      case "json":
-        return "json";
-      case "sh":
-        return "bash";
-      case "py":
-        return "python";
-      case "go":
-        return "go";
-      case "cpp":
-      case "c++":
-      case "cc":
-        return "cpp";
-      case "c":
-        return "c";
-      case "java":
-        return "java";
-      case "php":
-        return "php";
-      case "rb":
-        return "ruby";
-      case "swift":
-        return "swift";
-      case "kt":
-        return "kotlin";
-      case "cs":
-        return "csharp";
-      case "html":
-        return "html";
-      case "css":
-        return "css";
-      case "scss":
-        return "scss";
-      case "sql":
-        return "sql";
-      case "graphql":
-      case "gql":
-        return "graphql";
-      default:
-        return "text";
-    }
-  };
+  const { theme: currentTheme } = useTheme();
 
   useEffect(() => {
-    const fetchGithubContent = async () => {
+    const fetchAndHighlightContent = async () => {
       try {
         const rawUrl = url
           .replace("github.com", "raw.githubusercontent.com")
           .replace("/blob/", "/");
 
-        const response = await fetch(rawUrl);
+        const [response, highlighter] = await Promise.all([
+          fetch(rawUrl),
+          getShikiHighlighter(),
+        ]);
+
         if (!response.ok) {
           throw new Error("Failed to fetch file content");
         }
@@ -106,16 +46,35 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
         const text = await response.text();
         const lines = text.split("\n");
         const selectedLines = lines.slice(fromLine - 1, toLine || lines.length);
-        setContent(selectedLines.join("\n"));
+        let codeContent = selectedLines.join("\n");
+
+        // Apply dedentation if enabled
+        if (dedent) {
+          codeContent = dedentCode(codeContent);
+        }
+
+        // Set the theme based on current theme
+        const theme = currentTheme === "dark" ? "github-dark" : "github-light";
+
+        // Highlight the code with the current theme and line numbers
+        const highlightedCode = highlighter.codeToHtml(codeContent, {
+          lang: getLanguage(url),
+          theme: theme,
+        });
+
+        // Wrap the highlighted code with a div that sets the starting line number
+        const wrappedCode = `<div style="--start-line: ${fromLine}">${highlightedCode}</div>`;
+        setContent(wrappedCode);
         setLoading(false);
       } catch (err) {
+        console.error("Highlighting error:", err);
         setError(err instanceof Error ? err.message : "An error occurred");
         setLoading(false);
       }
     };
 
-    fetchGithubContent();
-  }, [url, fromLine, toLine]);
+    fetchAndHighlightContent();
+  }, [url, fromLine, toLine, currentTheme, dedent]);
 
   if (loading) {
     return (
@@ -158,23 +117,12 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
         </div>
       </div>
 
-      <SyntaxHighlighter
-        language={getLanguage(url)}
-        style={theme === "light" ? lightTheme : darkTheme}
-        customStyle={{
-          margin: 0,
-          padding: "1rem",
-          background: "transparent",
-          fontSize: "0.875rem",
-          lineHeight: "1.5",
-        }}
-        showLineNumbers
-        startingLineNumber={fromLine}
-        wrapLines
-        wrapLongLines
-      >
-        {content}
-      </SyntaxHighlighter>
+      <div className="nextra-code-block nx-relative">
+        <div
+          className="nx-bg-primary-700/5 nx-overflow-x-auto nx-font-medium nx-subpixel-antialiased dark:nx-bg-primary-300/10 nx-text-[.9em]"
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
+      </div>
     </div>
   );
 };
