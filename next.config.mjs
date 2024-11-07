@@ -10,6 +10,7 @@ const nextConfig = {
     legacyBrowsers: false,
   },
   trailingSlash: false,
+  staticPageGenerationTimeout: 120,
   async redirects() {
     return [
       {
