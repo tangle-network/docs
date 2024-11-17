@@ -1,8 +1,8 @@
-import GithubFileReaderDisplay from "../../../components/GithubFileReaderDisplay";
-
+---
+title: Periodic Listeners
 ---
 
-## title: Periodic Listeners
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
 # Periodic Listeners
 
@@ -46,9 +46,9 @@ We can make a `PeriodicEventListener` that ticks every 6000ms to check the statu
 Start by defining our inner event listener (`T` = `WebPoller`, in this case), and implement the `EventListener` trait.
 
 <GithubFileReaderDisplay 
-  url="https://github.com/tangle-network/gadget/blob/main/blueprints/examples/src/examples/periodic_web_poller.rs"
-  fromLine={48}
-  toLine={83}
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/examples/src/periodic_web_poller.rs"
+  fromLine={50}
+  toLine={85}
   title="Example WebPoller `EventListener` Implementation"
 />
 
@@ -57,17 +57,17 @@ Start by defining our inner event listener (`T` = `WebPoller`, in this case), an
 Implement the pre-processor and post-processors for the event listener:
 
 <GithubFileReaderDisplay 
-  url="https://github.com/tangle-network/gadget/blob/main/blueprints/examples/src/examples/periodic_web_poller.rs#L29-L46"
-  fromLine={29}
-  toLine={46}
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/examples/src/periodic_web_poller.rs"
+  fromLine={31}
+  toLine={48}
   title="Example WebPoller Pre-Processor and Post-Processor"
 />
 
 Integrate the event listener inside the `job`:
 
 <GithubFileReaderDisplay 
-  url="https://github.com/tangle-network/gadget/blob/main/blueprints/examples/src/examples/periodic_web_poller.rs#L14-L27"
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/examples/src/periodic_web_poller.rs"
   fromLine={14}
-  toLine={27}
+  toLine={29}
   title="Example Job with Periodic Web Poller Listener"
 />

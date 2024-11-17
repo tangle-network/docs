@@ -92,6 +92,12 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
     );
   }
 
+  const getGithubLineLink = () => {
+    // Add line numbers to GitHub URL
+    const lineFragment = toLine ? `#L${fromLine}-L${toLine}` : `#L${fromLine}`;
+    return `${url}${lineFragment}`;
+  };
+
   return (
     <div className="my-6 overflow-hidden border border-gray-200 dark:border-gray-800 rounded-lg">
       <div className="flex justify-between items-center px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
@@ -106,7 +112,7 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
             Lines {fromLine}-{toLine || "end"}
           </span>
           <a
-            href={url}
+            href={getGithubLineLink()}
             target="_blank"
             rel="noopener noreferrer"
             className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors duration-200"

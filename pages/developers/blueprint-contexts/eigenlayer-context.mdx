@@ -1,4 +1,8 @@
-import GithubFileReaderDisplay from '../../../components/GithubFileReaderDisplay';
+---
+title: Eigenlayer Context
+---
+
+import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
 # Eigenlayer Context
 
@@ -6,16 +10,32 @@ The `EigenlayerContext` trait provides a standardized interface for interacting 
 
 ## Overview
 
-The `EigenlayerContext` trait provides access to core Eigenlayer services:
+The `EigenlayerContext` trait provides access to core Eigenlayer services and functionality:
+
+### Core Services
 
 - AVS Registry Reader/Writer - For interacting with the AVS registry contracts
 - Operator Info Service - For managing operator information and state
 - BLS Aggregation Service - For handling BLS signature aggregation
 
+### Operator Management
+
+- Query operator stakes and details
+- Track stake history and updates
+- Retrieve operator public keys
+- Get operator IDs and addresses
+
+### Stake Management
+
+- Get stake information for specific blocks
+- Track total stake history
+- Query stake updates and changes
+- Monitor stake across different quorums
+
 <GithubFileReaderDisplay 
   url="https://github.com/tangle-network/gadget/blob/main/sdk/src/ctx.rs"
-  fromLine={108}
-  toLine={140}
+  fromLine={125}
+  toLine={238}
   title="EigenlayerContext Trait Definition"
 />
 
@@ -27,8 +47,8 @@ First, define your context struct that implements the `EigenlayerContext` trait:
 
 <GithubFileReaderDisplay 
   url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/contexts/aggregator.rs"
-  fromLine={45}
-  toLine={57}
+  fromLine={43}
+  toLine={56}
   title="Aggregator Context Definition"
 />
 
@@ -49,7 +69,7 @@ Finally, instantiate your context in your main runner:
 
 <GithubFileReaderDisplay 
   url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/main.rs"
-  fromLine={71}
-  toLine={84}
+  fromLine={27}
+  toLine={45}
   title="Instantiating the Context"
 />
