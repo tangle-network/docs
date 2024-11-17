@@ -1,5 +1,4 @@
 import nextra from "nextra";
-import { withPlausibleProxy } from "next-plausible";
 
 /**
  * @type {import('next').NextConfig}
@@ -52,4 +51,4 @@ const withNextra = nextra({
   latex: true,
 });
 
-export default withPlausibleProxy()(withNextra(nextConfig));
+export default withNextra(nextConfig);
