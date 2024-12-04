@@ -1,0 +1,73 @@
+---
+title: Using the EigenLayer ECDSA Template
+---
+
+# Building AVS with the EigenLayer ECDSA Template
+
+## Introduction
+
+This guide will walk you through the process of utilizing our ECDSA Template to initiate your own AVS with
+ECDSA-oriented Smart Contracts. For reference, the [Tangle AVS](https://github.com/tangle-network/avs) demonstrates an
+implementation of an AVS using ECDSA contracts.
+
+## Generating your project with Cargo Tangle
+
+### 1. Installation
+
+Before proceeding, ensure you have cargo-tangle installed. If not, you can install it using the following command:
+
+    > Supported on Linux, MacOS, and Windows (WSL2)
+
+```shell
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tangle-network/gadget/releases/download/cargo-tangle/v0.1.1-beta.7/cargo-tangle-installer.sh | sh
+```
+
+Alternatively, if you prefer installing the CLI from source:
+
+```shell
+cargo install cargo-tangle --git https://github.com/tangle-network/gadget --force
+```
+
+### 2. Generating your Project
+
+To generate your project, execute the following command:
+
+```shell
+cargo tangle blueprint create --name <blueprint_name> --eigenlayer ecdsa
+```
+
+Replace `<blueprint_name>` with your preferred AVS name. Upon running this command, you'll be prompted with a
+series of questions regarding your project's configuration and setup. Answer these questions as they appear; if
+uncertain, the default selection is generally best.
+
+#### Note
+
+If you choose to use `foundry.toml` for the Soldeer configuration (the default), you will need to delete the following
+files from the `contracts` directory:
+
+- `foundry.toml`
+- `remappings.txt`
+- `soldeer.lock`
+
+This step allows the generated project to correctly populate dependencies and build out of the box. We plan to address
+this in future updates to eliminate the need for manual file deletion.
+
+### 4. Hello, World!
+
+Now that you have generated the project, you can test out the simple example by running:
+
+```shell
+cargo test
+```
+
+This test just shows that the template generates you a fresh, working AVS structure. All that's left is to add what you want!
+
+### 5. Customizing your AVS
+
+The next steps depend on your specific requirements, but we offer several resources to assist you:
+
+- By default, the AVS contract generated with this template is named TangleServiceManager.sol (along with related test
+  files TestTangleServiceManager.sol and TangleServiceManager.t.sol). You can use your text editor's find-and-replace
+  function to rename these as desired.
+- For various types of event listener examples, refer to [this page](/developers/blueprint-event-listeners/introduction).
+- To gain a deeper understanding of how jobs function, consult the [jobs section](/developers/blueprint-macros/jobs).

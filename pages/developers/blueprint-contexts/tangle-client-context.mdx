@@ -18,9 +18,9 @@ The `TangleClientContext` trait provides access to a Subxt client that enables:
 - RPC Calls - Make direct RPC calls to Tangle nodes
 
 <GithubFileReaderDisplay 
-  url="https://github.com/tangle-network/gadget/blob/main/sdk/src/ctx.rs"
-  fromLine={92}
-  toLine={99}
+  url="https://github.com/tangle-network/gadget/blob/main/sdk/src/contexts/tangle_client.rs"
+  fromLine={3}
+  toLine={10}
   title="TangleClientContext Trait Definition"
 />
 
@@ -31,7 +31,7 @@ The `TangleClientContext` trait provides access to a Subxt client that enables:
 First, define your context struct that implements the `TangleClientContext` trait:
 
 <GithubFileReaderDisplay 
-  url="https://github.com/tangle-network/gadget/blob/main/macros/context-derive/tests/ui/01_basic.rs"
+  url="https://github.com/tangle-network/gadget/blob/main/macros/context-derive/tests/ui/basic.rs"
   fromLine={4}
   toLine={9}
   title="Tangle Client Context Definition"
@@ -42,7 +42,7 @@ First, define your context struct that implements the `TangleClientContext` trai
 You can then use this context to access the Subxt client and interact with Tangle:
 
 <GithubFileReaderDisplay 
-  url="https://github.com/tangle-network/gadget/blob/main/macros/context-derive/tests/ui/01_basic.rs"
+  url="https://github.com/tangle-network/gadget/blob/main/macros/context-derive/tests/ui/basic.rs"
   fromLine={19}
   toLine={19}
   title="Accessing Subxt Client Functionality"

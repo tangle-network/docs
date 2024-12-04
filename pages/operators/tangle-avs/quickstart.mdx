@@ -8,11 +8,7 @@ import Callout from "../../../components/Callout";
 # Tangle AVS: Quickstart Guide
 
 The following is a guide outlining the steps to set up and utilize **Tangle AVS** (Actively Validated Services),
-allowing you to run a Tangle Validator on **EigenLayer**'s network. If you do not have a Tangle node set up yet,
-please review the **How to run a Tangle node** setup guide [here](../node-basics/quickstart.mdx).
-
-This guide will help you get started with deploying the AVS and enabling cross-chain functionalities across multiple
-blockchain protocols, specifically Tangle and EigenLayer. Further explanation on the cross-chain mechanisms offered by
+allowing you to run a Tangle Validator on **EigenLayer**'s network. Further explanation of the cross-chain mechanisms offered by
 Tangle AVS can be found in the [Cross-Chain](cross-chain.mdx) section.
 
 For information on hardware requirements, see the [Hardware](../../operators/node-basics/hardware.mdx) section.
@@ -44,7 +40,7 @@ cargo build --release
 
 ### Running Tests
 
-This AVS is under active development, thus being unstable. In the meantime, the tests can be run locally to see the capabilities of the Tangle AVS. The following command runs a test that automatically generates and runs everything needed.
+If you would like to ensure the Tangle AVS works as you would expect, you can test it against local testnets. You can run the following command while a local Tangle testnet is running.
 
 ```sh filename="cargo test" copy
 RUST_LOG=gadget=trace cargo test test_full_tangle_avs -- --nocapture
