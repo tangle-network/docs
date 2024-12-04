@@ -1,0 +1,69 @@
+---
+title: Using the EigenLayer BLS Template
+---
+
+# Building AVS with the EigenLayer BLS Template
+
+## Introduction
+
+This will guide you through the process of utilizing our BLS Template for starting your own AVS with BLS-oriented Smart
+Contracts. The [Incredible Squaring AVS](/developers/eigenlayer-avs/incredible-squaring-avs) is an example of an AVS
+that uses BLS contracts.
+
+## Generating your project with Cargo Tangle
+
+### 1. Installation
+
+If you haven't already, you will need to install cargo-tangle. To install it, run the following command:
+
+    > Supported on Linux, MacOS, and Windows (WSL2)
+
+```shell
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tangle-network/gadget/releases/download/cargo-tangle/v0.1.1-beta.7/cargo-tangle-installer.sh | sh
+```
+
+Or, if you prefer to install the CLI from source:
+
+```shell
+cargo install cargo-tangle --git https://github.com/tangle-network/gadget --force
+```
+
+### 2. Generating your Project
+
+To create a new BLS AVS, use the following command:
+
+```shell
+cargo tangle blueprint create --name <blueprint_name> --eigenlayer
+```
+
+Just replace `<blueprint_name>` with the desired name for your AVS. Once you run this command, you will be asked a series
+of questions regarding the configurations and setup for your project. Simply answer those questions when prompted; if
+you aren't sure about a question, you likely just want the default selection that it starts on.
+
+#### Note
+
+If you choose to use `foundry.toml` for the Soldeer configuration (the default), you will need to delete the following files from the `contracts` directory:
+- `foundry.toml`
+- `remappings.txt`
+- `soldeer.lock`
+
+This will allow the generated project to correct populate the dependencies and build out of the box. This will be fixed in the future so that nothing needs to be deleted.
+
+### 4. Hello, World!
+
+Now that you have generated the project, you can test out the simple example by running:
+
+```shell
+cargo test
+```
+
+This test just shows that the template generates you a fresh, working AVS structure. All that's left is to add what you want!
+
+### 5. Customizing your AVS
+
+What you do from here is completely up to you, but we have plenty of resources to help you:
+
+- The contracts generated with this template will be called TangleServiceManager.sol, TangleTaskManager.sol, and
+ITangleTaskManager.sol by default. You can use the find-and-replace function to change these to whatever you would like.
+- Examples of different types of event listeners can be found [here](/developers/blueprint-event-listeners/introduction).
+- A deeper dive into how jobs work can be found in the [jobs section](/developers/blueprint-macros/jobs).
