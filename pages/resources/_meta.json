@@ -6,11 +6,12 @@
   "resources": "Resources and Tools",
   "-- bridges": {
     "type": "separator",
-    "title": "Bridges"
+    "title": "Bridges & Interoperability"
   },
   "bridge": "Tangle dApp Bridge",
   "hyperlane": "Hyperlane",
   "router": "Router",
+  "glacis": "Glacis",
   "chainport": "Chainport",
   "-- developer-tools": {
     "type": "separator",
