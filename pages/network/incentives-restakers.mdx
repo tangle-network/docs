@@ -53,44 +53,35 @@ TNT is the default restaking asset and must be included as restaked security col
 
 Users can enhance their score through time-locks. This locks their deposited assets for additional months, preventing any withdrawals or unstaking until the lock has ended:
 
-- Longer locks = higher score multiplier
+- Longer locks lead to higher score multipliers
 - Locked tokens cannot be withdrawn until expiry
-- Multiplier directly impacts reward share
+- Multiplier directly impacts deposit reward share
 
 ### Reward Calculation for Deposits
 
-The total reward formula $R$ for a user at any point is the sum of the base reward and lock reward:
+The reward formula $R$ for a user at any point is:
 
-$R = R_{base} + R_{lock}$
-
-Where the base reward is:
-
-$R_{base} = APY \times \frac{D_u}{D_t} \times \frac{D_t}{C}$
-
-And the lock reward is:
-
-$R_{lock} = D_u \times APY \times M \times \frac{T_r}{T_t}$
+$R = APY \times \frac{S_u}{S_t} \times \frac{D_t}{C}$
 
 Where:
 
 - $APY$ = Asset's annual percentage yield
-- $D_u$ = User's deposit amount
+- $S_u$ = User's score (including lock multipliers)
+- $S_t$ = Total score across all users
 - $D_t$ = Total deposits for the asset
 - $C$ = Maximum deposit capacity
-- $M$ = Lock multiplier
-- $T_r$ = Remaining lock time
-- $T_t$ = Total lock time
-
-### Score Distribution
-
-The protocol uses an updated scoring mechanism to allocate service revenue and fee rewards:
-
-- Base TNT score: 1 point per 1 TNT restaked.
-- Base non-TNT score: 1 point per $1 of token restaked * $LOCK\_MULTIPLIER$.
-- Pro-rata distribution based on user scores
-- On-chain calculation at each reward interval
 
 ### Reward Calculation for Service Rewards
+
+The protocol allocates service revenue and fee rewards using a dual-tier scoring mechanism:
+
+For TNT (Native Token):
+
+- Each TNT restaked earns 1 base point
+
+For Other Approved Assets:
+
+- Each $1 USD value restaked earns 1 base point
 
 The reward formula $R$ for a restaker securing a service instance is calculated as:
 
@@ -99,38 +90,61 @@ $R = Rewards \times \frac{S_u}{S_t}$
 Where:
 
 - $Rewards$ = Rewards and fees of the service instance
-- $S_u$ = User's restaking score for the service instance
-- $S_t$ = Total score across all active assets of the service instance
+- $A_u$ = User's restaking score for the exposed assets
+- $A_t$ = Total score across all exposed assets of the service instance
 
 ## Example Scenario: Calculating Restaking Rewards
 
-Let's walk through a practical example to understand how restaking rewards are calculated.
+Let's walk through practical examples to understand how both deposit rewards and service revenue rewards are calculated.
 
-### Initial Parameters
+### Deposit Rewards Example
 
-- Asset: WETH (Wrapped ETH)
-- TNT inflation allocation: 1%
-- Maximum deposit capacity: 1,000 WETH
-- Base scoring rate: 1 point per WETH
+Let's say Alice deposits 1000 TNT with a 12-month lock:
 
-### Alice's Position
+Initial Parameters:
 
-When Alice locks 10 WETH for a 12-month period:
+- Base APY: 5%
+- Lock multiplier: 2x for 2 months
+- Total deposits: 100,000 TNT
+- Maximum capacity: 1,000,000 TNT
 
-1. Her score is calculated as:
+Her rewards calculation:
 
-   - Base score: 10 (from 10 WETH)
-   - Lock multiplier: 12x (12 months)
-   - Total score: 10 × 12 = 120 score
+1. Score calculation:
 
-2. Her reward share is determined by:
+   - Base score: 1000 (from 1000 TNT)
+   - With 2x multiplier: 2000 score
+   - Total system score: 150,000
+
+2. Annual deposit rewards:
    ```
-   Annual Reward = 1% × (Alice's Score / Total WETH Score) × (Total WETH Deposits / Max Capacity)
+   5% × (2000/150,000) × (100,000/1,000,000) × 1000 TNT = 0.67 TNT
    ```
 
-For example, if:
+### Service Revenue Example
 
-- Total WETH score across all restakers = 1,000 score
-- Current total WETH deposits = 500 WETH
+Now let's calculate Alice's service revenue rewards:
 
-Then Alice's annual reward would be:
+Initial Parameters:
+
+- Service instance monthly fees: 1000 USDC
+- Service revenue allocation: 30% to restakers
+- Alice's restaked assets:
+  - 1000 TNT (1000 points)
+  - 2000 USDC (2000 points)
+- Total service restaking points: 10000 (5000 TNT + 5000 USDC worth)
+
+Her service revenue calculation:
+
+1. Monthly revenue share:
+
+   ```
+   1000 USDC × 30% = 300 USDC to restakers
+   ```
+
+2. Alice's share:
+   ```
+   300 USDC × (3000/10000) = 90 USDC per month
+   ```
+
+Alice would earn approximately 90 USDC per month from service revenue, in addition to her deposit rewards of 0.67 TNT annually. Her service revenue share is calculated based on her total restaking score (3000 points from 1000 TNT + 2000 USDC) divided by the total service restaking score of 10000 points. Note that while lock period multipliers affect deposit rewards, they do not impact service revenue calculations. The service revenue is paid out in whatever token the customers use to pay for the service - in this example USDC.
