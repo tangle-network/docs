@@ -4,6 +4,8 @@
     "title": "Introduction"
   },
   "resources": "Resources and Tools",
+  "account-manage": "Create & Manage Accounts",
+  "set-identity": "On-chain Identity",
   "-- bridges": {
     "type": "separator",
     "title": "Bridges & Interoperability"

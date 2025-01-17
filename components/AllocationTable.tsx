@@ -81,11 +81,11 @@ export default function AllocationTable() {
             <Cell>28.56500%</Cell>
             <Cell>A-Vesting</Cell>
             <Cell>12</Cell>
-            <Cell>24</Cell>
+            <Cell>48</Cell>
             <Cell>0%</Cell>
             <Cell>0.00</Cell>
-            <Cell>14,282,500.00</Cell>
-            <Cell>2,380,416.67</Cell>
+            <Cell>7,141,250.00</Cell>
+            <Cell>595,104.17</Cell>
             <Cell>28,565,000.00</Cell>
           </Row>
           <Row isEven={true}>
@@ -94,11 +94,11 @@ export default function AllocationTable() {
             <Cell>13.64000%</Cell>
             <Cell>A-Vesting</Cell>
             <Cell>12</Cell>
-            <Cell>24</Cell>
+            <Cell>48</Cell>
             <Cell>0%</Cell>
             <Cell>0.00</Cell>
-            <Cell>6,820,000.00</Cell>
-            <Cell>1,136,666.67</Cell>
+            <Cell>3,410,000.00</Cell>
+            <Cell>284,166.67</Cell>
             <Cell>13,640,000.00</Cell>
           </Row>
           <Row isEven={false}>
@@ -107,21 +107,21 @@ export default function AllocationTable() {
             <Cell>1.43500%</Cell>
             <Cell>A-Vesting</Cell>
             <Cell>12</Cell>
-            <Cell>24</Cell>
+            <Cell>48</Cell>
             <Cell>0%</Cell>
             <Cell>0.00</Cell>
-            <Cell>717,500.00</Cell>
-            <Cell>119,583.33</Cell>
+            <Cell>358,750.00</Cell>
+            <Cell>29,895.83</Cell>
             <Cell>1,435,000.00</Cell>
           </Row>
           <SubtotalRow>
-            <Cell col-Span={2}>
+            <Cell col-span={2}>
               <strong>Contributors Total</strong>
             </Cell>
             <Cell>43.64000%</Cell>
             <td colSpan={4}></td>
             <Cell>0.00</Cell>
-            <Cell>21,820,000.00</Cell>
+            <Cell>10,910,000.00</Cell>
             <td colSpan={1}></td>
             <Cell>43,640,000.00</Cell>
           </SubtotalRow>
@@ -133,7 +133,7 @@ export default function AllocationTable() {
             <Cell>n/a</Cell>
             <Cell>n/a</Cell>
             <Cell>100%</Cell>
-            <Cell>n/a</Cell>
+            <Cell>36,360,000.00</Cell>
             <Cell>n/a</Cell>
             <Cell>n/a</Cell>
             <Cell>36,360,000.00</Cell>
@@ -144,21 +144,21 @@ export default function AllocationTable() {
             <Cell>15.00000%</Cell>
             <Cell>A-Vesting</Cell>
             <Cell>12</Cell>
-            <Cell>24</Cell>
+            <Cell>48</Cell>
             <Cell>5%</Cell>
             <Cell>750,000.00</Cell>
-            <Cell>593,750.00</Cell>
-            <Cell>619,565.22</Cell>
+            <Cell>3,562,500.00</Cell>
+            <Cell>296,875.00</Cell>
             <Cell>15,000,000.00</Cell>
           </Row>
           <SubtotalRow>
-            <Cell col-Span={2}>
+            <Cell col-span={2}>
               <strong>Governance-Managed Total</strong>
             </Cell>
             <Cell>51.36000%</Cell>
             <td colSpan={4}></td>
-            <Cell>750,000.00</Cell>
-            <Cell>593,750.00</Cell>
+            <Cell>37,110,000.00</Cell>
+            <Cell>3,562,500.00</Cell>
             <td colSpan={1}></td>
             <Cell>51,360,000.00</Cell>
           </SubtotalRow>
@@ -215,8 +215,8 @@ export default function AllocationTable() {
             <Cell>1,000,000.00</Cell>
           </Row>
           <SubtotalRow>
-            <Cell col-Span={2}>
-              <strong>Airdrop Pools Subtotal</strong>
+            <Cell col-span={2}>
+              <strong>Airdrop Pools Total</strong>
             </Cell>
             <Cell>5.00000%</Cell>
             <td colSpan={4}></td>
@@ -226,12 +226,12 @@ export default function AllocationTable() {
             <Cell>5,000,000.00</Cell>
           </SubtotalRow>
           <TotalRow>
-            <Cell col-Span={2}>
+            <Cell col-span={2}>
               <strong>Total Supply</strong>
             </Cell>
             <Cell>100.00000%</Cell>
             <td colSpan={4}></td>
-            <Cell>1,000,000.00</Cell>
+            <Cell>37,360,000.00</Cell>
             <td colSpan={2}></td>
             <Cell>100,000,000.00</Cell>
           </TotalRow>

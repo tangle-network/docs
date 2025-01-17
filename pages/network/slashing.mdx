@@ -1,0 +1,39 @@
+# Slashing Mechanisms
+
+## Overview
+
+Slashing is a critical security mechanism in the Tangle Network that penalizes operators and restakers for misbehavior in service operations. When a slashing event occurs, both the operator and exposed restakers lose a configurable percentage of their staked assets. Slashing events are recorded publicly and permanently impact an operator's profile.
+
+## TNT Slashing Model
+
+### Service Instance Slashing
+
+Blueprint developers encode specific slashing conditions directly into their services during development. These conditions are made public during Blueprint deployment, ensuring full transparency for operators who choose to register for these services. This transparency allows operators to make informed decisions about which services they want to support.
+
+### Operator Controls
+
+While operators can register to run Blueprint services, they retain important controls over their operations. Most notably, they maintain the ability to reject Blueprint Service Instance (BSI) requests from paying customers. This control mechanism helps prevent potential spam attacks and resource overload scenarios, ensuring operators can maintain high quality of service.
+
+### Restaker Protections
+
+The system provides restakers with fine-grained control over their asset exposure. Restakers can precisely configure which Blueprints they want exposure to on a per-operator basis. This granular control extends to specific Blueprint Service Instances, allowing restakers to carefully manage their risk exposure across different services and operators.
+
+## Slashing Implementation
+
+### Core Logic
+
+The slashing mechanism operates through a multi-step process that begins in the services pallet. When a slashing condition is triggered, the pallet initiates a slash call with the operator's address, slashing percentage, and Blueprint ID. The multi-asset delegation pallet then processes this request by:
+
+1. Identifying all delegators associated with the operator
+2. Filtering for delegators exposed to the specific Blueprint
+3. Applying the specified slash percentage to both restaker and operator deposits
+
+This process accounts for scenarios where operators may also act as their own restakers, ensuring fair treatment across all participants.
+
+### Asset Distribution
+
+By default, slashed assets are transferred to the Treasury's control. However, Blueprint developers can implement custom hooks to direct slashed assets to specific destinations. The system carefully prevents automatic opt-in of restakers to new Blueprints that operators register for, protecting against potential collusion between operators and Blueprint developers.
+
+### Slashing Execution
+
+The service pallet implements a sophisticated queuing system for slash events. Each event enters a queue for a predetermined SLASHING_QUEUE_LIFETIME period. During this time, authorized parties (DISPUTE_ORIGIN) can dispute the slashing event. If no disputes are raised during the queue lifetime, the slashing event executes automatically. This waiting period ensures fair treatment while maintaining system security.

@@ -21,21 +21,53 @@ Observing successful networks as a benchmark, Tangle Network has tailored its ge
   Genesis participants will have 1 year to claim their distribution, **the deadline is April 10 2025.** otherwise the amount is sent to the Tangle Network on-chain treasury.
 </Callout>
 
-Vesting schedules in Tangle Network are designed to promote long-term commitment and ensure a phased distribution of tokens. The network adopts a structured vesting strategy with distinct categories:
+Tangle Network implements two distinct vesting schedules designed to promote long-term commitment while ensuring a balanced token distribution:
 
-**A-Vesting:** This category is characterized by a vesting period of 2 years, with a 12-month cliff. This means that no tokens are released in the first year. After completing the first year (the cliff period), the tokens allocated for that year become immediately available in full. The remainder of the allocation is then distributed monthly in equal 1/12 increments over the second year, facilitating a gradual release of tokens. This approach aligns with the policy of Immediate Vesting Post-Cliff with Retroactive Accumulation.
+**A-Vesting (4-Year Schedule):**
 
-**B-Vesting:** This vesting category is tailored for airdrop participants, featuring a 2-year vesting period with a notably short cliff of just 1 month. A predefined percentage of tokens becomes immediately available at the start. Subsequent to the cliff period, the remaining tokens are distributed on a monthly basis, ensuring a consistent flow of tokens into circulation. This strategy also follows the Immediate Vesting Post-Cliff with Retroactive Accumulation policy, aiming to reward early supporters while promoting long-term holding.
+- Total Duration: 4 years (48 months)
+- Cliff Period: 12 months
+- Initial Release: No tokens are released during the cliff period
+- Post-Cliff Distribution:
+  - At cliff end (12 months): 25% of total allocation released
+  - Remaining 75%: Vested monthly over 36 months in equal increments
+- Monthly Release Rate: ~2.08% of total allocation (post-cliff)
+
+**B-Vesting (Airdrop Schedule):**
+
+- Total Duration: 2 years (24 months)
+- Cliff Period: 1 month
+- Initial Release: Predefined percentage available at launch
+- Post-Cliff Distribution: Remaining tokens released monthly over 23 months
+- Designed specifically for airdrop participants to balance immediate utility with long-term alignment
+
+Both schedules follow the principle of Immediate Vesting Post-Cliff with Retroactive Accumulation, ensuring a predictable and fair distribution mechanism.
 
 ![Liquid Tokens Over Time](/images/liquid-tokens-over-time-chart.png)
 
 ### Detailed Allocation Overview
 
-The Tangle Network's allocation model is designed to support our foundational structures, incentivize community participation, and ensure long-term sustainability and success:
+The Tangle Network's allocation model is structured around three core pillars:
 
-- **Contributors** allocation supports the core teams, core-team investors and advisors essential for the network's development and strategic direction.
-- **Airdrops** are aimed at rewardingg and incentivizing validators, early supporters and participants, fostering a strong and engaged community from the outset.
-- **Governance-Managed** funds are earmarked for community decisionmaking, future development, network success programs, liquidity provisions, and partnerships critical for launch and growth.
+1. **Contributors**
+
+   - Supports core teams, core-team investors, and advisors
+   - Essential for sustained network development and strategic guidance
+   - Subject to A-Vesting schedule for long-term alignment
+
+2. **Airdrops**
+
+   - Rewards validators, early supporters, and active participants
+   - Follows B-Vesting schedule to encourage community engagement
+   - Designed to foster a robust and participatory ecosystem
+
+3. **Governance-Managed**
+   - Allocated for:
+     - Community-driven development initiatives
+     - Network success programs
+     - Strategic liquidity provisions
+     - Key partnerships and ecosystem growth
+   - Managed through transparent on-chain governance
 
 <Bleed>
 <AllocationTable />
@@ -43,7 +75,7 @@ The Tangle Network's allocation model is designed to support our foundational st
 
 # Token Allocation and Vesting Schedule Formulas
 
-This section outlines the formulas used to calculate various aspects of our token allocation and vesting schedules, presented in a way that's compatible with Markdown rendering.
+This section outlines the formulas used to calculate various aspects of our token allocation and vesting schedules.
 
 ### Initial Liquid Tokens
 
