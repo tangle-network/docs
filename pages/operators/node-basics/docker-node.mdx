@@ -119,7 +119,7 @@ ghcr.io/tangle-network/tangle/tangle:main \
 ```sh filename="Role" copy
 docker run --rm -it --platform linux/amd64 --network="host"  \
 ghcr.io/tangle-network/tangle/tangle:main \
-    tangle key insert --base-path /data \
+    key insert --base-path /data \
     --chain tangle-mainnet \
     --scheme Ecdsa \
     --key-type role
@@ -130,7 +130,7 @@ ghcr.io/tangle-network/tangle/tangle:main \
 ```sh filename="Grandpa" copy
 docker run --rm -it --platform linux/amd64 --network="host"  \
 ghcr.io/tangle-network/tangle/tangle:main \
-    tangle key insert --base-path /data \
+    key insert --base-path /data \
     --chain tangle-mainnet \
     --scheme Ed25519 \
     --key-type gran
