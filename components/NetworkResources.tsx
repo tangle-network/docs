@@ -101,6 +101,14 @@ const NETWORK_DATA = {
         text: "app.tangle.tools",
       },
     },
+    {
+      property: "PolkadotJS Apps",
+      value: {
+        type: "link",
+        url: "https://polkadot.js.org/apps/?rpc=wss://testnet-rpc.tangle.tools#/explorer",
+        text: "polkadot.js.org/apps/?rpc=wss://testnet-rpc.tangle.tools",
+      },
+    },
     { property: "Block Explorers", value: "" },
     {
       property: "EVM Explorers",

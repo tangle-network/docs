@@ -1,14 +1,22 @@
-# Restaking Incentives for Depositors
+# Restaking Incentives for Restakers
 
 ## Overview
 
-Tangle Network incentivizes restakers through TNT rewards for depositing specific assets. These rewards are distributed at regular intervals defined by governance (approximately every 7 days). The protocol determines which assets are incentivized and their maximum deposit capacities through governance decisions.
+Tangle Network incentivizes restakers through TNT rewards for depositing specific assets as well as with service revenue and fee rewards. Deposit rewards are distributed in an ongoing manner and are immediately claimable. Service revenue is distributed in fixed time intervals according to governance.
+
+The protocol determines which assets are incentivized for deposits and their maximum deposit capacities through governance decisions. Non-incentivized assets are still valid for deposits and can be leveraged to instance Tangle Blueprints.
+
+### Score vs Points
+
+For the purposes of avoiding confusion we use the terms points and score independently. Points refer to any future airdrop and scores refer to onchain values that we leverage for distributing onchain rewards, whether from deposits or services. Points are NOT equal to score values! Hopefully we don't mistake them in the docs.
 
 ## Deposit Mechanics
 
+Depositing incentivized assets on Tangle earns your TNT tokens and points in upcoming airdrops. There are a list of assets onchain that are incentivized. For these assets, there exists a **vault** for them specifying the capacity and APY for deposits.
+
 ### Deposit Capacity
 
-The system implements maximum deposit capacities for each incentivized asset to ensure secure and controlled TVL growth. Key aspects:
+The restaking system implements maximum deposit capacities for each incentivized asset to ensure secure and controlled TVL growth. Key aspects:
 
 - Fixed maximum amount per asset
 - APY distributed proportionally to deposits/capacity ratio
@@ -35,51 +43,94 @@ Users can view available assets and their parameters through the Tangle Restakin
 
 ## Scoring and Rewards
 
-### Score Distribution
+When Tangle Blueprints are instanced, a new service is created. Customers instance Tangle Blueprints by selecting the operators and types of restaked assets they desire for security. They pay for the service in advance and throughout operation for task based services.
 
-The protocol uses a scoring mechanism to allocate rewards:
+The payments and fees are distributed according to a scoring mechanism that is normalized against the USD value of the service instance's assets.
 
-- Base score: 1 point per token unit
-- Independent scoring per incentivized asset
-- Pro-rata distribution based on user scores
-- On-chain calculation at each reward interval
+TNT is the default restaking asset and must be included as restaked security collateral for all service instances. We treat TNT as a special asset when scoring. TNT earns a score of 1 value per 1 TNT allocated to secure the service, whereas other assets earn a score of 1 value per $1 allocated to secure the service.
 
 ### Lock Multipliers
 
-Users can enhance their score through time-locks:
+Users can enhance their score through time-locks. This locks their deposited assets for additional months, preventing any withdrawals or unstaking until the lock has ended:
 
 - Longer locks = higher score multiplier
 - Locked tokens cannot be withdrawn until expiry
 - Multiplier directly impacts reward share
 
-### Reward Calculation
+### Reward Calculation for Deposits
 
-The reward formula at any point is:
+The total reward formula $R$ for a user at any point is the sum of the base reward and lock reward:
 
-R = APY × (User Score / Total Asset Score) × (Total Asset Deposited / Deposit Capacity)
+$R = R_{base} + R_{lock}$
+
+Where the base reward is:
+
+$R_{base} = APY \times \frac{D_u}{D_t} \times \frac{D_t}{C}$
+
+And the lock reward is:
+
+$R_{lock} = D_u \times APY \times M \times \frac{T_r}{T_t}$
 
 Where:
 
-- $X\%$ = Asset's APY
-- USER_SCORE = User's locked deposit score
-- TOTAL_SCORE_OF_ASSET = Sum of all user scores for the asset
-- TOTAL_ASSET_DEPOSITED = Total amount deposited
-- DEPOSIT_CAPACITY = Maximum deposit capacity
+- $APY$ = Asset's annual percentage yield
+- $D_u$ = User's deposit amount
+- $D_t$ = Total deposits for the asset
+- $C$ = Maximum deposit capacity
+- $M$ = Lock multiplier
+- $T_r$ = Remaining lock time
+- $T_t$ = Total lock time
 
-## Example Scenario
+### Score Distribution
 
-Consider WETH with:
+The protocol uses an updated scoring mechanism to allocate service revenue and fee rewards:
 
-- 1% TNT inflation allocation
-- 1,000 WETH deposit cap
-- Base score: 1 per WETH
+- Base TNT score: 1 point per 1 TNT restaked.
+- Base non-TNT score: 1 point per $1 of token restaked * $LOCK\_MULTIPLIER$.
+- Pro-rata distribution based on user scores
+- On-chain calculation at each reward interval
 
-If Alice locks 10 WETH for 12 months:
+### Reward Calculation for Service Rewards
 
-- Score = 10 × 12 = 120 points
-- Reward calculation:
-  ```
-  1% × (120/TOTAL_SCORE_OF_WETH) × (TOTAL_WETH_DEPOSITED/1000)
-  ```
+The reward formula $R$ for a restaker securing a service instance is calculated as:
 
-> **Note:** Actual rewards fluctuate based on total deposits and lock durations in the system.
+$R = Rewards \times \frac{S_u}{S_t}$
+
+Where:
+
+- $Rewards$ = Rewards and fees of the service instance
+- $S_u$ = User's restaking score for the service instance
+- $S_t$ = Total score across all active assets of the service instance
+
+## Example Scenario: Calculating Restaking Rewards
+
+Let's walk through a practical example to understand how restaking rewards are calculated.
+
+### Initial Parameters
+
+- Asset: WETH (Wrapped ETH)
+- TNT inflation allocation: 1%
+- Maximum deposit capacity: 1,000 WETH
+- Base scoring rate: 1 point per WETH
+
+### Alice's Position
+
+When Alice locks 10 WETH for a 12-month period:
+
+1. Her score is calculated as:
+
+   - Base score: 10 (from 10 WETH)
+   - Lock multiplier: 12x (12 months)
+   - Total score: 10 × 12 = 120 score
+
+2. Her reward share is determined by:
+   ```
+   Annual Reward = 1% × (Alice's Score / Total WETH Score) × (Total WETH Deposits / Max Capacity)
+   ```
+
+For example, if:
+
+- Total WETH score across all restakers = 1,000 score
+- Current total WETH deposits = 500 WETH
+
+Then Alice's annual reward would be:
