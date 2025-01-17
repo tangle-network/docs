@@ -1,0 +1,88 @@
+# Incentives Overview
+
+## Platform Overview
+
+Tangle Network is a platform designed for software monetization, functioning as a marketplace for innovation where developers can deploy software and benefit from its long-term utility, usage, and fees.
+
+Services on Tangle are instances of Tangle Blueprints. Developers create Blueprints and generate revenue when customers instantiate them. These instances generate fees, payments, and rewards that are distributed between:
+
+- The Blueprint developer
+- The Tangle protocol
+- Operators and restakers securing the service
+
+The platform incentivizes TNT holders to restake their tokens on operators and specific Blueprints primarily through additional yield opportunities. TNT is the default restaking asset on Tangle and is required for securing Blueprint instances. This ensures TNT tokenholders are exposed to both the risks and rewards of the platform.
+
+## Core Economic Mechanisms
+
+### Transaction Fees
+
+TNT serves as the base asset for all network transactions:
+
+- Executing transactions on the EVM or native runtime requires TNT fees
+- Creating Blueprints and deploying instances requires TNT for transaction execution
+
+> **Note:** To encourage early adoption, the network may subsidize Blueprint creation and deployment costs during initial phases.
+
+### Proof of Stake Rewards
+
+TNT is the primary staking asset for the network's nominated proof-of-stake consensus mechanism:
+
+**Validators**
+
+- Earn native rewards for securing the network and producing blocks
+- Over 100 validators perform consensus tasks to secure the Tangle blockchain
+- Set commission rates on rewards they receive
+
+**Nominators**
+
+- Stake TNT to nominate validators
+- Receive pro-rated rewards after validator commissions
+- Current network inflation provides approximately 4-5% APY for validators and nominators combined
+
+The network distributes these rewards through controlled inflation, creating a sustainable economic model that incentivizes long-term participation in securing the network.
+
+### Restaking Incentives
+
+Tangle Network's restaking infrastructure creates a three-sided marketplace between developers, operators, and restakers (depositors). Each participant is incentivized through different mechanisms:
+
+**Restakers (Depositors)**
+
+- Earn base rewards for depositing TNT and other approved assets
+- Can boost rewards by locking deposits for longer periods
+- Delegate deposits to operators running Blueprint services
+- Rewards scale with deposit utilization and lock duration
+- Exposed to both upside and slashing risk of services
+
+**Operators**
+
+- Run Blueprint service instances requested by customers
+- Earn fees from service execution and customer payments
+- Receive share of protocol inflation rewards
+- Must maintain high uptime and performance
+- Can configure exposure levels for delegated assets
+
+**Blueprint Developers**
+
+- Create and deploy reusable service templates (Blueprints)
+- Can define custom reward distributions for operators/restakers
+- Benefit from long-term Blueprint adoption and usage
+- Access to programmable fee splits via smart contracts
+
+### Blueprint Economics
+
+The protocol enforces the following fee distribution for Blueprint instances:
+
+- 50% to Blueprint developer
+- 30% to operators/restakers via TNT rewards
+- 20% to protocol treasury
+
+This structure ensures:
+
+1. Developers are incentivized to build useful, widely-adopted Blueprints
+2. The protocol sustainably funds ongoing development
+3. Operators and restakers earn rewards for securing services
+4. Developers can create custom incentive mechanisms
+
+TNT serves as the default restaking asset required for all Blueprint instances, with operators required to allocate a minimum percentage of TNT for security. Additional approved assets can be used to further secure services based on customer requirements.
+
+The programmable distribution mechanism allows developers to customize how the remaining percentage of fees are allocated between operators, restakers, and other participants - providing flexibility while maintaining protocol alignment.

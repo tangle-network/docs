@@ -1,8 +1,15 @@
 {
   "overview": "Overview",
   "tokenomics": "Tokenomics",
-  "account-manage": "Create & Manage Accounts",
-  "set-identity": "On-chain Identity",
+  "-- incentives": {
+    "type": "separator",
+    "title": "Restaking Incentives"
+  },
+  "incentives-overview": "Overview",
+  "incentives-restaking": "For Restakers",
+  "incentives-operators": "For Operators",
+  "incentives-developers": "For Developers",
+  "slashing": "Slashing",
   "-- restaking infrastructure": {
     "type": "separator",
     "title": "Restaking Infrastructure"

@@ -1,0 +1,85 @@
+# Restaking Incentives for Depositors
+
+## Overview
+
+Tangle Network incentivizes restakers through TNT rewards for depositing specific assets. These rewards are distributed at regular intervals defined by governance (approximately every 7 days). The protocol determines which assets are incentivized and their maximum deposit capacities through governance decisions.
+
+## Deposit Mechanics
+
+### Deposit Capacity
+
+The system implements maximum deposit capacities for each incentivized asset to ensure secure and controlled TVL growth. Key aspects:
+
+- Fixed maximum amount per asset
+- APY distributed proportionally to deposits/capacity ratio
+- Unallocated APY is never minted
+- APY defines reward allocation at full capacity
+
+### Protocol Implementation
+
+The `pallet-multi-asset-delegation` system manages:
+
+- Deposit and withdrawal logic
+- Delegation to operators
+- Asset staking mechanisms
+- APY and capacity configurations
+- System upgrades via governance
+
+Users can view available assets and their parameters through the Tangle Restaking dApp.
+
+### Withdrawal Process
+
+- Standard withdrawal delay: ~7 days (W sessions)
+- Deposits continue earning incentives during withdrawal period
+- Assets must be unstaked before withdrawal
+
+## Scoring and Rewards
+
+### Score Distribution
+
+The protocol uses a scoring mechanism to allocate rewards:
+
+- Base score: 1 point per token unit
+- Independent scoring per incentivized asset
+- Pro-rata distribution based on user scores
+- On-chain calculation at each reward interval
+
+### Lock Multipliers
+
+Users can enhance their score through time-locks:
+
+- Longer locks = higher score multiplier
+- Locked tokens cannot be withdrawn until expiry
+- Multiplier directly impacts reward share
+
+### Reward Calculation
+
+The reward formula at any point is:
+
+R = APY × (User Score / Total Asset Score) × (Total Asset Deposited / Deposit Capacity)
+
+Where:
+
+- $X\%$ = Asset's APY
+- USER_SCORE = User's locked deposit score
+- TOTAL_SCORE_OF_ASSET = Sum of all user scores for the asset
+- TOTAL_ASSET_DEPOSITED = Total amount deposited
+- DEPOSIT_CAPACITY = Maximum deposit capacity
+
+## Example Scenario
+
+Consider WETH with:
+
+- 1% TNT inflation allocation
+- 1,000 WETH deposit cap
+- Base score: 1 per WETH
+
+If Alice locks 10 WETH for 12 months:
+
+- Score = 10 × 12 = 120 points
+- Reward calculation:
+  ```
+  1% × (120/TOTAL_SCORE_OF_WETH) × (TOTAL_WETH_DEPOSITED/1000)
+  ```
+
+> **Note:** Actual rewards fluctuate based on total deposits and lock durations in the system.
