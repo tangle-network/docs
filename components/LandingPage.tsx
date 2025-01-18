@@ -46,13 +46,13 @@ const resourcesCards = [
     icon: <FaWallet />,
     title: "TNT, Wallets and More",
     description: "Your source for Wallets, apps, staking and more.",
-    link: "/resources",
+    link: "/resources/resources",
   },
   {
     icon: <RiToolsLine />,
     title: "Developer Tools",
     description: "RPCs, faucets, and block explorers.",
-    link: "../developers/endpoints",
+    link: "/developers/endpoints",
   },
   {
     icon: <MdAppShortcut />,
