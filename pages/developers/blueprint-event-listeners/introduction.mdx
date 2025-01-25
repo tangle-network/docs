@@ -12,8 +12,8 @@ In general, when defining your job, you must register an event listeners and pro
 
 <GithubFileReaderDisplay 
   url="https://github.com/tangle-network/blueprint-template/blob/main/src/lib.rs"
-  fromLine={11}
-  toLine={32}
+  fromLine={12}
+  toLine={36}
   title="Example Blueprint Job with Tangle JobCalled Event Listener"
 />
 
@@ -24,9 +24,9 @@ In order to understand how to build an event listener, begin with a custom imple
 Event listeners in the SDK are designed to be flexible and allow developers to customize the behavior of their applications. Event listeners must implement the `EventListener` trait, which defines the following methods:
 
 <GithubFileReaderDisplay 
-  url="https://github.com/tangle-network/gadget/blob/main/sdk/src/event_listener/mod.rs"
+  url="https://github.com/tangle-network/gadget/blob/main/crates/event-listeners/core/src/lib.rs"
   fromLine={14}
-  toLine={23}
+  toLine={25}
   title="Event Listener Trait Definition"
 />
 
@@ -36,8 +36,8 @@ When a blueprint instance runs, the event listeners are constructed and executed
 
 <GithubFileReaderDisplay 
   url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring/src/main.rs"
-  fromLine={8}
-  toLine={26}
+  fromLine={7}
+  toLine={30}
   title="Example Blueprint Runner execution"
 />
 

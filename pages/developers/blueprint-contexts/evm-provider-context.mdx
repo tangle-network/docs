@@ -13,9 +13,9 @@ The `EvmProviderContext` trait provides a standardized [alloy-rs](https://github
 The `EvmProviderContext` trait provides access to an EVM provider:
 
 <GithubFileReaderDisplay 
-  url="https://github.com/tangle-network/gadget/blob/main/sdk/src/contexts/evm_provider.rs"
+  url="https://github.com/tangle-network/gadget/blob/main/crates/contexts/src/instrumented_evm_client.rs"
   fromLine={3}
-  toLine={12}
+  toLine={7}
   title="EvmProviderContext Trait Definition"
 />
 
@@ -26,9 +26,9 @@ The `EvmProviderContext` trait provides access to an EVM provider:
 First, define your context struct that implements the `EvmProviderContext` trait:
 
 <GithubFileReaderDisplay 
-  url="https://github.com/tangle-network/gadget/blob/main/macros/context-derive/tests/ui/basic.rs"
-  fromLine={4}
-  toLine={9}
+  url="https://github.com/tangle-network/gadget/blob/main/crates/macros/context-derive/tests/ui/basic.rs"
+  fromLine={22}
+  toLine={31}
   title="EVM Provider Context Definition"
 />
 
@@ -37,8 +37,8 @@ First, define your context struct that implements the `EvmProviderContext` trait
 You can then use this context to access EVM provider parameters:
 
 <GithubFileReaderDisplay 
-  url="https://github.com/tangle-network/gadget/blob/main/macros/context-derive/tests/ui/basic.rs"
-  fromLine={18}
-  toLine={18}
+  url="https://github.com/tangle-network/gadget/blob/main/crates/macros/context-derive/tests/ui/basic.rs"
+  fromLine={45}
+  toLine={45}
   title="Accessing EVM Provider Parameters"
 />
