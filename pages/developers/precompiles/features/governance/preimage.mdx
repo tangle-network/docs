@@ -1,0 +1,130 @@
+---
+title: Preimage Precompile Contract
+description: Learn how to take the first necessary step to submit a proposal on-chain by submitting a preimage that contains the action to be carried out in the proposal, using Tangle’s Preimage Precompile.
+---
+
+import GithubFileReaderDisplay from "../../../../../components/GithubFileReaderDisplay";
+
+# Interacting with the Preimage Precompile
+
+## Introduction
+
+As a Polkadot parachain and decentralized network, Tangle features native on-chain governance that enables stakeholders to participate in the direction of the network. With governance v2 (OpenGov), the Substrate Preimage Pallet allows token holders to take the first step toward creating a proposal by submitting the preimage (the action to be carried out in the proposal) on-chain. The hash of the preimage is required to submit the proposal.
+
+The Preimage Precompile interacts directly with Substrate’s Preimage Pallet. This pallet is coded in Rust and is normally not accessible from the Ethereum side of Tangle. However, the Preimage Precompile enables the necessary functionality—creating and managing preimages—directly from a Solidity interface.
+
+The Preimage Precompile is located at the following address on both Tangle Mainnet and Tangle Testnet:
+
+```text
+0x0000000000000000000000000000000000000806
+```
+
+---
+
+## The Preimage Solidity Interface
+
+Below is the Tangle Preimage interface, which you can use to interact with the on-chain Preimage Pallet:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tangle/blob/main/precompiles/preimage/Preimage.sol"
+  title="Solidity Interface for Tangle Preimage Precompile"
+/>
+
+
+
+The two key functions are:
+
+- `notePreimage` — registers a preimage on-chain.
+- `unnotePreimage` — clears an unrequested preimage from storage.
+
+These actions emit the `PreimageNoted` and `PreimageUnnoted` events, respectively.
+
+---
+
+## Interact with the Solidity Interface
+
+The following sections walk through how to use the Preimage Precompile with Remix and Polkadot.js Apps on Tangle. The examples below show Tangle Testnet steps, but you can follow a similar approach on Tangle Mainnet.
+
+### Checking Prerequisites
+
+To follow along, you will need:
+
+- MetaMask installed and connected to Tangle Testnet
+- An account on Tangle Testnet that has some test tokens
+
+### Remix Set Up
+
+1. Go to the official [Remix](https://remix.ethereum.org) website.
+2. In the File Explorer pane, create a new file (for example, “Preimage.sol”), and paste the interface code provided above (the Tangle Preimage interface) into the file.
+
+
+### Compile the Contract
+
+1. Click on the “Solidity Compiler” tab in Remix.
+2. Select the version of Solidity that is compatible with the interface (for example, 0.8.3 or higher).
+3. Click on “Compile Preimage.sol.”
+
+### Access the Contract
+
+1. Switch to the “Deploy & Run Transactions” tab. (Note that you are not truly deploying a contract; you are going to interact with the already-deployed Preimage Precompile on Tangle.)
+2. In the “ENVIRONMENT” dropdown, select “Injected Provider – MetaMask,” which should already be connected to Tangle Testnet.
+3. Ensure “Preimage.sol” is selected in the “CONTRACT” dropdown.
+4. In the “At Address” field, provide the Preimage Precompile’s address, which on Tangle is:
+   `0x0000000000000000000000000000000000000806`
+5. Click “At Address.” You should see the Precompile listed under “Deployed Contracts.”
+
+
+---
+
+### Submit a Preimage of a Proposal
+
+To create a new on-chain proposal, you must first register a preimage that encodes the proposed action. Use Polkadot.js Apps to generate both the encoded proposal and preimage hash, then use the Preimage Precompile’s notePreimage function to store it on-chain.
+
+#### Getting the Encoded Proposal and Preimage Hash
+
+Follow these steps in Polkadot.js Apps (with Tangle Testnet selected in the network dropdown):
+
+1. Navigate to the “Governance” tab.
+2. Select “Preimages” in the left-hand menu or from the dropdown.
+3. Click on “+ Add preimage.”
+
+Then:
+
+1. Select any account in the dropdown (no on-chain action will be taken here).
+2. Choose the appropriate pallet and dispatchable function you wish to propose (for example, the “system” pallet and the “remark” function).
+3. Provide any unique content for the remark.
+4. Click “Submit preimage,” but when prompted to sign, do NOT finalize the transaction. Just retrieve the data.
+
+
+On the following screen:
+
+1. Expand the triangle icon to reveal the encoded proposal bytes.
+2. Copy the bytes representing the encoded proposal. You’ll supply these bytes when calling the notePreimage function from Remix.
+
+
+> Note: Do not sign or submit the transaction in Polkadot.js Apps. You only need to copy the proposal bytes.
+
+---
+
+#### Storing the Preimage On-Chain
+
+Now return to Remix to call the notePreimage function on the Preimage Precompile:
+
+1. Expand the Preimage Precompile you interacted with.
+2. Find and expand the “notePreimage” function.
+3. Paste in the proposal bytes you copied from Polkadot.js Apps.
+4. Click “transact” and confirm the transaction in MetaMask.
+
+![Submit the preimage using the notePreimage function of the Preimage Precompile.](/images/builders/ethereum/precompiles/features/governance/preimage/preimage-7.webp)
+
+Once the transaction is confirmed, the preimage for your proposal is on-chain. You can now proceed with submitting the actual proposal (for example, in the referenda workflow) referencing the hash of this registered preimage.
+
+---
+
+### Removing a Preimage
+
+If you wish to remove a preimage, follow the same approach above, but use the unnotePreimage function from the deployed interface. In that case, you’ll need to provide the preimage hash (bytes32) you want to clear from on-chain storage.
+
+---
+
+That covers the typical operations for registering and removing preimages on Tangle using the Preimage Precompile. By following these steps, you can confidently take the first step toward submitting proposals and interacting with Tangle’s on-chain governance system.
