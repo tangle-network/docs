@@ -1,8 +1,6 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/Tabs";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -10,6 +8,7 @@ import {
 } from "./ui/Table";
 import Image from "next/image";
 import Link from "next/link";
+import { useMemo, useState, useCallback, memo } from "react";
 
 interface Token {
   name: string;
@@ -51,6 +50,19 @@ const CHAIN_CONFIGS = {
     explorerLink: "https://polygonscan.com/",
     icon: "/icons/chains/polygon.svg",
   },
+};
+
+const CHAIN_OPTIONS = Object.values(CHAIN_CONFIGS);
+
+const CHAIN_NAME_TO_CONFIG: Record<
+  string,
+  (typeof CHAIN_CONFIGS)[keyof typeof CHAIN_CONFIGS]
+> = {
+  Arbitrum: CHAIN_CONFIGS.ARBITRUM,
+  Base: CHAIN_CONFIGS.BASE,
+  "BNB Chain": CHAIN_CONFIGS.BNB,
+  Optimism: CHAIN_CONFIGS.OPTIMISM,
+  Polygon: CHAIN_CONFIGS.POLYGON,
 };
 
 const TOKENS: Token[] = [
@@ -607,112 +619,217 @@ const TOKENS: Token[] = [
   },
 ];
 
+const TokenRow = memo(({ token }: { token: Token }) => (
+  <TableRow className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+    <TableCell>
+      <div className="flex items-center gap-3">
+        <Image
+          src={token.icon}
+          alt={token.name}
+          width="32"
+          height="32"
+          loading="lazy"
+          priority={false}
+          className="rounded-full bg-gray-50 dark:bg-gray-800 p-1"
+        />
+        <div>
+          <div className="font-medium text-gray-900 dark:text-gray-100">
+            {token.name}
+          </div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            {token.symbol}
+          </div>
+        </div>
+      </div>
+    </TableCell>
+
+    <TableCell>
+      <div className="flex flex-wrap gap-2">
+        {token.chains.map((chain) => (
+          <ChainIcon key={chain.name} chain={chain} />
+        ))}
+      </div>
+    </TableCell>
+
+    <TableCell>
+      <Link
+        href={`https://explorer.tangle.tools/address/${token.address}`}
+        target="_blank"
+        className="text-sm font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors duration-200 break-all"
+      >
+        {token.address}
+      </Link>
+    </TableCell>
+  </TableRow>
+));
+TokenRow.displayName = "TokenRow";
+
+// Separate ChainIcon component
+const ChainIcon = memo(({ chain }: { chain: Token["chains"][0] }) =>
+  chain.address ? (
+    <Link
+      href={`${chain.explorerLink}token/${chain.address}`}
+      target="_blank"
+      className="block relative transition-transform hover:scale-110 focus:scale-110 outline-none"
+      title={`${chain.name}: ${chain.address}`}
+    >
+      <Image
+        src={chain.icon}
+        alt={chain.name}
+        width="24"
+        height="24"
+        loading="lazy"
+        priority={false}
+        className="rounded-full bg-gray-50 dark:bg-gray-800 p-0.5"
+      />
+      {chain.isNative && (
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white dark:border-gray-900" />
+      )}
+    </Link>
+  ) : (
+    <div className="relative" title={`${chain.name} (Native Token)`}>
+      <Image
+        src={chain.icon}
+        alt={chain.name}
+        width="24"
+        height="24"
+        loading="lazy"
+        priority={false}
+        className="rounded-full bg-gray-50 dark:bg-gray-800 p-0.5"
+      />
+      {chain.isNative && (
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white dark:border-gray-900" />
+      )}
+    </div>
+  ),
+);
+ChainIcon.displayName = "ChainIcon";
+
+// Main component
 export const TokenContracts = () => {
+  const [search, setSearch] = useState("");
+  const [selectedChain, setSelectedChain] = useState("");
+
+  const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const timeoutId = setTimeout(() => {
+      setSearch(e.target.value);
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  const filteredTokens = useMemo(() => {
+    let tokens = TOKENS;
+
+    // Text search filter
+    const searchTerm = search.toLowerCase();
+    if (searchTerm) {
+      tokens = tokens.filter(
+        (token) =>
+          token.name.toLowerCase().includes(searchTerm) ||
+          token.symbol.toLowerCase().includes(searchTerm),
+      );
+    }
+
+    // Chain filter
+    if (selectedChain) {
+      tokens = tokens.filter((token) =>
+        token.chains.some((chain) => chain.name === selectedChain),
+      );
+    }
+
+    return tokens;
+  }, [search, selectedChain]);
+
   return (
     <div className="mt-6 mb-10">
-      <div className="flex flex-col gap-4 mt-4">
-        {TOKENS.map((token) => (
-          <Tabs
-            key={token.symbol}
-            defaultValue="Token"
-            className="w-full border border-gray-200 dark:border-gray-800 rounded-lg p-2 shadow-sm hover:shadow-md transition-shadow duration-200 bg-gray-100/80 dark:bg-gray-900"
+      <div className="flex gap-4 mb-4">
+        <input
+          type="text"
+          placeholder="Search tokens..."
+          onChange={handleSearch}
+          className="flex-1 max-w-sm px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+        />
+        <div className="relative">
+          <select
+            value={selectedChain}
+            onChange={(e) => setSelectedChain(e.target.value)}
+            className="h-10 w-[180px] appearance-none rounded-lg border border-gray-200 bg-white pl-10 pr-10 text-sm 
+            hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500
+            dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700"
           >
-            <TabsList className="grid w-full grid-cols-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-              <TabsTrigger
-                value="Token"
-                className="data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-gray-700"
+            <option value="">All Chains</option>
+            {CHAIN_OPTIONS.map((chain) => (
+              <option
+                key={chain.name}
+                value={chain.name}
+                className="flex items-center gap-2"
               >
-                Token
-              </TabsTrigger>
-              <TabsTrigger
-                value="Routes"
-                className="data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-gray-700"
+                {chain.name}
+              </option>
+            ))}
+          </select>
+
+          {/* Chain Icon */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            {selectedChain ? (
+              <Image
+                src={CHAIN_NAME_TO_CONFIG[selectedChain].icon}
+                alt={selectedChain}
+                width="16"
+                height="16"
+                className="rounded-full"
+              />
+            ) : (
+              <svg
+                className="h-4 w-4 text-gray-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                Routes
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="Token">
-              <div className="flex items-center gap-4 p-4 rounded-lg bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-                <div className="flex-shrink-0">
-                  <Image
-                    src={token.icon}
-                    alt={token.name}
-                    width="48"
-                    height="48"
-                    className="rounded-full bg-gray-50 dark:bg-gray-800 p-1"
-                  />
-                </div>
-                <div className="flex flex-col gap-2 flex-grow">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                      {token.name}
-                    </h3>
-                    <span className="px-2 py-0.5 text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-700">
-                      {token.symbol}
-                    </span>
-                  </div>
-                  <Link
-                    href={`https://explorer.tangle.tools/address/${token.address}`}
-                    target="_blank"
-                    className="text-sm font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors duration-200 hover:underline font-medium"
-                  >
-                    {token.address}
-                  </Link>
-                </div>
-              </div>
-            </TabsContent>
-            <TabsContent value="Routes">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-                    <TableHead className="w-1/2 text-gray-700 dark:text-gray-300">
-                      Chain
-                    </TableHead>
-                    <TableHead className="w-1/2 text-gray-700 dark:text-gray-300">
-                      Address
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className="bg-white dark:bg-transparent">
-                  {token.chains.map((chain) => (
-                    <TableRow
-                      key={chain.name}
-                      className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200"
-                    >
-                      <TableCell className="font-medium flex items-center gap-2">
-                        <Image
-                          src={chain.icon}
-                          alt={chain.name}
-                          width="32"
-                          height="32"
-                          className="rounded-full bg-gray-50 dark:bg-gray-800 p-0.5"
-                        />
-                        <span className="text-gray-900 dark:text-gray-100">
-                          {chain.name}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {chain.address ? (
-                          <Link
-                            href={`${chain.explorerLink}token/${chain.address}`}
-                            target="_blank"
-                            className="text-sm font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors duration-200 hover:underline font-medium"
-                          >
-                            {chain.address}
-                          </Link>
-                        ) : (
-                          <span className="text-sm text-gray-500 dark:text-gray-400 italic font-semibold">
-                            Native Token
-                          </span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TabsContent>
-          </Tabs>
-        ))}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16m-7 6h7"
+                />
+              </svg>
+            )}
+          </div>
+
+          {/* Dropdown Arrow */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500 dark:text-gray-400">
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div className="overflow-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 max-h-[600px]">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-50 dark:bg-gray-800/50">
+              <TableHead className="w-[200px]">Token</TableHead>
+              <TableHead className="w-[200px]">Supported Chains</TableHead>
+              <TableHead>Token Address (on Tangle)</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredTokens.map((token) => (
+              <TokenRow key={token.symbol} token={token} />
+            ))}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
