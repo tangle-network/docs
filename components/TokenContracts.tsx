@@ -9,6 +9,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, useCallback, memo } from "react";
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
 
 interface Token {
   name: string;
@@ -619,8 +621,10 @@ const TOKENS: Token[] = [
   },
 ];
 
+// Dynamically import the TokenRow component
 const TokenRow = memo(({ token }: { token: Token }) => (
-  <TableRow className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+  <TableRow className="hover:bg-gray-50 dark:hover:bg-gray-800/50 will-change-auto">
+    {/* Token Info - Simplified */}
     <TableCell>
       <div className="flex items-center gap-3">
         <Image
@@ -629,33 +633,50 @@ const TokenRow = memo(({ token }: { token: Token }) => (
           width="32"
           height="32"
           loading="lazy"
-          priority={false}
           className="rounded-full bg-gray-50 dark:bg-gray-800 p-1"
+          decoding="async"
+          fetchPriority="high"
         />
-        <div>
-          <div className="font-medium text-gray-900 dark:text-gray-100">
-            {token.name}
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            {token.symbol}
-          </div>
-        </div>
+        <span className="font-medium">
+          {token.name} <span className="text-gray-500">({token.symbol})</span>
+        </span>
       </div>
     </TableCell>
 
+    {/* Chain Icons - Simplified */}
     <TableCell>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2">
         {token.chains.map((chain) => (
-          <ChainIcon key={chain.name} chain={chain} />
+          <Link
+            key={chain.name}
+            href={
+              chain.address
+                ? `${chain.explorerLink}token/${chain.address}`
+                : "#"
+            }
+            target="_blank"
+            className={chain.address ? "cursor-pointer" : "cursor-default"}
+          >
+            <Image
+              src={chain.icon}
+              alt={chain.name}
+              width="24"
+              height="24"
+              loading="lazy"
+              className="rounded-full bg-gray-50 dark:bg-gray-800 p-0.5"
+              title={chain.name}
+            />
+          </Link>
         ))}
       </div>
     </TableCell>
 
+    {/* Address - Simplified */}
     <TableCell>
       <Link
         href={`https://explorer.tangle.tools/address/${token.address}`}
         target="_blank"
-        className="text-sm font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors duration-200 break-all"
+        className="text-sm font-mono text-blue-600 dark:text-blue-400 hover:underline"
       >
         {token.address}
       </Link>
@@ -664,48 +685,6 @@ const TokenRow = memo(({ token }: { token: Token }) => (
 ));
 TokenRow.displayName = "TokenRow";
 
-// Separate ChainIcon component
-const ChainIcon = memo(({ chain }: { chain: Token["chains"][0] }) =>
-  chain.address ? (
-    <Link
-      href={`${chain.explorerLink}token/${chain.address}`}
-      target="_blank"
-      className="block relative transition-transform hover:scale-110 focus:scale-110 outline-none"
-      title={`${chain.name}: ${chain.address}`}
-    >
-      <Image
-        src={chain.icon}
-        alt={chain.name}
-        width="24"
-        height="24"
-        loading="lazy"
-        priority={false}
-        className="rounded-full bg-gray-50 dark:bg-gray-800 p-0.5"
-      />
-      {chain.isNative && (
-        <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white dark:border-gray-900" />
-      )}
-    </Link>
-  ) : (
-    <div className="relative" title={`${chain.name} (Native Token)`}>
-      <Image
-        src={chain.icon}
-        alt={chain.name}
-        width="24"
-        height="24"
-        loading="lazy"
-        priority={false}
-        className="rounded-full bg-gray-50 dark:bg-gray-800 p-0.5"
-      />
-      {chain.isNative && (
-        <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white dark:border-gray-900" />
-      )}
-    </div>
-  ),
-);
-ChainIcon.displayName = "ChainIcon";
-
-// Main component
 export const TokenContracts = () => {
   const [search, setSearch] = useState("");
   const [selectedChain, setSelectedChain] = useState("");
@@ -815,10 +794,16 @@ export const TokenContracts = () => {
         </div>
       </div>
 
-      <div className="overflow-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 max-h-[600px]">
+      <div
+        className="overflow-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+        style={{
+          height: "600px",
+          contain: "content",
+        }}
+      >
         <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50 dark:bg-gray-800/50">
+          <TableHeader className="sticky top-0 bg-gray-50 dark:bg-gray-800/50 z-10">
+            <TableRow>
               <TableHead className="w-[200px]">Token</TableHead>
               <TableHead className="w-[200px]">Supported Chains</TableHead>
               <TableHead>Token Address (on Tangle)</TableHead>
@@ -834,3 +819,15 @@ export const TokenContracts = () => {
     </div>
   );
 };
+
+const LoadingRows = ({ count }: { count: number }) => (
+  <>
+    {Array.from({ length: count }).map((_, i) => (
+      <TableRow key={i}>
+        <TableCell colSpan={3}>
+          <div className="animate-pulse h-16 bg-gray-100 dark:bg-gray-800 rounded" />
+        </TableCell>
+      </TableRow>
+    ))}
+  </>
+);
