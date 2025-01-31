@@ -1,0 +1,43 @@
+---
+title: Precompile Registry
+description: Learn how to access and interact with the Precompile Registry on Tangle, which can be used to determine whether a given address is a precompile and if it’s active.
+---
+
+import GithubFileReaderDisplay from "../../../../components/GithubFileReaderDisplay";
+
+# Precompile Registry on Tangle
+
+## Introduction
+
+The Precompile Registry is a single source of truth for all available precompiles on Tangle. It can be used to determine whether an address corresponds to a precompile and whether a precompile is active or deprecated. This helps developers prepare for potential backward-incompatible changes by providing an exit strategy or deprecation plan when precompiles evolve over time.
+
+A key additional purpose of the Precompile Registry is to allow any user to set "dummy code" (`0x60006000fd`) for a precompile address. By default, precompiles do not have bytecode. Some Solidity checks require contract bytecode to be non-empty in order to call functions. The dummy code can be used to bypass such checks.
+
+## Precompile Registry Addresses
+
+Below are the addresses for the Registry Precompile on Tangle:
+
+- Tangle Mainnet: `0x0000000000000000000000000000000000000807`
+- Tangle Testnet: `0x0000000000000000000000000000000000000807`
+
+## The Solidity Interface
+
+Below is the Solidity interface for interacting with the Precompile Registry. It exposes three main functions: `isPrecompile`, `isActivePrecompile`, and `updateAccountCode`.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tangle/blob/main/precompiles/precompile-registry/PrecompileRegistry.sol"
+  title="Solidity Interface for Tangle Precompile Registry"
+/>
+
+## Interact with the Precompile Registry Using Remix
+
+You can interact with the Precompile Registry via [Remix](https://remix.ethereum.org/). Below is a general guide:
+
+1. Create a new file in Remix and paste the interface above (or load it from a GitHub repo of your choice).
+2. In the "Compile" tab, compile the interface.
+3. Go to the "Deploy and run transactions" tab:
+   - Choose "Injected Provider - MetaMask" in the ENVIRONMENT dropdown (or another environment that points to Tangle).
+   - Select the compiled interface in the CONTRACT dropdown.
+   - In the "At Address" field, input the Tangle Mainnet or Tangle Testnet address of the Registry Precompile (for example, `0x0000000000000000000000000000000000000806` for Tangle Testnet).
+   - Click "At Address." The precompile interface will appear under "Deployed Contracts."
+4. Interact with any of the methods (e.g., call `isPrecompile` to check if an address is recognized as a precompile).

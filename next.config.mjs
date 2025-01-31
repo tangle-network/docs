@@ -7,9 +7,15 @@ const nextConfig = {
   reactStrictMode: true,
   experimental: {
     legacyBrowsers: false,
+    optimizeCss: true,
+    scrollRestoration: true,
   },
   trailingSlash: false,
   staticPageGenerationTimeout: 120,
+  images: {
+    minimumCacheTTL: 60,
+    deviceSizes: [32, 48, 64],
+  },
   async redirects() {
     return [
       {

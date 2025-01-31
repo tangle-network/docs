@@ -1,0 +1,168 @@
+---
+title: Non-Network Specific Precompiles
+description: Learn how to use precompiled contracts, which are not specific to Ethereum or Tangle, yet are supported for use in your application.
+keywords: ethereum, Tangle, StorageCleaner, ECRecoverPublicKey, sha3FIPS256
+---
+
+import NetworkTabs from "../../../../components/NetworkResources.tsx"
+
+# Non-Network Specific Precompiled Smart Contracts
+
+## Introduction
+
+A precompiled contract, or precompile, is a set of programmed functionalities hard-coded into the blockchain client. Precompiles perform computationally heavy tasks, such as cryptographic processes like hashing. Moving these functionalities to the blockchain client serves the dual purpose of making the computation more efficient than using a traditional smart contract and ensuring everyone has access to the complete and accurate set of processes and algorithms required to operate correctly.
+
+Precompile functionality is bundled and shared under a smart contract address, which allows interactions similar to those of a traditional smart contract. Some precompiled contracts are not specific to Ethereum or Tangle, but are supported for use in your Tangle-based application.
+
+The nonspecific precompiles currently included in this category include `StorageCleaner`, `ECRecoverPublicKey`, and `SHA3FIPS256`.
+
+In the next section, you will learn more about the functionalities included in these precompiles.
+
+## Clear Storage Entries with StorageCleaner
+
+The primary function of the `StorageCleaner` precompile is to clear storage entry key-value pairs for a smart contract marked as self-destructed, previously referred to as "suicided." `StorageCleaner` includes functionality to iterate over a list of addresses to identify self-destructed contracts and delete the appropriate storage entries associated with identified addresses. You can also input a numeric limit to prevent the precompile from consuming too much gas.
+
+With the implementation of [EIP-6780: SELFDESTRUCT](https://eips.ethereum.org/EIPS/eip-6780) as part of the Ethereum Cancun/Dencun upgrade, contracts can only be self-destructed in the same transaction where they are created. This limitation keeps storage entries small and allows them to be automatically deleted during destruction. The `StorageCleaner` precompile remains available when a legacy contract needs storage entries cleared.
+
+## Retrieve a Public Key with ECRecoverPublicKey
+
+The primary function of the `ECRecoverPublicKey` precompile is to recover the public key used to create a digital signature from a given message hash and signature. This precompile is similar to [ECRecover](https://www.evm.codes/precompiled?fork=cancun#0x01), with the exception of returning the public key of the account that signed the message rather than the account address.
+
+In the following sections, you will learn how to use the `ECRecoverPublicKey` precompile.
+
+### Checking Prerequisites
+
+The versions used in this example are v20.15.0 (Node.js) and 10.7.0 (npm). You will also need to install the [Web3](https://web3js.readthedocs.io/en/latest) package by executing:
+
+```bash
+npm install --save web3
+```
+
+To verify the installed version of Web3, you can use the `ls` command:
+
+```bash
+npm ls web3
+```
+
+This example uses version 4.11.1. You will also use [Remix](https://remix.ethereum.org), connecting it to the Tangle Testnet via MetaMask.
+
+<NetworkTabs />
+
+### Retrieve Transaction Signature Values
+
+To use the `ECRecoverPublicKey` precompile, you must first sign a message to create and retrieve the message hash and transaction signature values (`v`, `r`, `s`) to pass as arguments in the contract call. Always use security best practices when handling private keys.
+
+Create a new file called `signMessage.js` in your project directory:
+
+```bash
+touch signMessage.js
+```
+
+Open `signMessage.js` in your code editor and add the following script to initialize Web3 with the Tangle Testnet, sign and hash the message, and return the signature values:
+
+```js
+// Example script to sign a message using an account on Tangle Testnet
+
+const { Web3 } = require('web3');
+
+// Provider
+const web3 = new Web3('https://testnet-rpc.tangle.tools');
+
+// Address and Private Key
+const address = '0x6Be02d1d3665660d22FF9624b7BE0551ee1Ac91b';
+const pk1 = '99B3C12287537E38C90A9219D4CB074A89A16E9CDB20BF85728EBD97C343E342';
+const msg = web3.utils.sha3('supercalifragilisticexpialidocious');
+
+async function signMessage(pk) {
+  try {
+    // Sign and get Signed Message
+    const smsg = await web3.eth.accounts.sign(msg, pk);
+    console.log(smsg);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+signMessage(pk1);
+```
+
+Return to your terminal command line to run the script with this command:
+
+```bash
+node signMessage.js
+```
+
+A typical output for the code above may look like the following:
+
+```js
+{
+  message: '0xc2ae6711c7a897c75140343cde1cbdba96ebbd756f5914fde5c12fadf002ec97',
+  messageHash: '0xc51dac836bc7841a01c4b631fa620904fc8724d7f9f1d3c420f0e02adf229d50',
+  v: '0x1b',
+  r: '0x44287513919034a471a7dc2b2ed121f95984ae23b20f9637ba8dff471b6719ef',
+  s: '0x7d7dc30309a3baffbfd9342b97d0e804092c0aeb5821319aa732bc09146eafb4',
+  signature: '0x44287513919034a471a7dc2b2ed121f95984ae23b20f9637ba8dff471b6719ef7d7dc30309a3baffbfd9342b97d0e804092c0aeb5821319aa732bc09146eafb41b'
+}
+```
+
+Save these values as you will need them in the next section.
+
+### Test ECRecoverPublicKey Contract
+
+You can now visit [Remix](https://remix.ethereum.org/) to test the precompiled contract. Note that you could also use the Web3.js library, but in this case, you can go to Remix to ensure it is using the precompiled contract on the blockchain. The Solidity code you can use to retrieve the public key is the following:
+
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity >=0.8.2 <0.9.0;
+
+contract RecoverPublicKey {
+    function recoverPublicKey(
+        bytes32 hash,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public view returns (bytes memory) {
+        address precompileAddress = 0x0000000000000000000000000000000000000402;
+        (bool success, bytes memory publicKey) = precompileAddress.staticcall(
+            abi.encodeWithSignature(
+                "ECRecoverPublicKey(bytes32,uint8,bytes32,bytes32)",
+                hash,
+                v,
+                r,
+                s
+            )
+        );
+        require(success, "ECRecoverPublicKey failed");
+        return publicKey;
+    }
+}
+```
+
+Using the Remix compiler and deployment, and with MetaMask pointing to Tangle Testnet, you can deploy the contract and call the `recoverPublicKey()` method. It returns the public key for the account that signed the message. You can then use this public key value for other cryptographic functions and verifications.
+
+## Create a Hash with SHA3FIPS256
+
+SHA3-256 is part of the SHA-3 family of cryptographic hashes codified in [FIPS202](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf) that produces an output 256 bits in length. Although the name is similar to SHA256, the SHA-3 family is built with an entirely different algorithm and accordingly produces a different hash output than SHA256 for the same input. You can verify this yourself using this [SHA3-256 Hash Calculator tool](https://md5calc.com/hash/sha3-256). After calculating the SHA3-256 output, change the algorithm in the drop-down selector to SHA256 and take note of the resulting output.
+
+Currently, there is no SHA3-256 support in Solidity, so it needs to be called with inline assembly. The following sample code can be used to call this precompile on Tangle.
+
+```solidity
+pragma solidity ^0.7.0;
+
+contract Precompiles {
+    function sha3fips(bytes memory data) public view returns (bytes32) {
+        bytes32[1] memory h;
+        assembly {
+            if iszero(
+                staticcall(not(0), 0x400, add(data, 32), mload(data), h, 32)
+            ) {
+                invalid()
+            }
+        }
+        return h[0];
+    }
+}
+```
+
+Using [Remix](https://remix.ethereum.org) with MetaMask pointing to Tangle Testnet, you can deploy the contract and call the `sha3fips(bytes memory data)` method to return the encoded string of the data parameter.

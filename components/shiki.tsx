@@ -26,6 +26,8 @@ export const getLanguage = (url: string) => {
     case "js":
     case "jsx":
       return "javascript";
+    case "sol":
+      return "solidity";
     default:
       return "plaintext";
   }
