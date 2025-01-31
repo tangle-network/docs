@@ -17,20 +17,18 @@ For example, Alice signs a call permit and Bob dispatches it. Bob pays for the t
 ## Precompile Address
 
 On Tangle, the Call Permit Precompile is located at the well-known address `0x0000000000000000000000000000000000000805`. Below are the addresses you can use depending on the network:
+
 - Tangle Mainnet: `0x0000000000000000000000000000000000000805`
 - Tangle Testnet: `0x0000000000000000000000000000000000000805`
-
 
 ## The Call Permit Solidity Interface
 
 Below is the recommended Solidity interface for interacting with the Call Permit Precompile on Tangle. Note that it follows the EIP-712 standard and can be used to dispatch gas-less transactions.
 
-
 <GithubFileReaderDisplay
   url="https://github.com/tangle-network/tangle/blob/main/precompiles/call-permit/CallPermit.sol"
   title="Solidity Interface for Tangle Call Permit Precompile"
 />
-
 
 When `dispatch` is called, the precompile checks the signed permit and the current nonce of the signer. If the permit is valid, the call is executed as if the signer itself had made the transaction. After a successful `dispatch`, the signer’s nonce is incremented automatically.
 

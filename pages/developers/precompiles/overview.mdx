@@ -49,42 +49,41 @@ The precompiled contracts are categorized by address and based on the origin net
 | BN128Pairing           | Checks the pairing on a BN128 elliptic curve.                                                                     | `0x0000000000000000000000000000000000000008` |
 | Blake2                 | Computes the Blake2 cryptographic hash function.                                                                  | `0x0000000000000000000000000000000000000009` |
 
-
 ### Non Tangle Specific Nor Ethereum Precompiles
 
-| Precompile             | Description                                                                                                       | Address                                      |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| SHA3FIPS256            | Computes the SHA3 (FIPS 202 compliant) hash function.                                                             | `0x0000000000000000000000000000000000000400` |
-| Dispatch               | Handles dispatching and managing contract calls and interactions.                                                 | `0x0000000000000000000000000000000000000401` |
-| ECRecoverPublicKey     | Recovers the public key from an elliptic curve signature.                                                         | `0x0000000000000000000000000000000000000402` |
-| Curve25519Add          | Adds two Curve25519 points.                                                                                       | `0x0000000000000000000000000000000000000403` |
-| Curve25519ScalarMul    | Multiplies a Curve25519 point by a scalar.                                                                        | `0x0000000000000000000000000000000000000404` |
-| Ed25519Verify          | Verifies an Ed25519 signature.                                                                                    | `0x0000000000000000000000000000000000000405` |
+| Precompile          | Description                                                       | Address                                      |
+| ------------------- | ----------------------------------------------------------------- | -------------------------------------------- |
+| SHA3FIPS256         | Computes the SHA3 (FIPS 202 compliant) hash function.             | `0x0000000000000000000000000000000000000400` |
+| Dispatch            | Handles dispatching and managing contract calls and interactions. | `0x0000000000000000000000000000000000000401` |
+| ECRecoverPublicKey  | Recovers the public key from an elliptic curve signature.         | `0x0000000000000000000000000000000000000402` |
+| Curve25519Add       | Adds two Curve25519 points.                                       | `0x0000000000000000000000000000000000000403` |
+| Curve25519ScalarMul | Multiplies a Curve25519 point by a scalar.                        | `0x0000000000000000000000000000000000000404` |
+| Ed25519Verify       | Verifies an Ed25519 signature.                                    | `0x0000000000000000000000000000000000000405` |
 
 ### Tangle Specific Precompiles
 
-| Precompile          | Description                                                                 | Address                                      |
-| ------------------- | --------------------------------------------------------------------------- | -------------------------------------------- |
-| Staking             | Handles staking-related operations.                                         | `0x0000000000000000000000000000000000000800` |
-| Vesting             | Manages vesting schedules.                                                  | `0x0000000000000000000000000000000000000801` |
-| Erc-20 Balances     | Treats TNT as a native ERC20 token on the EVM side of Tangle.               | `0x0000000000000000000000000000000000000802` |
-| DemocracyInterface  | An interface for interacting with on-chain governance.                      | `0x0000000000000000000000000000000000000803` |
-| Batch               | Allows for multiple calls to be made within a single transaction.           | `0x0000000000000000000000000000000000000804` |
-| Call Permit         | Facilitates authorized calls (for gasless transactions).                    | `0x0000000000000000000000000000000000000805` |
-| Preimage            | Used for managing preimages, which are proposals before they become public. | `0x0000000000000000000000000000000000000806` |
-| Precompile-Registry | Manages the registration of new precompiles.                                | `0x0000000000000000000000000000000000000807` |
-| Ecdsa-Secp256k1     | Verifies ECDSA signatures using the secp256k1 curve.                        | `0x0000000000000000000000000000000000000816` |
-| Ecdsa-Secp256r1     | Verifies ECDSA signatures using the secp256r1 curve.                        | `0x0000000000000000000000000000000000000817` |
-| Ecdsa-Stark         | Verifies ECDSA signatures using the Stark curve.                            | `0x0000000000000000000000000000000000000818` |
-| Schnorr-Sr25519     | Verifies Schnorr signatures using the Sr25519 curve.                        | `0x0000000000000000000000000000000000000819` |
-| Schnorr-Secp256k1   | Verifies Schnorr signatures using the secp256k1 curve.                      | `0x000000000000000000000000000000000000081a` |
-| Schnorr-Ed25519     | Verifies Schnorr signatures using the Ed25519 curve.                        | `0x000000000000000000000000000000000000081b` |
-| Schnorr-Ed448       | Verifies Schnorr signatures using the Ed448 curve.                          | `0x000000000000000000000000000000000000081c` |
-| Schnorr-P256        | Verifies Schnorr signatures using the P256 curve.                           | `0x000000000000000000000000000000000000081d` |
-| Schnorr-P384        | Verifies Schnorr signatures using the P384 curve.                           | `0x000000000000000000000000000000000000081e` |
-| Schnorr-Ristretto255| Verifies Schnorr signatures using the Ristretto255 curve.                   | `0x000000000000000000000000000000000000081f` |
-| Schnorr-Taproot     | Verifies Schnorr signatures using the Taproot Scheme.                       | `0x0000000000000000000000000000000000000820` |
-| Bls12-381           | Performs operations on the BLS12-381 curve.                                 | `0x0000000000000000000000000000000000000821` |
-| MultiAsset Delegation | Provides functions for managing multi-asset delegation pallet.            | `0x0000000000000000000000000000000000000822` |
-| Services Pallet     | Provides functions for managing services pallet.                            | `0x0000000000000000000000000000000000000823` |
-| Liqued Staking      | Provides functions for managing liquid staking pallet.                      | `0x0000000000000000000000000000000000000824` |
+| Precompile            | Description                                                                 | Address                                      |
+| --------------------- | --------------------------------------------------------------------------- | -------------------------------------------- |
+| Staking               | Handles staking-related operations.                                         | `0x0000000000000000000000000000000000000800` |
+| Vesting               | Manages vesting schedules.                                                  | `0x0000000000000000000000000000000000000801` |
+| Erc-20 Balances       | Treats TNT as a native ERC20 token on the EVM side of Tangle.               | `0x0000000000000000000000000000000000000802` |
+| DemocracyInterface    | An interface for interacting with on-chain governance.                      | `0x0000000000000000000000000000000000000803` |
+| Batch                 | Allows for multiple calls to be made within a single transaction.           | `0x0000000000000000000000000000000000000804` |
+| Call Permit           | Facilitates authorized calls (for gasless transactions).                    | `0x0000000000000000000000000000000000000805` |
+| Preimage              | Used for managing preimages, which are proposals before they become public. | `0x0000000000000000000000000000000000000806` |
+| Precompile-Registry   | Manages the registration of new precompiles.                                | `0x0000000000000000000000000000000000000807` |
+| Ecdsa-Secp256k1       | Verifies ECDSA signatures using the secp256k1 curve.                        | `0x0000000000000000000000000000000000000816` |
+| Ecdsa-Secp256r1       | Verifies ECDSA signatures using the secp256r1 curve.                        | `0x0000000000000000000000000000000000000817` |
+| Ecdsa-Stark           | Verifies ECDSA signatures using the Stark curve.                            | `0x0000000000000000000000000000000000000818` |
+| Schnorr-Sr25519       | Verifies Schnorr signatures using the Sr25519 curve.                        | `0x0000000000000000000000000000000000000819` |
+| Schnorr-Secp256k1     | Verifies Schnorr signatures using the secp256k1 curve.                      | `0x000000000000000000000000000000000000081a` |
+| Schnorr-Ed25519       | Verifies Schnorr signatures using the Ed25519 curve.                        | `0x000000000000000000000000000000000000081b` |
+| Schnorr-Ed448         | Verifies Schnorr signatures using the Ed448 curve.                          | `0x000000000000000000000000000000000000081c` |
+| Schnorr-P256          | Verifies Schnorr signatures using the P256 curve.                           | `0x000000000000000000000000000000000000081d` |
+| Schnorr-P384          | Verifies Schnorr signatures using the P384 curve.                           | `0x000000000000000000000000000000000000081e` |
+| Schnorr-Ristretto255  | Verifies Schnorr signatures using the Ristretto255 curve.                   | `0x000000000000000000000000000000000000081f` |
+| Schnorr-Taproot       | Verifies Schnorr signatures using the Taproot Scheme.                       | `0x0000000000000000000000000000000000000820` |
+| Bls12-381             | Performs operations on the BLS12-381 curve.                                 | `0x0000000000000000000000000000000000000821` |
+| MultiAsset Delegation | Provides functions for managing multi-asset delegation pallet.              | `0x0000000000000000000000000000000000000822` |
+| Services Pallet       | Provides functions for managing services pallet.                            | `0x0000000000000000000000000000000000000823` |
+| Liqued Staking        | Provides functions for managing liquid staking pallet.                      | `0x0000000000000000000000000000000000000824` |

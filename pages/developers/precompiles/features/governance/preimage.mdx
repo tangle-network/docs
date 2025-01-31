@@ -30,8 +30,6 @@ Below is the Tangle Preimage interface, which you can use to interact with the o
   title="Solidity Interface for Tangle Preimage Precompile"
 />
 
-
-
 The two key functions are:
 
 - `notePreimage` — registers a preimage on-chain.
@@ -57,7 +55,6 @@ To follow along, you will need:
 1. Go to the official [Remix](https://remix.ethereum.org) website.
 2. In the File Explorer pane, create a new file (for example, “Preimage.sol”), and paste the interface code provided above (the Tangle Preimage interface) into the file.
 
-
 ### Compile the Contract
 
 1. Click on the “Solidity Compiler” tab in Remix.
@@ -72,7 +69,6 @@ To follow along, you will need:
 4. In the “At Address” field, provide the Preimage Precompile’s address, which on Tangle is:
    `0x0000000000000000000000000000000000000806`
 5. Click “At Address.” You should see the Precompile listed under “Deployed Contracts.”
-
 
 ---
 
@@ -95,12 +91,10 @@ Then:
 3. Provide any unique content for the remark.
 4. Click “Submit preimage,” but when prompted to sign, do NOT finalize the transaction. Just retrieve the data.
 
-
 On the following screen:
 
 1. Expand the triangle icon to reveal the encoded proposal bytes.
 2. Copy the bytes representing the encoded proposal. You’ll supply these bytes when calling the notePreimage function from Remix.
-
 
 > Note: Do not sign or submit the transaction in Polkadot.js Apps. You only need to copy the proposal bytes.
 

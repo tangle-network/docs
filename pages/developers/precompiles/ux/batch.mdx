@@ -4,7 +4,6 @@ description: "Learn how to transact multiple transfers and contract interactions
 keywords: ["solidity", "ethereum", "batch", "transaction", "tangle", "precompiled", "contracts"]
 ---
 
-
 import GithubFileReaderDisplay from "../../../../components/GithubFileReaderDisplay";
 
 # Interacting with the Batch Precompile
@@ -25,7 +24,6 @@ The precompile is located at the following addresses:
 ## The Batch Solidity Interface
 
 Below is the Solidity interface for the batch precompile on Tangle, which exposes three functions:
-
 
 <GithubFileReaderDisplay
   url="https://github.com/tangle-network/tangle/blob/main/precompiles/batch/Batch.sol"
@@ -186,9 +184,10 @@ Afterwards, you can verify the contract state change by calling functions (for e
 So far, each operation has been separate, but the real power of batching is to combine transfers and contract interactions into a single transaction. For instance, consider these arrays when using **batchAll**:
 
 • Three subtransactions:
-  1. A native token transfer to some address
-  2. A call to `SimpleContract` that sets a message
-  3. Another call to `SimpleContract` that sets another message
+
+1. A native token transfer to some address
+2. A call to `SimpleContract` that sets a message
+3. Another call to `SimpleContract` that sets another message
 
 • The `to` array might look like this:
 

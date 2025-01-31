@@ -141,7 +141,6 @@ contract RecoverPublicKey {
 
 Using the Remix compiler and deployment, and with MetaMask pointing to Tangle Testnet, you can deploy the contract and call the `recoverPublicKey()` method. It returns the public key for the account that signed the message. You can then use this public key value for other cryptographic functions and verifications.
 
-
 ## Create a Hash with SHA3FIPS256
 
 SHA3-256 is part of the SHA-3 family of cryptographic hashes codified in [FIPS202](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf) that produces an output 256 bits in length. Although the name is similar to SHA256, the SHA-3 family is built with an entirely different algorithm and accordingly produces a different hash output than SHA256 for the same input. You can verify this yourself using this [SHA3-256 Hash Calculator tool](https://md5calc.com/hash/sha3-256). After calculating the SHA3-256 output, change the algorithm in the drop-down selector to SHA256 and take note of the resulting output.
