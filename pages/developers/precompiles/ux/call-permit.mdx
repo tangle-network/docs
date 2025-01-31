@@ -1,0 +1,238 @@
+---
+title: "Call Permit Precompile Contract"
+description: "Learn how to use the Call Permit Precompile contract on Tangle to sign a permit for any EVM call that can be dispatched by anyone or any smart contract."
+keywords: [solidity, ethereum, call permit, permit, gasless transaction, tangle, precompiled, contracts]
+---
+
+import GithubFileReaderDisplay from "../../../../components/GithubFileReaderDisplay";
+
+# Interacting with the Call Permit Precompile
+
+## Introduction
+
+The Call Permit Precompile on Tangle allows a user to sign a permit, an [EIP-712](https://eips.ethereum.org/EIPS/eip-712) signed message, for any EVM call. It can then be dispatched by anyone or any smart contract. The user who signed the permit is effectively “authorizing” another account or contract to execute the call on their behalf. This enables gas-less transactions because the dispatcher pays for fees on behalf of the signer.
+
+For example, Alice signs a call permit and Bob dispatches it. Bob pays for the transaction fees, so Alice does not need to hold any native tokens to cover gas. However, keep in mind that if the call includes a token transfer, the signer must have a sufficient balance of that token.
+
+## Precompile Address
+
+On Tangle, the Call Permit Precompile is located at the well-known address `0x0000000000000000000000000000000000000805`. Below are the addresses you can use depending on the network:
+
+- Tangle Mainnet: `0x0000000000000000000000000000000000000805`
+- Tangle Testnet: `0x0000000000000000000000000000000000000805`
+
+## The Call Permit Solidity Interface
+
+Below is the recommended Solidity interface for interacting with the Call Permit Precompile on Tangle. Note that it follows the EIP-712 standard and can be used to dispatch gas-less transactions.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tangle/blob/main/precompiles/call-permit/CallPermit.sol"
+  title="Solidity Interface for Tangle Call Permit Precompile"
+/>
+
+When `dispatch` is called, the precompile checks the signed permit and the current nonce of the signer. If the permit is valid, the call is executed as if the signer itself had made the transaction. After a successful `dispatch`, the signer’s nonce is incremented automatically.
+
+---
+
+## Setup the Example
+
+This section guides you through a simple usage example. You will:
+
+1. Deploy a sample contract, `SetMessage.sol`.
+2. Generate and sign the permit using one account (for example, Alice).
+3. Dispatch the call using another account (for example, Bob).
+
+### Prerequisites
+
+To follow this demonstration, you should:
+
+- Have [MetaMask installed](https://metamask.io/) in your browser.
+- Connect MetaMask to Tangle Testnet (or Tangle Mainnet, if you prefer).
+- Have at least two accounts on Tangle, one funded for paying fees (Bob) and one to act as the signer (Alice).
+
+### Example Contract (SetMessage.sol)
+
+Here is a simple contract used to illustrate the call permit process. It stores a string message:
+
+```solidity
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity 0.8.7;
+
+contract SetMessage {
+    string storedMessage;
+
+    function set(string calldata x) public {
+        storedMessage = x;
+    }
+
+    function get() public view returns (string memory) {
+        return storedMessage;
+    }
+}
+```
+
+### Remix Setup
+
+A common way to work with the Tangle Precompile Registry is via [Remix](https://remix.ethereum.org). You can deploy the sample contract and interact with the Call Permit Precompile. Steps:
+
+1. Open Remix and enable the "File explorers".
+2. Create a file named `SetMessage.sol` and paste the code above.
+3. Also create a file named `CallPermit.sol` (or any name you choose) and paste the [interface](#the-call-permit-solidity-interface) from this documentation (if needed for reference).
+4. Compile both files by selecting each and pressing the "Compile" button.
+
+### Deploying the Example Contract
+
+1. In Remix, go to the “Deploy & run transactions” panel.
+2. Select “Injected Web3” or “Injected Provider - Metamask” from the Environment dropdown (ensuring your MetaMask is connected to Tangle).
+3. Deploy `SetMessage.sol`. Confirm the transaction in MetaMask.
+4. You should see the deployed contract under “Deployed Contracts”.
+
+Record or copy the newly deployed `SetMessage` contract address; you will need it when forming the permit data.
+
+### Accessing the Call Permit Precompile
+
+Since the Call Permit contract is precompiled and already deployed, you do not deploy it yourself. Instead, you point Remix to the address:
+
+1. Go to the “Deploy & run transactions” panel in Remix.
+2. Leave the Environment set to “Injected Provider - Metamask”.
+3. Next to "At Address", paste the well-known precompile address:
+   `0x0000000000000000000000000000000000000805`
+4. Click “At Address” to tell Remix to load the Call Permit contract interface at that address.
+5. Remix adds the Call Permit Precompile contract to your “Deployed Contracts” list.
+
+---
+
+## Generate Call Permit Signature
+
+To dispatch a call permit, one must first sign the EIP-712 message that includes:
+
+- The signer’s address (`from`)
+- The contract you want to call (`to`)
+- The `value` (in wei/fungible tokens)
+- The `data` you want to send, including function signatures and arguments
+- A `gaslimit` to ensure the dispatcher doesn’t choose excessive gas
+- The `deadline` for expiration
+- The signer’s `nonce` from the Call Permit Precompile
+
+### Determining the Signer’s Nonce
+
+In Remix, expand the CallPermit precompile entry under “Deployed Contracts”; then input the signer’s address into the `nonces` function and press the button to read the current nonce.
+
+### Example Data
+
+For `SetMessage.sol`, suppose you want to set the message to "hello world". The contract’s function signature for `set(string)` is:
+
+- 4-byte function selector for `set(string)`
+- Encoded string argument
+
+In hex, the payload can look like this:
+
+```
+0x4ed3885e
+0000000000000000000000000000000000000000000000000000000000000020
+000000000000000000000000000000000000000000000000000000000000000b
+68656c6c6f20776f726c64000000000000000000000000000000000000000000
+```
+
+We recommend a gas limit of around 100000 for this example.
+
+### Signing the Permit in the Browser
+
+You can sign the permit in multiple ways. Below is an example using [JSFiddle](https://jsfiddle.net) and the MetaMask provider directly:
+
+1. In JSFiddle (or any similar environment), add Ethers.js as a resource.
+2. Use this snippet (simplified example):
+
+```js
+// Example snippet to sign the data via MetaMask in the browser
+
+// IMPORTANT: This is a simplified code snippet for demonstration only.
+async function main() {
+  // Request accounts from MetaMask
+  const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+  const from = accounts[0];
+
+  // Replace these as appropriate
+  const to = "0x1234567890123456789012345678901234567890";
+  const value = 0; // Setting to 0 for this example
+  const data = "0x4ed3885e..." // (truncated) your data from above
+  const gaslimit = 100000;
+  const nonce = 0; // The first time you do this, it might be 0
+  const deadline = Math.floor(Date.now() / 1000) + 600; // 10 mins from "now"
+
+  const typedData = JSON.stringify({
+    types: {
+      EIP712Domain: [
+        { name: "name", type: "string" },
+        { name: "version", type: "string" },
+        { name: "chainId", type: "uint256" },
+        { name: "verifyingContract", type: "address" },
+      ],
+      CallPermit: [
+        { name: "from", type: "address" },
+        { name: "to", type: "address" },
+        { name: "value", type: "uint256" },
+        { name: "data", type: "bytes" },
+        { name: "gaslimit", type: "uint64" },
+        { name: "nonce", type: "uint256" },
+        { name: "deadline", type: "uint256" },
+      ],
+    },
+    primaryType: "CallPermit",
+    domain: {
+      name: "Call Permit Precompile",
+      version: "1",
+      chainId: 3799, // Tangle Testnet
+      verifyingContract: "0x0000000000000000000000000000000000000805",
+    },
+    message: {
+      from,
+      to,
+      value,
+      data,
+      gaslimit,
+      nonce,
+      deadline,
+    },
+  });
+
+  // Request the user to sign typed data
+  const signature = await window.ethereum.request({
+    method: "eth_signTypedData_v4",
+    params: [from, typedData],
+  });
+
+  console.log("Signature:", signature);
+}
+
+main().catch(console.error);
+```
+
+3. Run the snippet. MetaMask prompts you to sign. Approve the message, and you should see the signature in your console (it should look like a hex string, typically “0x” followed by 64 bytes plus the “v” byte).
+
+You can decode the signature into `v`, `r`, `s` fields using [Ethers.js](https://docs.ethers.org/v6/). You’ll need these fields to call `dispatch`.
+
+### Signing the Permit in Node.js
+
+Alternatively, you can use the MetaMask [`@metamask/eth-sig-util`](https://www.npmjs.com/package/@metamask/eth-sig-util) package with a private key in Node.js. Doing so requires you to be mindful about key storage. Once you have the signature, the process is the same: you break it down into `v`, `r`, and `s`.
+
+---
+
+## Interact with the Precompile
+
+Once you have the call permit signature, you can test `dispatch` on Tangle.
+
+### Dispatch a Call
+
+1. In Remix, switch to the account that will pay fees (Bob).
+2. Expand the Call Permit Precompile contract under “Deployed Contracts.”
+3. Find and expand the `dispatch` function.
+4. Fill in the fields with the same `from`, `to`, `value`, `data`, `gaslimit`, and `deadline` that you used for the signature.
+5. Paste in `v`, `r`, and `s`.
+6. Click “transact.”
+
+If your permit is valid and everything matches, the transaction should succeed. The call is effectively executed as if “Alice” had done it, while “Bob” pays the fees.
+
+### Verify the Result
+
+Return to the `SetMessage` contract you deployed. Call its `get` function to see if the stored message was updated to “hello world”. If so, congratulations! You have successfully dispatched a gas-less transaction on Tangle using the Call Permit Precompile.

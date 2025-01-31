@@ -20,7 +20,7 @@
           buildInputs = [
             # Nodejs
             pkgs.nodePackages.typescript-language-server
-            pkgs.nodejs_18
+            pkgs.nodejs_22
             pkgs.nodePackages.yarn
           ];
           packages = [ ];

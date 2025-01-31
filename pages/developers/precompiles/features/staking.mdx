@@ -1,0 +1,91 @@
+---
+title: "Staking Precompile Contract"
+description: "Unlock the potential of staking on Tangle with a specialized precompiled contract accessible via the Ethereum API."
+keywords: ["solidity", "ethereum", "staking", "tangle", "precompiled", "contracts"]
+---
+
+import GithubFileReaderDisplay from "../../../../components/GithubFileReaderDisplay";
+
+# Interacting with the Staking Precompile
+
+## Introduction
+
+Tangle uses a staking system via a built-in pallet in the runtime. To allow developers to interact with this pallet using the Ethereum API, Tangle provides a precompiled contract located at address:
+
+- Tangle Mainnet and Tangle Testnet: `0x0000000000000000000000000000000000000800`
+
+By calling this precompile through any standard Ethereum tool (such as Remix or web3 libraries), you can use Solidity to bond tokens, nominate validators, unbond tokens, and more—all without having to directly use Substrate APIs. This guide shows how to connect to the precompile contract and make use of its functions using the Tangle staking interface.
+
+---
+
+## The Tangle Staking Solidity Interface
+
+Below is the Solidity interface that wraps the Tangle staking functionality:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tangle/blob/main/precompiles/staking/StakingInterface.sol"
+  title="Solidity Interface for Tangle Staking Precompile"
+/>
+
+---
+
+## Using the Staking Precompile on Tangle
+
+Below is a step-by-step overview of how you might interact with the Tangle staking precompile using Remix as an example. The same approach applies to other tools or libraries capable of interacting with EVM contracts.
+
+### Prerequisites
+
+- MetaMask installed and connected to Tangle Testnet (or Tangle Mainnet)
+- An account funded with native tokens on Tangle so you can bond or nominate
+
+### Accessing the Precompile in Remix
+
+1. Go to the [Remix IDE](https://remix.ethereum.org).
+2. Create a new file named "StakingInterface.sol", and paste in the interface above.
+3. In the "Compile" tab, compile "StakingInterface.sol".
+4. In the "Deploy & Run" tab, select "Injected Provider - MetaMask" from the ENVIRONMENT dropdown.
+5. In the "CONTRACT" dropdown, select "Staking - StakingInterface.sol" (the name may vary depending on your file).
+6. In the text field next to the "At Address" button, enter the Tangle Staking precompile address:
+   `0x0000000000000000000000000000000000000800`
+7. Click on "At Address" to load the already-deployed precompile into Remix. You should now see the interface methods under "Deployed Contracts."
+
+---
+
+## Example Calls
+
+Below are simple examples of how to interact with a few of the core methods in the interface. All calls should be made against the loaded precompile in Remix.
+
+### 1. Read the Current Era
+
+1. Expand `currentEra()`
+2. Click "call"
+3. The result returned is the current era index on Tangle.
+
+### 2. Bond Tokens
+
+1. Expand `bond(uint256, bytes32)`
+2. Enter the amount of tokens (in Wei) to bond.
+3. Enter the "payee" as a bytes32-encoded value. For example, if you want staking rewards to go to your stash account, you might pass the stash account bytes in little-endian or a relevant encoding.
+4. Click "transact"
+5. Approve the MetaMask transaction.
+
+### 3. Nominate Validators
+
+1. Expand `nominate(bytes32[])`
+2. Provide an array of validator stash addresses in bytes32 form (for example, ["0xabc123...","0xdef456..."]).
+3. Click "transact"
+4. Approve the MetaMask transaction to become a nominator for those validators.
+
+### 4. Unbond Tokens
+
+1. Expand `unbond(uint256)`
+2. Enter the amount of tokens (in Wei) you want to unbond.
+3. Click "transact"
+4. Approve the MetaMask transaction.
+5. Remember that there is an unbonding period before tokens become available. After this period, you can call withdrawUnbonded(uint32) to remove them from the staking system entirely.
+
+---
+
+## More Information
+
+Please Refer to the Solidity interface above for more methods and details on how to interact with the Tangle staking precompile.

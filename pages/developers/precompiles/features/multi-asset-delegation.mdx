@@ -1,0 +1,128 @@
+---
+title: "Multi Asset Delegation Precompile Contract"
+description: "Leverage Tangle's multi-asset delegation functionality through a specialized precompiled contract accessible via the Ethereum API."
+keywords: ["solidity", "ethereum", "delegation", "multi-asset", "tangle", "precompiled", "contracts"]
+---
+
+import GithubFileReaderDisplay from "../../../../components/GithubFileReaderDisplay";
+
+# Interacting with the MultiAssetDelegation Precompile
+
+## Introduction
+
+Tangle supports multi-asset delegation through a built-in pallet in its runtime. To make it easy for developers to interact with this pallet using Ethereum-compatible tools, Tangle includes a precompiled contract at the following address:
+
+- Tangle Mainnet and Tangle Testnet: `0x0000000000000000000000000000000000000822`
+
+By calling this precompile using any standard Ethereum tool (Remix, web3 libraries, etc.), you can deposit assets, schedule asset withdrawals, delegate assets, and more—all without needing to interact directly with Substrate APIs. This guide demonstrates how to connect to the precompile contract and use its functions via the Tangle multi-asset delegation interface.
+
+---
+
+## The Tangle MultiAssetDelegation Solidity Interface
+
+Below is the Solidity interface that provides access to the multi-asset delegation functionality of Tangle:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tangle/blob/main/precompiles/multi-asset-delegation/MultiAssetDelegation.sol"
+  title="Solidity Interface for Tangle MultiAssetDelegation Precompile"
+/>
+
+---
+
+## Using the MultiAssetDelegation Precompile on Tangle
+
+Below is an overview of how you can interact with the Tangle multi-asset delegation precompile in Remix. The same procedures also work for other Ethereum-compatible tools and libraries.
+
+### Prerequisites
+
+- MetaMask installed and connected to either Tangle Testnet or Mainnet
+- An account funded with the relevant asset(s) on Tangle to deposit or delegate
+
+### Accessing the Precompile in Remix
+
+1. Navigate to the [Remix IDE](https://remix.ethereum.org).
+2. Create a new file named "MultiAssetDelegation.sol" (or any name you prefer), and paste in the Solidity interface shown above.
+3. In the "Compile" tab, compile "MultiAssetDelegationInterface.sol".
+4. In the "Deploy & Run" tab, from the ENVIRONMENT dropdown, select "Injected Provider - MetaMask".
+5. Under "CONTRACT", choose the compiled interface ("MultiAssetDelegation - MultiAssetDelegation.sol").
+6. In the text field next to the "At Address" button, enter the precompile address:
+   `0x0000000000000000000000000000000000000822`
+7. Click on "At Address" to load the precompiled contract. The interface methods will appear under "Deployed Contracts."
+
+---
+
+## Example Calls
+
+Below are example usages for some core methods on the multi-asset delegation interface. Make sure you have the correct asset IDs and token addresses (for ERC20 assets) whenever calling these methods. All calls below are made against the loaded precompile in Remix.
+
+### 1. Deposit Assets
+
+1. Expand the `deposit(uint256 assetId, address tokenAddress, uint256 amount, uint8 lockMultiplier)` section.
+2. Set `assetId` to `0` for ERC20 tokens, or provide another valid ID for other assets.
+3. Provide the ERC20 contract address in `tokenAddress` if `assetId` is `0`. If using a native asset ID, this may be ignored depending on your setup.
+4. Enter the `amount` you wish to deposit (in your asset's smallest unit, e.g., Wei for WETH).
+5. Specify a `lockMultiplier` value if required by your delegation logic (`0` for no lock).
+6. Click "transact" and confirm the MetaMask popup.
+
+### 2. Schedule a Withdrawal
+
+1. Expand `scheduleWithdraw(uint256 assetId, address tokenAddress, uint256 amount)`.
+2. Fill in `assetId` (`0` for ERC20), `tokenAddress` (if `assetId` is `0`), and `amount`.
+3. Click "transact" and approve the MetaMask transaction.
+4. The withdrawal is now scheduled; you can later execute or cancel it.
+
+### 3. Execute a Scheduled Withdrawal
+
+1. Expand `executeWithdraw()`.
+2. Click "transact".
+3. Confirm the MetaMask transaction.
+4. Any previously scheduled withdrawals that are now eligible will be executed.
+
+### 4. Cancel a Scheduled Withdrawal
+
+1. Expand `cancelWithdraw(uint256 assetId, address tokenAddress, uint256 amount)`.
+2. Provide the details of the scheduled withdrawal you wish to cancel (`assetId`, `tokenAddress` for ERC20 if needed, and the identical amount).
+3. Click "transact" and confirm the Metamask transaction.
+
+### 5. Delegate to an Operator
+
+1. Expand `delegate(bytes32 operator, uint256 assetId, address tokenAddress, uint256 amount, uint64[] memory blueprintSelection)`.
+2. Enter the operator (as a bytes32 account id), the asset ID, token address if assetId is `0` (ERC20), the amount to delegate, and any required blueprint parameters.
+3. Click "transact" to nominate that account as your operator with a specified stake.
+
+### 6. Schedule Unstake for Delegators
+
+1. Expand `scheduleDelegatorUnstake(bytes32 operator, uint256 assetId, address tokenAddress, uint256 amount)`.
+2. Input the operator you previously delegated to and the relevant asset parameters.
+3. Enter the amount you wish to unstake.
+4. Click "transact" and confirm in MetaMask.
+
+### 7. Execute Scheduled Unstake for Delegators
+
+1. Expand `executeDelegatorUnstake()`.
+2. Click "transact" and confirm the transaction.
+3. Any eligible scheduled unstake operations will finalize.
+
+### 8. Cancel Scheduled Unstake
+
+1. Expand `cancelDelegatorUnstake(bytes32 operator, uint256 assetId, address tokenAddress, uint256 amount)`.
+2. Provide the same operator, asset details, and amount that were set when scheduling the unstake.
+3. Click "transact" to cancel the unstake operation.
+
+### 9. Check Overall Balance
+
+1. Expand `balanceOf(address who, uint256 assetId, address tokenAddress)`.
+2. Enter the address you want to inspect, assetId (0 for ERC20), and `tokenAddress` if needed.
+3. Click "call" to see the total amount of assets held (deposited + delegated).
+
+### 10. Check Delegated Balance
+
+1. Expand `delegatedBalanceOf(address who, uint256 assetId, address tokenAddress)`.
+2. Enter the delegator's address, along with the relevant asset parameters.
+3. Click "call" to see how many of the delegator’s tokens are actively delegated.
+
+---
+
+## More Information
+
+For a complete list of methods and their parameters, refer to the Solidity interface above. This interface exposes all the critical multi-asset delegation functionality provided by Tangle's runtime, enabling you to manage deposits, schedule and execute withdrawals, delegate tokens, and unstake as needed—all through an Ethereum-compatible workflow. Make sure to handle asset IDs, token addresses, and amounts accurately to avoid transaction failures.

@@ -1,0 +1,224 @@
+---
+title: "Batch Precompile Contract"
+description: "Learn how to transact multiple transfers and contract interactions at once via a Solidity interface with Tangle's Batch Precompile contract."
+keywords: ["solidity", "ethereum", "batch", "transaction", "tangle", "precompiled", "contracts"]
+---
+
+import GithubFileReaderDisplay from "../../../../components/GithubFileReaderDisplay";
+
+# Interacting with the Batch Precompile
+
+## Introduction
+
+The batch precompiled contract on Tangle allows developers to combine multiple EVM calls into one.
+
+Normally, having users interact with multiple contracts would require multiple transaction confirmations in the user's wallet. An example would be approving a smart contract's access to a token, then transferring it. With the batch precompile, developers can enhance user experience with batched transactions as it minimizes the number of transactions a user is required to confirm to one. Additionally, gas fees can be reduced since batching avoids multiple base gas fees (the initial 21000 units of gas spent to begin a transaction).
+
+The precompile interacts directly with the EVM pallet on Tangle. The caller of the batch function will have their address act as the `msg.sender` for all subtransactions, but unlike [delegate calls](https://docs.soliditylang.org/en/v0.8.15/introduction-to-smart-contracts.html#delegatecall-callcode-and-libraries), the target contract will still affect its own storage. It is effectively the same as if the user signed multiple transactions, but with only one confirmation.
+
+The precompile is located at the following addresses:
+
+- Tangle Mainnet: `0x0000000000000000000000000000000000000808`
+- Tangle Testnet: `0x0000000000000000000000000000000000000808`
+
+## The Batch Solidity Interface
+
+Below is the Solidity interface for the batch precompile on Tangle, which exposes three functions:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tangle/blob/main/precompiles/batch/Batch.sol"
+  title="Solidity Interface for Tangle Batch Precompile"
+/>
+
+Below is more detail on how these functions work:
+
+### batchSome
+
+Performs multiple calls, where the same index of each array combines into the information required for a single subcall. If a subcall reverts, following subcalls will still be attempted.
+
+- `to` — array of addresses to direct subtransactions to, where each entry is a subtransaction
+- `value` — array of native currency values to send in the subtransactions, where the index corresponds to the subtransaction of the same index in the `to` array. If this array is shorter than the `to` array, all the following subtransactions will default to a value of 0
+- `callData` — array of call data to include in the subtransactions, where the index corresponds to the subtransaction of the same index in the `to` array. If this array is shorter than the `to` array, all of the following subtransactions will include no call data
+- `gasLimit` — array of gas limits for each subtransaction, where the index corresponds to the subtransaction of the same index in the `to` array. Values of 0 are interpreted as "unlimited" and will have all remaining gas of the batch transaction forwarded. If this array is shorter than the `to` array, all of the following subtransactions will have all remaining gas forwarded
+
+### batchSomeUntilFailure
+
+Performs multiple calls, where the same index of each array combines into the information required for a single subcall. If a subcall reverts, no following subcalls will be executed, but the successful subcalls remain intact. It does not revert the entire batch transaction.
+
+- `to` — array of addresses to direct subtransactions to
+- `value` — array of native currency values to send
+- `callData` — array of call data to include in each subtransaction
+- `gasLimit` — array of gas limits for each subtransaction
+
+### batchAll
+
+Performs multiple calls atomically. If a subcall reverts, all subcalls will revert.
+
+- `to` — array of addresses to direct subtransactions to
+- `value` — array of native currency values to send
+- `callData` — array of call data to include in each subtransaction
+- `gasLimit` — array of gas limits for each subtransaction
+
+## Interact with the Solidity Interface
+
+### Checking Prerequisites
+
+To follow along with this tutorial, you will need to have:
+
+- [MetaMask installed and connected to Tangle Testnet or Tangle Mainnet](#)
+- Create or have two accounts on Tangle Testnet to test out the different features in the batch precompile
+- At least one of the accounts will need to be funded with test tokens on Tangle Testnet.
+
+### Example Contract
+
+The following contract, `SimpleContract.sol`, will be used as an example of batching contract interactions, but in practice, any contract can be interacted with:
+
+```solidity
+// SPDX-License-Identifier: GPL-3.0-only
+pragma solidity >=0.8.3;
+
+contract SimpleContract {
+    mapping(uint256 => string) public messages;
+
+    function setMessage(uint256 id, string memory message) public {
+        messages[id] = message;
+    }
+}
+```
+
+### Remix Set Up
+
+You can interact with the batch precompile using [Remix](https://remix.ethereum.org). To add the interface and the example contract and follow along with this tutorial, you will need to:
+
+1. Click on the **File explorer** tab in Remix
+2. Create a file named **Batch.sol**, and paste in the batch interface shown above
+3. Create a file named **SimpleContract.sol**, and paste in the `SimpleContract` provided above
+
+### Compile the Contract
+
+Next, you will need to compile both files in Remix:
+
+1. Open the **Batch.sol** file
+2. Click on the **Compile** tab
+3. Click on **Compile Batch.sol**
+
+If the interface was compiled successfully, you'll see a green checkmark next to the **Compile** tab. Then, repeat these steps for **SimpleContract.sol**.
+
+### Access the Precompile
+
+Instead of deploying the batch precompile, you will access the interface given the address of the precompiled contract:
+
+1. Click on the **Deploy and Run** tab (below the **Compile** tab) in Remix. The precompiled contract is already deployed on Tangle
+2. Select **Injected Provider - MetaMask** under **ENVIRONMENT**. MetaMask may prompt you to connect your account
+3. Ensure the correct account is displayed under **ACCOUNT**
+4. Select **Batch - Batch.sol** under **CONTRACT**
+5. Copy the batch precompile address for Tangle (0x0000000000000000000000000000000000000808) and paste it into the **At Address** field
+6. Click **At Address**
+
+A new instance of **Batch - Batch.sol** will appear under **Deployed Contracts**.
+
+### Deploy Example Contract
+
+On the other hand, `SimpleContract.sol` will be deployed as a new contract. After compiling `SimpleContract.sol`:
+
+1. Click on the **Deploy and Run** tab
+2. Select **Injected Provider - MetaMask** under **ENVIRONMENT**
+3. Ensure the correct account is displayed under **ACCOUNT**
+4. Select **SimpleContract - SimpleContract.sol** in the **CONTRACT** dropdown
+5. Click **Deploy**
+6. Confirm the MetaMask transaction
+
+A new instance of **SimpleContract** will appear under **Deployed Contracts**.
+
+### Send Native Currency via Precompile
+
+Sending native currency with the batch precompile involves specifying which addresses to send to and how much to send, all in a single batch call. For this example, you'll use the **batchAll** function to send native currency atomically in Tangle Testnet:
+
+1. Make sure you have enough test tokens in your connected wallet on Tangle Testnet
+2. Expand the **Batch - Batch.sol** precompile instance
+3. Expand the **batchAll** function
+4. For the **to** input, provide the addresses you want to send tokens to, for example:
+   `["ADDRESS_1", "ADDRESS_2"]`
+5. For the **value** input, provide the amounts to send in Wei, for example:
+   `["100000000000000000", "200000000000000000"]`
+   which corresponds to 0.1 and 0.2 tokens respectively
+6. For the **callData** and **gasLimit** inputs, provide empty arrays:
+   `[]`
+7. Click **transact**
+8. Confirm in MetaMask
+
+Once the transaction is complete, confirm both recipient addresses have the appropriate token balances in MetaMask or via a block explorer.
+
+### Find a Contract Interaction's Call Data
+
+Visual interfaces like Remix and libraries like [Ethers.js](https://github.com/ethers-io/ethers.js) or [Web3.js](https://github.com/ChainSafe/web3.js) encapsulate the call data used to interact with Solidity contracts, but you can also obtain it explicitly to use with the batch precompile.
+
+Try finding a transaction's call data manually in Remix:
+
+1. Expand the deployed `SimpleContract.sol` instance
+2. Expand the **setMessage** function
+3. Enter example values, such as `id = 1` and `message = "moonbeam"`
+4. Instead of clicking **transact**, click the copy button next to it to copy the call data
+
+This copied string is the function selector plus encoded arguments for the function call.
+
+### Function Interaction via Precompile
+
+To batch contract interactions, function inputs must be encoded as call data within the `callData` array. For an atomic operation where a single subcall failure reverts all subcalls:
+
+1. Copy the address of your `SimpleContract.sol` instance
+2. Expand the **Batch - Batch.sol** instance under **Deployed Contracts**
+3. Expand the **batchAll** function
+4. For **to**, insert your contract's address, for example:
+   `["INSERT_SIMPLE_CONTRACT_ADDRESS"]`
+5. For **value**, if your function call does not require any native currency, pass an array with `[0]`
+6. For **callData**, insert the call data string you obtained earlier in brackets, for example:
+   `["0x648345c800000000000000000000000000000000000000000000000000000000..."]`
+7. For **gasLimit**, insert an empty array `[]` or the gas limit you wish to enforce
+8. Click **transact** and confirm in MetaMask
+
+Afterwards, you can verify the contract state change by calling functions (for example, `messages(1)`) on the deployed `SimpleContract`.
+
+### Combining Subtransactions
+
+So far, each operation has been separate, but the real power of batching is to combine transfers and contract interactions into a single transaction. For instance, consider these arrays when using **batchAll**:
+
+• Three subtransactions:
+
+1. A native token transfer to some address
+2. A call to `SimpleContract` that sets a message
+3. Another call to `SimpleContract` that sets another message
+
+• The `to` array might look like this:
+
+```text
+[
+  "0x6Be02d1d3665660d22FF9624b7BE0551ee1Ac91b",
+  "0xd14b70a55F6cBAc06d4FA49b99be0370D0e1BD39",
+  "0xd14b70a55F6cBAc06d4FA49b99be0370D0e1BD39"
+]
+```
+
+• The `value` array:
+
+```text
+["1000000000000000000", "0", "0"]
+```
+
+• The `callData` array (first item is empty, so the native token transfer does nothing beyond sending currency; the next two strings correspond to calls of `setMessage` with different parameters):
+
+```text
+[
+  "0x",
+  "0x648345c8000000000000000000000000000000000000000000000000000000000000000500000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000009796f752061726520610000000000000000000000000000000000000000000000",
+  "0x648345c800000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000e61206d6f6f6e6265616d2070726f000000000000000000000000000000000000"
+]
+```
+
+• And an empty array for `gasLimit`:
+
+```text
+[]
+```
+
+Entering these arrays under the **batchAll** function will execute all three subtransactions—one token transfer and two contract interactions—in a single transaction.
