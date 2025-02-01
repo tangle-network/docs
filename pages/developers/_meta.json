@@ -22,6 +22,7 @@
     "title": "Solution Developers"
   },
   "endpoints": "Endpoints and Integration",
+  "precompiles": "EVM Precompiles",
   "technicals": "EVM Development",
   "-- contribute": {
     "type": "separator",

@@ -32,11 +32,11 @@ The `EigenlayerContext` trait provides access to core Eigenlayer services and fu
 - Query stake updates and changes
 - Monitor stake across different quorums
 
-<GithubFileReaderDisplay 
+<GithubFileReaderDisplay
   url="https://github.com/tangle-network/gadget/blob/main/crates/contexts/src/eigenlayer.rs"
+  title="EigenlayerContext Trait Definition"
   fromLine={5}
   toLine={9}
-  title="EigenlayerContext Trait Definition"
 />
 
 ## Using the Context
@@ -45,7 +45,7 @@ The `EigenlayerContext` trait provides access to core Eigenlayer services and fu
 
 First, define your context struct that implements the `EigenlayerContext` trait:
 
-<GithubFileReaderDisplay 
+<GithubFileReaderDisplay
   url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/contexts/aggregator.rs"
   fromLine={39}
   toLine={52}
@@ -56,7 +56,7 @@ First, define your context struct that implements the `EigenlayerContext` trait:
 
 You can then use this context in your jobs to access Eigenlayer functionality:
 
-<GithubFileReaderDisplay 
+<GithubFileReaderDisplay
   url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
   fromLine={13}
   toLine={52}
@@ -67,7 +67,7 @@ You can then use this context in your jobs to access Eigenlayer functionality:
 
 Finally, instantiate your context in your main runner:
 
-<GithubFileReaderDisplay 
+<GithubFileReaderDisplay
   url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/main.rs"
   fromLine={27}
   toLine={53}

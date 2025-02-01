@@ -10,7 +10,7 @@ When building a blueprint, your application may require to listen to events. Eve
 
 In general, when defining your job, you must register an event listeners and provide a context as such:
 
-<GithubFileReaderDisplay 
+<GithubFileReaderDisplay
   url="https://github.com/tangle-network/blueprint-template/blob/main/src/lib.rs"
   fromLine={12}
   toLine={36}
@@ -23,7 +23,7 @@ In order to understand how to build an event listener, begin with a custom imple
 
 Event listeners in the SDK are designed to be flexible and allow developers to customize the behavior of their applications. Event listeners must implement the `EventListener` trait, which defines the following methods:
 
-<GithubFileReaderDisplay 
+<GithubFileReaderDisplay
   url="https://github.com/tangle-network/gadget/blob/main/crates/event-listeners/core/src/lib.rs"
   fromLine={14}
   toLine={25}
@@ -34,7 +34,7 @@ Event listeners in the SDK are designed to be flexible and allow developers to c
 
 When a blueprint instance runs, the event listeners are constructed and executed as part of the job handler. Executing the listeners is handled by the `BlueprintRunner`
 
-<GithubFileReaderDisplay 
+<GithubFileReaderDisplay
   url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring/src/main.rs"
   fromLine={7}
   toLine={30}
