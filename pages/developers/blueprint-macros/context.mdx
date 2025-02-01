@@ -118,9 +118,9 @@ These extensions can be easily added to your Context using derive macros, as sho
 Here's an example of how to use the built-in `KeystoreContext` extension:
 
 ```rust
-use std::convert::Infallible;
-use gadget_sdk::ctx::KeystoreContext;
-use gadget_sdk::config::StdGadgetConfiguration;
+use blueprint_sdk::std::convert::Infallible;
+use blueprint_sdk::contexts::keystore::KeystoreContext;
+use blueprint_sdk::config::StdGadgetConfiguration;
 
 #[derive(Debug, Clone, KeystoreContext)] // Derive the KeystoreContext extension
 struct Context {
@@ -129,7 +129,7 @@ struct Context {
     sdk_config: StdGadgetConfiguration,
 }
 
-#[job(id = 2, params(x), result(_))]
+#[job(id = 2, params(x))]
 pub fn x_squared(ctx: &Context, x: u64) -> Result<u64, Infallible> {
     let keystore = ctx.keystore(); // Access the keystore using the extension method
     // Use the keystore here ...
@@ -177,7 +177,7 @@ impl HttpClientContext for Context {
 }
 
 // Example job using the custom extension
-#[job(id = 3, params(url), result(_))]
+#[job(id = 3, params(url))]
 pub async fn fetch_url(ctx: &Context, url: String) -> Result<String, reqwest::Error> {
     let client = ctx.http_client();
     let response = client.get(&url).send().await?;

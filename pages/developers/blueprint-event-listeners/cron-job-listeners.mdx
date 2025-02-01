@@ -36,57 +36,42 @@ A `CronJob` executes a job periodically, using a context that provides interval 
   title="CronJob Event Listener Definition"
 />
 
-[//]: # (--TODO: Update the section below once the Example Blueprints are updated in Gadget)
+--TODO: Update the section below once the Example Blueprints are updated in Gadget
 
-[//]: # (We can make a `PeriodicEventListener` that ticks every 6000ms to check the status of a web server using [reqwest]&#40;https://crates.io/crates/reqwest&#41;.)
+We can make a `PeriodicEventListener` that ticks every 6000ms to check the status of a web server using [reqwest](https://crates.io/crates/reqwest).
 
-[//]: # ()
-[//]: # (Start by defining our inner event listener &#40;`T` = `WebPoller`, in this case&#41;, and implement the `EventListener` trait.)
 
-[//]: # ()
-[//]: # (<GithubFileReaderDisplay )
+Start by defining our inner event listener (`T` = `WebPoller`, in this case), and implement the `EventListener` trait.
 
-[//]: # (  url="https://github.com/tangle-network/gadget/blob/main/blueprints/examples/src/periodic_web_poller.rs")
 
-[//]: # (  fromLine={50})
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/examples/src/periodic_web_poller.rs"
+  fromLine={79}
+  toLine={116}
+  title="Example WebPoller `EventListener` Implementation"
+/>
 
-[//]: # (  toLine={85})
 
-[//]: # (  title="Example WebPoller `EventListener` Implementation")
+## Using it in a Blueprint
 
-[//]: # (/>)
 
-[//]: # ()
-[//]: # (## Using it in a Blueprint)
+Implement the pre-processor and post-processors, as needed for the event listener:
 
-[//]: # ()
-[//]: # (Implement the pre-processor and post-processors for the event listener:)
 
-[//]: # ()
-[//]: # (<GithubFileReaderDisplay )
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/examples/src/periodic_web_poller.rs"
+  fromLine={68}
+  toLine={77}
+  title="Example WebPoller Post-Processor"
+/>
 
-[//]: # (  url="https://github.com/tangle-network/gadget/blob/main/blueprints/examples/src/periodic_web_poller.rs")
 
-[//]: # (  fromLine={31})
+Integrate the event listener inside the `job`:
 
-[//]: # (  toLine={48})
 
-[//]: # (  title="Example WebPoller Pre-Processor and Post-Processor")
-
-[//]: # (/>)
-
-[//]: # ()
-[//]: # (Integrate the event listener inside the `job`:)
-
-[//]: # ()
-[//]: # (<GithubFileReaderDisplay )
-
-[//]: # (  url="https://github.com/tangle-network/gadget/blob/main/blueprints/examples/src/periodic_web_poller.rs")
-
-[//]: # (  fromLine={14})
-
-[//]: # (  toLine={29})
-
-[//]: # (  title="Example Job with Periodic Web Poller Listener")
-
-[//]: # (/>)
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/gadget/blob/main/blueprints/examples/src/periodic_web_poller.rs"
+  fromLine={36}
+  toLine={65}
+  title="Example Job with Periodic Web Poller Listener"
+/>
