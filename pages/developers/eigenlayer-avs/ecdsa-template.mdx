@@ -19,13 +19,13 @@ Before proceeding, ensure you have cargo-tangle installed. If not, you can insta
     > Supported on Linux, MacOS, and Windows (WSL2)
 
 ```shell
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tangle-network/gadget/releases/download/cargo-tangle/v0.1.1-beta.7/cargo-tangle-installer.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tangle-network/gadget/releases/download/cargo-tangle-v0.1.2/cargo-tangle-installer.sh | sh
 ```
 
-Alternatively, if you prefer installing the CLI from source:
+Or, to install the latest CLI version from crates.io:
 
 ```shell
-cargo install cargo-tangle --git https://github.com/tangle-network/gadget --force
+cargo install cargo-tangle --force
 ```
 
 ### 2. Generating your Project
@@ -42,15 +42,11 @@ uncertain, the default selection is generally best.
 
 #### Note
 
-If you choose to use `foundry.toml` for the Soldeer configuration (the default), you will need to delete the following
-files from the `contracts` directory:
+If Soldeer fails to update/install the necessary dependencies upon generation, you may need to run it manually with the following command:
 
-- `foundry.toml`
-- `remappings.txt`
-- `soldeer.lock`
-
-This step allows the generated project to correctly populate dependencies and build out of the box. We plan to address
-this in future updates to eliminate the need for manual file deletion.
+```bash
+forge soldeer update -d
+```
 
 ### 4. Hello, World!
 

@@ -78,7 +78,6 @@ use my_special_web_polling_context::Context;
 #[report(
     id = 1,
     params(value),
-    result(_),
     event_listener(
         listener = PeriodicEventListener<2000, WebPoller, serde_json::Value, reqwest::Client>
     ),

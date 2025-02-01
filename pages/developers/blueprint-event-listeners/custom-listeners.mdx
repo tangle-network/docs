@@ -5,7 +5,7 @@ title: Custom Event Listeners
 To create an event listener, begin by defining a struct or enum which will listen to events:
 
 ```rust
-use gadget_sdk::event_listener::EventListener;
+use blueprint_sdk::event_listeners::core::EventListener;
 use async_trait::async_trait;
 
 /// Define a simple event listener that ticks every MS milliseconds.
@@ -65,7 +65,6 @@ Finally, register the event listener inside the `job` macro using `event_listene
 #[job(
     id = 0,
     params(x),
-    result(_),
     event_listener(listener = Ticker::<6000>), // <-- Register the event listener here
 )]
 pub fn hello_event_listener(

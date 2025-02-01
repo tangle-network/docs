@@ -1,6 +1,4 @@
-import { Callout } from 'nextra/components'
 import CardGrid from "../../../components/CardGrid.tsx"
-import ExpandableImage from "../../../components/ExpandableImage.tsx"
 
 # Blueprints
 
@@ -26,13 +24,13 @@ import ExpandableImage from "../../../components/ExpandableImage.tsx"
   ]}
 />
 
-**Blueprints** are specifications for Actively Validated Services (AVS) or **Instances** on the Tangle Network. Developers build blueprints using our [Gadget SDK](https://github.com/tangle-network/gadget) and deploy them to the Tangle Network. Once deployed, users can create Instances of the Blueprint, which are run by Tangle Operators. The Tangle Network incentivizes operators to run these instances by rewarding them with TNT tokens and fees from instancing and instance exeuction. Developers incentivize operators to run instances by specifying additional rewards for operators in the Blueprint.
+**Blueprints** are specifications for Actively Validated Services (AVS) or **Instances** on the Tangle Network. Developers build blueprints using our [Gadget SDK](https://github.com/tangle-network/gadget) and deploy them to the Tangle Network. Once deployed, users can create Instances of the Blueprint, which are run by Tangle Operators. The Tangle Network incentivizes operators to run these instances by rewarding them with TNT tokens and fees from instancing and instance execution. Developers incentivize operators to run instances by specifying additional rewards for operators in the Blueprint.
 
-An Actively Validated Service or Blueprint Instance is a computational service that runs a specified period of time, potentially user-specified or on-demand or forever. Instances allow Blueprints to be reused multiple times, so that useful services can be leveraged by many customers. A key benefit of instancing Blueprints is that each instance can have different operators and diffierent restaked assets securing them.
+An Actively Validated Service or Blueprint Instance is a computational service that runs a specified period of time, potentially user-specified or on-demand or forever. Instances allow Blueprints to be reused multiple times, so that useful services can be leveraged by many customers. A key benefit of instancing Blueprints is that each instance can have different operators and different restaked assets securing them.
 
 A Tangle Blueprint is defined by:
 
-- An program binary.
+- A program binary.
 - A set of smart contracts that provide programmability over the service's output verification and handling of malicious failures
 
 Tangle Blueprints specify their target environment for program execution. The Blueprint's binary can run natively on the operator's machine, in a virtual machine, or in a containerized environment. We are constantly working to provide the right environments for developers to build Blueprints so that operators are satisfied executing Blueprint Instances. Our Gadget SDK supports building AVS and Blueprint Instances directly on Eigenlayer without the same instancing as exists on Tangle, allowing developers nonetheless to leverage the features of our SDK to build and test their services on Eigenlayer. Future integrations with other restaking infrastructures are planned.
@@ -46,10 +44,10 @@ Developers interact with Tangle Blueprints by deploying them to the blockchain. 
 The Blueprint includes one main smart contract responsible with all aspects of customizing a Blueprint's behavior and features. Developers have the flexibility to extend this contract, create child contracts, and anything that adheres to the function signatures expected by the runtime when executing logic. The Blueprint smart contract handles:
 
 1. **Registration**: Specifies how Operators register for the Blueprint, allowing the developer to add additional fees, access control, KYC, and any other EVM-deployable functionality to the registration process.
-2. **Request**: Defines how customer of Blueprints initiate Service Instances, providing the same customizability as the EVM for the initialization process of Service Instances.
+2. **Request**: Defines how customer of Blueprints initiates Service Instances, providing the same customizability as the EVM for the initialization process of Service Instances.
 3. **On Job Hooks**: Allows developers to specify custom logic to be executed when a job is created.
 4. **On Job Result Hooks**: Allows developers to specify custom logic to be executed when a job is completed, such as verifying a job's output.
-5. **Custom slashing conditions**: Allows developers to specify custom slashing conditions for Operators, such as failing to provide a service or providing a malicious service. These would be callable by anyone or priveledged callers but is entirely up to the developer to design.
+5. **Custom slashing conditions**: Allows developers to specify custom slashing conditions for Operators, such as failing to provide a service or providing a malicious service. These would be callable by anyone or privileged callers but is entirely up to the developer to design.
 
 Blueprint upgrades are handled differently than runtime upgrades and should eventually be supported through an additional Blueprint smart contract for governance. Upgrades should not overwrite previous versions to protect against malicious updates to active and future services. Instead, upgrades allow for a form of Operator lock-in, enabling developers to quickly benefit from the success of existing services and pass liquidity, as users can request "new versions" of the Blueprint while accessing the already restaked capital from the success of previous versions.
 
