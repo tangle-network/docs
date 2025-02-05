@@ -21,6 +21,7 @@
   },
   "claim-airdrop": "Claim the Airdrop",
   "launch": "About the Launch",
+  "points-mechanics": "Points Mechanics",
   "-- governance": {
     "type": "separator",
     "title": "Governance"
