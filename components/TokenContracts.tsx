@@ -52,6 +52,11 @@ const CHAIN_CONFIGS = {
     explorerLink: "https://polygonscan.com/",
     icon: "/icons/chains/polygon.svg",
   },
+  ETHEREUM: {
+    name: "Ethereum",
+    explorerLink: "https://etherscan.io/",
+    icon: "/icons/chains/ethereum.svg",
+  },
 };
 
 const CHAIN_OPTIONS = Object.values(CHAIN_CONFIGS);
@@ -255,6 +260,71 @@ const TOKENS: Token[] = [
       {
         ...CHAIN_CONFIGS.BASE,
         address: "0xecAc9C5F704e954931349Da37F60E39f515c11c1",
+        isNative: false,
+      },
+    ],
+  },
+  {
+    name: "Eigen",
+    symbol: "EIGEN",
+    address: "0x322CCb93C99BDDD78eC7cc6cA55eeceF1268BC16",
+    icon: "/icons/tokens/eigen.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xec53bF9167f50cDEB3Ae105f56099aaaB9061F83",
+        isNative: false,
+      },
+    ],
+  },
+  {
+    name: "Hord ETH Staking",
+    symbol: "hETH",
+    address: "0xcFeb82B9a9C7791683C846a69311A6885eD29A03",
+    icon: "/icons/tokens/heth.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x5bBe36152d3CD3eB7183A82470b39b29EedF068B",
+        isNative: false,
+      },
+    ],
+  },
+  {
+    name: "ether.fi ETH",
+    symbol: "eETH",
+    address: "0x69cC6D7da66752B267C9F6B157F0643F54654233",
+    icon: "/icons/tokens/eeth.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x35fA164735182de50811E8e2E824cFb9B6118ac2",
+        isNative: false,
+      },
+    ],
+  },
+  {
+    name: "ether.fi BTC",
+    symbol: "eBTC",
+    address: "0x8360830C2BCE22a7Dd15d9350C81d8E573B563eE",
+    icon: "/icons/tokens/ebtc.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x657e8C867D8B37dCC18fA4Caead9C45EB088C642",
+        isNative: false,
+      },
+    ],
+  },
+  {
+    name: "Avail",
+    symbol: "AVAIL",
+    address: "0x4A68525B31F8C67761e0429f6e4766a55f15b7A5",
+    icon: "/icons/tokens/avail.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xEeB4d8400AEefafC1B2953e0094134A887C76Bd8",
         isNative: false,
       },
     ],
