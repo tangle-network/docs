@@ -5,11 +5,6 @@ import nextra from "nextra";
  */
 const nextConfig = {
   reactStrictMode: true,
-  experimental: {
-    legacyBrowsers: false,
-    optimizeCss: true,
-    scrollRestoration: true,
-  },
   trailingSlash: false,
   staticPageGenerationTimeout: 120,
   images: {
