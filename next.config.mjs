@@ -6,11 +6,10 @@ import nextra from "nextra";
 const nextConfig = {
   reactStrictMode: true,
   trailingSlash: false,
-  staticPageGenerationTimeout: 120,
-  images: {
-    minimumCacheTTL: 60,
-    deviceSizes: [32, 48, 64],
+  experimental: {
+    legacyBrowsers: false,
   },
+  staticPageGenerationTimeout: 120,
   async redirects() {
     return [
       {
