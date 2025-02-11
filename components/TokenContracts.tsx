@@ -106,6 +106,19 @@ const TOKENS: Token[] = [
     ],
   },
   {
+    name: "Avail (Wormhole)",
+    symbol: "AVAIL",
+    address: "0x4b7c2a96d1E9f3D37F979A8c74e17d53473fbf40",
+    icon: "/icons/tokens/avail.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.BASE,
+        address: "0xd89d90d26B48940FA8F58385Fe84625d468E057a",
+        isNative: false,
+      },
+    ],
+  },
+  {
     name: "BNB",
     symbol: "BNB",
     address: "0x7497aDa0D9761ce5fc5965dDF926810BEfDDEA4d",
@@ -505,6 +518,19 @@ const TOKENS: Token[] = [
       {
         ...CHAIN_CONFIGS.ETHEREUM,
         address: "0x3742f3Fcc56B2d46c7B8CA77c23be60Cd43Ca80a",
+        isNative: false,
+      },
+    ],
+  },
+  {
+    name: "Staked Avail (Wormhole)",
+    symbol: "stAVAIL",
+    address: "0xb0b1cb358f4597838859edA7dac076ada0E8aA34",
+    icon: "/icons/tokens/stavail.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.BASE,
+        address: "0x74cb668d23E6e54524e2E1e4d1c392F5fd611783",
         isNative: false,
       },
     ],
