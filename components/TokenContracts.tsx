@@ -215,6 +215,19 @@ const TOKENS: Token[] = [
     ],
   },
   {
+    name: "ether.fi",
+    symbol: "ETHFI",
+    address: "0xc4B1827d959d4b109787893A7C8978050fDFC58B",
+    icon: "/icons/tokens/ethfi.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xFe0c30065B384F05761f15d0CC899D4F9F9Cc0eB",
+        isNative: false,
+      },
+    ],
+  },
+  {
     name: "ether.fi BTC",
     symbol: "eBTC",
     address: "0x8360830C2BCE22a7Dd15d9350C81d8E573B563eE",
