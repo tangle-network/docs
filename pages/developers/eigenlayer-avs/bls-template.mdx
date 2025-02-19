@@ -14,18 +14,8 @@ that uses BLS contracts.
 
 ### 1. Installation
 
-If you haven't already, you will need to install cargo-tangle. To install it, run the following command:
-
-    > Supported on Linux, MacOS, and Windows (WSL2)
-
 ```shell
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tangle-network/gadget/releases/download/cargo-tangle-v0.1.2/cargo-tangle-installer.sh | sh
-```
-
-Or, to install the latest CLI version from crates.io:
-
-```shell
-cargo install cargo-tangle --force
+$ cargo install cargo-tangle --git https://github.com/tangle-network/gadget --force
 ```
 
 ### 2. Generating your Project
@@ -33,7 +23,7 @@ cargo install cargo-tangle --force
 To create a new BLS AVS, use the following command:
 
 ```shell
-cargo tangle blueprint create --name <blueprint_name> --eigenlayer
+$ cargo tangle blueprint create --name <blueprint_name> --eigenlayer
 ```
 
 Just replace `<blueprint_name>` with the desired name for your AVS. Once you run this command, you will be asked a series
@@ -45,7 +35,7 @@ you aren't sure about a question, you likely just want the default selection tha
 If Soldeer fails to update/install the necessary dependencies upon generation, you may need to run it manually with the following command:
 
 ```bash
-forge soldeer update -d
+$ forge soldeer update -d
 ```
 
 ### 4. Hello, World!
@@ -53,7 +43,7 @@ forge soldeer update -d
 Now that you have generated the project, you can test out the simple example by running:
 
 ```shell
-cargo test
+$ cargo test
 ```
 
 This test just shows that the template generates you a fresh, working AVS structure. All that's left is to add what you want!

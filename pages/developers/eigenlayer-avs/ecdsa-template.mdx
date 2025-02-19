@@ -14,18 +14,8 @@ implementation of an AVS using ECDSA contracts.
 
 ### 1. Installation
 
-Before proceeding, ensure you have cargo-tangle installed. If not, you can install it using the following command:
-
-    > Supported on Linux, MacOS, and Windows (WSL2)
-
 ```shell
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/tangle-network/gadget/releases/download/cargo-tangle-v0.1.2/cargo-tangle-installer.sh | sh
-```
-
-Or, to install the latest CLI version from crates.io:
-
-```shell
-cargo install cargo-tangle --force
+$ cargo install cargo-tangle --git https://github.com/tangle-network/gadget --force
 ```
 
 ### 2. Generating your Project
@@ -33,7 +23,7 @@ cargo install cargo-tangle --force
 To generate your project, execute the following command:
 
 ```shell
-cargo tangle blueprint create --name <blueprint_name> --eigenlayer ecdsa
+$ cargo tangle blueprint create --name <blueprint_name> --eigenlayer ecdsa
 ```
 
 Replace `<blueprint_name>` with your preferred AVS name. Upon running this command, you'll be prompted with a
@@ -45,7 +35,7 @@ uncertain, the default selection is generally best.
 If Soldeer fails to update/install the necessary dependencies upon generation, you may need to run it manually with the following command:
 
 ```bash
-forge soldeer update -d
+$ forge soldeer update -d
 ```
 
 ### 4. Hello, World!
@@ -53,7 +43,7 @@ forge soldeer update -d
 Now that you have generated the project, you can test out the simple example by running:
 
 ```shell
-cargo test
+$ cargo test
 ```
 
 This test just shows that the template generates you a fresh, working AVS structure. All that's left is to add what you want!
