@@ -52,6 +52,11 @@ const CHAIN_CONFIGS = {
     explorerLink: "https://polygonscan.com/",
     icon: "/icons/chains/polygon.svg",
   },
+  ETHEREUM: {
+    name: "Ethereum",
+    explorerLink: "https://etherscan.io/",
+    icon: "/icons/chains/ethereum.svg",
+  },
 };
 
 const CHAIN_OPTIONS = Object.values(CHAIN_CONFIGS);
@@ -65,6 +70,7 @@ const CHAIN_NAME_TO_CONFIG: Record<
   "BNB Chain": CHAIN_CONFIGS.BNB,
   Optimism: CHAIN_CONFIGS.OPTIMISM,
   Polygon: CHAIN_CONFIGS.POLYGON,
+  Ethereum: CHAIN_CONFIGS.ETHEREUM,
 };
 
 const TOKENS: Token[] = [
@@ -75,8 +81,26 @@ const TOKENS: Token[] = [
     icon: "/icons/tokens/arb.svg",
     chains: [
       {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xB50721BCf8d664c30412Cfbc6cf7a15145234ad1",
+        isNative: false,
+      },
+      {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0x912CE59144191C1204E64559FE8253a0e49E6548",
+        isNative: false,
+      },
+    ],
+  },
+  {
+    name: "Avail",
+    symbol: "AVAIL",
+    address: "0x4A68525B31F8C67761e0429f6e4766a55f15b7A5",
+    icon: "/icons/tokens/avail.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xEeB4d8400AEefafC1B2953e0094134A887C76Bd8",
         isNative: false,
       },
     ],
@@ -113,6 +137,11 @@ const TOKENS: Token[] = [
     icon: "/icons/tokens/cbbtc.svg",
     chains: [
       {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+        isNative: false,
+      },
+      {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
         isNative: false,
@@ -131,6 +160,11 @@ const TOKENS: Token[] = [
     icon: "/icons/tokens/cbeth.svg",
     chains: [
       {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xBe9895146f7AF43049ca1c1AE358B0541Ea49704",
+        isNative: false,
+      },
+      {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0x1DEBd73E752bEaF79865Fd6446b0c970EaE7732f",
         isNative: false,
@@ -148,39 +182,16 @@ const TOKENS: Token[] = [
     ],
   },
   {
-    name: "Curve DAO Token",
-    symbol: "CRV",
-    address: "0xED8Ef3eF3965f64A143977eB641BA2212DCfC96e",
-    icon: "/icons/tokens/crv.svg",
-    chains: [
-      {
-        ...CHAIN_CONFIGS.ARBITRUM,
-        address: "0x11cDb42B0EB46D95f990BeDD4695A6e3fA034978",
-        isNative: false,
-      },
-      {
-        ...CHAIN_CONFIGS.BASE,
-        address: "0x8Ee73c484A26e0A5df2Ee2a4960B789967dd0415",
-        isNative: false,
-      },
-      {
-        ...CHAIN_CONFIGS.OPTIMISM,
-        address: "0x0994206dfE8De6Ec6920FF4D779B0d950605Fb53",
-        isNative: false,
-      },
-      {
-        ...CHAIN_CONFIGS.POLYGON,
-        address: "0x172370d5Cd63279eFa6d502DAB29171933a610AF",
-        isNative: false,
-      },
-    ],
-  },
-  {
     name: "Dai Stablecoin",
     symbol: "DAI",
     address: "0xE75BE8E6C71eA004949898306DDa9BD59Cc2b0dC",
     icon: "/icons/tokens/dai.svg",
     chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+        isNative: false,
+      },
       {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
@@ -204,11 +215,67 @@ const TOKENS: Token[] = [
     ],
   },
   {
-    name: "Ethereum",
+    name: "ether.fi",
+    symbol: "ETHFI",
+    address: "0xc4B1827d959d4b109787893A7C8978050fDFC58B",
+    icon: "/icons/tokens/ethfi.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xFe0c30065B384F05761f15d0CC899D4F9F9Cc0eB",
+        isNative: false,
+      },
+    ],
+  },
+  {
+    name: "ether.fi BTC",
+    symbol: "eBTC",
+    address: "0x8360830C2BCE22a7Dd15d9350C81d8E573B563eE",
+    icon: "/icons/tokens/ebtc.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x657e8C867D8B37dCC18fA4Caead9C45EB088C642",
+        isNative: false,
+      },
+    ],
+  },
+  {
+    name: "ether.fi ETH",
+    symbol: "eETH",
+    address: "0x69cC6D7da66752B267C9F6B157F0643F54654233",
+    icon: "/icons/tokens/eeth.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x35fA164735182de50811E8e2E824cFb9B6118ac2",
+        isNative: false,
+      },
+    ],
+  },
+  {
+    name: "Eigen",
+    symbol: "EIGEN",
+    address: "0x322CCb93C99BDDD78eC7cc6cA55eeceF1268BC16",
+    icon: "/icons/tokens/eigen.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xec53bF9167f50cDEB3Ae105f56099aaaB9061F83",
+        isNative: false,
+      },
+    ],
+  },
+  {
+    name: "Ether",
     symbol: "ETH",
     address: "0x6341d878A7f8D1872D8EA6f10e15E89692DC7cd7",
     icon: "/icons/tokens/eth.svg",
     chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        isNative: true,
+      },
       {
         ...CHAIN_CONFIGS.ARBITRUM,
         isNative: true,
@@ -230,6 +297,11 @@ const TOKENS: Token[] = [
     icon: "/icons/tokens/ezeth.svg",
     chains: [
       {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xbf5495Efe5DB9ce00f80364C8B423567e58d2110",
+        isNative: false,
+      },
+      {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0x2416092f143378750bb29b79eD961ab195CcEea5",
         isNative: false,
@@ -247,11 +319,29 @@ const TOKENS: Token[] = [
     ],
   },
   {
-    name: " Lombard Staked Bitcoin",
+    name: "Hord ETH Staking",
+    symbol: "hETH",
+    address: "0xcFeb82B9a9C7791683C846a69311A6885eD29A03",
+    icon: "/icons/tokens/heth.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x5bBe36152d3CD3eB7183A82470b39b29EedF068B",
+        isNative: false,
+      },
+    ],
+  },
+  {
+    name: "Lombard Staked Bitcoin",
     symbol: "LBTC",
     address: "0xB703e29F2b05c57Fbc2E3492bE5fC6Db62CE3188",
     icon: "/icons/tokens/lbtc.svg",
     chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x8236a87084f8B84306f72007F36F2618A5634494",
+        isNative: false,
+      },
       {
         ...CHAIN_CONFIGS.BASE,
         address: "0xecAc9C5F704e954931349Da37F60E39f515c11c1",
@@ -265,6 +355,11 @@ const TOKENS: Token[] = [
     address: "0x94AB056b6CF81464458d205E632b2757A311E821",
     icon: "/icons/tokens/lido.svg",
     chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32",
+        isNative: false,
+      },
       {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0x13Ad51ed4F1B7e9Dc168d8a00cB3f4dDD85EfA60",
@@ -289,8 +384,18 @@ const TOKENS: Token[] = [
     icon: "/icons/tokens/link.svg",
     chains: [
       {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x514910771AF9Ca656af840dff83E8264EcF986CA",
+        isNative: false,
+      },
+      {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0xf97f4df75117a78c1A5a0DBb814Af92458539FB4",
+        isNative: false,
+      },
+      {
+        ...CHAIN_CONFIGS.BASE,
+        address: "0x88Fb150BDc53A65fe94Dea0c9BA0a6dAf8C6e196",
         isNative: false,
       },
       {
@@ -303,9 +408,17 @@ const TOKENS: Token[] = [
         address: "0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39",
         isNative: false,
       },
+    ],
+  },
+  {
+    name: "Mantle ETH",
+    symbol: "mETH",
+    address: "0x89C60DBe8F15d9567A75B0712D43CE4d44977c29",
+    icon: "/icons/tokens/meth.svg",
+    chains: [
       {
-        ...CHAIN_CONFIGS.BASE,
-        address: "0x88Fb150BDc53A65fe94Dea0c9BA0a6dAf8C6e196",
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xd5F7838F5C461fefF7FE49ea5ebaF7728bB0ADfa",
         isNative: false,
       },
     ],
@@ -330,6 +443,11 @@ const TOKENS: Token[] = [
     icon: "/icons/tokens/pol.svg",
     chains: [
       {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x455e53CBB86018Ac2B8092FdCd39d8444aFFC3F6",
+        isNative: false,
+      },
+      {
         ...CHAIN_CONFIGS.POLYGON,
         isNative: true,
       },
@@ -342,8 +460,18 @@ const TOKENS: Token[] = [
     icon: "/icons/tokens/reth.svg",
     chains: [
       {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xae78736Cd615f374D3085123A210448E74Fc6393",
+        isNative: false,
+      },
+      {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0xEC70Dcb4A1EFa46b8F2D97C310C9c4790ba5ffA8",
+        isNative: false,
+      },
+      {
+        ...CHAIN_CONFIGS.BASE,
+        address: "0xB6fe221Fe9EeF5aBa221c348bA20A1Bf5e73624c",
         isNative: false,
       },
       {
@@ -356,11 +484,6 @@ const TOKENS: Token[] = [
         address: "0x0266F4F08D82372CF0FcbCCc0Ff74309089c74d1",
         isNative: false,
       },
-      {
-        ...CHAIN_CONFIGS.BASE,
-        address: "0xB6fe221Fe9EeF5aBa221c348bA20A1Bf5e73624c",
-        isNative: false,
-      },
     ],
   },
   {
@@ -369,6 +492,11 @@ const TOKENS: Token[] = [
     address: "0x223E7B1EAd79C6603a891D9e733FD5ADD1044dd1",
     icon: "/icons/tokens/solvbtc.svg",
     chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x7A56E1C57C7475CCf742a1832B028F0456652F97",
+        isNative: false,
+      },
       {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0x3647c54c4c2C65bC7a2D63c0Da2809B399DBBDC0",
@@ -383,8 +511,26 @@ const TOKENS: Token[] = [
     icon: "/icons/tokens/solvbtc.svg",
     chains: [
       {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xd9D920AA40f578ab794426F5C90F6C731D159DEf",
+        isNative: false,
+      },
+      {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0x346c574c56e1a4aaa8dc88cda8f7eb12b39947ab",
+        isNative: false,
+      },
+    ],
+  },
+  {
+    name: "Staked Avail",
+    symbol: "stAVAIL",
+    address: "0x06f5C8FEc9C36130cB547DF3201CF4cea2562419",
+    icon: "/icons/tokens/stavail.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x3742f3Fcc56B2d46c7B8CA77c23be60Cd43Ca80a",
         isNative: false,
       },
     ],
@@ -409,6 +555,11 @@ const TOKENS: Token[] = [
     icon: "/icons/tokens/sweth.svg",
     chains: [
       {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xf951E335afb289353dc249e82926178EaC7DEd78",
+        isNative: false,
+      },
+      {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0xbc011A12Da28e8F0f528d9eE5E7039E22F91cf18",
         isNative: false,
@@ -416,11 +567,16 @@ const TOKENS: Token[] = [
     ],
   },
   {
-    name: "Arbitrum tBTC v2",
+    name: "tBTC v2",
     symbol: "tBTC",
-    address: "0x9330D5e38d714e1E71fd2dBeA7EbD98f13E4E241",
+    address: "0x388A9a1a38CA0079a43202817cc56315C5D4B89B",
     icon: "/icons/tokens/tbtc.svg",
     chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x18084fbA666a33d37592fA2633fD49a74DD93a88",
+        isNative: false,
+      },
       {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0x6c84a8f1c29108F47a79964b5Fe888D4f4D0dE40",
@@ -444,34 +600,16 @@ const TOKENS: Token[] = [
     ],
   },
   {
-    name: "Uniswap",
-    symbol: "UNI",
-    address: "0xC2450aa58A3ec477B04F2122c8101eE6bdcC3A82",
-    icon: "/icons/tokens/uni.svg",
-    chains: [
-      {
-        ...CHAIN_CONFIGS.ARBITRUM,
-        address: "0xFa7F8980b0f1E64A2062791cc3b0871572f1F7f0",
-        isNative: false,
-      },
-      {
-        ...CHAIN_CONFIGS.OPTIMISM,
-        address: "0x6fd9d7AD17242c41f7131d257212c54A0e816691",
-        isNative: false,
-      },
-      {
-        ...CHAIN_CONFIGS.POLYGON,
-        address: "0xb33EaAd8d922B1083446DC23f610c2567fB5180f",
-        isNative: false,
-      },
-    ],
-  },
-  {
     name: "USD Coin",
     symbol: "USDC",
     address: "0x524322C9bF30137E12f86EFE74D1Cba05f4126Fa",
     icon: "/icons/tokens/usdc.svg",
     chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        isNative: false,
+      },
       {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
@@ -501,6 +639,11 @@ const TOKENS: Token[] = [
     icon: "/icons/tokens/usdt.svg",
     chains: [
       {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        isNative: false,
+      },
+      {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
         isNative: false,
@@ -529,6 +672,11 @@ const TOKENS: Token[] = [
     icon: "/icons/tokens/usdx.svg",
     chains: [
       {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xf3527ef8dE265eAa3716FB312c12847bFBA66Cef",
+        isNative: false,
+      },
+      {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0xf3527ef8dE265eAa3716FB312c12847bFBA66Cef",
         isNative: false,
@@ -541,6 +689,11 @@ const TOKENS: Token[] = [
     address: "0xd5c9FCfF2f362E89538E92e8B6e677571E11C1e7",
     icon: "/icons/tokens/wbtc.svg",
     chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+        isNative: false,
+      },
       {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
@@ -570,6 +723,11 @@ const TOKENS: Token[] = [
     icon: "/icons/tokens/weth.svg",
     chains: [
       {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+        isNative: false,
+      },
+      {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
         isNative: false,
@@ -597,6 +755,11 @@ const TOKENS: Token[] = [
     address: "0xC0fD9c0ee70d7d9Eede7f5918077dC506aF95E48",
     icon: "/icons/tokens/wsteth.svg",
     chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+        isNative: false,
+      },
       {
         ...CHAIN_CONFIGS.ARBITRUM,
         address: "0x5979D7b546E38E414F7E9822514be443A4800529",
