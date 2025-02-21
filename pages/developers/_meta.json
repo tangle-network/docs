@@ -13,6 +13,7 @@
   "blueprint-macros": "Blueprint SDK Macros",
   "blueprint-event-listeners": "Blueprint SDK Event Listeners",
   "blueprint-contexts": "Blueprint SDK Contexts",
+  "p2p-networking": "Blueprint P2P Networking",
   "tangle-avs": "Build a Tangle Blueprint AVS",
   "eigenlayer-avs": "Build an Eigenlayer AVS",
   "testing-with-tangle": "Testing with Tangle",

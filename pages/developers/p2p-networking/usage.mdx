@@ -1,0 +1,20 @@
+# Using the P2P Networking Utilities
+
+To spin up a P2P network, following two methods are provided on `GadgetConfiguration`:
+
+* `GadgetConfiguration::libp2p_network_config()`
+* `GadgetConfiguration::libp2p_start_network()`
+
+```rust
+use blueprint_sdk::networking::service_handle::NetworkServiceHandle;
+use blueprint_sdk::networking::InstanceMsgPublicKey;
+use blueprint_sdk::macros::contexts::TangleClientContext;
+
+let allowed_keys: HashSet<InstanceMsgPublicKey> = /* ... */;
+
+// Create the `NetworkConfig` based on the `GadgetConfiguration`
+let network_config = config.libp2p_network_config("my/protocol/1.0.0")?;
+
+// Start up the network, getting a handle back
+let network_handle = config.libp2p_start_network(network_config, allowed_keys)?;
+```
