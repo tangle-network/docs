@@ -1,0 +1,169 @@
+# Testing Multi-node Blueprints
+
+This guide explains how to test blueprints that require multiple nodes for distributed computation, such as threshold cryptography protocols or consensus protocols. We'll walk through setting up a test environment and running multi-node tests using our SDK's testing utilities.
+
+## Overview
+
+When developing multi-node blueprints, testing requires simulating a network of nodes that can communicate and coordinate with each other. Our SDK provides testing utilities that make it easy to:
+
+- Set up a simulated multi-node network environment
+- Configure individual nodes with custom handlers
+- Submit jobs and verify results across nodes
+- Test distributed protocols and consensus mechanisms
+
+## Test Environment Setup
+
+### Prerequisites
+
+First, include the necessary testing utilities in your project:
+
+```rust
+use blueprint_sdk::testing::utils::tangle::TangleTestHarness;
+use blueprint_sdk::testing::utils::harness::TestHarness;
+use blueprint_sdk::testing::tempfile;
+use blueprint_sdk::logging;
+```
+
+### Basic Setup
+
+1. **Initialize Logging and Error Handling**:
+
+```rust
+logging::setup_log();
+```
+
+2. **Create Test Harness**:
+
+```rust
+let tmp_dir = tempfile::TempDir::new()?;
+let harness = TangleTestHarness::setup(tmp_dir).await?
+```
+
+## Setting Up Multi-node Services
+
+### Node Configuration
+
+1. **Initialize Test Environment**:
+
+```rust
+// N specifies number of nodes (e.g. N = 3)
+let (mut test_env, service_id, blueprint_id) = harness.setup_services::<N>(false).await?;
+test_env.initialize().await?;
+```
+
+2. **Configure Individual Nodes**:
+
+```rust
+let handles = test_env.node_handles().await;
+for handle in handles {
+// Get node configuration
+let config = handle.gadget_config().await;
+// Initialize node-specific context
+let blueprint_ctx = YourContext::new(config.clone()).await?;
+// Add job handlers
+let job_handler = YourJobHandler::new(&config, blueprint_ctx.clone()).await?;
+handle.add_job(job_handler).await;
+}
+```
+
+3. **Allow Time for Network Setup**:
+
+```rust
+// Wait for network handshakes
+tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+```
+
+4. **Start the Environment**:
+
+```rust
+test_env.start().await?;
+```
+
+## Running Tests
+
+### Submitting Jobs
+
+To test your blueprint's functionality, submit jobs and verify their results:
+
+```rust
+// Submit a job with arguments
+let job = harness
+    .submit_job(
+    service_id,
+    JOB_ID,
+    vec![InputValue::Uint16(2)] // Example job argument
+)
+.await?;
+logging::info!("Submitted job {JOB_ID} with service ID {service_id}");
+```
+
+### Verifying Results
+
+Wait for job completion and verify the results:
+
+```rust
+// Wait for job execution
+let results = harness.wait_for_job_execution(service_id, job).await?;
+assert_eq!(results.service_id, service_id);
+
+// Verify outputs
+if !expected_outputs.is_empty() {
+assert_eq!(
+    results.result.len(),
+    expected_outputs.len(),
+    "Number of outputs doesn't match expected"
+);
+
+// Add more verification logic as needed...
+}
+```
+
+## Best Practices
+
+1. **Error Handling**: Always implement proper error handling and logging to diagnose test failures.
+
+2. **Network Delays**: Include appropriate delays for network initialization and handshakes.
+
+3. **Verification**: Thoroughly verify all job outputs against expected results.
+
+4. **Cleanup**: Use temporary directories that are automatically cleaned up after tests.
+
+5. **Logging**: Implement comprehensive logging to track test progress and debug issues.
+
+## Example: Complete Test Structure
+
+Here's a complete example showing how to structure a multi-node test:
+
+```rust
+#[tokio::test(flavor = "multi_thread")]
+async fn test_blueprint() -> color_eyre::Result<()> {
+    logging::setup_log();
+    let tmp_dir = tempfile::TempDir::new()?;
+    let harness = TangleTestHarness::setup(tmp_dir).await?;
+
+    // Initialize nodes
+    let (mut test_env, service_id, ) = harness.setup_services::<3>(false).await?;
+    test_env.initialize().await?;
+
+    // Configure nodes
+    let handles = test_env.node_handles().await;
+    for handle in handles {
+        // Add handlers
+        // ...
+    }
+
+    // Wait for network setup
+    tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+    test_env.start().await?;
+
+    // Run test jobs
+    let job = harness.submit_job(service_id, JOB_ID, vec![/ args /]).await?;
+    let results = harness.wait_for_job_execution(service_id, job).await?;
+
+    // Verify results
+    assert_eq!(results.service_id, service_id);
+
+    // Additional verification...
+    Ok(())
+}
+```
