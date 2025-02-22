@@ -22,14 +22,46 @@ fn example_usage(config: GadgetConfiguration) -> Result<(), GadgetError> {
     let network_handle = config.libp2p_start_network(network_config, allowed_keys)?;
 
     // Use the handle to receive p2p messages from the network
+    loop {
+        if let Some(msg) = network_handle.next_protocol_message() {
+            println!("Received message: {:?}", msg);
+        }
+
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    }
+
     // Use the handle to send p2p messages to the network
-    network_handle.send_message(/* ... */);
+    let p2p_routing = MessageRouting {
+        /// Unique identifier for this message
+        message_id: 1,
+        /// The round/sequence number this message belongs to
+        round_id: 1,
+        /// The sender's information
+        sender: ParticipantInfo {
+            /// The public key of the sender
+            public_key: InstanceMsgPublicKey(/* ... */),
+            /// The address of the sender
+            address: /* ... */
+        },
+        /// Recipient information for direct messages
+        recipient: Some(ParticipantInfo {
+            public_key: InstanceMsgPublicKey(/* ... */),
+            address: /* ... */
+        }),
+    };
+    network_handle.send(p2p_routing, /* ...some bytes (Vec<u8>)... */);
 
-    // Receive gossip messages from the network
     // Send gossip messages to the network
-    network_handle.send_gossip_message(/* ... */);
-
-
+    let gossip_routing = MessageRouting {
+        message_id: 1,
+        round_id: 1,
+        sender: ParticipantInfo {
+            public_key: InstanceMsgPublicKey(/* ... */),
+            address: /* ... */
+        },
+        recipient: None,
+    };
+    network_handle.send(gossip_routing, /* ...some bytes (Vec<u8>)... */);
 
     Ok(())
 }
@@ -95,7 +127,9 @@ impl BlsContext {
 
 ### Round Based Job
 
-In your job you can now leverage your `NetworkServiceHandle` to send messages to the network. You may also want to leverage a `round-based` protocol that handles sending, receiving, and processing messages with the `RoundBasedNetworkAdapter`
+`round-based` is a [library for building structure round based protocols](https://github.com/LFDT-Lockness/round-based), especially MPC protocols. There are a variety of benefits to structuring your protocol in this way and it can streamline the separation between networking and protocol logic.
+
+To leverage a `round-based` protocol that handles sending, receiving, and processing messages use the `RoundBasedNetworkAdapter` available from the SDK and in the `gadget-networking-round-based-extension` crate.
 
 ```rust
 #[job(
