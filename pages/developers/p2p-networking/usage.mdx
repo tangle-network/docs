@@ -2,19 +2,146 @@
 
 To spin up a P2P network, following two methods are provided on `GadgetConfiguration`:
 
-* `GadgetConfiguration::libp2p_network_config()`
-* `GadgetConfiguration::libp2p_start_network()`
+- `GadgetConfiguration::libp2p_network_config()`
+- `GadgetConfiguration::libp2p_start_network()`
+
+## Example
+
+Here's an example of how to spin up a P2P network and send messages to it.
 
 ```rust
 use blueprint_sdk::networking::service_handle::NetworkServiceHandle;
 use blueprint_sdk::networking::InstanceMsgPublicKey;
-use blueprint_sdk::macros::contexts::TangleClientContext;
+fn example_usage(config: GadgetConfiguration) -> Result<(), GadgetError> {
+    let allowed_keys: HashSet<InstanceMsgPublicKey> = /* ... */;
 
-let allowed_keys: HashSet<InstanceMsgPublicKey> = /* ... */;
+    // Create the `NetworkConfig` based on the `GadgetConfiguration`
+    let network_config = config.libp2p_network_config("my/protocol/1.0.0")?;
 
-// Create the `NetworkConfig` based on the `GadgetConfiguration`
-let network_config = config.libp2p_network_config("my/protocol/1.0.0")?;
+    // Start up the network, getting a handle back
+    let network_handle = config.libp2p_start_network(network_config, allowed_keys)?;
 
-// Start up the network, getting a handle back
-let network_handle = config.libp2p_start_network(network_config, allowed_keys)?;
+    // Use the handle to receive p2p messages from the network
+    // Use the handle to send p2p messages to the network
+    network_handle.send_message(/* ... */);
+
+    // Receive gossip messages from the network
+    // Send gossip messages to the network
+    network_handle.send_gossip_message(/* ... */);
+
+
+
+    Ok(())
+}
+```
+
+## Integrating Networking with Service contexts
+
+The P2P networking utilities can be integrated into service contexts to manage network state and handle messages. It exposes an interface for you to send messages to other peers of your service as well as gossip messages to the entire network of service instance operators.
+
+## Context Constructor
+
+Create a context that you can pass into your jobs and background services.
+
+```rust
+/// The context holds necessary information for the service to run.
+#[derive(Clone, KeystoreContext, TangleClientContext, ServicesContext)]
+pub struct BlsContext {
+    #[config]
+    pub config: GadgetConfiguration,
+    #[call_id]
+    pub call_id: Option<u64>,
+    pub network_backend: NetworkServiceHandle,
+    pub store: Arc<LocalDatabase<BlsState>>,
+    pub identity: sp_core::ecdsa::Pair,
+}
+
+// Core context management implementation
+impl BlsContext {
+    /// Creates a new service context with the provided configuration
+    ///
+    /// # Errors
+    /// Returns an error if:
+    /// - Network initialization fails
+    /// - Configuration is invalid
+    pub async fn new(config: GadgetConfiguration) -> Result<Self> {
+        let operator_keys: HashSet<InstanceMsgPublicKey> = config
+            .tangle_client()
+            .await?
+            .get_operators()
+            .await?
+            .values()
+            .map(|key| InstanceMsgPublicKey(*key))
+            .collect();
+
+        let network_config = config.libp2p_network_config(NETWORK_PROTOCOL)?;
+        let identity = network_config.instance_key_pair.0.clone();
+
+        let network_backend = config.libp2p_start_network(network_config, operator_keys)?;
+
+        let keystore_dir = PathBuf::from(&config.keystore_uri).join("bls.json");
+        let store = Arc::new(LocalDatabase::open(keystore_dir));
+
+        Ok(Self {
+            config,
+            call_id: None,
+            network_backend,
+            store,
+            identity,
+        })
+    }
+}
+```
+
+### Round Based Job
+
+In your job you can now leverage your `NetworkServiceHandle` to send messages to the network. You may also want to leverage a `round-based` protocol that handles sending, receiving, and processing messages with the `RoundBasedNetworkAdapter`
+
+```rust
+#[job(
+    id = 0,
+    params(t),
+    event_listener(
+        listener = TangleEventListener<BlsContext, JobCalled>,
+        pre_processor = services_pre_processor,
+        post_processor = services_post_processor,
+    ),
+)]
+pub async fn keygen(t: u16, context: BlsContext) -> Result<Vec<u8>, GadgetError> {
+    // Get configuration and compute deterministic values
+    let blueprint_id = context
+        .blueprint_id()
+        .map_err(|e| KeygenError::ContextError(e.to_string()))?;
+    let call_id = context
+        .current_call_id()
+        .await
+        .map_err(|e| KeygenError::ContextError(e.to_string()))?;
+    // Setup party information
+    let (i, operators) = context
+        .get_party_index_and_operators()
+        .await
+        .map_err(|e| KeygenError::ContextError(e.to_string()))?;
+    let parties: HashMap<u16, InstanceMsgPublicKey> = operators
+        .into_iter()
+        .enumerate()
+        .map(|(j, (_, ecdsa))| (j as PartyIndex, InstanceMsgPublicKey(ecdsa)))
+        .collect();
+    let n = parties.len() as u16;
+    let i = i as u16;
+    // Create a new round based network adapter
+    let network = RoundBasedNetworkAdapter::<KeygenMsg>::new(
+        context.network_backend.clone(),
+        i,
+        parties.clone(),
+        crate::context::NETWORK_PROTOCOL,
+    );
+
+    // Create a new round based party
+    let party = round_based::party::MpcParty::connected(network);
+
+    // Run the keygen protocol
+    let output = crate::keygen_state_machine::bls_keygen_protocol(party, i, t, n, call_id).await?;
+
+    Ok(output)
+}
 ```
