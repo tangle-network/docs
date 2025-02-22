@@ -1,0 +1,98 @@
+# Eigenlayer CLI Commands
+
+The Tangle CLI provides commands for deploying and running Eigenlayer AVS (Active Validator Set) services. This guide covers the deployment and operation of Eigenlayer components.
+
+## Blueprint Commands
+
+The blueprint commands allow you to create, deploy, and run Eigenlayer AVS services.
+
+### Create a New AVS Project
+
+```bash
+cargo tangle blueprint create -n <NAME> --eigenlayer [BLS|ECDSA]
+```
+
+#### Create Options
+- `-n, --name <NAME>`: Name of your AVS project
+- `--eigenlayer`: Specify either BLS or ECDSA variant
+
+### Deploy AVS Contracts
+
+```bash
+cargo tangle blueprint deploy eigenlayer [OPTIONS]
+```
+
+#### Deploy Options
+- `--rpc-url <URL>`: HTTP RPC endpoint to connect to
+- `--contracts-path <PATH>`: Path to your contracts directory (defaults to "./contracts")
+- `--chain <CHAIN>`: Target chain type (e.g., "testnet", "local-testnet")
+- `--keystore-path <PATH>`: Path to your keystore
+- `--settings-file <PATH>`: Path to your settings file
+- `--devnet`: Automatically uses local settings, running a local Anvil testnet in the background that continues until it is stopped
+- `--ordered-deployment`: Deploy contracts in an interactive ordered manner
+
+### Run AVS Service
+
+```bash
+cargo tangle blueprint run [OPTIONS]
+```
+
+#### Run Options
+- `-p, --protocol eigenlayer`: Specify Eigenlayer protocol
+- `-u, --rpc-url <URL>`: HTTP RPC endpoint URL
+- `-k, --keystore-path <PATH>`: Path to the keystore (defaults to ./keystore)
+- `-b, --binary-path <PATH>`: Path to the AVS binary (optional)
+- `-w, --network <NETWORK>`: Network to connect to (local, testnet, mainnet)
+- `-d, --data-dir <PATH>`: Data directory path (defaults to ./data)
+- `-n, --bootnodes <NODES>`: Optional bootnodes to connect to
+- `-f, --settings-file <PATH>`: Path to the protocol settings env file
+
+### Environment Variables
+
+- `EIGENLAYER_PRIVATE_KEY`: Your private key for deployment (alternative to keystore)
+
+## Example Workflow
+
+1. **Create a New AVS Project**
+   ```bash
+   cargo tangle blueprint create -n my-avs --eigenlayer BLS
+   ```
+
+2. **Build Your AVS**
+   ```bash
+   cargo build --release
+   ```
+
+3. **Deploy Contracts**
+   ```bash
+   cargo tangle blueprint deploy eigenlayer \
+     --devnet \
+     --ordered-deployment
+   ```
+
+4. **Run Your Service**
+   Your RPC URL will depend on the previous command's output
+   ```bash
+   cargo tangle blueprint run \
+     -p eigenlayer \
+     -u http://localhost:<PORT> \
+     -w testnet \
+     -s ./settings.env \
+     -k ./test-keystore
+   ```
+
+## Troubleshooting
+
+Common issues and solutions:
+
+1. **Deployment Failures**
+   - Verify RPC endpoint is accessible
+   - Ensure correct chain is specified
+   - Check contract constructor arguments
+   - Verify sufficient funds for deployment
+
+2. **Service Issues**
+   - Check configuration file format
+   - Verify contract addresses are correct
+   - Ensure binary is compiled with correct features
+   - Check network connectivity
