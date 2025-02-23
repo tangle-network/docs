@@ -1,6 +1,8 @@
 # Eigenlayer CLI Commands
 
-The Tangle CLI provides commands for deploying and running Eigenlayer AVS (Active Validator Set) services. This guide covers the deployment and operation of Eigenlayer components.
+Our CLI provides commands for deploying and running Eigenlayer AVSs. We have two templates for quickly creating an AVS: the [BLS template](/developers/eigenlayer-avs/bls-template) and the [ECDSA template](/developers/eigenlayer-avs/ecdsa-template).
+
+For a step-by-step example of using the BLS template, see [Deploying an Eigenlayer AVS](/developers/eigenlayer-avs/bls-example).
 
 ## Blueprint Commands
 
@@ -13,6 +15,7 @@ cargo tangle blueprint create -n <NAME> --eigenlayer [BLS|ECDSA]
 ```
 
 #### Create Options
+
 - `-n, --name <NAME>`: Name of your AVS project
 - `--eigenlayer`: Specify either BLS or ECDSA variant
 
@@ -23,13 +26,13 @@ cargo tangle blueprint deploy eigenlayer [OPTIONS]
 ```
 
 #### Deploy Options
-- `--rpc-url <URL>`: HTTP RPC endpoint to connect to
+
+- `--rpc-url <URL>`: HTTP RPC endpoint to connect to (required unless --devnet is used)
 - `--contracts-path <PATH>`: Path to your contracts directory (defaults to "./contracts")
-- `--chain <CHAIN>`: Target chain type (e.g., "testnet", "local-testnet")
-- `--keystore-path <PATH>`: Path to your keystore
-- `--settings-file <PATH>`: Path to your settings file
-- `--devnet`: Automatically uses local settings, running a local Anvil testnet in the background that continues until it is stopped
-- `--ordered-deployment`: Deploy contracts in an interactive ordered manner
+- `--ordered-deployment`: Deploy contracts in an interactive ordered manner (if omitted, deploys as they are found)
+- `-w, --network <NETWORK>`: Network to deploy to (local, testnet, mainnet) [default: local]
+- `--devnet`: Start a local devnet using Anvil (only valid with --network local)
+- `-k, --keystore-path <PATH>`: Path to your keystore (defaults to ./keystore)
 
 ### Run AVS Service
 
@@ -38,47 +41,63 @@ cargo tangle blueprint run [OPTIONS]
 ```
 
 #### Run Options
+
 - `-p, --protocol eigenlayer`: Specify Eigenlayer protocol
-- `-u, --rpc-url <URL>`: HTTP RPC endpoint URL
+- `-u, --rpc-url <URL>`: HTTP RPC endpoint URL (required)
 - `-k, --keystore-path <PATH>`: Path to the keystore (defaults to ./keystore)
-- `-b, --binary-path <PATH>`: Path to the AVS binary (optional)
+- `-b, --binary-path <PATH>`: Path to the AVS binary (optional, will build if not provided)
 - `-w, --network <NETWORK>`: Network to connect to (local, testnet, mainnet)
 - `-d, --data-dir <PATH>`: Data directory path (defaults to ./data)
 - `-n, --bootnodes <NODES>`: Optional bootnodes to connect to
-- `-f, --settings-file <PATH>`: Path to the protocol settings env file
+- `-f, --settings-file <PATH>`: Path to the protocol settings env file (defaults to ./settings.env)
 
-### Environment Variables
+### Required Environment Variables for Eigenlayer
 
-- `EIGENLAYER_PRIVATE_KEY`: Your private key for deployment (alternative to keystore)
+The following environment variables must be set in your settings.env file:
+
+- `REGISTRY_COORDINATOR_ADDRESS`: Address of the Registry Coordinator contract
+- `OPERATOR_STATE_RETRIEVER_ADDRESS`: Address of the Operator State Retriever contract
+- `DELEGATION_MANAGER_ADDRESS`: Address of the Delegation Manager contract
+- `SERVICE_MANAGER_ADDRESS`: Address of the Service Manager contract
+- `STAKE_REGISTRY_ADDRESS`: Address of the Stake Registry contract
+- `STRATEGY_MANAGER_ADDRESS`: Address of the Strategy Manager contract
+- `AVS_DIRECTORY_ADDRESS`: Address of the AVS Directory contract
+- `REWARDS_COORDINATOR_ADDRESS`: Address of the Rewards Coordinator contract
 
 ## Example Workflow
 
 1. **Create a New AVS Project**
+
    ```bash
-   cargo tangle blueprint create -n my-avs --eigenlayer BLS
+   cargo tangle blueprint create -n my-avs --eigenlayer bls
    ```
 
 2. **Build Your AVS**
+
    ```bash
    cargo build --release
    ```
 
 3. **Deploy Contracts**
+
    ```bash
+   # Deploy to local devnet
    cargo tangle blueprint deploy eigenlayer \
      --devnet \
+     --ordered-deployment
+
+   # Or deploy to testnet
+   cargo tangle blueprint deploy eigenlayer \
+     --network testnet \
+     --rpc-url <YOUR_RPC_URL> \
      --ordered-deployment
    ```
 
 4. **Run Your Service**
-   Your RPC URL will depend on the previous command's output
    ```bash
    cargo tangle blueprint run \
      -p eigenlayer \
-     -u http://localhost:<PORT> \
-     -w testnet \
-     -s ./settings.env \
-     -k ./test-keystore
+     -u <YOUR_RPC_URL>
    ```
 
 ## Troubleshooting
@@ -86,13 +105,14 @@ cargo tangle blueprint run [OPTIONS]
 Common issues and solutions:
 
 1. **Deployment Failures**
+
    - Verify RPC endpoint is accessible
-   - Ensure correct chain is specified
+   - Ensure correct network is specified (local, testnet, mainnet)
    - Check contract constructor arguments
    - Verify sufficient funds for deployment
 
 2. **Service Issues**
-   - Check configuration file format
-   - Verify contract addresses are correct
-   - Ensure binary is compiled with correct features
-   - Check network connectivity
+   - Check settings.env file contains all required contract addresses
+   - Verify contract addresses are correct for the chosen network
+   - Ensure binary is built with correct features
+   - Check network connectivity and RPC endpoint accessibility
