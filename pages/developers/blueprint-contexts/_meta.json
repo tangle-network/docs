@@ -3,6 +3,5 @@
   "keystore-context": "Keystore Context",
   "evm-provider-context": "EVM Provider Context",
   "tangle-client-context": "Tangle Client Context",
-  "service-context": "Tangle Services Context",
   "eigenlayer-context": "Eigenlayer Context"
 }
