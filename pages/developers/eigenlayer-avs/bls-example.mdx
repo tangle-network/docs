@@ -1,0 +1,63 @@
+# Deploying and running an Eigenlayer AVS from the BLS Template
+
+The following is a step-by-step guide for deploying and running an AVS using the cargo-tangle CLI.
+
+## Generating the AVS from the Template
+
+Run the following command, answering each prompt for project information. For anything you aren't certain about, the default selection is a safe choice. This command creates a BLS AVS called `my-avs`.
+
+```bash
+cargo tangle blueprint create --name my-avs --eigenlayer bls
+```
+
+Now that you have generated your AVS project, move to the newly created directory.
+
+```bash
+cd my-avs
+```
+
+## Deploying the AVS to a local testnet
+
+The AVS is fully ready to be deployed, perfect for testing locally. The following command will start a local testnet in the background and deploy the AVS's necessary contracts.
+
+```bash
+cargo tangle blueprint deploy eigenlayer \
+    --devnet \
+    --ordered-deployment
+```
+
+In this case, you want to deploy the contracts in an ordered manner. Specifically, you need to deploy the TangleTaskManager before the TangleServiceManager, since the Service Manager takes the Task Manager's address as a constructor argument.
+
+When you deploy the TangleTaskManager, you are also given the option to initialize it. You want to make sure you do this, supplying the initialization arguments when prompted.
+
+You will be prompted for each contract's constructor arguments (if it has any). You can find the addresses of the contracts you need in your project's settings.env file. Below is a complete list of addresses you will need. Some are zero addresses because they aren't actually used.
+
+### Addresses for deployment
+
+| Address              | Value                                        |
+| -------------------- | -------------------------------------------- |
+| Registry Coordinator | c3e53f4d16ae77db1c982e75a937b9f60fe63690     |
+| Pauser Registry      | Obtained from beginning of Deployment output |
+| Initial Owner        | 70997970C51812dc3A010C7d01b50e0d17dc79C8     |
+| Aggregator           | a0Ee7A142d267C1f36714E4a8F75612F20a79720     |
+| Generator            | 15d34AAf54267DB7D7c367839AAf71A00a2C6A65     |
+| AVS Directory        | 0000000000000000000000000000000000000000     |
+| Rewards Coordinator  | 0000000000000000000000000000000000000000     |
+| Stake Registry       | 5fc8d32690cc91d4c39d9d3abcbd16989f875707     |
+| Tangle Task Manager  | Obtained in Deployment output                |
+
+Once all contracts have been deployed, you will notice that it continues running to keep the testnet alive.
+
+## Running the AVS
+
+In a new terminal, run the following command in the project's directory (make sure to replace the task manager address and the RPC URL with the values obtained from your deployment output):
+
+```bash
+TASK_MANAGER_ADDRESS=<ADDRESS_FROM_OUTPUT> cargo tangle blueprint run \
+    -p eigenlayer \
+    -u <URL_FROM_DEPLOYMENT_OUTPUT> \
+    --keystore-path ./test-keystore
+```
+
+Running this once, will register the example operator (it uses Anvil's account 0 by default) and then exit the process. Once the registration is complete, you simply need to run the same command again.
+Upon running the command for a second time, you should see "Successfully ran job function!" printed to the terminal, signifying that the job function was successfully executed!
