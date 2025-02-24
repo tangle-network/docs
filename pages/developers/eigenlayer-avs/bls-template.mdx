@@ -10,6 +10,12 @@ This will guide you through the process of utilizing our BLS Template for starti
 Contracts. The [Incredible Squaring AVS](/developers/eigenlayer-avs/incredible-squaring-avs) is an example of an AVS
 that uses BLS contracts.
 
+## Prerequisites
+
+- [docker desktop](https://docs.docker.com/desktop/)
+- [foundry](https://book.getfoundry.sh/) (stable)
+- [rust](https://www.rust-lang.org/tools/install)
+
 ## Complete Workflow
 
 ### 1. Installation
@@ -150,6 +156,9 @@ The template provides a foundation that you can build upon:
 - For job implementation details, consult the [jobs documentation](/developers/blueprint-macros/jobs).
 
 ## Development Keys
+
+The aggregator key is - `47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a`
+The task generator key is - `2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6`
 
 ```rust
 pub const ANVIL_PRIVATE_KEYS: [&str; 10] = [
