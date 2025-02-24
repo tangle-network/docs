@@ -13,7 +13,7 @@ The primary subcommand, used for building, testing, and deploying blueprints.
 Usage:
 
 ```shell
-$ cargo tangle blueprint <subcommand>
+cargo tangle blueprint <subcommand>
 ```
 
 ### Subcommands
@@ -37,19 +37,19 @@ Usage:
 Create a blueprint using the default template
 
 ```shell
-$ cargo tangle blueprint create --name <name>
+cargo tangle blueprint create --name <name>
 ```
 
 Create a blueprint using another template from git
 
 ```shell
-$ cargo tangle blueprint create --name <name> --repo <git-repo-url>
+cargo tangle blueprint create --name <name> --repo <git-repo-url>
 ```
 
 Create an EigenLayer AVS:
 
 ```shell
-$ cargo tangle blueprint create --name <project-name> --eigenlayer <type>
+cargo tangle blueprint create --name <project-name> --eigenlayer <type>
 ```
 
 where the following are the possible types (defaulting to bls if the type is omitted):

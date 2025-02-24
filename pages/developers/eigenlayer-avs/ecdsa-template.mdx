@@ -21,7 +21,7 @@ implementation of an AVS using ECDSA contracts.
 ### 1. Installation
 
 ```shell
-$ cargo install cargo-tangle --git https://github.com/tangle-network/gadget --force
+cargo install cargo-tangle --git https://github.com/tangle-network/gadget --force
 ```
 
 ### 2. Creating Your Project
@@ -29,7 +29,7 @@ $ cargo install cargo-tangle --git https://github.com/tangle-network/gadget --fo
 To create a new ECDSA AVS, use the following command:
 
 ```shell
-$ cargo tangle blueprint create --name <blueprint_name> --eigenlayer ecdsa
+cargo tangle blueprint create --name <blueprint_name> --eigenlayer ecdsa
 ```
 
 Replace `<blueprint_name>` with your desired AVS name. You'll be prompted with configuration questions - if unsure, the default selections are recommended.
@@ -37,7 +37,7 @@ Replace `<blueprint_name>` with your desired AVS name. You'll be prompted with c
 ### 3. Building Your AVS
 
 ```shell
-$ cargo build --release
+cargo build --release
 ```
 
 ### 4. Deploying Your Contracts
@@ -126,7 +126,7 @@ Your settings.env file must include:
 To verify your setup:
 
 ```shell
-$ cargo test
+cargo test
 ```
 
 ## Troubleshooting
