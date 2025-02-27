@@ -15,7 +15,7 @@ const getStartedCards = [
     icon: <SiBlueprint />,
     title: "Get started building Blueprints",
     description:
-      "Blueprints are the template object implemented as software in the Tangle codebase.",
+      "Tangle Network is a decentralized cloud infrastructure that allows users to deploy and monetize Blueprints across any blockchain ecosystem.",
     link: "../developers/blueprints/introduction",
   },
   {
@@ -36,7 +36,7 @@ const getStartedCards = [
     icon: <GiPlatform />,
     title: "Learn more about the network and platform",
     description:
-      "Here are the biggest enterprise technology acquisitions of 2021 so far, in reverse chronological order.",
+      "Discover Tangle network's unique decentralized cloud infrastructure.",
     link: "../network/overview",
   },
 ];
@@ -80,14 +80,15 @@ const LandingPage = () => {
               TANGLE DOCUMENTATION
             </p>
             <h1 className="text-3xl font-normal text-gray-900 dark:text-white md:text-3xl lg:text-5xl">
-              Your Guide to the{" "}
+              Your Guide to Tangle&apos;s{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-blue-700">
-                Modular Restaking Infrastructure
+                Decentralized Cloud Infrastructure
               </span>
             </h1>
             <p className="text-lg font-bold md:font-normal text-gray-700 lg:text-lg dark:text-gray-400">
-              Create and monetize services that deploy securely across any
-              blockchain ecosystem.
+              Create and monetize Blueprints that deploy securely across any
+              blockchain ecosystem. Instance services on-demand using crypto
+              rails.
             </p>
           </div>
 
