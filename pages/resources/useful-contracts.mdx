@@ -1,0 +1,39 @@
+# Useful Contracts
+
+## MultiSend
+
+This contract allows you to send identical amounts of TNT to multiple addresses in a single transaction. Useful for batching transactions for airdrop distributions.
+
+Explorer: [0x55E25dF92f6a7384844964a6e2a85fa182f8abfa](https://explorer.tangle.tools/address/0x55E25dF92f6a7384844964a6e2a85fa182f8abfa?tab=txs)
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract MultiSend {
+    constructor() {}
+
+    function multiSend(address[] calldata recipients, uint256[] calldata amounts) external payable {
+        require(recipients.length == amounts.length, "Arrays must be same length");
+        require(recipients.length > 0, "Must provide at least one recipient");
+
+        uint256 total = 0;
+        for(uint256 i = 0; i < amounts.length; i++) {
+            total += amounts[i];
+        }
+        require(msg.value >= total, "Insufficient funds sent");
+
+        for(uint256 i = 0; i < recipients.length; i++) {
+            (bool success,) = recipients[i].call{value: amounts[i]}("");
+            require(success, "Transfer failed");
+        }
+
+        // Return excess ETH if any
+        uint256 remaining = msg.value - total;
+        if (remaining > 0) {
+            (bool success,) = msg.sender.call{value: remaining}("");
+            require(success, "Failed to return remaining ETH");
+        }
+    }
+}
+```
