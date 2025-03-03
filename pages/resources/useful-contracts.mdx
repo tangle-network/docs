@@ -37,3 +37,95 @@ contract MultiSend {
     }
 }
 ```
+
+## Multicall3
+
+Multicall3 has two main use cases:
+
+1. Aggregate results from multiple contract reads into a single JSON-RPC request.
+2. Execute multiple state-changing calls in a single transaction.
+
+Read more about Multicall3 [here](https://github.com/mds1/multicall3).
+
+Testnet Explorer: [0xcA11bde05977b3631167028862bE2a173976CA11](https://testnet-explorer.tangle.tools/address/0xca11bde05977b3631167028862be2a173976ca11)
+
+Mainnet Explorer: [0xcA11bde05977b3631167028862bE2a173976CA11](https://explorer.tangle.tools/address/0xcA11bde05977b3631167028862bE2a173976CA11)
+
+```typescript
+import assert from 'node:assert';
+import { createPublicClient, defineChain, erc20Abi, http } from 'viem';
+
+assert(process.env.RPC_URL, 'RPC_URL is not set');
+
+const TANGLE_TESTNET = defineChain({
+  id: 3799,
+  name: 'Tangle EVM Testnet',
+  nativeCurrency: {
+    name: 'Tangle Native Token',
+    symbol: 'tTNT',
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: [process.env.RPC_URL],
+    },
+  },
+  contracts: {
+    multicall3: {
+      address: '0xcA11bde05977b3631167028862bE2a173976CA11',
+      blockCreated: 776767,
+    },
+  },
+});
+
+// Setup the client.
+const client = createPublicClient({
+  chain: TANGLE_TESTNET,
+  transport: http(process.env.RPC_URL),
+});
+
+const ERC20_ADDRESS = '0x87d95f134221D9c2b3dE15aCe58BACe4121c07B0';
+
+async function example1() {
+  // Execute the multicall and get the erc20 metadata (name, symbol, decimals). None of these calls can fail so we set
+  // `allowFailure` to false. This results in each return value's type matching the type of the
+  // corresponding call, e.g. `0x${string}` for addresses, `bigint` for uint256, etc. If we set
+  // `allowFailure` to true then the returns types are of the following shape, using the example of
+  // the address return type:
+  //   {
+  //       error: Error;
+  //       result?: undefined;
+  //       status: "error";
+  //   } | {
+  //       error?: undefined;
+  //       result: `0x${string}`;
+  //       status: "success";
+  //   }
+  const [name, symbol, decimals] = await client.multicall({
+    contracts: [
+      {
+        address: ERC20_ADDRESS,
+        abi: erc20Abi,
+        functionName: 'name',
+      },
+      {
+        address: ERC20_ADDRESS,
+        abi: erc20Abi,
+        functionName: 'symbol',
+      },
+      {
+        address: ERC20_ADDRESS,
+        abi: erc20Abi,
+        functionName: 'decimals',
+      },
+    ],
+    allowFailure: false,
+  });
+
+  console.log(
+    `Token ${name} has a symbol of ${symbol} and ${decimals} decimals at address ${ERC20_ADDRESS} on ${TANGLE_TESTNET.name}`,
+  );
+}
+
+example1().catch(console.error);
+```
