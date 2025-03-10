@@ -1,7 +1,0 @@
-{
-  "introduction": "Introduction to Event Listeners",
-  "tangle-job-calls": "Tangle Job Call Listener",
-  "evm-contracts": "EVM Contract Listeners",
-  "cron-job-listeners": "Cron Job Listeners",
-  "custom-listeners": "Custom Listeners"
-}

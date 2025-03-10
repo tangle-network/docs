@@ -4,17 +4,15 @@
     "title": "Introduction"
   },
   "blueprints": "Blueprints",
-  "cli": "Tangle Blueprint CLI",
+  "cli": "Blueprint CLI",
   "-- gadget-tutorial": {
     "type": "separator",
     "title": "Blueprint Developers"
   },
-  "gadget-sdk": "Blueprint Gadget SDK",
-  "blueprint-macros": "Blueprint SDK Macros",
-  "blueprint-event-listeners": "Blueprint SDK Event Listeners",
-  "blueprint-contexts": "Blueprint SDK Contexts",
-  "p2p-networking": "Blueprint P2P Networking",
-  "tangle-avs": "Build a Tangle Blueprint AVS",
+  "gadget-sdk": "Introduction",
+  "blueprint-contexts": "Contexts",
+  "p2p-networking": "P2P Networking",
+  "tangle-avs": "Build a Tangle Blueprint",
   "eigenlayer-avs": "Build an Eigenlayer AVS",
   "testing-with-tangle": "Testing with Tangle",
   "troubleshooting": "Troubleshooting",
