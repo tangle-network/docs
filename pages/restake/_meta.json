@@ -25,5 +25,12 @@
   "join_a_pool": "Join a Liquid Staking Pool",
   "lst-rewards": "Incentives",
   "lst-assets": "Supported Assets",
-  "lst_developers": "Developer Docs"
+  "lst_developers": "Developer Docs",
+  "-- liquid restaking": {
+    "type": "separator",
+    "title": "Liquid Restaking"
+  },
+  "lrt-concepts": "Introduction to Liquid Restaking",
+  "lrt-vs-lst": "Liquid Restaking vs. Liquid Staking",
+  "lrt_developers": "Developer Docs"
 }
