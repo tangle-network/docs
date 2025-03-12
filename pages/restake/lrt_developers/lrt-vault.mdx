@@ -12,6 +12,7 @@ This tutorial walks through creating a Liquid Restaking Token (LRT) Vault on Tan
 - Some test tokens for deployment (on testnet)
 
 Install Foundry:
+
 ```bash
 curl -L https://foundry.paradigm.xyz | bash
 foundryup
@@ -22,6 +23,7 @@ foundryup
 The Tangle Liquid Restaking implementation consists of the following key components:
 
 1. **Vault Contract (TangleLiquidRestakingVault)**: An ERC4626-compliant vault that:
+
    - Manages deposits and withdrawals
    - Implements reward distribution with index-based accounting
    - Handles delegation through the MultiAssetDelegation precompile
@@ -30,11 +32,12 @@ The Tangle Liquid Restaking implementation consists of the following key compone
 2. **MultiAssetDelegation Wrapper**: Interfaces with Tangle's MultiAssetDelegation precompile at `0x0000000000000000000000000000000000000822`
 
 Core features include:
+
 ```solidity
 contract TangleLiquidRestakingVault is ERC4626, Owned, TangleMultiAssetDelegationWrapper {
     /// @notice Scale factor for reward index calculations
     uint256 private constant REWARD_FACTOR = 1e18;
-    
+
     /// @notice Tracks user's reward snapshot for a token
     struct RewardSnapshot {
         uint256 rewardIndex;    // Global index at snapshot creation
@@ -92,7 +95,7 @@ The vault handles delegation through the MultiAssetDelegation precompile, managi
 /// @notice Deposit assets into vault and delegate
 function deposit(uint256 assets, address receiver) public override returns (uint256 shares) {
     shares = previewDeposit(assets);
-    
+
     // Process reward snapshots
     if (rewardTokens.length > 0) {
         _updateAllRewardIndices();
@@ -105,7 +108,7 @@ function deposit(uint256 assets, address receiver) public override returns (uint
     // Deposit into MADs and delegate
     _deposit(assets);
     _delegate(operator, assets, blueprintSelection);
-    
+
     return shares;
 }
 ```
@@ -126,14 +129,14 @@ contract TangleLiquidRestakingVaultTest is Test {
     address baseToken;
     bytes32 operator;
     uint64[] blueprintSelection;
-    
+
     function setUp() public {
         // Setup test environment
         baseToken = address(new ERC20("Test Token", "TEST"));
         operator = bytes32(uint256(1));
         blueprintSelection = new uint64[](1);
         blueprintSelection[0] = 1;
-        
+
         // Deploy vault
         vault = new TangleLiquidRestakingVault(
             baseToken,
@@ -148,16 +151,17 @@ contract TangleLiquidRestakingVaultTest is Test {
     function testDeposit() public {
         uint256 amount = 1000e18;
         deal(baseToken, address(this), amount);
-        
+
         ERC20(baseToken).approve(address(vault), amount);
         vault.deposit(amount, address(this));
-        
+
         assertEq(vault.balanceOf(address(this)), amount);
     }
 }
 ```
 
 Run the tests using Forge:
+
 ```bash
 forge test -vv
 ```
@@ -257,16 +261,16 @@ function executeUnstake() external {
 /// Claim rewards for specified tokens
 function claimRewards(address user, address[] calldata tokens) external returns (uint256[] memory) {
     if (msg.sender != user) revert Unauthorized();
-    
+
     rewards = new uint256[](tokens.length);
     _updateAllRewardIndices();
-    
+
     for (uint256 i = 0; i < tokens.length; i++) {
         address token = tokens[i];
         if (!rewardData[token].isValid) revert InvalidRewardToken();
         rewards[i] = _claimReward(user, token);
     }
-    
+
     return rewards;
 }
 ```
@@ -281,6 +285,7 @@ The vault implements several security measures:
 4. **Math Safety**: Uses `FixedPointMathLib` for safe calculations
 
 Key security features from the contract:
+
 ```solidity
 /// @notice Scale factor for reward index calculations
 uint256 private constant REWARD_FACTOR = 1e18;
