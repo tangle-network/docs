@@ -1,0 +1,271 @@
+---
+title: Tangle Blueprints
+---
+
+# Tangle CLI Blueprint Commands
+
+This guide covers the commands available for creating, testing, and interacting with Tangle Blueprints.
+It also walks you through a full [demo](#step-by-step-demo) for creating, deploying, and running a Tangle Blueprint locally.
+
+## Creating a Blueprint
+
+We offer a template for getting started with building a Tangle Blueprint. The `create` command allows you to
+generate a new blueprint from our template or even a custom one:
+
+```shell
+cargo tangle blueprint create --name <blueprint-name>
+```
+
+Options:
+
+- `--name` (**required**): The name of the blueprint
+- `--repo` (**optional and conflicts with `--path`**): The repository to pull the template from (defaults to our blueprint template)
+- `--branch` (**optional and conflicts with `--tag`**): The branch of the template to pull from if `--repo` is specified
+- `--tag` (**optional and conflicts with `--branch`**): The tag of the template to pull from if `--repo` is specified
+- `--path` (**optional and conflicts with `--repo`**): The path to copy a template from
+
+## Deploying a Blueprint
+
+Deploy your Blueprint to the Tangle Network:
+
+```shell
+cargo tangle blueprint deploy tangle --ws-rpc-url <ws-url> --http-rpc-url <http-url> --keystore-path <path>
+```
+
+Options:
+
+- `--ws-rpc-url`: WebSocket RPC URL (default: `wss://rpc.tangle.tools`, automatically uses devnet URL
+  if `--devnet` is specified)
+- `--http-rpc-url`: HTTP RPC URL (default: `https://rpc.tangle.tools`, automatically uses devnet URL
+  if `--devnet` is specified)
+- `--package`: The blueprint package to deploy (used for workspaces with multiple packages)
+- `--keystore-path`: Path to the keystore (default: `./keystore`)
+- `--devnet`: Run a local devnet in background for testing, with WebSocket RPC URL
+  defaulting to `ws://127.0.0.1:9944` and HTTP RPC URL defaulting to `http://127.0.0.1:9944`
+
+## Listing Blueprints
+
+List Blueprints deployed on Tangle:
+
+```shell
+cargo tangle blueprint list-blueprints --ws-rpc-url <ws-url>
+```
+
+Alias: `lb`
+
+Options:
+
+- `--ws-rpc-url`: WebSocket RPC URL (default: `ws://127.0.0.1:9944`)
+
+## Registering for a Blueprint
+
+Register as an operator for a Blueprint:
+
+```shell
+cargo tangle blueprint register --ws-rpc-url <ws-url> --blueprint-id <id> --keystore-uri <path>
+```
+
+Alias: `reg`
+
+Options:
+
+- `--ws-rpc-url`: WebSocket RPC URL (default: `ws://127.0.0.1:9944`)
+- `--blueprint-id` (**required**): The ID of the Blueprint to register for
+- `--keystore-uri`: Path to the keystore (default: `./keystore`)
+
+## Requesting a Service
+
+Request a service from a Blueprint:
+
+```shell
+cargo tangle blueprint request-service --ws-rpc-url <ws-url> --blueprint-id <id> --min-exposure-percent <min> --max-exposure-percent <max> --target-operators <operators> --value <value> --keystore-uri <path>
+```
+
+Alias: `req`
+
+Options:
+
+- `--ws-rpc-url`: WebSocket RPC URL (default: `ws://127.0.0.1:9944`)
+- `--blueprint-id` (**required**): The ID of the Blueprint to request service from
+- `--min-exposure-percent`: Minimum exposure percentage (default: `50`)
+- `--max-exposure-percent`: Maximum exposure percentage (default: `80`)
+- `--target-operators` (**required**): List of target operator account IDs
+- `--value` (**required**): Payment amount for the service
+- `--keystore-uri`: Path to the keystore (default: `./keystore`)
+
+## Listing Service Requests
+
+List pending service requests:
+
+```shell
+cargo tangle blueprint list-requests --ws-rpc-url <ws-url>
+```
+
+Alias: `ls`
+
+Options:
+
+- `--ws-rpc-url`: WebSocket RPC URL (default: `ws://127.0.0.1:9944`)
+
+## Accepting a Service Request
+
+Accept a service request as an operator:
+
+```shell
+cargo tangle blueprint accept-request --ws-rpc-url <ws-url> --min-exposure-percent <min> --max-exposure-percent <max> --restaking-percent <percent> --keystore-uri <path> --request-id <id>
+```
+
+Alias: `accept`
+
+Options:
+
+- `--ws-rpc-url`: WebSocket RPC URL (default: `ws://127.0.0.1:9944`)
+- `--min-exposure-percent`: Minimum exposure percentage (default: `50`)
+- `--max-exposure-percent`: Maximum exposure percentage (default: `80`)
+- `--restaking-percent`: Restaking percentage (default: `50`)
+- `--keystore-uri`: Path to the keystore (default: `./keystore`)
+- `--request-id` (**required**): The ID of the request to accept
+
+## Rejecting a Service Request
+
+Reject a service request as an operator:
+
+```shell
+cargo tangle blueprint reject-request --ws-rpc-url <ws-url> --keystore-uri <path> --request-id <id>
+```
+
+Alias: `reject`
+
+Options:
+
+- `--ws-rpc-url`: WebSocket RPC URL (default: `ws://127.0.0.1:9944`)
+- `--keystore-uri`: Path to the keystore (default: `./keystore`)
+- `--request-id` (**required**): The ID of the request to reject
+
+## Running a Blueprint
+
+Run a Blueprint with the specified configuration:
+
+```shell
+cargo tangle blueprint run --protocol tangle --rpc-url <url> --keystore-path <path> --settings-file <file>
+```
+
+Options:
+
+- `--protocol`: Protocol to run (must be `tangle`)
+- `--rpc-url`: HTTP RPC URL (default: `http://127.0.0.1:9944`)
+- `--keystore-path`: Path to the keystore (default: `./keystore`)
+- `--binary-path`: Path to the AVS binary (optional)
+- `--network`: Type of network you are connecting to (local, testnet, mainnet) (default: `local`)
+- `--data-dir`: Data directory path (default: `./data`)
+- `--bootnodes`: Optional bootnodes to connect to
+- `--settings-file`: Path to the protocol settings env file, if not specified then
+  you will be prompted for the required information (default: `./settings.env`)
+
+## Submitting a Job
+
+Submit a job to a running Blueprint:
+
+```shell
+cargo tangle blueprint submit --ws-rpc-url <ws-url> --service-id <id> --blueprint-id <id> --keystore-uri <path> --job <job-id> --params-file <file> --watcher
+```
+
+Options:
+
+- `--ws-rpc-url`: WebSocket RPC URL (default: `ws://127.0.0.1:9944`)
+- `--service-id`: The service ID to submit the job to
+- `--blueprint-id` (**required**): The Blueprint ID to submit the job to
+- `--keystore-uri` (**required**): Path to the keystore
+- `--job` (**required**): The job ID to submit
+- `--params-file` (**optional**): Path to a JSON file containing job parameters
+- `--watcher` (**optional**): Whether to wait for the job to complete. If specified, the command will block until the job is completed, returning the job result.
+
+## Step-by-Step Demo
+
+Here's a complete demo for creating, deploying, and running a Tangle Blueprint:
+
+1. Create a new Blueprint:
+
+We will create a new Blueprint using the `create` command. For this demo, we won't make any changes to our blueprint.
+The Blueprint generated from the template is ready to be tested as-is.
+
+```shell
+   cargo tangle blueprint create --name my-blueprint
+```
+
+With the blueprint created, we will navigate into the blueprint's directory.
+
+```shell
+   cd my-blueprint
+```
+
+2. Deploy the Blueprint:
+
+Now we will deploy the newly created Blueprint using the `deploy` command. We use the `--devnet` flag to start a local devnet in
+background for easy testing. We will leave this terminal running to keep the testnet running.
+
+```shell
+   cargo tangle blueprint deploy tangle --devnet
+```
+
+3. List deployed Blueprints:
+
+In a new terminal in the blueprint's directory, we can list the deployed Blueprints using the `list-blueprints` command. This gives us some important information, namely the Blueprint ID.
+
+```shell
+   cargo tangle blueprint list-blueprints
+```
+
+4. Register to the deployed blueprint:
+
+Before we can interact with the Blueprint, we need to register to it.
+
+```shell
+   cargo tangle blueprint register --blueprint-id 0 --keystore-uri ./test-keystore
+```
+
+5. Request service with another account:
+
+With the account that owns the Blueprint, we request service from our Operator. The target
+operator is the account that will run the Blueprint and is given in the output of the deployment.
+
+```shell
+cargo tangle blueprint request-service --blueprint-id 0 --target-operators 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY --value 0 --keystore-uri ./deploy-keystore
+```
+
+6. List all service requests:
+
+Now that we requested service, we must find that request and accept it. So we list the service
+requests to get some information, specifically the request ID.
+
+```shell
+cargo tangle blueprint list-requests
+```
+
+7. Accept the service request:
+
+With the account that will run the Blueprint, we accept the service request.
+
+```shell
+cargo tangle blueprint accept-request --request-id 0 --keystore-uri ./test-keystore
+```
+
+8. Run the Blueprint:
+
+We are now ready to start running the Blueprint, so that we are able to complete any submitted jobs.
+Once we start running the Blueprint, the process will continue running until we manually stop it.
+We will leave this terminal running so we can submit a job to be completed.
+
+```shell
+cargo tangle blueprint run --protocol tangle --keystore-path ./test-keystore
+```
+
+9. Submit a job for the running Blueprint to process:
+
+In a third terminal in the blueprint's directory, we run the following command to submit a job and wait for the result.
+
+```shell
+cargo tangle blueprint submit --job 0 --blueprint-id 0 --service-id 0 --watcher --keystore-uri ./deploy-keystore
+```
+
+You should then see the result of the job in the terminal, meaning that demo was completed successfully!
