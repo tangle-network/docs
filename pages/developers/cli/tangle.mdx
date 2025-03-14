@@ -182,9 +182,24 @@ Options:
 
 ## Step-by-Step Demo
 
-Here's a complete demo for creating, deploying, and running a Tangle Blueprint:
+Below is a complete demo for creating, deploying, and running a Tangle Blueprint. Before we get started, there are a few things to note.
+To walk through the flow of the demo, we act as two different accounts:
 
-1. Create a new Blueprint:
+1. The Blueprint owner
+2. The Operator
+
+The Blueprint owner is the account that will deploy the Blueprint, request service, and submit jobs.
+The Operator is the account that will respond to service requests and run Blueprints.
+
+The Blueprint owner uses the `./deploy-keystore` keystore, while the Operator uses the `./test-keystore` keystore. Both of these
+are generated when deploying with the `--devnet` flag.
+
+### Prerequisites
+
+1. Install Tangle CLI, see [installation](./installation.mdx).
+2. Install a local devnet, see [devnet](/developers/devnet).
+
+3. Create a new Blueprint:
 
 We will create a new Blueprint using the `create` command. For this demo, we won't make any changes to our blueprint.
 The Blueprint generated from the template is ready to be tested as-is.
