@@ -14,7 +14,7 @@
 
 ❗ **Note:** This is a fork of [Vercel Docs](https://github.com/vercel/turbo/tree/main/docs).
 
-This repository serves as the **documentation** for the **[Tangle Network](https://www.tangle.tools/)** . The docs are written in [MDX](https://mdxjs.com/) format an extension of [markdown](https://www.markdownguide.org/), processed by [Nextra](https://github.com/shuding/nextra/tree/main), and published to Webb Docs. For support on using Nextra see [https://nextra.site/docs].(https://nextra.site/docs)
+This repository serves as the **documentation** for the **[Tangle Network](https://www.tangle.tools/)** . The docs are written in [MDX](https://mdxjs.com/) format an extension of [markdown](https://www.markdownguide.org/), processed by [Nextra](https://github.com/shuding/nextra/tree/main), and published to Tangle Docs. For support on using Nextra see [https://nextra.site/docs].(https://nextra.site/docs)
 
 ### Directory structure
 
@@ -86,9 +86,9 @@ navigation.
 
 <h2 id="contribute"> Contributing </h2>
 
-Interested in contributing to the Webb Documentation? Thank you so much for your interest! We are always appreciative for contributions from the open-source community!
+Interested in contributing to the Tangle Network Documentation? Thank you so much for your interest! We are always appreciative for contributions from the open-source community!
 
-If you have a contribution in mind, please check out our [Contribution Guide](./.github/CONTRIBUTING.md) for information on how to do so. We are excited for your first contribution! If you have any further questions, please do not hesitate to reach out on our [Webb Discord channel](https://discord.com/invite/cv8EfJu3Tn)! We would love to get to know you and your work!
+If you have a contribution in mind, please check out our [Contribution Guide](./.github/CONTRIBUTING.md) for information on how to do so. We are excited for your first contribution! If you have any further questions, please do not hesitate to reach out on our [Tangle Discord channel](https://discord.com/invite/cv8EfJu3Tn)! We would love to get to know you and your work!
 
 <h2 id="license"> License </h2>
 

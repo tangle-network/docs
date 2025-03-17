@@ -6,7 +6,6 @@ import type { AppProps } from "next/app";
 import type { ReactElement, ReactNode } from "react";
 import "../globals.css";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import { AskCookbook } from "../components/AskCookbook";
 import { getShikiHighlighter } from "../components/shiki";
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
@@ -57,7 +56,6 @@ export default function Nextra({ Component, pageProps }: NextraAppProps) {
           <GoogleAnalytics gaId="G-JEQ15MLV6B" />
         </>,
       )}
-      <AskCookbook />
     </>
   );
 }

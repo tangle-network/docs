@@ -77,7 +77,7 @@ export default function AllocationTable() {
         <tbody>
           <Row isEven={false}>
             <Cell>Contributors</Cell>
-            <Cell>Webb (Developer)</Cell>
+            <Cell>Webb Technologies (Developer)</Cell>
             <Cell>28.56500%</Cell>
             <Cell>A-Vesting</Cell>
             <Cell>12</Cell>

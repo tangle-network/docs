@@ -4,9 +4,7 @@ import ExpandableImage from '../../../components/ExpandableImage';
 
 <ExpandableImage src="/images/blueprint-manager-diagram.png" alt="Blueprint Manager Diagram" />
 
-On Tangle, Blueprints have an offchain and an onchain lifecycle. The offchain component is managed by what we call the **Blueprint Manager**. The **Blueprint Manager** can be considered **_Tangle's Operator Node_**. We even plan to run the Blueprint Manager as an AVS on other restaking infrastructures in order to aggregate operators and assets around Tangle Blueprints.
-
-This onchain and offchain logic functions as follows:
+On Tangle, Blueprints have an offchain and an onchain lifecycle. The offchain component is managed by what we call the **Blueprint Manager**. The **Blueprint Manager** can be considered **_Tangle's Operator Node_**. This onchain and offchain logic functions as follows:
 
 1. Operators must register for Blueprints onchain. This indicates an operators willingness to accept requests for Blueprint Instances of that type.
 2. Operators upon registering for Blueprints onchain, download the Blueprint's binary and metadata from the Tangle Network. This is handled by the Blueprint Manager, which listens for new registrations.
