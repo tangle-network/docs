@@ -18,11 +18,18 @@ jobs:
         uses: styfle/cancel-workflow-action@0.11.0
         with:
           access_token: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: actions/checkout@v3
+
+      - name: Enable corepack
+        run: |
+          corepack enable
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
+
       - name: lint
         run: |
           yarn install
@@ -39,11 +46,18 @@ jobs:
         uses: styfle/cancel-workflow-action@0.11.0
         with:
           access_token: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: actions/checkout@v3
+
+      - name: Enable corepack
+        run: |
+          corepack enable
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
+
       - name: prettier
         run: |
           yarn install
@@ -57,7 +71,13 @@ jobs:
         uses: styfle/cancel-workflow-action@0.11.0
         with:
           access_token: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: actions/checkout@v3
+
+      - name: Enable corepack
+        run: |
+          corepack enable
+
       - name: Link Checker
         uses: lycheeverse/lychee-action@v1.9.0
         with:
