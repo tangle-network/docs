@@ -19,7 +19,12 @@ Tangle's core staking infrastructure is composed of three major pieces. The firs
     title: "Liquid Staking",
     description: "Explore Tangle's liquid staking protocols for validator-specific staking operations and liquid staked tokens (LSTs).",
     link: "../restake/lst-concepts"
-  }
+  },
+  {
+    title: "Liqued Restaking", 
+    description: "Learn about how to build a LRT (Liquid Restaking Token) vaults and how to use it for restaking.",
+    link: "../restake/lrt-concepts"
+  },
 ]} />
 
 ## Nominated Staking
@@ -41,3 +46,8 @@ Users deposit assets into the restaking infrastructure by depositing into a pool
 Tangle includes a variety of liquid staking protocol implementations for partner projects and blockchain ecosystems, providing the restaking infrastructure with unique liquid staking tokens to be used in securing new services. The tokens Tangle takes an active part in developing and leveraging bear the prefix `tg...`. The `tg` LST protocols are stake operation specific liquid staking protocols. By stake operation, we mean a unique staking action that exists separate to another, such as staking on Validator A versus Validator B or staking on Vault A or Vault B for an arbitrary staking protocol. These examples would create `tgXYZ_A` and `tgXYZ_B` liquid staked tokens which are not fungible with respect to one another.
 
 In doing so, Tangle's LST protocol creates a plethora of new LSTs and a well-defined pool in the restaking infrastructure. Validators, node operators, and vaults of various protocols have unique assets to represent their operations, and Tangle's liquid staking tokens provides these communities with additional product opportunities for leveraging those assets and actions.
+
+## Liquid Restaking
+
+Liquid Restaking Tokens (LRTs) are used to restake any assets into the restaking infrastructure.
+LRT in the nutshell is a way where you take any asset (usually an already staked asset, like stETH) and stake it again by depositing it into a the Tangle Restaking infrastructure and receive extra rewards for doing so.

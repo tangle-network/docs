@@ -1,0 +1,230 @@
+import GithubFileReaderDisplay from "../../../components/GithubFileReaderDisplay";
+
+# Creating a LRT Vault on Tangle
+
+## Overview
+
+This tutorial walks through creating a Liquid Restaking Token (LRT) Vault on Tangle Network using the reference implementation from the [tangle-lrt](https://github.com/tangle-network/lrt) repository. LRT vaults allow users to receive liquid tokens representing their staked assets while participating in Tangle's restaking mechanism.
+
+## Prerequisites
+
+- Basic knowledge of Solidity and EVM development
+- [Foundry](https://book.getfoundry.sh/) installed for smart contract development
+- MetaMask wallet connected to Tangle Network
+- Some test tokens for deployment (on testnet)
+
+Install Foundry:
+
+```bash
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
+```
+
+## Understanding the Components
+
+The Tangle Liquid Restaking implementation consists of the following key components:
+
+1. **Vault Contract (TangleLiquidRestakingVault)**: An ERC4626-compliant vault that:
+
+   - Manages deposits and withdrawals
+   - Implements reward distribution with index-based accounting
+   - Handles delegation through the MultiAssetDelegation precompile
+   - Provides liquid token representation of staked assets
+
+2. **MultiAssetDelegation Wrapper**: Interfaces with Tangle's MultiAssetDelegation precompile at `0x0000000000000000000000000000000000000822`
+3. **Rewards Wrapper**: Interfaces with Tangle's Rewards precompile at `0x0000000000000000000000000000000000000825`
+
+Core features include:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/lrt/blob/main/src/TangleLiquidRestakingVault.sol"
+  title="Solidity Interface for Tangle Liquid Restaking Vault"
+  fromLine={12}
+  toLine={44}
+/>
+
+## Step 1: Setting Up the Project
+
+First, clone the reference implementation:
+
+```bash
+git clone https://github.com/tangle-network/lrt
+cd lrt
+forge soldeer update -d
+```
+
+## Step 2: Core Implementation Details
+
+### Reward Distribution System
+
+The vault implements a sophisticated reward distribution system using index-based accounting:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/lrt/blob/main/src/TangleLiquidRestakingVault.sol"
+  title="Solidity Interface for Tangle Liquid Restaking Vault"
+  fromLine={504}
+  toLine={522}
+/>
+
+### Delegation Management
+
+The vault handles delegation through the MultiAssetDelegation precompile, managing deposits and withdrawals:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/lrt/blob/main/src/TangleLiquidRestakingVault.sol"
+  title="Solidity Interface for Tangle Liquid Restaking Vault"
+  fromLine={251}
+  toLine={283}
+/>
+
+## Step 3: Testing the Implementation
+
+Create test files in the `test` directory using Foundry's Solidity testing framework. Here's an example test structure:
+
+```solidity
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.20;
+
+import "forge-std/Test.sol";
+import "../src/TangleLiquidRestakingVault.sol";
+
+contract TangleLiquidRestakingVaultTest is Test {
+    TangleLiquidRestakingVault vault;
+    address baseToken;
+    bytes32 operator;
+    uint64[] blueprintSelection;
+
+    function setUp() public {
+        // Setup test environment
+        baseToken = address(new ERC20("Test Token", "TEST"));
+        operator = bytes32(uint256(1));
+        blueprintSelection = new uint64[](1);
+        blueprintSelection[0] = 1;
+
+        // Deploy vault
+        vault = new TangleLiquidRestakingVault(
+            baseToken,
+            operator,
+            blueprintSelection,
+            MULTI_ASSET_DELEGATION_CONTRACT,
+            "Liquid Restaked Test",
+            "lrTEST"
+        );
+    }
+
+    function testDeposit() public {
+        uint256 amount = 1000e18;
+        deal(baseToken, address(this), amount);
+
+        ERC20(baseToken).approve(address(vault), amount);
+        vault.deposit(amount, address(this));
+
+        assertEq(vault.balanceOf(address(this)), amount);
+    }
+}
+```
+
+Run the tests using Forge:
+
+```bash
+forge test -vv
+```
+
+## Step 4: Deployment
+
+The vault can be deployed using Forge's deployment capabilities:
+
+1. Create a deployment script in `script/DeployVault.s.sol`:
+
+```solidity
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.20;
+
+import "forge-std/Script.sol";
+import "../src/TangleLiquidRestakingVault.sol";
+
+contract DeployVault is Script {
+    function run() external {
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(deployerPrivateKey);
+
+        // Deploy vault
+        bytes32 operator = bytes32(uint256(vm.envUint("OPERATOR_ID")));
+        uint64[] memory blueprintSelection = new uint64[](1);
+        blueprintSelection[0] = uint64(vm.envUint("BLUEPRINT_ID"));
+
+        TangleLiquidRestakingVault vault = new TangleLiquidRestakingVault(
+            vm.envAddress("BASE_TOKEN"),
+            operator,
+            blueprintSelection,
+            MULTI_ASSET_DELEGATION_CONTRACT,
+            "Liquid Restaked Token",
+            "LRT"
+        );
+
+        vm.stopBroadcast();
+    }
+}
+```
+
+2. Configure deployment variables in `.env`:
+
+```env
+TANGLE_RPC_URL="https://testnet-rpc.tangle.tools"  # or mainnet
+PRIVATE_KEY="your-private-key"
+BASE_TOKEN="0x..."
+OPERATOR_ID="1"  # your operator ID
+BLUEPRINT_ID="1"  # your blueprint ID
+```
+
+3. Deploy using Forge:
+
+```bash
+forge script script/DeployVault.s.sol:DeployVault --rpc-url $TANGLE_RPC_URL --broadcast
+```
+
+## Step 5: Interacting with the Vault
+
+The vault exposes several key functions for user interaction:
+
+### Deposits and Withdrawals
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/lrt/blob/main/src/TangleLiquidRestakingVault.sol"
+  title="Solidity Interface for Tangle Liquid Restaking Vault"
+  fromLine={357}
+  toLine={388}
+/>
+
+### Reward Management
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/lrt/blob/main/src/TangleLiquidRestakingVault.sol"
+  title="Solidity Interface for Tangle Liquid Restaking Vault"
+  fromLine={197}
+  toLine={226}
+/>
+
+## Security Considerations
+
+The vault implements several security measures:
+
+1. **Access Control**: Uses Solmate's `Owned` for admin functions
+2. **Reward Accounting**: Index-based accounting prevents double-claiming
+3. **Withdrawal Process**: Two-step withdrawal process with unstaking period
+4. **Math Safety**: Uses `FixedPointMathLib` for safe calculations
+
+Key security features from the contract:
+
+```solidity
+/// @notice Scale factor for reward index calculations
+uint256 private constant REWARD_FACTOR = 1e18;
+
+/// @notice Uses mulDivUp for final reward calculation
+uint256 newRewards = snapshot.shareBalance.mulDivUp(indexDelta, REWARD_FACTOR);
+
+/// @notice Validates withdrawal amounts
+if (scheduledWithdrawAmount[owner] < assets) revert NoScheduledAmount();
+```
+
+For more information on the MultiAssetDelegation precompile and its features, see the [precompile documentation](../../developers/precompiles/features/multi-asset-delegation.mdx).
