@@ -9,7 +9,7 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 ## Introduction
 
 This will guide you through setting up and using EVM event listeners for EigenLayer AVSes, using examples from the
-[Incredible Squaring blueprint implementation](https://github.com/tangle-network/gadget/tree/main/blueprints/incredible-squaring-eigenlayer).
+[Incredible Squaring blueprint implementation](https://github.com/tangle-network/blueprint/tree/main/blueprints/incredible-squaring-eigenlayer).
 
 EVM event listeners are crucial for interacting with smart contracts on Ethereum-compatible networks.
 In the context of EigenLayer and the blueprint macro system, these listeners allow your Gadget to respond to specific
@@ -22,7 +22,7 @@ events emitted by EigenLayer contracts.
 First, define the contract interface using the `sol!` and `load_abi!` macros. This generates Rust bindings for your smart contract.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/lib.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/blueprints/incredible-squaring-eigenlayer/src/lib.rs"
   fromLine={48}
   toLine={59}
   title="incredible-squaring-eigenlayer/src/lib.rs"
@@ -33,7 +33,7 @@ First, define the contract interface using the `sol!` and `load_abi!` macros. Th
 Use the [`#[job]`](/developers/blueprint-macros/jobs) macro to define a function that will handle specific events. Include the `event_listener` attribute to specify the event details:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/blueprints/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
   fromLine={13}
   toLine={52}
   title="incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
@@ -44,7 +44,7 @@ Use the [`#[job]`](/developers/blueprint-macros/jobs) macro to define a function
 Implement a preprocessor function to convert the event data into the format expected by your job function:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/blueprints/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
   fromLine={54}
   toLine={67}
   title="Event converter pre processor function"
@@ -57,7 +57,7 @@ Implement a preprocessor function to convert the event data into the format expe
 Create an HTTP provider to connect to the Ethereum network w/ a wallet enabled for transacting:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/main.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/blueprints/incredible-squaring-eigenlayer/src/main.rs"
   fromLine={20}
   toLine={24}
   title="Provider setup"
@@ -68,7 +68,7 @@ Create an HTTP provider to connect to the Ethereum network w/ a wallet enabled f
 Instantiate the contract using the generated bindings:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/main.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/blueprints/incredible-squaring-eigenlayer/src/main.rs"
   fromLine={36}
   toLine={44}
   title="Contract creation and event listener setup"
@@ -79,7 +79,7 @@ Instantiate the contract using the generated bindings:
 Use the `BlueprintRunner` to execute the jobs and background services:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/gadget/blob/main/blueprints/incredible-squaring-eigenlayer/src/main.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/blueprints/incredible-squaring-eigenlayer/src/main.rs"
   fromLine={47}
   toLine={56}
   title="BlueprintRunner setup"
@@ -99,7 +99,7 @@ Before you begin, ensure you have the following installed:
 Clone this repository:
 
 ```shell
-git clone https://github.com/tangle-network/gadget.git
+git clone https://github.com/tangle-network/blueprint.git
 cd gadget
 ```
 

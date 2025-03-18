@@ -5,273 +5,174 @@ import GithubRepoCard, { GithubRepoList } from "../../../components/GithubRepoCa
 
 Tangle Network enables developers to rapidly build and deploy secure multi-party services through our Blueprint system. Blueprints are reusable templates that can be instantly deployed as live services backed by Tangle's decentralized operator network.
 
-## Advanced Capabilities
-
-The Blueprint SDK supports building complex distributed systems. Jump to a section:
-
-<NonuniformTableOfContentCards
-  items={[
-    {
-      title: "Distributed Validator Infrastructure",
-      href: "#distributed-validator-infrastructure",
-      subItems: [
-        { 
-          title: "Obol DVT",
-          href: "#obol-dvt",
-          description: "Distributed validator clusters using Obol DVT"
-        }
-      ]
-    },
-    {
-      title: "Multi-Party Computation (MPC)",
-      href: "#multi-party-computation-mpc", 
-      subItems: [
-        {
-          title: "Threshold signatures as a service",
-          href: "#threshold-signatures-as-a-service",
-          description: "Signature schemes using threshold cryptography"
-        },
-        {
-          title: "FROST Threshold Signatures",
-          href: "#frost-threshold-signatures",
-          description: "Implementing threshold signatures with FROST protocol"
-        }
-      ]
-    },
-    {
-      title: "Zero-knowledge Proof Generation Services",
-      href: "#zero-knowledge-proof-generation-services",
-      subItems: [
-        {
-          title: "zkSNARKs as a Service (MPC based zkSaaS)",
-          href: "#zksnarks-as-a-service-mpc-based-zksaas",
-          description: "Zero-knowledge proof generation using MPC"
-        }
-      ]
-    },
-    {
-      title: "Interoperability Services",
-      href: "#interoperability-services",
-      subItems: [
-        {
-          title: "Hyperlane Bridges",
-          href: "#hyperlane-bridges-as-a-service",
-          description: "Cross-chain messaging with Hyperlane"
-        },
-        {
-          title: "LayerZero DVNS & Executors", 
-          href: "#layerzero-decentralized-verifier-and-executor-networks",
-          description: "Omnichain interoperability with LayerZero"
-        }
-      ]
-    },
-    {
-      title: "AI Agent Services",
-      href: "#ai-agent-services",
-      subItems: [
-        {
-          title: "Gaia AI Agent",
-          href: "#gaia-ai-agent",
-          description: "AI agent services on Tangle Network"
-        }
-      ]
-    }
-  ]}
-/>
----
-
-## Distributed Validator Infrasturcutre
-
-Distributed validators are useful for building secure and redundant validator operations. Usually, the core signing functionality is distributed using threshold signature schemes and distributed key generations, allowing multiple operators to participate as a single validator in a consensus system.
-
-Tangle Network provides a perfect infrastructure for building and launching distributed validator clusters for various networks as well as launching dApps on top of them for liquid staking and restaking applications.
-
-### Obol DVT
-
-<br />
-<GithubRepoCard
-    name="obol-dvt"
-    description="Obol Distributed Validator Template for building distributed validator clusters"
-    url="https://github.com/tangle-network/obol-dvt-blueprint"
-    displayStyle="row"
-/>
-
-## Multi-Party Computation (MPC)
-
-### Threshold signatures as a service
-
-Signatures are pervasive in the design of blockchain bridges, oracles, and custody solutions. Tangle Network offers signature schemes as a service using threshold cryptography, enabling developers to build private and non-private cross-chain applications.
-
-#### FROST Threshold Signatures
-
-<br />
-<GithubRepoCard
-    name="frost-blueprint"
-    description="Demonstrates how to implement threshold signatures using the FROST protocol on Tangle Network. This example showcases:"
-    url="https://github.com/tangle-network/frost-blueprint"
-    displayStyle="row"
-/>
-
-The FROST Blueprint demonstrates how to implement threshold signatures using the FROST protocol on Tangle Network. [FROST](https://eprint.iacr.org/2020/852.pdf) is a protocol for generating threshold Schnorr signatures. This example showcases:
-
-- Distributed key generation between operators
-- Threshold signature creation
-- Verification of signatures
-
-Tangle currently supports several Threshold signature schemes:
-
-<div style={{ maxHeight: '300px', overflowY: 'auto', padding: '10px' }}>
-
-| Scheme                     | Description                                                |
-| -------------------------- | ---------------------------------------------------------- |
-| DfnsCGGMP21Secp256k1       | ECDSA threshold signature scheme on the secp256k1 curve    |
-| DfnsCGGMP21Secp256r1       | ECDSA threshold signature scheme on the secp256r1 curve    |
-| DfnsCGGMP21Stark           | ECDSA threshold signature scheme for StarkNet              |
-| SilentShardDKLS23Secp256k1 | Silent shard-based threshold signature scheme on secp256k1 |
-| ZcashFrostP256             | FROST threshold signature scheme on the P-256 curve        |
-| ZcashFrostP384             | FROST threshold signature scheme on the P-384 curve        |
-| ZcashFrostSecp256k1        | FROST threshold signature scheme on the secp256k1 curve    |
-| ZcashFrostEd25519          | FROST threshold signature scheme on the Ed25519 curve      |
-| ZcashFrostEd448            | FROST threshold signature scheme on the Ed448 curve        |
-| ZcashFrostRistretto255     | FROST threshold signature scheme on the Ristretto255 group |
-| GennaroDKGBls381           | BLS threshold signature scheme on the BLS12-381 curve      |
-
-</div>
-
-Use cases for MPC services include bridges, oracles, interoperable shielded pools, and social and identity bridges.
-
-### Distributed Randomness Generation
-
-Tangle Network enables building distributed random number generation (DRNG) services using threshold BLS signatures. With Tangle Blueprints, developers can build reusable templates to deploy secure, unbiasable, and publicly verifiable random beacons.
-
-A common DRNG protocol works by having operators collectively generate randomness in rounds:
-
-1. Operators first run a distributed key generation to create a shared public key
-2. In each round, operators generate partial BLS signatures using their key shares
-3. These signatures are combined into a threshold signature that serves as the random value
-4. Values can be chained (incorporating previous signatures) or unchained (independent per round)
-
-The BLS signature scheme ensures the randomness is verifiable and cannot be manipulated by a minority of malicious operators. The Blueprint provides a complete implementation including operator registration, randomness generation, and verification.
-
-## Zero-knowledge Proof Generation Services
-
-Zero-knowledge proof generation is critical for maintaining privacy and implementation of complex cryptographic protocols within decentralized applications. Developers can build and deploy zero-knowledge proof generation services allowing users to access proof generation functionality directly through the Tangle Network. This allows developers to outsource the computationally expensive tasks to a privacy-preserving infrastructure.
-
-### zkSNARKs as a Service (MPC based zkSaaS)
-
-zkSaaS is an implementation of a threshold protocol that leverages secure multi-party computation (MPC) to generate zero-knowledge SNARKs in a distributed way. Based on academic research, it uses a (t,N)-threshold protocol that can tolerate up to t corruptions out of N nodes, where t is typically N/4. The protocol distributes the core computations of the zero-knowledge prover across multiple nodes, enabling secure and decentralized proof generation. The current implementation supports Groth16 proofs with plans to expand to other proving systems.
-
-Tangle has built a proof of concept for a privacy-preserving MPC based zkSaaS that enables secure distributed proof generation. The implementation currently supports Groth16 proofs with plans to expand to other proving systems.
+## Bridges
 
 <GithubRepoCard
-  name="zk-SaaS"
-  description="Privacy-preserving MPC based zkSaaS proof of concept supporting Groth16 proof generation"
-  url="https://github.com/tangle-network/zk-SaaS"
+  name="layerzero-dvn-blueprint-template"
+  description="Template for creating LayerZero DVN (Decentralized Verifier Network) blueprints"
+  url="https://github.com/tangle-network/layerzero-dvn-blueprint-template"
   displayStyle="row"
 />
 
-## Interoperability Services
-
-Leverage Tangle's Blueprint SDK to build bridge deployment and interoperability templates that allow customers to launch bridges and cross-chain services between new and existing crypto networks. These templates can monetize the usage, deploy with a decentralized and secure operator set, and leverage quality of service guarantees to ensure the solution's availability and uptime.
-
-### Hyperlane bridges as a Service
-
-<br />
 <GithubRepoCard
-  name="hyperlane-blueprint-template"
-  description="Template repository for building Hyperlane bridge Blueprints on Tangle Network"
-  url="https://github.com/tangle-network/hyperlane-blueprint-template"
+  name="hyperlane-relayer-blueprint"
+  description="Blueprint for implementing Hyperlane relayer functionality"
+  url="https://github.com/tangle-network/hyperlane-relayer-blueprint"
   displayStyle="row"
 />
 
-Hyperlane's modular bridge stack makes it easy to deploy and manage bridges between different EVM and other compatible blockchains. It is a permissionless protocol, meaning any developer can deploy it, operate it, and design ways to monetize it. This makes it a perfect candidate for a Blueprint service that can be deployed and reusably instanced on Tangle.
-
-The Tangle Network provides a template repository for building Hyperlane Bridge Blueprints. This template includes:
-
-- A complete Hyperlane Warp Route Blueprint implementation
-- Example deployment scripts and configuration
-- Integration with the Tangle Blueprint Manager
-- Documentation and guides for customization
-
-The template allows developers to:
-
-1. Deploy custom Warp Routes between any Hyperlane-supported chains
-2. Configure custom token mappings and bridge parameters
-3. Monetize bridge usage through fees
-4. Leverage Tangle's operator network for secure bridge operation
-5. Customize security parameters and operator requirements
-
-### LayerZero Decentralized Verifier and Executor Networks
-
-<br />
-<GithubRepoList
-  repos={[
-    {
-      name: "layerzero-dvn-blueprint-template",
-      description: "Template for building decentralized verifier networks (DVNs)",
-      url: "https://github.com/tangle-network/layerzero-dvn-blueprint-template",
-      displayStyle: "row"
-    },
-  ]}
+<GithubRepoCard
+  name="hyperlane-ism-blueprint-template"
+  description="Template for creating Hyperlane Interchain Security Module blueprints"
+  url="https://github.com/tangle-network/hyperlane-ism-blueprint-template"
   displayStyle="row"
 />
-<br />
 
-LayerZero allows developers to build decentralized verifier and executor networks that can be used to verify and execute transactions across different blockchains. Tangle Blueprints can provide reusable templates for deploying DVNs and custom Executors for any compatible chain.
-
-Tangle provides template repositories for building LayerZero DVN and Executor Blueprints:
-
-These templates include:
-
-- Complete DVN and Executor Blueprint implementations
-- Example deployment scripts and configuration
-- Integration with the Tangle Blueprint Manager
-- Documentation and guides for customization
-
-The templates allow developers to:
-
-1. Create custom DVNs and Executors for any LayerZero-supported chain
-2. Configure verification and execution parameters
-3. Monetize usage through fees
-4. Leverage Tangle's operator network for secure operation
-5. Customize security parameters and operator requirements
-
-## AI Agent Services
-
-Tangle Network enables developers to build and deploy AI agent services that can be used to provide inference over various models and datasets.
-
-### Gaia AI Agent
-
-<br />
 <GithubRepoCard
-    name="Gaia-ai-agent"
-    description="Template for building AI agent services on Tangle Network"
-    url="https://github.com/tangle-network/gaia-ai-agent-template"
-    displayStyle="row"
+  name="hyperbridge-relayer-blueprint"
+  description="Blueprint for implementing Hyperbridge relayer functionality"
+  url="https://github.com/tangle-network/hyperbridge-relayer-blueprint"
+  displayStyle="row"
 />
 
-The Gaia AI Agent Blueprint provides a comprehensive template for building and deploying AI agent services on Tangle Network. This Blueprint enables developers to create secure, decentralized AI services with the following key features:
+## AI
 
-- Fully-featured AI agent node with integrated configuration management
-- Dynamic model and dataset management through on-chain governance
-- REST API server with:
-  - Real-time chat interface for natural language interactions
-  - Image generation and editing capabilities powered by stable diffusion models
-  - Ability to integrate rate limiting, access control, and authentication
-- Seamless integration with Tangle's operator network for decentralized execution
-- Built-in monetization through configurable usage fees
-- Extensive documentation and deployment guides
+<GithubRepoCard
+  name="coinbase-agentkit-blueprint"
+  description="Coinbase AgentKit Blueprint"
+  url="https://github.com/tangle-network/coinbase-agentkit-blueprint"
+  displayStyle="row"
+/>
+<GithubRepoCard
+  name="rig-ai-agent-blueprint"
+  description="A template showcasing Rig AI agent integration with Tangle Blueprints, which contains an example agent for spell checking and improving code documentation of requested repos."
+  url="https://github.com/tangle-network/rig-ai-agent-blueprint"
+  displayStyle="row"
+/>
 
-## Future Service Categories
+<GithubRepoCard
+  name="gaia-ai-agent-template"
+  description="Template for creating AI agents using the Gaia framework"
+  url="https://github.com/tangle-network/gaia-ai-agent-template"
+  displayStyle="row"
+/>
 
-We're exploring the development of new privacy technologies and AVS categories for the future:
+<GithubRepoCard
+  name="discord-summarizer-rig-blueprint"
+  description="Template for creating AI agents that summarizes discord channels daily"
+  url="https://github.com/tangle-network/discord-summarizer-rig-blueprint/"
+  displayStyle="row"
+/>
 
-- Bridges, oracles, prover networks
-- Data storage and availability for privacy applications
-- Private information retrieval as a service
-- Threshold decryption as a service
-- Sequencing as a service
-- Randomness beacons
-- zkTLS as a service
-- Distributed validators as a service
-- [Reach out to propose more!](https://forms.fillout.com/t/knbYUNUWw6us)
+## Key Management
+
+<GithubRepoCard
+  name="turnkey-blueprint-template"
+  description="A template that contains Turnkey APIs for interacting with Turnkey for use in a Tangle blueprint."
+  url="https://github.com/tangle-network/turnkey-blueprint-template"
+  displayStyle="row"
+/>
+
+## MPC
+
+<GithubRepoCard
+  name="frost-blueprint"
+  description="Blueprint for implementing FROST (Flexible Round-Optimized Schnorr Threshold) signatures"
+  url="https://github.com/tangle-network/frost-blueprint"
+  displayStyle="row"
+/>
+
+<GithubRepoCard
+  name="dfns-cggmp21-blueprint"
+  description="Blueprint for implementing DFNS CGGMP21 distributed key generation"
+  url="https://github.com/tangle-network/dfns-cggmp21-blueprint"
+  displayStyle="row"
+/>
+
+<GithubRepoCard
+  name="schnorr-musig2-blueprint"
+  description="Blueprint for Musig2 Schnorr signatures over Secp256k1"
+  url="https://github.com/tangle-network/schnorr-musig2-blueprint"
+  displayStyle="row"
+/>
+
+<GithubRepoCard
+  name="bls-blueprint"
+  description="Blueprint for threshold BLS signatures using BLS381"
+  url="https://github.com/tangle-network/bls-blueprint"
+  displayStyle="row"
+/>
+
+<GithubRepoCard
+  name="silent-timelock-encryption-blueprint"
+  description="Blueprint for silent setup timelock encryptions and threshold decryptions."
+  url="https://github.com/tangle-network/silent-timelock-encryption-blueprint"
+  displayStyle="row"
+/>
+
+<GithubRepoCard
+  name="bte-blueprint"
+  description="Blueprint for batch threshold decryption, includes examples for MEV-resistent orderflow."
+  url="https://github.com/tangle-network/bte-blueprint"
+  displayStyle="row"
+/>
+
+## Distributed Validators
+
+<GithubRepoCard
+  name="obol-dvt-blueprint"
+  description="Blueprint for implementing Obol Distributed Validator Technology"
+  url="https://github.com/tangle-network/obol-dvt-blueprint"
+  displayStyle="row"
+/>
+
+## Web Services
+
+<GithubRepoCard
+  name="secure-code-execution-blueprint"
+  description="A template for code execution service supporting Rust, Golang, Python, JS/TS"
+  url="https://github.com/tangle-network/secure-code-execution-blueprint"
+  displayStyle="row"
+/>
+
+<GithubRepoCard
+  name="txrelayer-blueprint"
+  description="Blueprint for feeless transaction relayers to support any EVM."
+  url="https://github.com/tangle-network/txrelayer-blueprint"
+  displayStyle="row"
+/>
+
+<GithubRepoCard
+  name="tls-notary-blueprint"
+  description="Blueprint for implementing TLS notary services"
+  url="https://github.com/tangle-network/tls-notary-blueprint"
+  displayStyle="row"
+/>
+
+<GithubRepoCard
+  name="apillon-simplet-blueprint-template"
+  description="Template for creating Apillon Simplet web services"
+  url="https://github.com/tangle-network/apillon-simplet-blueprint-template"
+  displayStyle="row"
+/>
+
+## Rollups
+
+<GithubRepoCard
+  name="avail-arbitrum-orbit-raas"
+  description="Rollup-as-a-Service implementation for Arbitrum Orbit using Avail DA"
+  url="https://github.com/tangle-network/avail-arbitrum-orbit-raas"
+  displayStyle="row"
+/>
+<GithubRepoCard
+  name="raas-blueprints"
+  description="Collection of Rollup-as-a-Service blueprints"
+  url="https://github.com/tangle-network/raas-blueprints"
+  displayStyle="row"
+/>
+<GithubRepoCard
+  name="espresso-raas-blueprint"
+  description="Espresso Rollup-as-a-Service Blueprint"
+  url="https://github.com/tangle-network/espresso-raas-blueprint"
+  displayStyle="row"
+/>

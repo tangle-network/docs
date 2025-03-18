@@ -54,7 +54,7 @@ const Head = () => {
       <meta name="theme-color" content="#1F1D2B" />
       <meta name="twitter:card" content="summary_medium_image" />
       <meta name="twitter:site" content="@tangle_network" />
-      <meta name="twitter:creator" content="@webbprotocol" />
+      <meta name="twitter:creator" content="@tanglenetwork" />
       <title>{title}</title>
       <meta name="description" content={description} />
       <meta property="og:title" content={title} />
@@ -139,7 +139,7 @@ const theme: DocsThemeConfig = {
         <meta name="theme-color" content="#1F1D2B" />
         <meta name="twitter:card" content="summary_medium_image" />
         <meta name="twitter:site" content="@tangle_network" />
-        <meta name="twitter:creator" content="@webbprotocol" />
+        <meta name="twitter:creator" content="@tanglenetwork" />
         <title>{title}</title>
         <meta name="description" content={description} />
         <meta property="og:title" content={title} />
