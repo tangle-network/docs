@@ -9,7 +9,7 @@
     "type": "separator",
     "title": "Blueprint Developers"
   },
-  "gadget-sdk": "Introduction",
+  "blueprint-sdk": "Introduction",
   "blueprint-contexts": "Contexts",
   "p2p-networking": "P2P Networking",
   "tangle-avs": "Build a Tangle Blueprint",

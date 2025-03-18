@@ -24,24 +24,24 @@ import CardGrid from "../../../components/CardGrid.tsx"
   ]}
 />
 
-**Blueprints** are specifications for Actively Validated Services (AVS) or **Instances** on the Tangle Network. Developers build blueprints using our [Gadget SDK](https://github.com/tangle-network/gadget) and deploy them to the Tangle Network. Once deployed, users can create Instances of the Blueprint, which are run by Tangle Operators. The Tangle Network incentivizes operators to run these instances by rewarding them with TNT tokens and fees from instancing and instance execution. Developers incentivize operators to run instances by specifying additional rewards for operators in the Blueprint.
+**Blueprints** are Infrastructure as Code templates and **Instances** are their instantiations on the Tangle Network. Developers build Blueprints using our [Blueprint SDK](https://github.com/tangle-network/blueprint) and deploy them to the Tangle Network. Users can discover Blueprints and create Instances of them, which are run by Tangle Operators. The Tangle Network incentivizes operators to run these instances by rewarding them with TNT tokens and fees from execution.
 
-An Actively Validated Service or Blueprint Instance is a computational service that runs a specified period of time, potentially user-specified or on-demand or forever. Instances allow Blueprints to be reused multiple times, so that useful services can be leveraged by many customers. A key benefit of instancing Blueprints is that each instance can have different operators and different restaked assets securing them.
+A Blueprint Instance is a computational service. Blueprints are reusable templates so that useful services can be leveraged by many customers. A key benefit of instancing Blueprints is that each instance can have different operators and different restaked assets securing them.
 
 A Tangle Blueprint is defined by:
 
-- A program binary.
+- An native program binary, a docker image, or a virtual machine binary.
 - A set of smart contracts that provide programmability over the service's output verification and handling of malicious failures
 
-Tangle Blueprints specify their target environment for program execution. The Blueprint's binary can run natively on the operator's machine, in a virtual machine, or in a containerized environment. We are constantly working to provide the right environments for developers to build Blueprints so that operators are satisfied executing Blueprint Instances. Our Gadget SDK supports building AVS and Blueprint Instances directly on Eigenlayer without the same instancing as exists on Tangle, allowing developers nonetheless to leverage the features of our SDK to build and test their services on Eigenlayer. Future integrations with other restaking infrastructures are planned.
+Tangle Blueprints specify their target environment for program execution. The Blueprint's binary can run natively on the operator's machine, in a virtual machine, or in a containerized environment.
 
 ## Detailed Interactions
 
 ### Developers
 
-Developers interact with Tangle Blueprints by deploying them to the blockchain. A Blueprint specification contains metadata and smart contracts, currently targeting the EVM. The smart contracts are deployed to the Tangle EVM, while the metadata is stored in Tangle's runtime.
+Developers interact with Tangle Blueprints by developing and deploying them to the blockchain. The smart contracts are deployed to the Tangle EVM, while the metadata is stored in Tangle's runtime.
 
-The Blueprint includes one main smart contract responsible with all aspects of customizing a Blueprint's behavior and features. Developers have the flexibility to extend this contract, create child contracts, and anything that adheres to the function signatures expected by the runtime when executing logic. The Blueprint smart contract handles:
+The Blueprint includes smart contracts responsible with all aspects of customizing a Blueprint's behavior and features. Developers have the flexibility to extend this contract, create child contracts, and anything that adheres to the function signatures expected by the runtime when executing logic. The Blueprint smart contract handles:
 
 1. **Registration**: Specifies how Operators register for the Blueprint, allowing the developer to add additional fees, access control, KYC, and any other EVM-deployable functionality to the registration process.
 2. **Request**: Defines how customer of Blueprints initiates Service Instances, providing the same customizability as the EVM for the initialization process of Service Instances.
@@ -49,27 +49,21 @@ The Blueprint includes one main smart contract responsible with all aspects of c
 4. **On Job Result Hooks**: Allows developers to specify custom logic to be executed when a job is completed, such as verifying a job's output.
 5. **Custom slashing conditions**: Allows developers to specify custom slashing conditions for Operators, such as failing to provide a service or providing a malicious service. These would be callable by anyone or privileged callers but is entirely up to the developer to design.
 
-Blueprint upgrades are handled differently than runtime upgrades and should eventually be supported through an additional Blueprint smart contract for governance. Upgrades should not overwrite previous versions to protect against malicious updates to active and future services. Instead, upgrades allow for a form of Operator lock-in, enabling developers to quickly benefit from the success of existing services and pass liquidity, as users can request "new versions" of the Blueprint while accessing the already restaked capital from the success of previous versions.
-
 Blueprints empower developers to create, customize, and monetize technical service configurations on the Tangle Network, defining features, behavior, resource requirements, and the Gadget binary for services such as Threshold MPC, zero-knowledge provers, AI infrastructure, and more. Developers can programmatically incentivize operators to restake on their services and update them to improve and benefit from their long-term success. Tangle Blueprints are designed for reuse by various users and projects.
 
-### Customer
+### Customers
 
-Tangle Network provides a user-friendly platform for customer to discover, deploy, and manage Blueprint Instances. Customer can access tailored technical services with varying configurations and features, specify their requirements (e.g., threshold of participants, registration criteria), and select a subset of Operators to provide the service. The stake recursion process increases the economic security of reliable services.
+Tangle Network provides a user-friendly platform for customers to discover, deploy, and manage Blueprint Instances. Customers can access tailored technical services with varying configurations and features, specify their requirements (e.g., threshold of participants, registration criteria), and select a subset of Operators to provide the service. The stake recursion process increases the economic security of reliable services.
 
-Customer interact with Tangle by initializing Blueprints, which create Blueprint Instances. To initialize an Instance, a consumer:
+Customers interact with Tangle by instancing Blueprints, which create Blueprint Instances. To initialize an Instance, a customer:
 
-1. Selects a participation selection strategy that satisfies the Blueprint's Request smart contract constraints. Participation strategies may not be necessary if there are no constraints, as any subset could generally be selected for the Instance.
-2. Provides additional metadata required by the Blueprint's Request smart contract.
+1. Selects a participation selection strategy that satisfies the Blueprint's Request smart contract constraints.
+2. Provides metadata required by the Instance.
 3. Pays the fee required for the Instance configuration.
 
 ### Operators
 
-Operators are incentivized to provide the services specified in the Blueprints to customer through a reward system funded by the staking and recursion process. TNT holders govern this process, deciding which Blueprints receive incentives based on their value to the network. Operators play a vital role in maintaining the decentralized infrastructure and ensuring the availability and performance of the services offered. They also provide the value of sorting Blueprints by utility, unless co-opted for malicious intent.
-
-### Delegators and Nominators
-
-Delegators and Nominators contribute to the economic security of the Tangle Network by providing liquidity through the stake recursion process. They earn rewards based on their participation and the network's overall performance. The inflation and reward distribution mechanism incentivizes both developers and restakers, with a portion of the inflationary rewards directed to developers who create attractive services that attract liquidity from restakers.
+Operators are incentivized to operate the Blueprint Instances by receiving rewards from the Tangle Network and fees from users who pay for the service. The rewards and incentives are distributed proportionally to the amount of stake that the Operator has restaked on the Instance.
 
 ## Composability and Ecosystem
 

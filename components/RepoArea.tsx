@@ -31,10 +31,10 @@ export const StatsdApp = () => {
       <DetailedFeatureLink
         feature={{
           Icon: GitHubIcon,
-          description: "Monorepo for Webb DApps",
-          name: "webb-dapp",
+          description: "Monorepo for Tangle DApps",
+          name: "dApp",
         }}
-        href="https://github.com/tangle-network/webb-dapp"
+        href="https://github.com/tangle-network/dapp"
       ></DetailedFeatureLink>
       <DetailedFeatureLink
         feature={{
@@ -47,10 +47,10 @@ export const StatsdApp = () => {
       <DetailedFeatureLink
         feature={{
           Icon: GitHubIcon,
-          description: "SubQuery implementation for DKG and Webb Networks",
-          name: "webb-subql",
+          description: "SubQuery implementation for Tangle Network",
+          name: "tangle-subql",
         }}
-        href="https://github.com/tangle-network/webb-subql"
+        href="https://github.com/tangle-network/tangle-subql"
       ></DetailedFeatureLink>
     </div>
   );
