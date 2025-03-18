@@ -1,3 +1,5 @@
+import GithubFileReaderDisplay from "../../../components/GithubFileReaderDisplay";
+
 # Creating a LRT Vault on Tangle
 
 ## Overview
@@ -30,30 +32,16 @@ The Tangle Liquid Restaking implementation consists of the following key compone
    - Provides liquid token representation of staked assets
 
 2. **MultiAssetDelegation Wrapper**: Interfaces with Tangle's MultiAssetDelegation precompile at `0x0000000000000000000000000000000000000822`
+3. **Rewards Wrapper**: Interfaces with Tangle's Rewards precompile at `0x0000000000000000000000000000000000000825`
 
 Core features include:
 
-```solidity
-contract TangleLiquidRestakingVault is ERC4626, Owned, TangleMultiAssetDelegationWrapper {
-    /// @notice Scale factor for reward index calculations
-    uint256 private constant REWARD_FACTOR = 1e18;
-
-    /// @notice Tracks user's reward snapshot for a token
-    struct RewardSnapshot {
-        uint256 rewardIndex;    // Global index at snapshot creation
-        uint256 timestamp;      // When snapshot was created
-        uint256 shareBalance;   // User's share balance at snapshot
-        uint256 lastRewardIndex; // Index in rewardTimestamps array
-        uint256 pendingRewards; // Unclaimed rewards at snapshot
-    }
-
-    /// @notice Operator address for delegation
-    bytes32 public operator;
-
-    /// @notice Blueprint selection for delegation and exposure
-    uint64[] public blueprintSelection;
-}
-```
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/lrt/blob/main/src/TangleLiquidRestakingVault.sol"
+  title="Solidity Interface for Tangle Liquid Restaking Vault"
+  fromLine={12}
+  toLine={44}
+/>
 
 ## Step 1: Setting Up the Project
 
@@ -71,47 +59,23 @@ forge soldeer update -d
 
 The vault implements a sophisticated reward distribution system using index-based accounting:
 
-```solidity
-/// @notice Calculate pending rewards for a user
-function _calculatePendingRewards(address user, address token) internal view returns (uint256) {
-    RewardSnapshot memory snapshot = userSnapshots[user][token];
-    RewardData storage rData = rewardData[token];
-
-    // Calculate rewards since last snapshot
-    uint256 indexDelta = rData.index - snapshot.rewardIndex;
-    // Use mulDivUp for final reward calculation to ensure no dust is left behind
-    uint256 newRewards = snapshot.shareBalance.mulDivUp(indexDelta, REWARD_FACTOR);
-    uint256 totalRewards = newRewards + snapshot.pendingRewards;
-
-    return totalRewards;
-}
-```
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/lrt/blob/main/src/TangleLiquidRestakingVault.sol"
+  title="Solidity Interface for Tangle Liquid Restaking Vault"
+  fromLine={504}
+  toLine={522}
+/>
 
 ### Delegation Management
 
 The vault handles delegation through the MultiAssetDelegation precompile, managing deposits and withdrawals:
 
-```solidity
-/// @notice Deposit assets into vault and delegate
-function deposit(uint256 assets, address receiver) public override returns (uint256 shares) {
-    shares = previewDeposit(assets);
-
-    // Process reward snapshots
-    if (rewardTokens.length > 0) {
-        _updateAllRewardIndices();
-        // ... snapshot processing
-    }
-
-    // Complete deposit
-    super.deposit(assets, receiver);
-
-    // Deposit into MADs and delegate
-    _deposit(assets);
-    _delegate(operator, assets, blueprintSelection);
-
-    return shares;
-}
-```
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/lrt/blob/main/src/TangleLiquidRestakingVault.sol"
+  title="Solidity Interface for Tangle Liquid Restaking Vault"
+  fromLine={251}
+  toLine={283}
+/>
 
 ## Step 3: Testing the Implementation
 
@@ -225,55 +189,21 @@ The vault exposes several key functions for user interaction:
 
 ### Deposits and Withdrawals
 
-```solidity
-/// Schedule unstaking of assets
-function scheduleUnstake(uint256 assets) external {
-    uint256 shares = previewWithdraw(assets);
-    require(balanceOf[msg.sender] >= shares, "Insufficient shares");
-
-    // Track scheduled unstake
-    scheduledUnstakeAmount[msg.sender] += assets;
-
-    // Process snapshots to stop reward accrual
-    _processRewardSnapshots(msg.sender, address(0), shares);
-
-    // Schedule unstake through wrapper
-    _scheduleUnstake(operator, assets);
-}
-
-/// Execute the unstake
-function executeUnstake() external {
-    uint256 scheduled = scheduledUnstakeAmount[msg.sender];
-    if (scheduled == 0) revert NoScheduledAmount();
-
-    // Execute unstake through wrapper
-    _executeUnstake();
-
-    // Update state tracking
-    unstakeAmount[msg.sender] += scheduled;
-    scheduledUnstakeAmount[msg.sender] = 0;
-}
-```
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/lrt/blob/main/src/TangleLiquidRestakingVault.sol"
+  title="Solidity Interface for Tangle Liquid Restaking Vault"
+  fromLine={357}
+  toLine={388}
+/>
 
 ### Reward Management
 
-```solidity
-/// Claim rewards for specified tokens
-function claimRewards(address user, address[] calldata tokens) external returns (uint256[] memory) {
-    if (msg.sender != user) revert Unauthorized();
-
-    rewards = new uint256[](tokens.length);
-    _updateAllRewardIndices();
-
-    for (uint256 i = 0; i < tokens.length; i++) {
-        address token = tokens[i];
-        if (!rewardData[token].isValid) revert InvalidRewardToken();
-        rewards[i] = _claimReward(user, token);
-    }
-
-    return rewards;
-}
-```
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/lrt/blob/main/src/TangleLiquidRestakingVault.sol"
+  title="Solidity Interface for Tangle Liquid Restaking Vault"
+  fromLine={197}
+  toLine={226}
+/>
 
 ## Security Considerations
 
