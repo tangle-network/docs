@@ -18,3 +18,4 @@ out
 .dccache
 *.code-workspace
 .direnv
+._*
