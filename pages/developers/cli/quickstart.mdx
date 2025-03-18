@@ -9,10 +9,11 @@ title: Quickstart
 - [git](https://git-scm.org)
 - Tangle CLI, see [installation](./installation.mdx)
 
-## Creating a New Project
+## Creating a New Tangle Blueprint
 
-1. For an in-depth guide to commands, see the [CLI Reference](./reference.mdx). To get started
-   right away with creating a Tangle Blueprint, open your terminal and run:
+1. For an in-depth guide to commands, see the [Tangle Blueprint Commands](./tangle.mdx). If you are
+   looking to get started building an Eigenlayer AVS, see the [eigenlayer section](./eigenlayer.mdx) instead.
+   To get started right away with creating a Tangle Blueprint, open your terminal and run:
 
 ```shell
 cargo tangle blueprint create --name <blueprint-name>
@@ -22,20 +23,6 @@ cargo tangle blueprint create --name <blueprint-name>
 
 ![CLI Blueprint Creation](/images/cli-blueprint-create.png)
 
-### Project Structure
-
-After creation, your project will have the following structure:
-
-```
-<blueprint-name>/
-├── src/
-│    ├── lib.rs
-│    └── main.rs
-├── Cargo.toml
-├── README.md
-└── ...
-```
-
 ## Deploying your Blueprint
 
 Once you're ready to deploy your blueprint, simply:
@@ -43,7 +30,7 @@ Once you're ready to deploy your blueprint, simply:
 ```shell
 export SIGNER="//Alice"
 export EVM_SIGNER="0xcb6df9de1efca7a3998a8ead4e02159d5fa99c3e0d4fd6432667390bb4726854"
-cargo tangle blueprint deploy
+cargo tangle blueprint deploy tangle --devnet
 ```
 
-See [deploy command reference](./reference.mdx#deploy) for all options.
+See [deploy command reference](./tangle.mdx#deploying-a-blueprint) for all options.
