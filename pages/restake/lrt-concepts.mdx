@@ -1,0 +1,53 @@
+# Liquid Restaking on Tangle Network
+
+## Introduction
+
+Liquid restaking allows users to participate in restaking while simultaneously maintaining liquidity of their assets.
+This mechanism is implemented through smart contracts that define their own liquid restaking mechanics while proxying calls to the underlying staking system. This allows users to stake their tokens, earn rewards, and maintain liquidity without being subject to traditional staking lock-up periods.
+
+## Core Concepts
+
+### Delegation Vaults
+
+Delegation vaults are the backbone of liquid restaking on Tangle Network. These vaults:
+
+- Allow users to deposit tokens which are then delegated to Tangle operators running blueprint services
+- Issue shares (liquid tokens) representing the user's deposited assets
+- Handle the complexities of managing deposits, unstaking, and withdrawals
+- Rewards distribution and claiming.
+
+### Liquid Tokens
+
+When users deposit assets into a liquid restaking vault, they receive shares in return. These shares:
+
+- Represent ownership of the underlying staked assets
+- Can be transferred or traded while the underlying assets remain staked
+- Serve as a claim ticket for both the original deposit and earned rewards
+- Do not automatically increase in value like traditional LSTs but instead provide access to claim rewards
+
+### Multi-step Withdrawal Process
+
+The withdrawal process in liquid restaking involves multiple steps:
+
+1. **Schedule Unstake**: User initiates the unstaking process from the operator
+2. **Execute Unstake**: The unstaking request is processed after the unbonding period
+3. **Schedule Withdrawal**: User requests to withdraw their assets from the vault
+4. **Execute Withdrawal**: The final withdrawal is processed, returning assets to the user
+
+This process ensures orderly exits while maintaining the security of the network.
+
+### Rewards Distribution
+
+Liquid restaking vaults use an accumulator-based system for tracking and distributing rewards:
+
+- Each reward token has a global accumulator tracking rewards-per-share over time
+- User positions are tracked by snapshots recording their share balance and last claim point
+- Rewards are calculated based on the difference between current and last-seen accumulator values
+- This system ensures fair distribution regardless of when users entered the pool or how many shares they hold
+
+### Operator Delegation
+
+Vaults will automatically delegate deposited assets to selected Tangle operators who:
+
+- Run blueprint services on the network
+- Generate rewards through their participation

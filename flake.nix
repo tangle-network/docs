@@ -5,8 +5,14 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         overlays = [ ];
         pkgs = import nixpkgs {
@@ -21,9 +27,10 @@
             # Nodejs
             pkgs.nodePackages.typescript-language-server
             pkgs.nodejs_22
-            pkgs.nodePackages.yarn
+            pkgs.yarn-berry
           ];
           packages = [ ];
         };
-      });
+      }
+    );
 }
