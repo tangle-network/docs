@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { BlockCopyButton } from "./ui/block-copy-button";
 import {
@@ -94,7 +94,7 @@ const NETWORK_DATA = {
   testnet: [
     { property: "Interfaces and Apps", value: "" },
     {
-      property: "Tangle App",
+      property: "Tangle dApp",
       value: {
         type: "link",
         url: "https://app.tangle.tools",
@@ -122,8 +122,8 @@ const NETWORK_DATA = {
       property: "Substrate Explorer",
       value: {
         type: "link",
-        url: "https://tangle-testnet.statescan.io/",
-        text: "tangle-testnet.statescan.io",
+        url: "https://polkadot.js.org/apps/?rpc=wss://testnet-rpc.tangle.tools#/explorer",
+        text: "polkadot.js.org/apps/?rpc=wss://testnet-rpc.tangle.tools",
       },
     },
     { property: "Asset Details", value: "" },
@@ -173,8 +173,28 @@ const NETWORK_DATA = {
 const NetworkTabs = () => {
   const [activeTab, setActiveTab] = useState("mainnet");
 
+  // Set initial tab based on URL hash when component mounts
+  useEffect(() => {
+    // Get hash from URL (remove the # character)
+    const hash = window.location.hash.substring(1);
+
+    // If hash matches one of our tabs, set it as active
+    if (["mainnet", "testnet", "wallets", "evmToSubstrate"].includes(hash)) {
+      setActiveTab(hash);
+    } else {
+      // Explicitly set to mainnet if no valid hash is present
+      setActiveTab("mainnet");
+      // If URL has no hash, we don't need to update it
+      if (hash && hash !== "mainnet") {
+        window.location.hash = "mainnet";
+      }
+    }
+  }, []);
+
   const handleTabClick = (tab) => {
     setActiveTab(tab);
+    // Update URL hash when tab changes
+    window.location.hash = tab;
   };
 
   const renderValue = (value) => {
