@@ -1,0 +1,167 @@
+---
+title: Tangle CLI Key Commands
+---
+
+# Tangle CLI Key Commands
+
+This guide covers the key management commands available in the Tangle CLI tool. These commands allow you to generate, import, export, and list cryptographic keys used by Tangle and Eigenlayer protocols.
+
+## Key Commands Overview
+
+The Tangle CLI provides a set of commands for managing cryptographic keys:
+
+```bash
+cargo tangle key <COMMAND>
+```
+
+The alias can also be used:
+
+```bash
+cargo tangle k <COMMAND>
+```
+
+However, for clarity, all examples in this documentation will use the full command names.
+
+## Generate a New Key
+
+Generate a new cryptographic key of the specified type:
+
+```bash
+cargo tangle key generate --key-type <KEY_TYPE> [OPTIONS]
+```
+
+**Alias:** `cargo tangle k g` (shorthand version)
+
+### Options
+
+- `-t, --key-type <KEY_TYPE>` (**required**): The type of key to generate (sr25519, ed25519, ecdsa, bls381, bls377, bn254)
+- `-o, --output <PATH>` (optional): The path to save the key to. If not specified, the key will only be shown in the output
+- `--seed <SEED>` (optional): The seed to use for key generation (hex format without 0x prefix)
+- `-v, --show-secret` (optional): Show the secret key in output in addition to the public key
+
+### Example
+
+```bash
+# Generate an ECDSA key and show the secret
+cargo tangle key generate --key-type ecdsa --show-secret
+
+# Generate a BLS key and save to a file
+cargo tangle key generate --key-type bls381 --output ./my-keystore
+```
+
+## Import a Key
+
+Import an existing key into the keystore:
+
+```bash
+cargo tangle key import --keystore-path <PATH> [OPTIONS]
+```
+
+**Alias:** `cargo tangle k i` (shorthand version)
+
+### Options
+
+- `-k, --keystore-path <PATH>` (**required**): The path to the keystore
+- `-t, --key-type <KEY_TYPE>` (optional): The type of key to import (sr25519, ed25519, ecdsa, bls381, bls377, bn254)
+- `-x, --secret <SECRET>` (optional): The secret key to import (hex format without 0x prefix). Only required if key type is also specified
+- `-p, --protocol <PROTOCOL>` (optional): The protocol you are generating keys for (Eigenlayer or Tangle) which only applies to ECDSA keys [default: tangle]
+
+When importing a key, you must specify the key type and secret key. If you don't specify a key type and secret, the CLI will prompt you interactively. Specifying the secret but not
+the key type will also prompt you to select a key type.
+
+### Examples
+
+```bash
+# Import an ECDSA key for Tangle
+cargo tangle key import --keystore-path ./keystore --key-type ecdsa --secret <YOUR_SECRET_KEY>
+
+# Import an ECDSA key for Eigenlayer
+cargo tangle key import --keystore-path ./keystore --key-type ecdsa --protocol eigenlayer --secret <YOUR_SECRET_KEY>
+
+# Import an sr25519 key
+cargo tangle key import --keystore-path ./keystore --key-type sr25519 --secret <YOUR_SECRET_KEY>
+
+# Import with interactive prompt
+cargo tangle key import --keystore-path ./keystore
+```
+
+## Export a Key
+
+Export a key from the keystore, specifying the key type and public key:
+
+```bash
+cargo tangle key export --key-type <KEY_TYPE> --public <PUBLIC_KEY> --keystore-path <PATH>
+```
+
+**Alias:** `cargo tangle k e` (shorthand version)
+
+### Options
+
+- `-t, --key-type <KEY_TYPE>` (**required**): The type of key to export (sr25519, ed25519, ecdsa, bls381, bls377, bn254)
+- `-p, --public <PUBLIC_KEY>` (**required**): The public key to export (hex format without 0x prefix)
+- `-k, --keystore-path <PATH>` (**required**): The path to the keystore
+
+### Example
+
+```bash
+cargo tangle key export --key-type ecdsa --public <YOUR_PUBLIC_KEY> --keystore-path ./keystore
+```
+
+## List Keys
+
+List all keys in the keystore, specifying the keystore path:
+
+```bash
+cargo tangle key list --keystore-path <PATH>
+```
+
+**Alias:** `cargo tangle k l` (shorthand version)
+
+### Options
+
+- `-k, --keystore-path <PATH>` (**required**): The path to the keystore
+
+### Example
+
+```bash
+cargo tangle key list --keystore-path ./keystore
+```
+
+## Generate a Mnemonic Phrase
+
+Generate a new mnemonic phrase for key recovery:
+
+```bash
+cargo tangle key generate-mnemonic [OPTIONS]
+```
+
+**Alias:** `cargo tangle k m` (shorthand version)
+
+### Options
+
+- `-w, --word-count <COUNT>` (optional): Number of words in the mnemonic (12, 15, 18, 21, or 24)
+
+### Example
+
+```bash
+# Generate a 24-word mnemonic
+cargo tangle key generate-mnemonic --word-count 24
+```
+
+## Key Types
+
+The Tangle CLI supports the following key types:
+
+- `sr25519`: Schnorrkel/Ristretto x25519 (used by Substrate)
+- `ed25519`: Edwards-curve Digital Signature Algorithm
+- `ecdsa`: Elliptic Curve Digital Signature Algorithm
+- `bls381`: Boneh-Lynn-Shacham signatures on BLS12-381 curve
+- `bls377`: Boneh-Lynn-Shacham signatures on BLS12-377 curve
+- `bn254`: Barreto-Naehrig curve with embedding degree 12
+
+## Best Practices
+
+1. **Backup your keys**: Always keep a secure backup of your keys or mnemonic phrases.
+2. **Secure your keystore**: Ensure your keystore directory has appropriate permissions.
+3. **Use different keys for different environments**: Use separate keys for testnet and mainnet.
+4. **Never share your private keys**: Keep your private keys confidential.
