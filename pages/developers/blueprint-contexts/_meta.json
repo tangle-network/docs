@@ -1,5 +1,4 @@
 {
-  "introduction": "Introduction to Contexts",
   "keystore-context": "Keystore Context",
   "evm-provider-context": "EVM Provider Context",
   "tangle-client-context": "Tangle Client Context",
