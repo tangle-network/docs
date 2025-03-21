@@ -1,0 +1,25 @@
+---
+title: P2P Networking round-based Extension
+description: An overview of the round-based extension for the P2P networking utilities provided by the blueprint SDK.
+---
+
+# `round-based` extension for P2P Networking
+
+[round-based] is an MPC framework that unifies and simplifies the way of developing and working with multiparty
+protocols (e.g. threshold signing, random beacons, etc.).
+
+To enable the extension, add the following to your `Cargo.toml`:
+
+```toml
+[dependencies]
+blueprint-sdk = { version = "0.1.0", features = ["round-based-compat", ...]}
+```
+
+The extension provides multiple wrappers, with the primary one being the [`RoundBasedNetworkAdapter`].
+
+# Example
+
+<!-- TODO: Add example -->
+
+[round-based]: https://crates.io/crates/round-based
+[`RoundBasedNetworkAdapter`]: https://docs.rs/blueprint_networking_round_based_extension/latest/blueprint_networking_round_based_extension/struct.RoundBasedNetworkAdapter.html
