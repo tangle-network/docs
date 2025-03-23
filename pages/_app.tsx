@@ -1,14 +1,14 @@
 // _app.tsx
 
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "katex/dist/katex.min.css";
 import type { NextPage } from "next";
 import type { AppProps } from "next/app";
 import type { ReactElement, ReactNode } from "react";
-import "../globals.css";
-import { GoogleAnalytics } from "@next/third-parties/google";
 import { getShikiHighlighter } from "../components/shiki";
+import "../globals.css";
 
-export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
+export type NextPageWithLayout<P = object, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
 };
 
@@ -17,11 +17,10 @@ type NextraAppProps = AppProps & {
 };
 
 // Shim requestIdleCallback in Safari
-if (typeof window !== "undefined" && !("requestIdleCallback" in window)) {
-  // @ts-ignore
-  window.requestIdleCallback = (fn) => setTimeout(fn, 1);
-  // @ts-ignore
-  window.cancelIdleCallback = (id) => clearTimeout(id);
+if (typeof window !== "undefined" && window.requestIdleCallback === undefined) {
+  window.requestIdleCallback = (callback: IdleRequestCallback) =>
+    setTimeout(callback, 1);
+  window.cancelIdleCallback = (id: number) => clearTimeout(id);
 }
 
 // Initialize the highlighter when the app starts

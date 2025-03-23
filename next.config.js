@@ -1,4 +1,16 @@
-import nextra from "nextra";
+/* eslint-disable @typescript-eslint/no-var-requires */
+
+const withNextra = require("nextra")({
+  theme: "nextra-theme-docs",
+  themeConfig: "./theme.config.tsx",
+  staticImage: true,
+  flexsearch: true,
+  latex: true,
+});
+
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
+});
 
 /**
  * @type {import('next').NextConfig}
@@ -41,14 +53,18 @@ const nextConfig = {
       // ],
     };
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.github.com",
+      },
+    ],
+  },
 };
 
-const withNextra = nextra({
-  theme: "nextra-theme-docs",
-  themeConfig: "./theme.config.tsx",
-  staticImage: true,
-  flexsearch: true,
-  latex: true,
-});
-
-export default withNextra(nextConfig);
+module.exports = withBundleAnalyzer(withNextra(nextConfig));

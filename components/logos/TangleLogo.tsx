@@ -1,10 +1,13 @@
-const TangleLogo = (props) => (
+import { ComponentProps } from "react";
+
+const TangleLogo = (props: ComponentProps<"svg">) => (
   <svg
     width="453"
     height="200"
     viewBox="0 0 453 200"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    {...props}
   >
     <g clipPath="url(#clip0_4390_53415)">
       <path

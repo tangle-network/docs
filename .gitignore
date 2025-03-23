@@ -19,3 +19,4 @@ out
 *.code-workspace
 .direnv
 ._*
+tsconfig.tsbuildinfo

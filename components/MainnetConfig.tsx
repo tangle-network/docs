@@ -1,6 +1,19 @@
-import React, { useState } from "react";
 import Link from "next/link";
 import styles from "./NetworkConfig.module.css";
+
+type NetworkCardProps = {
+  cardTitle: string;
+  network: string;
+  type: string;
+  symbol: string;
+  decimals: number;
+  chainId: string;
+  rpcUrl: string;
+  wssUrl: string;
+  wssUrl2: string;
+  explorerUrls: { name: string; url: string }[];
+  fundingInfo: { url: string };
+};
 
 const NetworkCard = ({
   cardTitle,
@@ -13,8 +26,7 @@ const NetworkCard = ({
   wssUrl,
   wssUrl2,
   explorerUrls,
-  fundingInfo,
-}) => {
+}: NetworkCardProps) => {
   return (
     <div className={styles.networkCard}>
       <div className={styles.networkType}>

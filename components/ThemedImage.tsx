@@ -8,10 +8,10 @@ const ThemedImage: FC<{
   return (
     <>
       <div className="block dark:hidden">
-        <Image alt="light img" {...lightImageProps} />
+        <Image {...lightImageProps} alt="light img" />
       </div>
       <div className="hidden dark:block">
-        <Image alt="dark img" {...darkImageProps} />
+        <Image {...darkImageProps} alt="dark img" />
       </div>
     </>
   );

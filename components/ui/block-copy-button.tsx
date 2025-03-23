@@ -12,7 +12,6 @@ import {
 } from "./tooltip";
 
 export function BlockCopyButton({
-  name,
   code,
   ...props
 }: {
