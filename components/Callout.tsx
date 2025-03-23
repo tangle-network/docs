@@ -1,16 +1,16 @@
 import React, { ReactElement, ReactNode } from "react";
+
 import {
-  LightBulbIcon,
-  ExclamationIcon,
-  ExclamationCircleIcon,
-  InformationCircleIcon,
-} from "@heroicons/react/solid";
+  HiOutlineLightBulb as LightBulbIcon,
+  HiOutlineExclamationCircle as ExclamationIcon,
+  HiOutlineExclamationTriangle as ExclamationTriangleIcon,
+} from "react-icons/hi2";
 
 const THEMES = {
   info: {
     classes:
       "bg-blue-100 text-blue-800 dark:text-blue-300 dark:bg-blue-200 dark:bg-opacity-10",
-    icon: <InformationCircleIcon className="w-5 h-5 mt-1" />,
+    icon: <ExclamationIcon className="w-5 h-5 mt-1" />,
   },
   idea: {
     classes:
@@ -20,7 +20,7 @@ const THEMES = {
   error: {
     classes:
       "bg-red-200 text-red-900 dark:text-red-200 dark:bg-red-600 dark:bg-opacity-30",
-    icon: <ExclamationCircleIcon className="w-5 h-5 mt-1" />,
+    icon: <ExclamationTriangleIcon className="w-5 h-5 mt-1" />,
   },
   default: {
     classes:

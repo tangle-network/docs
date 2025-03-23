@@ -1,4 +1,4 @@
-import classNames from "classnames";
+import classNames from "clsx";
 import Link from "next/link";
 import type { Feature } from "./LegacyFeatures";
 import { cn } from "@/lib/utils";

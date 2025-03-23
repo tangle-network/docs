@@ -1,8 +1,11 @@
-import React from "react";
-import Link from "next/link";
-import { BookOpenIcon, ServerIcon } from "@heroicons/react/outline";
-import { FaGithub } from "react-icons/fa";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+import React from "react";
+import { FaGithub } from "react-icons/fa";
+import {
+  HiOutlineBookOpen as BookOpenIcon,
+  HiOutlineServerStack as ServerIcon,
+} from "react-icons/hi2";
 
 const features = [
   {

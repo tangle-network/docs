@@ -1,4 +1,4 @@
-import { CodeIcon } from "@heroicons/react/outline";
+import { HiCodeBracket as CodeIcon } from "react-icons/hi2";
 import { DetailedFeatureLink } from "./Feature";
 import { GitHubIcon } from "./Icons";
 

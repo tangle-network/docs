@@ -1,4 +1,4 @@
-import { ServerIcon } from "@heroicons/react/outline";
+import { HiOutlineServerStack as ServerIcon } from "react-icons/hi2";
 import {
   DiscordIcon,
   TelegramIcon,

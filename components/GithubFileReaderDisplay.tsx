@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { FaGithub, FaLink, FaSpinner } from "react-icons/fa";
-import { useTheme } from "next-themes";
 import {
   dedentCode,
   getLanguage,
   getShikiHighlighter,
 } from "@/components/shiki";
+import { useTheme } from "nextra-theme-docs";
+import React, { useEffect, useMemo, useState } from "react";
+import { FaGithub, FaLink, FaSpinner } from "react-icons/fa";
 
 interface GithubFileReaderDisplayProps {
   url: string;
@@ -25,7 +25,15 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { theme: currentTheme } = useTheme();
+  const { theme, systemTheme } = useTheme();
+
+  const currentTheme = useMemo(() => {
+    if (theme === "system") {
+      return systemTheme;
+    }
+
+    return theme;
+  }, [systemTheme, theme]);
 
   useEffect(() => {
     const fetchAndHighlightContent = async () => {
@@ -78,15 +86,15 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8 border border-gray-200 dark:border-gray-800 rounded-lg">
-        <FaSpinner className="animate-spin text-purple-500 text-2xl" />
+      <div className="flex items-center justify-center p-8 border border-gray-200 rounded-lg dark:border-gray-800">
+        <FaSpinner className="text-2xl text-purple-500 animate-spin" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-600 dark:text-red-400">
+      <div className="p-4 text-red-600 border border-red-200 rounded-lg dark:border-red-800 bg-red-50 dark:bg-red-900/20 dark:text-red-400">
         Error: {error}
       </div>
     );
@@ -99,8 +107,8 @@ const GithubFileReaderDisplay: React.FC<GithubFileReaderDisplayProps> = ({
   };
 
   return (
-    <div className="my-6 overflow-hidden border border-gray-200 dark:border-gray-800 rounded-lg">
-      <div className="flex justify-between items-center px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
+    <div className="my-6 overflow-hidden border border-gray-200 rounded-lg dark:border-gray-800">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-800">
         <div className="flex items-center space-x-2">
           <FaGithub className="text-gray-600 dark:text-gray-400" />
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">

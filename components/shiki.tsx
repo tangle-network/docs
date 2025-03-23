@@ -1,4 +1,18 @@
-import { createHighlighter, type Highlighter, bundledLanguages } from "shiki";
+import {
+  type BundledLanguage,
+  createHighlighter,
+  type Highlighter,
+  type PlainTextLanguage,
+} from "shiki";
+
+export const SHIKI_SUPPORTED_LANGUAGES = [
+  "rust",
+  "typescript",
+  "javascript",
+  "solidity",
+  "plaintext",
+  "toml",
+] as const satisfies ReadonlyArray<BundledLanguage | PlainTextLanguage>;
 
 // Create a singleton promise for the highlighter
 let highlighterPromise: Promise<Highlighter> | null = null;
@@ -8,14 +22,16 @@ export const getShikiHighlighter = () => {
   if (!highlighterPromise) {
     highlighterPromise = createHighlighter({
       themes: ["github-dark", "github-light"],
-      langs: Object.keys(bundledLanguages),
+      langs: SHIKI_SUPPORTED_LANGUAGES.slice(),
     });
   }
   return highlighterPromise;
 };
 
 // Language detection utility
-export const getLanguage = (url: string) => {
+export const getLanguage = (
+  url: string,
+): (typeof SHIKI_SUPPORTED_LANGUAGES)[number] => {
   const extension = url.split(".").pop()?.toLowerCase();
   switch (extension) {
     case "rs":
@@ -28,6 +44,8 @@ export const getLanguage = (url: string) => {
       return "javascript";
     case "sol":
       return "solidity";
+    case "toml":
+      return "toml";
     default:
       return "plaintext";
   }

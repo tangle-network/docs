@@ -15,11 +15,14 @@ function Head() {
   const { frontMatter } = useConfig();
 
   // Set default values for title and description
-  const defaultTitle = "Tangle Tools Documentation";
+  const defaultTitle = "Tangle Documentation";
   const defaultDescription = "Comprehensive documentation for Tangle Tools";
 
   // Get the title and description from the front matter, or use the default values
-  const title = frontMatter.title || defaultTitle;
+  const title = frontMatter.title
+    ? `${frontMatter.title} - Tangle Network`
+    : defaultTitle;
+
   const description = frontMatter.description || defaultDescription;
 
   return (
@@ -76,17 +79,6 @@ function Head() {
 
 const theme: DocsThemeConfig = {
   docsRepositoryBase: "https://github.com/tangle-network/tangle-docs/tree/main",
-  useNextSeoProps() {
-    const { frontMatter } = useConfig();
-
-    const defaultTitle = frontMatter.overrideTitle;
-
-    return {
-      description: frontMatter.description,
-      defaultTitle,
-      titleTemplate: `%s - Tangle Network`,
-    };
-  },
   toc: {
     float: true,
   },
@@ -94,7 +86,7 @@ const theme: DocsThemeConfig = {
   logoLink: false,
   head: Head,
   editLink: {
-    text: "Edit this page on GitHub",
+    content: "Edit this page on GitHub",
   },
   sidebar: {
     defaultMenuCollapseLevel: 1,
@@ -122,10 +114,12 @@ const theme: DocsThemeConfig = {
   nextThemes: {
     defaultTheme: "light",
   },
-  primaryHue: 236,
-  primarySaturation: {
-    light: 80,
-    dark: 40,
+  color: {
+    hue: 236,
+    saturation: {
+      light: 80,
+      dark: 40,
+    },
   },
 };
 
