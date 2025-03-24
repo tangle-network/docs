@@ -1,12 +1,10 @@
 // _app.tsx
 
-import { GoogleAnalytics } from "@next/third-parties/google";
-import "katex/dist/katex.min.css";
+import "../globals.css";
+
 import type { NextPage } from "next";
 import type { AppProps } from "next/app";
 import type { ReactElement, ReactNode } from "react";
-import { getShikiHighlighter } from "../components/shiki";
-import "../globals.css";
 
 export type NextPageWithLayout<P = object, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -22,9 +20,6 @@ if (typeof window !== "undefined" && window.requestIdleCallback === undefined) {
     setTimeout(callback, 1);
   window.cancelIdleCallback = (id: number) => clearTimeout(id);
 }
-
-// Initialize the highlighter when the app starts
-getShikiHighlighter();
 
 export default function Nextra({ Component, pageProps }: NextraAppProps) {
   // Define a layout if it doesn't exist in the page component
@@ -49,12 +44,7 @@ export default function Nextra({ Component, pageProps }: NextraAppProps) {
         </defs>
       </svg>
 
-      {getLayout(
-        <>
-          <Component {...pageProps} />
-          <GoogleAnalytics gaId="G-JEQ15MLV6B" />
-        </>,
-      )}
+      {getLayout(<Component {...pageProps} />)}
     </>
   );
 }

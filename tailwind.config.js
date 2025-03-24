@@ -2,11 +2,10 @@
 const config = {
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{ts,tsx,html,css}",
-    "./components/**/*.{ts,tsx,html,css}",
+    "./pages/**/*.{ts,tsx,html,css,md,mdx}",
+    "./components/**/*.{ts,tsx,html,css,md,mdx}",
     "./theme.config.tsx",
   ],
-  prefix: "",
   theme: {
     container: {
       center: true,

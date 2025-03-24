@@ -89,13 +89,14 @@ const LandingPage = () => {
             </p>
           </div>
 
-          <div className="relative bottom-0 w-[90%] hidden lg:flex lg:justify-end">
+          <div className="relative bottom-0 min-w-[512px] min-h-[336px] hidden lg:flex lg:justify-end">
             <Image
+              priority
               src="/images/TangleNetworkMap.png"
               alt="A visualization of the Tangle Network"
-              className="z-0"
-              width={512}
-              height={336}
+              className="z-0 w-auto h-auto"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </div>
         </div>
