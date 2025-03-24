@@ -5,7 +5,6 @@ import { GrNodes } from "react-icons/gr";
 import { MdApps, MdAppShortcut } from "react-icons/md";
 import { RiToolsLine } from "react-icons/ri";
 import { SiBlueprint } from "react-icons/si";
-import TangleNetworkMap from "../public/images/TangleNetworkMap.png";
 import CallToActionCard from "./CallToActionCard";
 
 const getStartedCards = [
@@ -72,8 +71,8 @@ const LandingPage = () => {
     <div className="">
       <div className="flex flex-col max-w-screen-xl mx-auto mt-10 align-center">
         {/* Header and Image Row */}
-        <div className="z-10 flex flex-col items-center justify-between p-5 font-bold lg:p-0 lg:flex-row lg:items-end">
-          <div className="flex flex-col items-start gap-1 mb-8 space-y-4 pl-7 mr-28 lg:space-xy-6">
+        <div className="z-10 flex flex-col items-center justify-between gap-5 p-5 font-bold lg:pt-0 lg:flex-row lg:items-center">
+          <div className="flex flex-col items-start gap-1 space-y-4 lg:space-xy-6">
             <p className="pl-1 text-sm text-gray-400 font-bol md:absolute lg:text-sm">
               TANGLE DOCUMENTATION
             </p>
@@ -90,20 +89,19 @@ const LandingPage = () => {
             </p>
           </div>
 
-          <div className="relative hidden lg:flex">
-            <div className="relative bottom-0 flex">
-              <Image
-                src={TangleNetworkMap}
-                alt="A visualization of the Tangle Network"
-                className="z-0 w-full h-auto md:content-end"
-                style={{ maxWidth: "90%" }}
-              />
-            </div>
+          <div className="relative bottom-0 w-[90%] hidden lg:flex lg:justify-end">
+            <Image
+              src="/images/TangleNetworkMap.png"
+              alt="A visualization of the Tangle Network"
+              className="z-0"
+              width={512}
+              height={336}
+            />
           </div>
         </div>
 
         {/* Horizontal Line */}
-        <div className="relative mb-12 border-b border-gray-300 opacity-0  sm:opacity-100"></div>
+        <div className="relative mb-12 border-b border-gray-300 opacity-0 sm:opacity-100"></div>
 
         {/* Call-to-Action Cards Row */}
         <div className="container">
