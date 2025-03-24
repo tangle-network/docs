@@ -93,6 +93,37 @@ const TOKENS: Token[] = [
     ],
   },
   {
+    name: "Aethir",
+    symbol: "ATH",
+    address: "0xeA7aCe3ac44F3BC6dE29535Ce89f43956c4c7B65",
+    icon: "/icons/tokens/ath.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0xbe0Ed4138121EcFC5c0E56B40517da27E6c5226B",
+        isNative: false,
+      },
+      {
+        ...CHAIN_CONFIGS.ARBITRUM,
+        address: "0xc87B37a581ec3257B734886d9d3a581F5A9d056c",
+        isNative: false,
+      },
+    ],
+  },
+  {
+    name: "Parasail ATH",
+    symbol: "pATH",
+    address: "0xabc70B5990d6349EAd1112432b9e2357eE2D7a45",
+    icon: "/icons/tokens/ath.svg",
+    chains: [
+      {
+        ...CHAIN_CONFIGS.ARBITRUM,
+        address: "0xc537e67Eb192b3F0B6B183ff52060Ee92475f398",
+        isNative: false,
+      },
+    ],
+  },
+  {
     name: "Avail",
     symbol: "AVAIL",
     address: "0x4A68525B31F8C67761e0429f6e4766a55f15b7A5",
