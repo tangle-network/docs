@@ -1,6 +1,10 @@
-import React, { useState } from "react";
-import { blake2AsU8a, encodeAddress } from "@polkadot/util-crypto";
 import { hexToU8a, stringToU8a, u8aConcat } from "@polkadot/util";
+import { blake2AsU8a, encodeAddress } from "@polkadot/util-crypto";
+import Link from "next/link";
+import { Callout } from "nextra/components";
+import { useState } from "react";
+import { BlockCopyButton } from "./ui/block-copy-button";
+import { Button } from "./ui/button";
 import {
   Card,
   CardContent,
@@ -9,14 +13,10 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
-import { Button } from "./ui/button";
-import { BlockCopyButton } from "./ui/block-copy-button";
-import Link from "next/link";
-import { Callout } from "nextra/components";
 
 const TANGLE_PREFIX = 5845;
 
-const evmToTangle = (evmAddress) => {
+const evmToTangle = (evmAddress: string) => {
   const addr = hexToU8a(evmAddress);
   const data = stringToU8a("evm:");
   const res = blake2AsU8a(u8aConcat(data, addr));

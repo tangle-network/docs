@@ -10,6 +10,17 @@ import {
 import WalletTable from "./WalletTable";
 import EvmToSubstrateConverter from "./EvmToSubstrateConverter";
 
+type NetworkDetail = {
+  property: string;
+  value:
+    | string
+    | {
+        type: string;
+        url: string;
+        text?: string;
+      };
+};
+
 const NETWORK_DATA = {
   mainnet: [
     { property: "Interfaces and Apps", value: "" },
@@ -90,7 +101,7 @@ const NETWORK_DATA = {
         text: "github.com/tangle-network/tangle",
       },
     },
-  ],
+  ] satisfies NetworkDetail[],
   testnet: [
     { property: "Interfaces and Apps", value: "" },
     {
@@ -167,8 +178,8 @@ const NETWORK_DATA = {
         text: "github.com/tangle-network/tangle",
       },
     },
-  ],
-};
+  ] satisfies NetworkDetail[],
+} as const;
 
 const NetworkTabs = () => {
   const [activeTab, setActiveTab] = useState("mainnet");
@@ -191,18 +202,22 @@ const NetworkTabs = () => {
     }
   }, []);
 
-  const handleTabClick = (tab) => {
+  const handleTabClick = (tab: string) => {
     setActiveTab(tab);
     // Update URL hash when tab changes
     window.location.hash = tab;
   };
 
-  const renderValue = (value) => {
+  const renderValue = (value: NetworkDetail["value"]) => {
+    if (typeof value === "string") {
+      return <span>{value}</span>;
+    }
+
     switch (value.type) {
       case "wss":
         return (
           <div className="flex items-center">
-            <span className="mr-2 bg-slate-200 font-mono dark:bg-black dark:text-white text-sm py-1 px-3">
+            <span className="px-3 py-1 mr-2 font-mono text-sm bg-slate-200 dark:bg-black dark:text-white">
               {value.url}
             </span>
             <BlockCopyButton name={value.url} code={value.url} />
@@ -212,7 +227,7 @@ const NetworkTabs = () => {
         return (
           <Link
             href={value.url}
-            className="underline underline-offset-1 dark:text-blue-200 text-linkBlue font-semibold"
+            className="font-semibold underline underline-offset-1 dark:text-blue-200 text-linkBlue"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -224,15 +239,18 @@ const NetworkTabs = () => {
     }
   };
 
-  const renderTable = (data) => {
-    const sections = {};
+  const renderTable = (data: NetworkDetail[]) => {
+    const sections: Record<string, typeof data> = {};
 
     data.forEach((item) => {
       if (item.value === "") {
-        sections[item.property] = [];
+        const key = item.property;
+        sections[key] = [];
       } else {
         const lastSection = Object.keys(sections).pop();
-        sections[lastSection].push(item);
+        if (lastSection) {
+          sections[lastSection].push(item);
+        }
       }
     });
 
@@ -240,18 +258,18 @@ const NetworkTabs = () => {
       <>
         {Object.entries(sections).map(([section, items]) => (
           <div key={section} className="mb-8">
-            <h3 className="text-xl font-semibold mb-2">{section}</h3>
-            <table className="w-full border-collapse bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-300">
+            <h3 className="mb-2 text-xl font-semibold">{section}</h3>
+            <table className="w-full text-gray-800 bg-white border-collapse dark:bg-gray-800 dark:text-gray-300">
               <tbody>
-                {(items as any[]).map((item, index) => (
+                {items.map((item, index) => (
                   <tr
                     className={`${index % 2 === 0 ? "bg-gray-50 dark:bg-gray-700" : ""} border-b`}
                     key={index}
                   >
-                    <td className="px-4 py-2 whitespace-nowrap bg-slate-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-700">
+                    <td className="px-4 py-2 border border-gray-300 whitespace-nowrap bg-slate-100 dark:bg-gray-600 dark:border-gray-700">
                       {item.property}
                     </td>
-                    <td className="px-4 py-2 truncate text-ellipsis border border-gray-300 dark:border-gray-700">
+                    <td className="px-4 py-2 truncate border border-gray-300 text-ellipsis dark:border-gray-700">
                       {renderValue(item.value)}
                     </td>
                   </tr>
@@ -266,8 +284,8 @@ const NetworkTabs = () => {
 
   return (
     <div className="mt-10">
-      <ul className="flex flex-wrap mb-8 text-sm border-b-2 font-medium text-center text-gray-500 dark:text-gray-400">
-        <li className="inline-flex text-xl items-center justify-center pt-8 px-4  border-b-2 border-transparent rounded-t-lg group">
+      <ul className="flex flex-wrap mb-8 text-sm font-medium text-center text-gray-500 border-b-2 dark:text-gray-400">
+        <li className="inline-flex items-center justify-center px-4 pt-8 text-xl border-b-2 border-transparent rounded-t-lg group">
           <a
             href="#"
             onClick={() => handleTabClick("mainnet")}
@@ -277,11 +295,11 @@ const NetworkTabs = () => {
                 : "hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:text-gray-300"
             }`}
           >
-            <Waypoints className="w-4 h-4 inline me-2 text-blue-600 dark:text-blue-500" />
+            <Waypoints className="inline w-4 h-4 text-blue-600 me-2 dark:text-blue-500" />
             Mainnet
           </a>
         </li>
-        <li className="inline-flex text-xl items-center justify-center pt-8 px-4  border-b-2 border-transparent rounded-t-lg group">
+        <li className="inline-flex items-center justify-center px-4 pt-8 text-xl border-b-2 border-transparent rounded-t-lg group">
           {" "}
           <a
             href="#"
@@ -292,11 +310,11 @@ const NetworkTabs = () => {
                 : "hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:text-gray-300"
             }`}
           >
-            <FlaskConical className="w-4 inline h-4 me-2 text-blue-600 dark:text-blue-500" />
+            <FlaskConical className="inline w-4 h-4 text-blue-600 me-2 dark:text-blue-500" />
             Testnet
           </a>
         </li>
-        <li className="inline-flex text-xl items-center justify-center pt-8 px-4  border-b-2 border-transparent rounded-t-lg group">
+        <li className="inline-flex items-center justify-center px-4 pt-8 text-xl border-b-2 border-transparent rounded-t-lg group">
           {" "}
           <a
             href="#"
@@ -307,11 +325,11 @@ const NetworkTabs = () => {
                 : "hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:text-gray-300"
             }`}
           >
-            <WalletMinimal className="w-4 inline h-4 me-2 text-blue-600 dark:text-blue-500" />
+            <WalletMinimal className="inline w-4 h-4 text-blue-600 me-2 dark:text-blue-500" />
             Wallets
           </a>
         </li>
-        <li className="inline-flex text-xl items-center justify-center pt-8 px-4  border-b-2 border-transparent rounded-t-lg group">
+        <li className="inline-flex items-center justify-center px-4 pt-8 text-xl border-b-2 border-transparent rounded-t-lg group">
           {" "}
           <a
             href="#"
@@ -322,20 +340,20 @@ const NetworkTabs = () => {
                 : "hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:text-gray-300"
             }`}
           >
-            <SendToBack className="w-4 inline h-4 me-2 text-blue-600 dark:text-blue-500" />
+            <SendToBack className="inline w-4 h-4 text-blue-600 me-2 dark:text-blue-500" />
             Address Converter
           </a>
         </li>
       </ul>
 
-      <div className="table-auto w-full">
+      <div className="w-full table-auto">
         {activeTab === "wallets" ? (
           <WalletTable />
         ) : activeTab === "evmToSubstrate" ? (
           <EvmToSubstrateConverter />
-        ) : (
+        ) : activeTab === "mainnet" || activeTab === "testnet" ? (
           renderTable(NETWORK_DATA[activeTab])
-        )}
+        ) : null}
       </div>
     </div>
   );

@@ -1,14 +1,11 @@
 import Image from "next/image";
-import { SiBlueprint } from "react-icons/si";
-import { GiToken } from "react-icons/gi";
 import { FaWallet } from "react-icons/fa";
-import { RiToolsLine } from "react-icons/ri";
-import { MdApps } from "react-icons/md";
-import { MdAppShortcut } from "react-icons/md";
+import { GiPlatform, GiToken } from "react-icons/gi";
 import { GrNodes } from "react-icons/gr";
-import { GiPlatform } from "react-icons/gi";
+import { MdApps, MdAppShortcut } from "react-icons/md";
+import { RiToolsLine } from "react-icons/ri";
+import { SiBlueprint } from "react-icons/si";
 import CallToActionCard from "./CallToActionCard";
-import TangleNetworkMap from "../public/images/TangleNetworkMap.png";
 
 const getStartedCards = [
   {
@@ -72,11 +69,11 @@ const resourcesCards = [
 const LandingPage = () => {
   return (
     <div className="">
-      <div className="max-w-screen-xl flex flex-col align-center mx-auto mt-10">
+      <div className="flex flex-col max-w-screen-xl mx-auto mt-10 align-center">
         {/* Header and Image Row */}
-        <div className="flex flex-col items-center z-10 font-bold p-5 lg:p-0 lg:flex-row lg:items-end justify-between">
-          <div className="flex flex-col pl-7 items-start mb-8 mr-28 gap-1 space-y-4 lg:space-xy-6">
-            <p className="text-sm font-bol md:absolute text-gray-400 pl-1 lg:text-sm">
+        <div className="z-10 flex flex-col items-center justify-between gap-5 p-5 font-bold lg:pt-0 lg:flex-row lg:items-center">
+          <div className="flex flex-col items-start gap-1 space-y-4 lg:space-xy-6">
+            <p className="pl-1 text-sm text-slate-500 dark:text-slate-400 font-bol md:absolute lg:text-sm">
               TANGLE DOCUMENTATION
             </p>
             <h1 className="text-3xl font-normal text-gray-900 dark:text-white md:text-3xl lg:text-5xl">
@@ -85,35 +82,35 @@ const LandingPage = () => {
                 Decentralized Cloud Infrastructure
               </span>
             </h1>
-            <p className="text-lg font-bold md:font-normal text-gray-700 lg:text-lg dark:text-gray-400">
+            <p className="text-lg font-bold text-gray-700 md:font-normal lg:text-lg dark:text-gray-400">
               Create and monetize Blueprints that deploy securely across any
               blockchain ecosystem. Instance services on-demand using crypto
               rails.
             </p>
           </div>
 
-          <div className="hidden lg:flex relative">
-            <div className="flex relative bottom-0">
-              <Image
-                src={TangleNetworkMap}
-                alt="A visualization of the Tangle Network"
-                className="md:content-end z-0 w-full h-auto"
-                style={{ maxWidth: "90%" }}
-              />
-            </div>
+          <div className="relative bottom-0 min-w-[512px] min-h-[336px] hidden lg:flex lg:justify-end">
+            <Image
+              priority
+              src="/images/TangleNetworkMap.png"
+              alt="A visualization of the Tangle Network"
+              className="z-0 w-auto h-auto"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
           </div>
         </div>
 
         {/* Horizontal Line */}
-        <div className=" opacity-0 relative sm:opacity-100 border-b border-gray-300 mb-12"></div>
+        <div className="relative mb-12 border-b border-gray-300 opacity-0 sm:opacity-100"></div>
 
         {/* Call-to-Action Cards Row */}
         <div className="container">
-          <h3 className="text-xl inline-flex mb-10 underline underline-offset-8 font-semibold text-gray-500 dark:text-white">
+          <h2 className="inline-flex mb-10 text-xl font-semibold text-gray-500 underline underline-offset-8 dark:text-white">
             Get Started
-          </h3>
+          </h2>
           <div className="relative flex flex-grow p-5 md:p-0">
-            <div className="flex flex-col flex-grow sm:flex-row items-center gap-5 mb-8">
+            <div className="flex flex-col items-center flex-grow gap-5 mb-8 sm:flex-row">
               {getStartedCards.map((card, index) => (
                 <CallToActionCard
                   key={index}
@@ -129,11 +126,11 @@ const LandingPage = () => {
 
         {/* Resources Cards Row */}
         <div className="container">
-          <h3 className="text-xl inline-flex mb-10 underline underline-offset-8 font-semibold text-gray-500 dark:text-white">
+          <h2 className="inline-flex mb-10 text-xl font-semibold text-gray-500 underline underline-offset-8 dark:text-white">
             Resources
-          </h3>
+          </h2>
           <div className="relative flex flex-grow p-5 md:p-0">
-            <div className="flex flex-col flex-grow sm:flex-row items-center gap-5 mb-8">
+            <div className="flex flex-col items-center flex-grow gap-5 mb-8 sm:flex-row">
               {resourcesCards.map((card, index) => (
                 <CallToActionCard
                   key={index}

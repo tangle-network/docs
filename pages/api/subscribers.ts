@@ -11,8 +11,13 @@ function isValidEmail(email: string): boolean {
   return re.test(String(email).toLowerCase());
 }
 
-const isBodyType = (body: any): body is BodyType => {
-  return typeof body.email === "string";
+const isBodyType = (body: unknown): body is BodyType => {
+  return (
+    typeof body === "object" &&
+    body !== null &&
+    "email" in body &&
+    typeof body.email === "string"
+  );
 };
 
 export default async function handler(

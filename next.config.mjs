@@ -1,4 +1,17 @@
 import nextra from "nextra";
+import bundleAnalyzer from "@next/bundle-analyzer";
+
+const withNextra = nextra({
+  theme: "nextra-theme-docs",
+  themeConfig: "./theme.config.tsx",
+  staticImage: true,
+  search: true,
+  latex: true,
+});
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 /**
  * @type {import('next').NextConfig}
@@ -6,9 +19,6 @@ import nextra from "nextra";
 const nextConfig = {
   reactStrictMode: true,
   trailingSlash: false,
-  experimental: {
-    legacyBrowsers: false,
-  },
   staticPageGenerationTimeout: 120,
   async redirects() {
     return [
@@ -41,14 +51,18 @@ const nextConfig = {
       // ],
     };
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.github.com",
+      },
+    ],
+  },
 };
 
-const withNextra = nextra({
-  theme: "nextra-theme-docs",
-  themeConfig: "./theme.config.tsx",
-  staticImage: true,
-  flexsearch: true,
-  latex: true,
-});
-
-export default withNextra(nextConfig);
+export default withBundleAnalyzer(withNextra(nextConfig));

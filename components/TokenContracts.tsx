@@ -1,3 +1,6 @@
+import Image from "next/image";
+import Link from "next/link";
+import { memo, useCallback, useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -6,11 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/Table";
-import Image from "next/image";
-import Link from "next/link";
-import { useMemo, useState, useCallback, memo } from "react";
-import dynamic from "next/dynamic";
-import { Suspense } from "react";
 
 interface Token {
   name: string;
@@ -796,7 +794,7 @@ const TokenRow = memo(({ token }: { token: Token }) => (
           width="32"
           height="32"
           loading="lazy"
-          className="rounded-full bg-gray-50 dark:bg-gray-800 p-1"
+          className="p-1 rounded-full bg-gray-50 dark:bg-gray-800"
           decoding="async"
           fetchPriority="high"
         />
@@ -839,7 +837,7 @@ const TokenRow = memo(({ token }: { token: Token }) => (
       <Link
         href={`https://explorer.tangle.tools/address/${token.address}`}
         target="_blank"
-        className="text-sm font-mono text-blue-600 dark:text-blue-400 hover:underline"
+        className="font-mono text-sm text-blue-600 dark:text-blue-400 hover:underline"
       >
         {token.address}
       </Link>
@@ -889,7 +887,7 @@ export const TokenContracts = () => {
           type="text"
           placeholder="Search tokens..."
           onChange={handleSearch}
-          className="flex-1 max-w-sm px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+          className="flex-1 max-w-sm px-4 py-2 bg-white border border-gray-200 rounded-lg dark:border-gray-800 dark:bg-gray-900"
         />
         <div className="relative">
           <select
@@ -912,7 +910,7 @@ export const TokenContracts = () => {
           </select>
 
           {/* Chain Icon */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             {selectedChain ? (
               <Image
                 src={CHAIN_NAME_TO_CONFIG[selectedChain].icon}
@@ -923,7 +921,7 @@ export const TokenContracts = () => {
               />
             ) : (
               <svg
-                className="h-4 w-4 text-gray-500"
+                className="w-4 h-4 text-gray-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -939,9 +937,9 @@ export const TokenContracts = () => {
           </div>
 
           {/* Dropdown Arrow */}
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500 dark:text-gray-400">
+          <div className="absolute inset-y-0 right-0 flex items-center px-2 text-gray-500 pointer-events-none dark:text-gray-400">
             <svg
-              className="h-4 w-4"
+              className="w-4 h-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -958,14 +956,14 @@ export const TokenContracts = () => {
       </div>
 
       <div
-        className="overflow-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+        className="overflow-auto bg-white border border-gray-200 rounded-lg dark:border-gray-800 dark:bg-gray-900"
         style={{
           height: "600px",
           contain: "content",
         }}
       >
         <Table>
-          <TableHeader className="sticky top-0 bg-gray-50 dark:bg-gray-800/50 z-10">
+          <TableHeader className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800/50">
             <TableRow>
               <TableHead className="w-[200px]">Token</TableHead>
               <TableHead className="w-[200px]">Supported Chains</TableHead>
@@ -982,15 +980,3 @@ export const TokenContracts = () => {
     </div>
   );
 };
-
-const LoadingRows = ({ count }: { count: number }) => (
-  <>
-    {Array.from({ length: count }).map((_, i) => (
-      <TableRow key={i}>
-        <TableCell colSpan={3}>
-          <div className="animate-pulse h-16 bg-gray-100 dark:bg-gray-800 rounded" />
-        </TableCell>
-      </TableRow>
-    ))}
-  </>
-);

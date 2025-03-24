@@ -1,7 +1,6 @@
-import React from "react";
+import { BetweenVerticalEnd } from "lucide-react";
 import { GrNodes } from "react-icons/gr";
 import CallToActionCard from "./CallToActionCard";
-import { BetweenVerticalEnd, SquareDashedBottomCode } from "lucide-react";
 
 const OperatorIntroCards = () => {
   const cards = [
@@ -28,7 +27,7 @@ const OperatorIntroCards = () => {
   ];
 
   return (
-    <div className="flex flex-col sm:flex-row justify-center items-stretch gap-5 my-20 p-5 md:p-0">
+    <div className="flex flex-col items-stretch justify-center gap-5 p-5 my-20 sm:flex-row md:p-0">
       {cards.map((card, index) => (
         <div key={index} className="flex-1">
           <CallToActionCard

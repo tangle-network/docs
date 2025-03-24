@@ -1,6 +1,12 @@
 import Image from "next/image";
 
-function TweetLink({ href, children }) {
+function TweetLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
   return (
     <a
       href={href}
@@ -13,7 +19,7 @@ function TweetLink({ href, children }) {
   );
 }
 
-export function Mention({ children }) {
+export function Mention({ children }: { children: string }) {
   return (
     <TweetLink href={`https://twitter.com/${children.replace("@", "")}`}>
       {children}
@@ -21,7 +27,21 @@ export function Mention({ children }) {
   );
 }
 
-export default function Tweet({ url, username, name, avatar, date, children }) {
+type TweetProps = {
+  username: string;
+  name: string;
+  avatar: string;
+  date: string;
+  children: React.ReactNode;
+};
+
+export default function Tweet({
+  username,
+  name,
+  avatar,
+  date,
+  children,
+}: TweetProps) {
   return (
     <div className="flex p-4 bg-white rounded-md shadow-xl dark:bg-opacity-10">
       <div className="flex-shrink-0 mr-4">

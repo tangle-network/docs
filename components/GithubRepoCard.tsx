@@ -1,6 +1,27 @@
-import React from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { FaGithub, FaStar, FaCodeBranch } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import { FaCodeBranch, FaStar } from "react-icons/fa";
+import { z } from "zod";
+
+const GithubRepoResponseSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  stargazers_count: z.number(),
+  forks_count: z.number(),
+  owner: z.object({
+    avatar_url: z.string(),
+    login: z.string(),
+  }),
+  language: z.string().nullable().optional(),
+  license: z
+    .object({
+      name: z.string(),
+    })
+    .nullable()
+    .optional(),
+  open_issues_count: z.number(),
+});
 
 interface GithubRepoCardProps {
   name: string;
@@ -21,7 +42,7 @@ const GithubRepoCard: React.FC<GithubRepoCardProps> = ({
 }) => {
   const isRow = displayStyle === "row";
 
-  const [repoData, setRepoData] = React.useState<{
+  const [repoData, setRepoData] = useState<{
     stars: number;
     forks: number;
     description: string;
@@ -43,26 +64,42 @@ const GithubRepoCard: React.FC<GithubRepoCardProps> = ({
     open_issues: 0,
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
+    let isMounted = true;
+
     const fetchRepoData = async () => {
       try {
         const apiUrl = url.replace("github.com", "api.github.com/repos");
         const response = await fetch(apiUrl, {
           headers: {
-            Authorization: `Bearer ${process.env.GITHUB_PAT}`,
-            Accept: "application/vnd.github.v3+json",
+            Accept: "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
           },
         });
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch repo data: ${response.status} ${response.statusText}`,
+          );
+        }
+
         const data = await response.json();
+        const parsedData = GithubRepoResponseSchema.parse(data);
+
+        // Avoid updating state on an unmounted component
+        if (!isMounted) {
+          return;
+        }
+
         setRepoData({
-          stars: data.stargazers_count,
-          forks: data.forks_count,
-          description: data.description || description,
-          name: data.name || name,
-          organization: data.organization,
-          language: data.language,
-          license: data.license,
-          open_issues: data.open_issues_count,
+          stars: parsedData.stargazers_count,
+          forks: parsedData.forks_count,
+          description: parsedData.description || description,
+          name: parsedData.name || name,
+          organization: parsedData.owner,
+          language: parsedData.language || undefined,
+          license: parsedData.license || undefined,
+          open_issues: parsedData.open_issues_count,
         });
       } catch (error) {
         console.error("Error fetching repo data:", error);
@@ -70,6 +107,10 @@ const GithubRepoCard: React.FC<GithubRepoCardProps> = ({
     };
 
     fetchRepoData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [url, name, description]);
 
   return (
@@ -91,13 +132,12 @@ const GithubRepoCard: React.FC<GithubRepoCardProps> = ({
       >
         {repoData.organization?.avatar_url && (
           <div className="flex-shrink-0">
-            <img
+            <Image
               src={repoData.organization.avatar_url}
               alt={`${repoData.organization.login} avatar`}
-              className={`
-                rounded-full
-                ${isRow ? "w-10 h-10" : "w-16 h-16"}
-              `}
+              width={isRow ? 40 : 64}
+              height={isRow ? 40 : 64}
+              className="rounded-full"
             />
           </div>
         )}
@@ -132,7 +172,7 @@ const GithubRepoCard: React.FC<GithubRepoCardProps> = ({
             >
               {repoData.language && (
                 <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                  <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
                   {repoData.language}
                 </span>
               )}
@@ -156,7 +196,7 @@ const GithubRepoCard: React.FC<GithubRepoCardProps> = ({
             </div>
             {repoData.open_issues > 0 && (
               <div className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                 <span className="text-sm">{repoData.open_issues} issues</span>
               </div>
             )}

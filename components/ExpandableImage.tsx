@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { FiZoomIn, FiZoomOut, FiRefreshCw, FiX } from "react-icons/fi";
+import Image from "next/image";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { FiRefreshCw, FiZoomIn, FiZoomOut } from "react-icons/fi";
 
 interface ExpandableImageProps {
   src: string;
@@ -16,7 +17,6 @@ const ExpandableImage: React.FC<ExpandableImageProps> = ({
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
 
   const imageSrc =
     src.startsWith("http") || src.startsWith("/") ? src : `/${src}`;
@@ -84,19 +84,19 @@ const ExpandableImage: React.FC<ExpandableImageProps> = ({
 
   return (
     <>
-      <div className="cursor-pointer hover:opacity-80 transition-opacity my-4">
-        <img
+      <div className="my-4 transition-opacity cursor-pointer hover:opacity-80">
+        <Image
           src={imageSrc}
           alt={alt}
           width={800}
           height={600}
           onClick={handleImageClick}
-          className="mx-auto max-w-full h-auto"
+          className="h-auto max-w-full mx-auto"
         />
       </div>
       {isExpanded && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
           onClick={handleCloseModal}
         >
           <div
@@ -108,11 +108,11 @@ const ExpandableImage: React.FC<ExpandableImageProps> = ({
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              ref={imageRef}
+            <Image
               src={imageSrc}
               alt={alt}
-              className="w-full h-full object-contain transition-transform duration-200 ease-out"
+              fill
+              className="object-contain w-full h-full transition-transform duration-200 ease-out"
               style={{
                 transform: `scale(${scale})`,
                 cursor: allowZoom && scale > 1 ? "move" : "default",
@@ -121,24 +121,24 @@ const ExpandableImage: React.FC<ExpandableImageProps> = ({
               }}
             />
             {allowZoom && (
-              <div className="absolute bottom-4 right-4 flex space-x-2">
+              <div className="absolute flex space-x-2 bottom-4 right-4">
                 <button
                   onClick={handleZoomIn}
-                  className="bg-white bg-opacity-50 p-2 rounded-full hover:bg-opacity-75 transition-colors"
+                  className="p-2 transition-colors bg-white bg-opacity-50 rounded-full hover:bg-opacity-75"
                   aria-label="Zoom in"
                 >
                   <FiZoomIn size={24} />
                 </button>
                 <button
                   onClick={handleZoomOut}
-                  className="bg-white bg-opacity-50 p-2 rounded-full hover:bg-opacity-75 transition-colors"
+                  className="p-2 transition-colors bg-white bg-opacity-50 rounded-full hover:bg-opacity-75"
                   aria-label="Zoom out"
                 >
                   <FiZoomOut size={24} />
                 </button>
                 <button
                   onClick={resetZoom}
-                  className="bg-white bg-opacity-50 p-2 rounded-full hover:bg-opacity-75 transition-colors"
+                  className="p-2 transition-colors bg-white bg-opacity-50 rounded-full hover:bg-opacity-75"
                   aria-label="Reset zoom"
                 >
                   <FiRefreshCw size={24} />

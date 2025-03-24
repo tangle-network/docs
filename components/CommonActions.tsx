@@ -1,8 +1,11 @@
-import React from "react";
-import Link from "next/link";
-import { BookOpenIcon, ServerIcon } from "@heroicons/react/outline";
-import { FaGithub } from "react-icons/fa";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+import React from "react";
+import { FaGithub } from "react-icons/fa";
+import {
+  HiOutlineBookOpen as BookOpenIcon,
+  HiOutlineServerStack as ServerIcon,
+} from "react-icons/hi2";
 
 const features = [
   {
@@ -56,16 +59,24 @@ const features = [
   // },
 ];
 
-const Card = ({ Icon, title, description: _description, href, action }) => (
+type CardProps = {
+  Icon: React.ElementType;
+  title: string;
+  description: string;
+  href: string;
+  action: string;
+};
+
+const Card = ({ Icon, title, href, action }: CardProps) => (
   <div
     className={cn(
       "border grid grid-rows-[auto_1fr_auto]",
-      "transition-shadow duration-[0.3s] ease-[ease-in-out]",
+      "transition-shadow duration-300 ease-in-out",
       "shadow-[0_4px_8px_0_rgb(0_0_0_/_8%),0_6px_20px_0_rgb(0_0_0_/_1%)]",
       "overflow-hidden mt-0 mb-1 mx-0 rounded-lg border-solid",
       "border-[#c0c0c0] dark:border-[#4b5563]",
-      "bg-[#f5f5f5] dark:bg-white",
-      "dark:text-black",
+      "bg-[#f5f5f5] dark:bg-gray-950",
+      "dark:text-white",
       "w-full [@media(min-width:480px)]:flex-[1_1_235px] [@media(min-width:480px)]:max-w-[calc(_50%_-_1rem_)]",
     )}
   >
