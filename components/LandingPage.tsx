@@ -73,7 +73,7 @@ const LandingPage = () => {
         {/* Header and Image Row */}
         <div className="z-10 flex flex-col items-center justify-between gap-5 p-5 font-bold lg:pt-0 lg:flex-row lg:items-center">
           <div className="flex flex-col items-start gap-1 space-y-4 lg:space-xy-6">
-            <p className="pl-1 text-sm text-gray-400 font-bol md:absolute lg:text-sm">
+            <p className="pl-1 text-sm text-slate-500 dark:text-slate-400 font-bol md:absolute lg:text-sm">
               TANGLE DOCUMENTATION
             </p>
             <h1 className="text-3xl font-normal text-gray-900 dark:text-white md:text-3xl lg:text-5xl">
@@ -106,9 +106,9 @@ const LandingPage = () => {
 
         {/* Call-to-Action Cards Row */}
         <div className="container">
-          <h3 className="inline-flex mb-10 text-xl font-semibold text-gray-500 underline underline-offset-8 dark:text-white">
+          <h2 className="inline-flex mb-10 text-xl font-semibold text-gray-500 underline underline-offset-8 dark:text-white">
             Get Started
-          </h3>
+          </h2>
           <div className="relative flex flex-grow p-5 md:p-0">
             <div className="flex flex-col items-center flex-grow gap-5 mb-8 sm:flex-row">
               {getStartedCards.map((card, index) => (
@@ -126,9 +126,9 @@ const LandingPage = () => {
 
         {/* Resources Cards Row */}
         <div className="container">
-          <h3 className="inline-flex mb-10 text-xl font-semibold text-gray-500 underline underline-offset-8 dark:text-white">
+          <h2 className="inline-flex mb-10 text-xl font-semibold text-gray-500 underline underline-offset-8 dark:text-white">
             Resources
-          </h3>
+          </h2>
           <div className="relative flex flex-grow p-5 md:p-0">
             <div className="flex flex-col items-center flex-grow gap-5 mb-8 sm:flex-row">
               {resourcesCards.map((card, index) => (
