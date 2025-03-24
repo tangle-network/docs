@@ -5,6 +5,7 @@ const meta: Meta = {
   quickstart: "Quickstart",
   tangle: "Tangle Blueprints",
   eigenlayer: "Eigenlayer AVSs",
+  keys: "Key Management",
 };
 
 export default meta;
