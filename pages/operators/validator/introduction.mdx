@@ -50,7 +50,12 @@ Once your node is operational, proceed.
 
 ## 1. Bond TNT or tTNT
 
-To validate, you will use a 'Stash' account and a 'staking proxy.' Make sure this account has enough funds to pay the fees for making transactions. Keep most of your funds in the stash account since it is meant to be the custodian of your staking funds. While you are not required to use a staking proxy, it is highly recommended. For this, you will create two accounts and make sure each of them have at least enough funds to pay the fees for making transactions.
+To validate, you will use a 'Stash' account and a 'staking account.' Make sure this account has enough funds to pay the fees for making transactions. Keep most of your funds in the stash account since it is meant to be the custodian of your staking funds. 
+
+<Callout>
+(Optional) While you are not required to use a proxy account for staking, it is recommended. For this, you will create two accounts and make sure each 
+of them have at least enough funds to pay the fees for making transactions. Learn more about [setting up a proxy account](./proxyaccount.mdx).
+</Callout>
 
 <Callout>
 Controller accounts are deprecated in Substrate. For more information, [see this discussion.](https://forum.polkadot.network/t/staking-controller-deprecation-plan-staking-ui-leads-comms/2748)
@@ -59,11 +64,7 @@ Controller accounts are deprecated in Substrate. For more information, [see this
 It is now time to set up our validator. We will do the following:
 
 1. Bond the TNT of the Stash account on the Tangle Network. These TNT will be put at stake for the security of the network and can be slashed.
-2. Select the [staking proxy account](./proxyaccount.mdx) account. This is the account that will decide when to start or stop validating.
-
-<Callout>
-See how to setup a [proxy account](./proxyaccount.mdx)
-</Callout>
+2. Select the account (optionally a [staking proxy account](./proxyaccount.mdx)). This is the account that will decide when to start or stop validating.
 
 First, go to the Staking section. Click on "Account Actions", and then the "+ Stash" button.
 
@@ -73,7 +74,7 @@ Make sure not to bond all your TNT balance since you will be unable to pay trans
 
 **Stash account** - Select your Stash account. In this example, we will bond 1 TNT, where the minimum bonding amount is 1. Make sure that your Stash account contains at least this much. You can, of course, stake more than this.
 
-**Staking proxy account** - Select the staking [proxy account](./proxyaccount.mdx) created earlier. This account will also need a small amount of TNT in order to start and stop validating.
+**Staking account** - Select the staking account (or [proxy account](./proxyaccount.mdx) created earlier) created earlier. This account will also need a small amount of TNT in order to start and stop validating.
 
 **Value bonded** - How much TNT from the Stash account you want to bond/stake. Note that you do not need to bond all of the TNT in that account. Also note that you can always bond more TNT later. However, withdrawing any bonded amount requires the duration of the unbonding period. On Kusama, the unbonding period is 7 days. On Polkadot, the planned unbonding period is 28 days.
 
@@ -161,7 +162,7 @@ To inform the chain about your session keys:
 1. Navigate to `Staking > Account Actions`
 2. Set Session Key
 
-- Click on `Set Session Key` for the account you've designated as your staking proxy.
+- Click on `Set Session Key` for the account you've designated as your staking account.
 - Enter the output from `author_rotateKeys` in the appropriate field.
 - Click `Set Session Key`.
 
