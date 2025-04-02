@@ -15,6 +15,7 @@ interface Token {
   symbol: string;
   address: string;
   icon: string;
+  isNative?: boolean;
   chains: {
     name: string;
     address?: string;
@@ -55,6 +56,11 @@ const CHAIN_CONFIGS = {
     explorerLink: "https://etherscan.io/",
     icon: "/icons/chains/ethereum.svg",
   },
+  LINEA: {
+    name: "Linea",
+    explorerLink: "https://lineascan.build/",
+    icon: "/icons/chains/linea.svg",
+  },
 };
 
 const CHAIN_OPTIONS = Object.values(CHAIN_CONFIGS);
@@ -69,9 +75,49 @@ const CHAIN_NAME_TO_CONFIG: Record<
   Optimism: CHAIN_CONFIGS.OPTIMISM,
   Polygon: CHAIN_CONFIGS.POLYGON,
   Ethereum: CHAIN_CONFIGS.ETHEREUM,
+  Linea: CHAIN_CONFIGS.LINEA,
 };
 
 const TOKENS: Token[] = [
+  {
+    name: "Tangle",
+    symbol: "TNT",
+    address: "0x0000000000000000000000000000000000000000",
+    icon: "/icons/tokens/tnt.svg",
+    isNative: true,
+    chains: [
+      {
+        ...CHAIN_CONFIGS.ETHEREUM,
+        address: "0x1465399089F3bFC43E7A52637a296C46423f8417",
+        isNative: false,
+      },
+      {
+        ...CHAIN_CONFIGS.ARBITRUM,
+        address: "0xB23565d388d03B95212Dc5b8F02e40D7edC77E1A",
+        isNative: false,
+      },
+      {
+        ...CHAIN_CONFIGS.BNB,
+        address: "0x108F919b5A76B64e80dBf74130Ff6441A62F6405",
+        isNative: false,
+      },
+      {
+        ...CHAIN_CONFIGS.LINEA,
+        address: "0x606F11cF2395881689eC7d1289A2282ab694bDa2",
+        isNative: false,
+      },
+      {
+        ...CHAIN_CONFIGS.BASE,
+        address: "0x64570ea315052A04E0b476254bb142BA21759DF5",
+        isNative: false,
+      },
+      {
+        ...CHAIN_CONFIGS.OPTIMISM,
+        address: "0xA06164d6440dd1E8cb51b743d7bEAB86c44f74f1",
+        isNative: false,
+      },
+    ],
+  },
   {
     name: "Arbitrum",
     symbol: "ARB",
@@ -130,19 +176,6 @@ const TOKENS: Token[] = [
       {
         ...CHAIN_CONFIGS.ETHEREUM,
         address: "0xEeB4d8400AEefafC1B2953e0094134A887C76Bd8",
-        isNative: false,
-      },
-    ],
-  },
-  {
-    name: "Avail (Wormhole)",
-    symbol: "AVAIL",
-    address: "0x4b7c2a96d1E9f3D37F979A8c74e17d53473fbf40",
-    icon: "/icons/tokens/avail.svg",
-    chains: [
-      {
-        ...CHAIN_CONFIGS.BASE,
-        address: "0xd89d90d26B48940FA8F58385Fe84625d468E057a",
         isNative: false,
       },
     ],
@@ -565,19 +598,6 @@ const TOKENS: Token[] = [
     ],
   },
   {
-    name: "Staked Avail (Wormhole)",
-    symbol: "stAVAIL",
-    address: "0xb0b1cb358f4597838859edA7dac076ada0E8aA34",
-    icon: "/icons/tokens/stavail.svg",
-    chains: [
-      {
-        ...CHAIN_CONFIGS.BASE,
-        address: "0x74cb668d23E6e54524e2E1e4d1c392F5fd611783",
-        isNative: false,
-      },
-    ],
-  },
-  {
     name: "Swell ETH",
     symbol: "swETH",
     address: "0x28ce5Ab9E7b4B04f146E3Ca5E3cb87D7b07d5497",
@@ -865,13 +885,17 @@ const TokenRow = memo(({ token }: { token: Token }) => (
 
     {/* Address - Simplified */}
     <TableCell>
-      <Link
-        href={`https://explorer.tangle.tools/address/${token.address}`}
-        target="_blank"
-        className="font-mono text-sm text-blue-600 dark:text-blue-400 hover:underline"
-      >
-        {token.address}
-      </Link>
+      {token.isNative ? (
+        "-"
+      ) : (
+        <Link
+          href={`https://explorer.tangle.tools/address/${token.address}`}
+          target="_blank"
+          className="font-mono text-sm text-blue-600 dark:text-blue-400 hover:underline"
+        >
+          {token.address}
+        </Link>
+      )}
     </TableCell>
   </TableRow>
 ));
