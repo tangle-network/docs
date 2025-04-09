@@ -8,94 +8,104 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
 ## Introduction
 
-This will guide you through setting up and using EVM event listeners for EigenLayer AVSes, using examples from the
+This guide will walk you through building an EigenLayer AVS (Actively Validated Service) using Tangle Blueprints, using examples from the
 [Incredible Squaring blueprint implementation](https://github.com/tangle-network/blueprint/tree/main/examples/incredible-squaring-eigenlayer).
 
-EVM event listeners are crucial for interacting with smart contracts on Ethereum-compatible networks.
-In the context of EigenLayer and the blueprint macro system, these listeners allow your Gadget to respond to specific
-events emitted by EigenLayer contracts.
+The Incredible Squaring AVS is a simple example that demonstrates how to build an AVS that squares numbers. While the computation is trivial, the example showcases the key components of an EigenLayer AVS built with Tangle Blueprints.
 
-## Setting Up EVM Event Listeners
+## Blueprint Structure
 
-### 1. Contract Definition
+The Incredible Squaring AVS blueprint follows the basic library and binary structure:
 
-First, define the contract interface using the `sol!` and `load_abi!` macros. This generates Rust bindings for your smart contract.
+1. **Library**: Contains job definitions and core logic
+2. **Binary**: Contains the Blueprint Runner implementation
 
-{/* TODO: Add URL */}
+## Job Definitions
 
-<GithubFileReaderDisplay
-  url=""
-  fromLine={48}
-  toLine={59}
-  title="incredible-squaring-eigenlayer/src/lib.rs"
-/>
-
-### 2. Job Definition with Event Handler
-
-Use the [`#[job]`](/developers/blueprint-macros/jobs) macro to define a function that will handle specific events. Include the `event_listener` attribute to specify the event details:
-
-{/* TODO: Add URL */}
+Jobs are the core computational units in your Blueprint. For the Incredible Squaring AVS, we define jobs to handle various tasks:
 
 <GithubFileReaderDisplay
-  url=""
+  url="https://github.com/tangle-network/blueprint/blob/d47f974b008712787982366a7ff1945d67e0035f/examples/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
   fromLine={13}
-  toLine={52}
-  title="incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
+  toLine={46}
+  title="Initialize Task Job Definition"
 />
 
-### 3. Event Converter Preprocessor Function
-
-Implement a preprocessor function to convert the event data into the format expected by your job function:
-
-{/* TODO: Add URL */}
+This job initializes a new task in the Incredible Squaring AVS. It takes parameters from an EVM event and processes them.
 
 <GithubFileReaderDisplay
-  url=""
-  fromLine={54}
-  toLine={67}
-  title="Event converter pre processor function"
+  url="https://github.com/tangle-network/blueprint/blob/d47f974b008712787982366a7ff1945d67e0035f/examples/incredible-squaring-eigenlayer/src/jobs/compute_x_square.rs"
+  fromLine={21}
+  toLine={109}
+  title="Compute X Square Job Definition"
 />
 
-## Implementing the Event Listener
+This job computes the square of a number in the Incredible Squaring AVS and sends the result as a signed response to an Aggregator.
 
-### 1. Set Up the Provider
+## Working with EVM Smart Contracts
 
-Create an HTTP provider to connect to the Ethereum network w/ a wallet enabled for transacting:
-
-{/* TODO: Add URL */}
+To interact with EVM smart contracts, the blueprint uses the `alloy` crate
 
 <GithubFileReaderDisplay
-  url=""
-  fromLine={20}
-  toLine={24}
-  title="Provider setup"
+  url="https://github.com/tangle-network/blueprint/blob/d47f974b008712787982366a7ff1945d67e0035f/examples/incredible-squaring-eigenlayer/src/lib.rs"
+  fromLine={27}
+  toLine={41}
+  title="Contract Definitions using Alloy's sol! macro"
 />
 
-### 2. Create the Contract Instances and Event Listeners
+## Blueprint Runner Architecture
 
-Instantiate the contract using the generated bindings:
+The Blueprint Runner is the core component that orchestrates the execution of your Blueprint. For the Incredible Squaring AVS, it consists of several key components:
 
-{/* TODO: Add URL */}
+### 1. Setting Up the Provider
+
+First, create an HTTP provider to connect to the Ethereum network with a wallet enabled for transacting:
 
 <GithubFileReaderDisplay
-  url=""
-  fromLine={36}
-  toLine={44}
-  title="Contract creation and event listener setup"
+  url="https://github.com/tangle-network/blueprint/blob/d47f974b008712787982366a7ff1945d67e0035f/examples/incredible-squaring-eigenlayer/src/main.rs"
+  fromLine={32}
+  toLine={36}
+  title="Provider Setup"
 />
 
-### 3. Set up the BlueprintRunner
+### 2. Creating Contexts
 
-Use the `BlueprintRunner` to execute the jobs and background services:
-
-{/* TODO: Add URL */}
+Next, create the contexts that will be used by your jobs:
 
 <GithubFileReaderDisplay
-  url=""
-  fromLine={47}
-  toLine={56}
-  title="BlueprintRunner setup"
+  url="https://github.com/tangle-network/blueprint/blob/d47f974b008712787982366a7ff1945d67e0035f/examples/incredible-squaring-eigenlayer/src/main.rs"
+  fromLine={39}
+  toLine={43}
+  title="Context Creation"
 />
+
+### 3. Setting Up Producers
+
+Producers listen for events and prepare them for processing. In the Incredible Squaring AVS, we set up producers to listen for EVM events:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/d47f974b008712787982366a7ff1945d67e0035f/examples/incredible-squaring-eigenlayer/src/main.rs"
+  fromLine={63}
+  toLine={69}
+  title="Producer Setup"
+/>
+
+### 4. Configuring the Blueprint Runner
+
+Finally, set up the Blueprint Runner with the router, producers, consumers, and background services:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/d47f974b008712787982366a7ff1945d67e0035f/examples/incredible-squaring-eigenlayer/src/main.rs"
+  fromLine={72}
+  toLine={86}
+  title="BlueprintRunner Setup"
+/>
+
+The Blueprint Runner:
+- Uses a router to direct job calls to the appropriate handlers
+- Sets up a producer that listen for events and prepare them for processing
+- Our job automatically handles signed task responses, so we don't use a consumer
+- Configures Aggregator as background services
 
 ## Testing the Incredible Squaring AVS
 
@@ -103,8 +113,8 @@ Use the `BlueprintRunner` to execute the jobs and background services:
 
 Before you begin, ensure you have the following installed:
 
-    Anvil
-    Docker
+- Anvil
+- Docker (DockerDesktop)
 
 ### 2. Installation
 
@@ -112,7 +122,7 @@ Clone this repository:
 
 ```shell
 git clone https://github.com/tangle-network/blueprint.git
-cd gadget
+cd blueprint
 ```
 
 Install Anvil:
@@ -122,21 +132,21 @@ curl -L https://foundry.paradigm.xyz | bash
 foundryup
 ```
 
-Running the AVS on a Testnet
+### 3. Running the AVS on a Testnet
 
-    We have a test for running this AVS Blueprint on a local Anvil Testnet. You can run the test with the following:
+We have a test for running this AVS Blueprint on a local Anvil Testnet. You can run the test with the following:
 
 ```shell
-RUST_LOG=gadget=trace cargo test --package incredible-squaring-blueprint-eigenlayer test_eigenlayer_incredible_squaring_blueprint -- --nocapture
+cargo test --package incredible-squaring-blueprint-eigenlayer test_eigenlayer_incredible_squaring_blueprint
 ```
 
 ## Best Practices and Considerations
 
-1. **Error Handling**: Implement robust error handling in your event listener functions to manage potential failures gracefully.
+1. **Error Handling**: Implement robust error handling in your job functions to manage potential failures gracefully.
 2. **Asynchronous Operations**: Use `async/await` for operations that may take time, such as network requests or complex computations.
-3. **Event Filtering**: Consider implementing additional filtering logic in your event converter function if you need to process only specific events based on certain criteria.
-4. **State Management**: If your Gadget needs to maintain state between events, consider implementing a state management system.
-5. **Testing**: Implement unit tests for your event handling logic, including the event converter function.
-6. **Logging**: Use appropriate logging to track the event handling process and aid in debugging.
-7. **Gas Considerations**: Be aware of the gas costs associated with your on-chain interactions, especially when responding to events with transactions.
-8. **Scalability**: Design your event handling system to scale with the number of events you expect to process.
+3. **State Management**: If your AVS needs to maintain state between job executions, consider implementing a state management system.
+4. **Testing**: Implement unit tests for your job logic and integration tests for the complete AVS.
+5. **Logging**: Use appropriate logging to track the job execution process and aid in debugging.
+6. **Gas Considerations**: Be aware of the gas costs associated with your on-chain interactions, especially when responding to events with transactions.
+7. **Scalability**: Design your AVS to scale with the number of tasks you expect to process.
+8. **Security**: Ensure your AVS follows security best practices, especially when handling cryptographic operations.

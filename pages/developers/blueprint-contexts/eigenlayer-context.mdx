@@ -33,10 +33,10 @@ The `EigenlayerContext` trait provides access to core Eigenlayer services and fu
 - Monitor stake across different quorums
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/main/crates/contexts/src/eigenlayer.rs"
+  url="https://github.com/tangle-network/blueprint/blob/7d97147417af83ce30f52714c60840c50b9142be/crates/contexts/src/instrumented_evm_client.rs"
   title="EigenlayerContext Trait Definition"
-  fromLine={5}
-  toLine={9}
+  fromLine={3}
+  toLine={6}
 />
 
 ## Using the Context
@@ -45,37 +45,42 @@ The `EigenlayerContext` trait provides access to core Eigenlayer services and fu
 
 First, define your context struct that implements the `EigenlayerContext` trait:
 
-{/* TODO: Add URL */}
-
 <GithubFileReaderDisplay
-  url=""
-  fromLine={39}
-  toLine={52}
+  url="https://github.com/tangle-network/blueprint/blob/7d97147417af83ce30f52714c60840c50b9142be/examples/incredible-squaring-eigenlayer/src/contexts/aggregator.rs"
+  fromLine={23}
+  toLine={35}
   title="Aggregator Context Definition"
 />
 
-### 2. Use the Context in Jobs
+### 2. Implement methods for the context
+
+You can implement methods for the context to provide custom functionality:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/7d97147417af83ce30f52714c60840c50b9142be/examples/incredible-squaring-eigenlayer/src/contexts/aggregator.rs"
+  fromLine={245}
+  toLine={261}
+  title="Implementing Methods for the Context"
+/>
+
+### 3. Use the Context in Jobs
 
 You can then use this context in your jobs to access Eigenlayer functionality:
 
-{/* TODO: Add URL */}
-
 <GithubFileReaderDisplay
-  url=""
-  fromLine={13}
-  toLine={52}
+  url="https://github.com/tangle-network/blueprint/blob/7d97147417af83ce30f52714c60840c50b9142be/examples/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
+  fromLine={32}
+  toLine={35}
   title="Using EigenlayerContext in Jobs"
 />
 
-### 3. Instantiate the Context
+### 4. Instantiate the Context
 
 Finally, instantiate your context in your main runner:
 
-{/* TODO: Add URL */}
-
 <GithubFileReaderDisplay
-  url=""
-  fromLine={27}
-  toLine={53}
+  url="https://github.com/tangle-network/blueprint/blob/7d97147417af83ce30f52714c60840c50b9142be/examples/incredible-squaring-eigenlayer/src/main.rs"
+  fromLine={39}
+  toLine={43}
   title="Instantiating the Context"
 />
