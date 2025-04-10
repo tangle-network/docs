@@ -1,0 +1,93 @@
+---
+title: Introduction to Blueprint Runners
+---
+
+import CardGrid from "../../../components/CardGrid.tsx"
+
+# Blueprint Runners
+
+Blueprint Runners are the core orchestration components that execute Tangle Blueprints. They manage the lifecycle of jobs, coordinate between different components, and ensure the reliable execution of your Actively Validated Service (AVS).
+
+## Getting Started
+
+<CardGrid
+  cards={[
+    {
+      title: "Jobs",
+      description: "Learn how to create jobs for your Blueprint.",
+      link: "/developers/blueprint-runner/jobs"
+    },
+    {
+      title: "Routers",
+      description: "Learn how to configure and use routers in your Blueprint Runner.",
+      link: "/developers/blueprint-runner/routers"
+    },
+    {
+      title: "Producers",
+      description: "Understand how producers capture and process events for your Blueprint.",
+      link: "/developers/blueprint-runner/producers"
+    },
+    {
+      title: "Consumers",
+      description: "Learn how consumers handle job results in your Blueprint Runner.",
+      link: "/developers/blueprint-runner/consumers"
+    },
+    {
+      title: "Background Services",
+      description: "Explore how background services support your Blueprint Runner.",
+      link: "/developers/blueprint-runner/background-services"
+    },
+    {
+      title: "Building a Blueprint Runner",
+      description: "Step-by-step guide to building your own Blueprint Runner.",
+      link: "/developers/blueprint-runner/building"
+    }
+  ]}
+/>
+
+## What is a Blueprint Runner?
+
+A Blueprint Runner is the runtime environment for your Tangle Blueprint. It:
+
+- Orchestrates job execution
+- Manages communication between different components
+- Handles event processing from the blockchain
+- Manages state and persistence
+- Ensures fault tolerance and reliability
+
+Blueprint Runners follow a modular architecture with four main components: [Routers](/developers/blueprint-runner/routers), [Producers](/developers/blueprint-runner/producers), [Consumers](/developers/blueprint-runner/consumers), and [Background Services](/developers/blueprint-runner/background-services).
+
+## Blueprint Runner Architecture
+
+The architecture of a Blueprint Runner consists of the following components:
+
+### Routers
+
+[Routers](/developers/blueprint-runner/routers) direct job calls to the appropriate job handlers based on job IDs. When a job is called, the router identifies the correct handler and passes the job parameters to it.
+
+### Producers
+
+[Producers](/developers/blueprint-runner/producers) listen for events (such as on-chain events from Tangle Network) and prepare them for processing. They convert raw event data into a format that can be processed by your job handlers.
+
+### Consumers
+
+[Consumers](/developers/blueprint-runner/consumers) handle the results of processed jobs. They can perform actions such as sending transactions, updating state, or triggering other processes based on job results.
+
+### Background Services
+
+[Background Services](/developers/blueprint-runner/background-services) are optional components that run continuously in the background. They can perform tasks such as monitoring, data collection, or periodic operations that are required for your jobs.
+
+## Blueprint Runner Lifecycle
+
+The Blueprint Runner follows a well-defined lifecycle to ensure reliable execution of your AVS:
+
+1. **Initialization**: The Blueprint Runner loads configuration, sets up components, and establishes connections.
+2. **Event Processing**: [Producers](/developers/blueprint-runner/producers) listen for events and convert them into job inputs.
+3. **Job Routing**: The [router](/developers/blueprint-runner/routers) directs job inputs to the appropriate job handlers.
+4. **Job Execution**: Job handlers process the inputs and produce results.
+5. **Result Handling**: [Consumers](/developers/blueprint-runner/consumers) process job results and perform necessary actions.
+6. **Continuous Operation**: [Background services](/developers/blueprint-runner/background-services) run continuously to support the Blueprint Runner.
+
+## Next Steps
+
+Ready to build your own Blueprint Runner? Check out our [step-by-step guide](/developers/blueprint-runner/building) to get started.

@@ -1,0 +1,94 @@
+---
+title: Producers
+---
+
+import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
+
+# Producers
+
+Producers are a key component of the [Blueprint Runner](/developers/blueprint-runner/introduction) architecture that capture events and prepare them for processing. This document explains how producers work, how to configure them, and how to implement them.
+
+## What are Producers?
+
+In a Blueprint Runner, producers are responsible for:
+
+1. Listening for events from a given source (e.g., blockchain events, polling calls, etc.)
+2. Preparing events to be passed to a job for processing, with the router
+
+Producers act as the input handlers of your Blueprint Runner, ensuring that external events are properly captured and processed.
+
+## Producer Configuration
+
+Producers are typically configured in the `main.rs` file of your Blueprint binary, when defining the Blueprint Runner. It is a `Stream` that outputs a JobCall, which is then passed to the router and routed to the appropriate job. A Producer can be made to generate JobCalls from anything, but we have some built-in producers that can be used out of the box.
+
+### Basic Producer Setup
+
+First, you define the producer you want to use. For example, a `TangleProducer` that listens for finalized blocks on Tangle. After which, you pass the producer to the Blueprint Runner's builder.
+
+```rust
+let env = BlueprintEnvironment::load()?;
+let tangle_client = env.tangle_client().await?;
+let tangle_producer = TangleProducer::finalized_blocks(tangle_client.rpc_client.clone()).await?;
+
+BlueprintRunner::builder(tangle_config, env)
+    .router(router) // Assuming your router is already defined
+    .producer(tangle_producer)
+    .run()
+    .await?;
+```
+
+## Types of Producers
+
+Blueprint Runners can utilize various types of producers depending on the event sources:
+
+### Blockchain Producers
+
+These producers listen for events from a blockchain, such as smart contract events or finalized blocks.
+
+There are currently two built-in blockchain producers:
+
+#### Tangle Producer
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/7774ea42c4d3ec3ff7e170626de3ddce511d1f2f/crates/tangle-extra/src/producer/mod.rs"
+  fromLine={43}
+  toLine={84}
+  title="Tangle Producer Definition"
+/>
+
+#### EVM Polling Producer
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/7774ea42c4d3ec3ff7e170626de3ddce511d1f2f/crates/evm-extra/src/producer/polling.rs"
+  fromLine={53}
+  toLine={136}
+  title="EVM Polling Producer Definition"
+/>
+
+### Cron Jobs
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/7774ea42c4d3ec3ff7e170626de3ddce511d1f2f/crates/producers-extra/src/cron.rs"
+  fromLine={10}
+  toLine={93}
+  title="Cron Job Producer Definition"
+/>
+
+## Integration with Other Components
+
+Producers work closely with other Blueprint Runner components:
+
+- **Routers**: Producers submit JobCalls to their [router](/developers/blueprint-runner/routers), where they are routed to the appropriate job
+- **Consumers**: JobCalls processed by producers ultimately lead to results handled by [consumers](/developers/blueprint-runner/consumers)
+
+## Next Steps
+
+Now that you understand producers, learn about:
+
+- [Routers](/developers/blueprint-runner/routers) - How to direct job calls to appropriate handlers
+- [Consumers](/developers/blueprint-runner/consumers) - How to handle job results
+- [Building a Blueprint Runner](/developers/blueprint-runner/building) - Step-by-step guide to building your own Blueprint Runner
+
+## Conclusion
+
+Producers are essential components that capture and prepare events for processing in your Blueprint Runner. By implementing robust and efficient producers, you can ensure that your Blueprint reliably processes desired events.

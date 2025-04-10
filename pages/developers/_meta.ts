@@ -13,6 +13,7 @@ const meta: Meta = {
   },
   "blueprint-sdk": "Introduction",
   "blueprint-contexts": "Contexts",
+  "blueprint-runner": "Blueprint Runner",
   "p2p-networking": "P2P Networking",
   "tangle-avs": "Build a Tangle Blueprint",
   "eigenlayer-avs": "Build an Eigenlayer AVS",
