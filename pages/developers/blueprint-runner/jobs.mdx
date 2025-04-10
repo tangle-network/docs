@@ -1,0 +1,103 @@
+---
+title: Jobs
+---
+
+import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
+
+# Jobs
+
+Jobs are the core building blocks of a [Blueprint Runner](/developers/blueprint-runner/introduction). They define the computational tasks that your Blueprint will execute in response to events. This document explains how jobs work, how to define them, and how to integrate them with other components of your Blueprint.
+
+## What are Jobs?
+
+In a Blueprint, jobs are functions that:
+
+1. Receive inputs from [producers](/developers/blueprint-runner/producers)
+2. Perform specific computational tasks
+3. Return results that can be processed by [consumers](/developers/blueprint-runner/consumers)
+
+Jobs are the heart of your Blueprint's functionality, encapsulating the business logic that processes events and produces meaningful results.
+
+## Job Definition
+
+Jobs in a Blueprint are defined in the library package of your project. A job definition consists of:
+
+1. A unique job ID that identifies the job
+2. A function that implements the job's logic
+3. Input parameters that the job accepts
+4. Return values that the job produces
+
+### Basic Job Structure
+
+Here's an example of a simple job definition from the Incredible Squaring example:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/a9860d2e3a161af63a75d6d800f662d303e92e5b/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
+  fromLine={7}
+  toLine={21}
+  title="Job Definition from Incredible Squaring Example"
+/>
+
+In this example:
+- `XSQUARE_JOB_ID` is a constant that uniquely identifies the job
+- `square` is the function that implements the job's logic
+- The job takes a single input parameter `x` of type `i32`
+- The job returns a result of type `i32`, which is the square of the input
+
+## Job Context
+
+Jobs can access context information provided by the Blueprint Runner. This context can include:
+
+- Configuration settings
+- Connections to external systems
+- State information
+- Utility functions
+
+Context is typically passed to jobs through the router configuration:
+
+```rust
+let router = Router::builder()
+    .route(MY_JOB_ID, my_job)
+    .with_context(my_context);
+```
+
+## Job Registration
+
+Jobs need to be registered to a route with the [router](/developers/blueprint-runner/routers) to be accessible. This is done when defining a Blueprint Runner:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/a9860d2e3a161af63a75d6d800f662d303e92e5b/examples/incredible-squaring/incredible-squaring-bin/src/main.rs"
+  fromLine={33}
+  toLine={48}
+  title="Job Registration in Router Configuration"
+/>
+
+## Job Execution Flow
+
+The execution flow of a job in a Blueprint Runner follows these steps:
+
+1. A [producer](/developers/blueprint-runner/producers) generates a job call with specific parameters
+2. The [router](/developers/blueprint-runner/routers) directs the job call to the appropriate job handler
+3. The job executes its logic and produces a result
+4. The result is passed to [consumers](/developers/blueprint-runner/consumers) for further processing
+
+## Integration with Other Components
+
+Jobs work closely with other Blueprint Runner components:
+
+- **Routers**: [Routers](/developers/blueprint-runner/routers) direct job calls to the appropriate job handlers
+- **Producers**: [Producers](/developers/blueprint-runner/producers) generate job calls with specific parameters
+- **Consumers**: [Consumers](/developers/blueprint-runner/consumers) process the results of job execution
+
+## Next Steps
+
+Now that you understand jobs, it might be helpful to take a look at:
+
+- [Routers](/developers/blueprint-runner/routers) - How to direct job calls to appropriate handlers
+- [Producers](/developers/blueprint-runner/producers) - How to capture and process events
+- [Consumers](/developers/blueprint-runner/consumers) - How to handle job results
+- [Building a Blueprint Runner](/developers/blueprint-runner/building) - Step-by-step guide to building your own Blueprint Runner
+
+## Conclusion
+
+Jobs are the core building blocks of your Blueprint, encapsulating the business logic that processes events and produces meaningful results. By implementing well-designed jobs, you can create powerful and flexible Blueprints that can handle a wide range of use cases.

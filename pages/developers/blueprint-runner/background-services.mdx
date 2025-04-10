@@ -1,0 +1,79 @@
+---
+title: Background Services
+---
+
+import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
+
+# Background Services
+
+Background services are optional components in the [Blueprint Runner](/developers/blueprint-runner/introduction) architecture that run continuously to support the operation of your Actively Validated Service (AVS). This document explains how background services work, how to configure them, and best practices for implementation.
+
+## What are Background Services?
+
+Background services refer to any long-running processes that operate independently of job execution. They:
+
+1. Run continuously in the background
+2. Can perform periodic or ongoing tasks
+3. Might maintain state or connections
+4. Support the overall operation of the Blueprint Runner
+
+Unlike job handlers that execute in response to specific requests, background services operate autonomously to provide supporting functionality.
+
+## Common Use Cases
+
+Background services could be used for various purposes in Blueprints, with the following being only a few examples:
+
+### Data Collection and Aggregation
+
+Services that collect and aggregate data, such as an aggregator that submits aggregated signatures to a Blockchain.
+
+### Monitoring and Health Checks
+
+Services that monitor the state of something, such as a health checker that verifies that a Blueprint is running.
+
+## Background Service Configuration
+
+Background services are typically configured in the `main.rs` file of your Blueprint binary, when building the Blueprint Runner. The configuration involves:
+
+### Basic Background Service Setup
+
+The only requirement for a background service is that it implements the `BackgroundService` trait:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/a9860d2e3a161af63a75d6d800f662d303e92e5b/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
+  fromLine={23}
+  toLine={34}
+  title="Defining a Background Service"
+/>
+
+With a background service defined, it is passed into the Blueprint Runner's builder as producers and consumers are:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/7774ea42c4d3ec3ff7e170626de3ddce511d1f2f/examples/incredible-squaring/incredible-squaring-bin/src/main.rs"
+  fromLine={36}
+  toLine={67}
+  title="Adding a Background Service to the Blueprint Runner"
+/>
+
+For some background services, it may be necessary to add some sort of cleanup code that runs when the Blueprint Runner shuts down. This can be done in the `with_shutdown_handler` method seen in the above code. This specific example just prints a message, but it might end a background process gracefully.
+
+## Integration with Other Components
+
+Background services work closely with other Blueprint Runner components:
+
+- **Routers**: Background services may provide support for [routers](/developers/blueprint-runner/routers), such as caching or state management
+- **Producers**: Background services can support [producers](/developers/blueprint-runner/producers) by maintaining connections or monitoring event sources
+- **Consumers**: Background services can assist [consumers](/developers/blueprint-runner/consumers) with resource management or periodic tasks
+
+## Next Steps
+
+Now that you understand background services, it might be helpful to take a look at:
+
+- [Routers](/developers/blueprint-runner/routers) - How to direct job calls to appropriate handlers
+- [Producers](/developers/blueprint-runner/producers) - How to capture and process events
+- [Consumers](/developers/blueprint-runner/consumers) - How to handle job results
+- [Building a Blueprint Runner](/developers/blueprint-runner/building) - Step-by-step guide to building your own Blueprint Runner
+
+## Conclusion
+
+Background services are powerful components that enhance the capabilities of your Blueprint Runner by providing continuous support operations. By implementing well-designed background services, you can build more robust, efficient, and feature-rich Blueprints.
