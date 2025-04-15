@@ -13,8 +13,7 @@ yarn-error.log
 .cache
 .vscode
 .DS_Store
-out/*
-out
+dist
 .dccache
 *.code-workspace
 .direnv

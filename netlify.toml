@@ -1,3 +1,18 @@
 [build]
     command = "next build"
-    publish = ".next"
+    publish = "dist"
+
+[[redirects]]
+from = "/restake"
+to = "/restake/introduction"
+status = 301
+
+[[redirects]]
+from = "/developers"
+to = "/developers/blueprints/introduction"
+status = 301
+
+[[redirects]]
+from = "/operators"
+to = "/operators/introduction"
+status = 301
