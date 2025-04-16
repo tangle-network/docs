@@ -3,8 +3,7 @@ const config = {
   siteUrl: process.env.SITE_URL || "https://docs.tangle.tools",
   generateRobotsTxt: true,
   exclude: ["/404", "/500", "/api/*", "*/_meta"],
-  outDir: "public",
-  generateIndexSitemap: true,
+  outDir: "dist",
 };
 
 export default config;
