@@ -1,0 +1,208 @@
+---
+title: Blueprint Pricing
+---
+
+# Blueprint Pricing
+
+This guide explains how pricing works for blueprint execution and how to integrate pricing functionality into your applications that use Tangle Network blueprints.
+
+## Prerequisites
+
+- Understanding of Blueprint concepts and execution model
+- Familiarity with Tangle Network architecture
+- Basic knowledge of cryptographic signatures and verification
+
+## Pricing Workflow
+
+The complete workflow for getting quotes and executing blueprints consists of:
+
+1. **Finding Operators**: Retrieve all operators registered for the blueprint to be executed.
+
+2. **Requesting Quotes**: Request price quotes from operators:
+
+   - Generate a proof-of-work for the request
+   - Create a properly formatted price request
+   - Submit the request via gRPC (at the address specified by each operator on-chain)
+
+3. **Processing Quotes**: When you receive quotes from operators:
+
+   - Verify their signatures
+   - Validate the proof-of-work
+   - Compare prices
+
+4. **Selecting Operators**: Choose which operators to use based on their pricing quotes, typically selecting the most cost-effective options.
+
+5. **Submitting Request**: Submit an on-chain request that includes your selected quotes via the `request_with_signed_price_quotes` services extrinsic.
+
+6. **Blueprint Execution**: The selected operators will execute the blueprint according to the agreed terms.
+
+## Pricing API
+
+To request price quotes, your application will use the gRPC API provided by operators. You just need to send a `GetPrice` gRPC request to the operator's gRPC endpoint. Here's the service definition in protobuf:
+
+```protobuf
+// The pricing service definition
+service Pricing {
+  // Retrieves a signed price quote for a given blueprint
+  rpc GetPrice (GetPriceRequest) returns (GetPriceResponse);
+}
+```
+
+### Message Types
+
+Here are the key message types you'll work with:
+
+```protobuf
+// The pricing service definition
+service PricingEngine {
+  // Retrieves a signed price quote for a given blueprint
+  rpc GetPrice (GetPriceRequest) returns (GetPriceResponse);
+}
+
+// Asset type enumeration
+enum AssetType {
+  CUSTOM = 0;
+  ERC20 = 1;
+}
+
+// Asset type definition
+message Asset {
+  oneof asset_type {
+    // Custom asset with a numeric identifier
+    uint64 custom = 1;
+    // ERC20 token with an H160 address
+    bytes erc20 = 2;
+  }
+}
+
+// Security requirements for an asset
+message AssetSecurityRequirements {
+  // The asset type
+  Asset asset = 1;
+  // Minimum exposure percentage (0-100)
+  uint32 minimum_exposure_percent = 2;
+  // Maximum exposure percentage (0-100)
+  uint32 maximum_exposure_percent = 3;
+}
+
+// Security commitment for an asset
+message AssetSecurityCommitment {
+  // The asset type
+  Asset asset = 1;
+  // Committed exposure percentage (0-100)
+  uint32 exposure_percent = 2;
+}
+
+// Resource requirement for a specific resource type
+message ResourceRequirement {
+  // Resource kind (CPU, Memory, GPU, etc.)
+  string kind = 1;
+  // Quantity required
+  uint64 count = 2;
+}
+
+// Pricing for a specific resource type
+message ResourcePricing {
+  // Resource kind (CPU, Memory, GPU, etc.)
+  string kind = 1;
+  // Quantity of the resource
+  uint64 count = 2;
+  // Price per unit in USD with decimal precision
+  double price_per_unit_rate = 3;
+}
+
+// Request message for GetPrice RPC
+message GetPriceRequest {
+  // The blueprint ID
+  uint64 blueprint_id = 1;
+  // Time-to-live for service in blocks
+  uint64 ttl_blocks = 2;
+  // Proof of work to prevent DDOS
+  bytes proof_of_work = 3;
+  // Optional resource recommendations
+  repeated ResourceRequirement resource_requirements = 4;
+  // Security requirements for assets
+  AssetSecurityRequirements security_requirements = 5;
+}
+
+// Response message for GetPrice RPC
+message GetPriceResponse {
+  // The quote details
+  QuoteDetails quote_details = 1;
+  // Signature of the hash of the body
+  bytes signature = 2;
+  // Operator ID
+  bytes operator_id = 3;
+  // Proof of work response
+  bytes proof_of_work = 4;
+}
+
+// The detailed quote information
+message QuoteDetails {
+  // The blueprint ID
+  uint64 blueprint_id = 1;
+  // Time-to-live for service in blocks
+  uint64 ttl_blocks = 2;
+  // Total cost in USD with decimal precision
+  double total_cost_rate = 3;
+  // Timestamp when quote was generated
+  uint64 timestamp = 4;
+  // Expiry timestamp
+  uint64 expiry = 5;
+  // Resource pricing details
+  repeated ResourcePricing resources = 6;
+  // Security commitments for assets
+  AssetSecurityCommitment security_commitments = 7;
+}
+```
+
+## Implementation Steps
+
+### 1. Generating Proof-of-Work
+
+Before requesting a quote, you need to generate a valid proof-of-work for the request. The Operator pricing server uses the Equix Equihash Rust implementation for proof-of-work generation.
+
+### 2. Creating and sending a Price Request
+
+Next, create a price request with your requirements using the types defined in [Message Types](#message-types) and send it to each operator registered to the blueprint you want to run. Both the registered operators and their gRPC endpoints are available on-chain.
+
+### 3. Verifying Quote Signatures
+
+When you receive quotes, verify their authenticity by using the hash of the quote details and the operator's signature of the quote's hash that was included in the response.
+
+### 4. Selecting Operators
+
+After verifying the quotes, select the operators you want to use based on their pricing and security commitments. It is recommended to automatically select the lowest-priced operators.
+
+### 5. Requesting service with quotes
+
+After selecting the operators, submit your request to the blockchain using the `request_with_signed_price_quotes` services extrinsic with the selected operators and their quotes.
+
+## Understanding Pricing Calculations
+
+Operators calculate prices using this formula:
+
+```
+Price = Resource Cost × Duration Factor × Security Factor
+```
+
+This means that the total cost of a blueprint execution is the sum of the prices from all selected operators.
+
+Where:
+
+- **Resource Cost** = resource_count × price_per_unit_rate
+- **Duration Factor** = time_blocks × BLOCK_TIME
+- **Security Factor** = Factor based on security requirements
+
+Understanding this helps you estimate costs and evaluate quotes effectively.
+
+## Best Practices
+
+1. **Get Multiple Quotes**: Always request quotes from all registered operators to compare prices
+2. **Verify All Signatures**: Always verify the signature of each quote before using it
+3. **Check Expiry Times**: Ensure quotes haven't expired before submitting them to the blockchain
+4. **Include Complete Security Requirements**: Specify all necessary security parameters in your requests
+5. **Handle Errors Gracefully**: Implement proper error handling for failed quote requests
+6. **Keep Quotes Intact**: Never modify quote details after receiving them
+7. **Use Fresh Proof-of-Work**: Generate a new proof-of-work for each request
+8. **Expect Price Variation**: Don't assume all operators will provide the same price
