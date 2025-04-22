@@ -1,0 +1,49 @@
+---
+title: Services Context
+---
+
+import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
+
+# Services Context
+
+The `ServicesContext` trait provides a standardized interface for interacting with the Tangle network in your Blueprint through a Subxt `OnlineClient` with a PolkadotConfig.
+
+## Overview
+
+The `ServicesContext` trait provides access to a Subxt client that enables:
+
+- Fetching Blueprints - Retrieve Blueprints by ID
+- Querying Blueprints - Query Blueprints for an operator
+- Retrieving Blueprint Owners - Return the Owner for a Blueprint
+- Fetching Service Operators - Return a list of operators for a service
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/7d97147417af83ce30f52714c60840c50b9142be/crates/contexts/src/services.rs"
+  fromLine={3}
+  toLine={9}
+  title="ServicesContext Trait Definition"
+/>
+
+## Using the Context
+
+### 1. Define Your Context
+
+First, define your context struct that implements the `ServicesContext` trait:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/7d97147417af83ce30f52714c60840c50b9142be/crates/macros/context-derive/tests/ui/basic.rs"
+  fromLine={13}
+  toLine={22}
+  title="Services Context Definition"
+/>
+
+### 2. Access Services Client Functionality
+
+You can then use this context to access the services client and interact with Tangle services:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/7d97147417af83ce30f52714c60840c50b9142be/crates/macros/context-derive/tests/ui/basic.rs"
+  fromLine={38}
+  toLine={38}
+  title="Accessing Services Client Functionality"
+/>

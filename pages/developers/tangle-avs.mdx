@@ -21,51 +21,68 @@ Before you begin, ensure you have the following installed:
 
 See the [CLI Quickstart](./cli/quickstart.mdx) for instructions on creating a [blueprint](./blueprints/introduction.mdx).
 
+### Blueprint Workspace Structure
+
+Tangle Blueprints are structured as Rust workspaces with multiple packages:
+
+1. **Library Package**: Contains the core logic of your Blueprint, including job definitions.
+2. **Binary Package**: Contains the entry point for your Blueprint runner.
+
 ### Key Files
 
-#### src/lib.rs
+#### lib/src/lib.rs
 
-This file contains the core logic of your Blueprint, including job definitions, report structures, and event listeners. Here's an example of a simple "Hello World" job:
-
-1. **Jobs**: Define the main computational tasks of your Blueprint. For more details on creating jobs, see our [Blueprint Job Documentation](/developers/blueprint-macros/jobs).
-
-2. **Reports**: Define offchain reporting logic for the custom slashing functionality of your Blueprint. Learn more about reports in our [Blueprint Report Documentation](/developers/blueprint-macros/reports).
-
-3. **Event Listeners**: Set up listeners to react to on-chain events, offchain events, cron-job like listeners, and even custom event triggers. For a deep dive into event listeners, check out our [Event Listener Documentation](/developers/blueprint-event-listeners/introduction).
-
-Here's a basic example incorporating these elements:
-
-{/* TODO: Add URL */}
+This file contains the core logic of your Blueprint, including job definitions. Jobs are the main computational tasks that your Blueprint will execute. Here's an example of a simple "Hello World" job:
 
 <GithubFileReaderDisplay
-  url=""
-  fromLine={20}
-  toLine={36}
-  title="Example Blueprint Job with Tangle JobCalled Event Listener"
+  url="https://github.com/tangle-network/blueprint-template/blob/32cef29fbe163969da9da5ff5cab4f0c19849fa3/%7B%7Bproject-name%7D%7D-lib/src/lib.rs"
+  fromLine={29}
+  toLine={48}
+  title="Example Blueprint Job Definition"
 />
 
 This job takes an optional `who` parameter and returns a greeting.
 
-#### src/main.rs
+For more details on creating jobs, see our [Blueprint Job Documentation](/developers/blueprint-macros/jobs).
 
-This file serves as the entry point for your Actively Validated Service (AVS) node. It sets up the runtime environment, initializes the necessary components, and starts the event watcher. Here's a breakdown of its key responsibilities:
+#### bin/src/main.rs
+
+This file serves as the entry point for your Actively Validated Service (AVS) node. It sets up the runtime environment, initializes the necessary components, and starts the Blueprint Runner. Here's a breakdown of its key responsibilities:
 
 1. **Environment Setup**: It loads the configuration, initializes the logger, and sets up error handling.
 2. **Client Initialization**: It creates a connection to the Tangle Network using the provided RPC endpoint.
-3. **Registration**: It checks if the node should run registration (implementation pending).
-4. **Event Handler Creation**: It instantiates the event handler for the `say_hello` job.
-5. **Event Watcher**: It starts the Substrate event watcher, which listens for relevant events on the Tangle Network.
-
-{/* TODO: Add URL */}
+3. **Router Configuration**: It sets up the router that directs job calls to the appropriate handlers.
+4. **Producer Setup**: It configures producers that listen for events and prepare them for processing.
+5. **Consumer Setup**: It configures consumers that handle processed results.
+6. **Background Services**: It initializes optional background services required for jobs.
+7. **Blueprint Runner**: It starts the Blueprint Runner, which orchestrates all components.
 
 <GithubFileReaderDisplay
-  url=""
-  fromLine={6}
-  toLine={27}
+  url="https://github.com/tangle-network/blueprint-template/blob/32cef29fbe163969da9da5ff5cab4f0c19849fa3/%7B%7Bproject-name%7D%7D-bin/src/main.rs"
+  fromLine={19}
+  toLine={83}
   title="Example Blueprint `main.rs` Entry Point"
 />
 
-This sets up the AVS node, initializes the environment, and starts the event watcher.
+## Blueprint Runner Architecture
+
+The Blueprint Runner is the core component that orchestrates the execution of your Blueprint. It consists of several key components:
+
+### Router
+
+The router is responsible for directing job calls to the appropriate job handlers based on job IDs. When a job is called, the router identifies the correct handler and passes the job parameters to it.
+
+### Producers
+
+Producers listen for events (such as on-chain events from Tangle Network) and prepare them for processing. They convert raw event data into a format that can be processed by your job handlers.
+
+### Consumers
+
+Consumers handle the results of processed jobs. They can perform actions such as sending transactions, updating state, or triggering other processes based on job results.
+
+### Background Services
+
+Background services are optional components that run continuously in the background. They can perform tasks such as monitoring, data collection, or periodic operations that are required for your jobs.
 
 ## Building Your Project
 
@@ -85,27 +102,21 @@ See [deploying your blueprint](./cli/quickstart.mdx#deploying-your-blueprint).
 
 Congratulations! You've created, built, and deployed your first Tangle Blueprint. Here are some suggestions for what to do next:
 
-1. Explore more complex job implementations in your `lib.rs` file. Learn more about [Jobs and the Job Macro system](/developers/blueprint-macros/jobs).
+1. Explore more complex job implementations in your library package. Learn more about [Jobs](/developers/blueprint-macros/jobs). {/* TODO: Use new jobs page */}
 
-2. Implement reporting mechanisms using the [Reports Macro](/developers/blueprint-macros/reports) to ensure the integrity of your AVS.
+2. Learn about [Context and Context Extensions](/developers/blueprint-macros/context) to manage dependencies and state in your Blueprint.
 
-3. Dive deeper into [Event Listeners](/developers/blueprint-event-listeners/introduction) to understand how to trigger your jobs and reports based on various events.
+3. Customize your Blueprint Runner with additional producers, consumers, and background services to handle more complex scenarios.
 
-4. Learn about [Context and Context Extensions](/developers/blueprint-macros/context) to manage dependencies and state in your Blueprint.
+4. If you're interested in building for EigenLayer, check out our guide on [Building an EigenLayer AVS](/developers/eigenlayer-avs).
 
-5. If you're interested in building for EigenLayer, check out our guide on [Building an EigenLayer AVS](/developers/eigenlayer-avs).
+5. Implement tests for your Blueprint using `tokio::test`. Learn more about [Testing Blueprints](/developers/blueprint-macros/testing).
 
-6. Implement tests for your Blueprint using `tokio::test`. Learn more about [Testing Blueprints](/developers/blueprint-macros/testing).
+6. Explore the Tangle network's features and how they interact with your Blueprint. Understand [EVM and Native Addresses](/developers/technicals/addresses) and [EVM to Substrate transfers](/developers/technicals/evm-substrate-transfers).
 
-7. Explore the Tangle network's features and how they interact with your Blueprint. Understand [EVM and Native Addresses](/developers/technicals/addresses) and [EVM to Substrate transfers](/developers/technicals/evm-substrate-transfers).
+7. Familiarize yourself with [EVM Precompiles](/developers/technicals/precompiles) available on Tangle Network.
 
-8. Familiarize yourself with [EVM Precompiles](/developers/technicals/precompiles) available on Tangle Network.
-
-9. Learn about [Deploying Contracts with Hardhat](/developers/technicals/deploy-using-hardhat) for more advanced contract deployment scenarios.
-
-For more advanced topics and in-depth information, check out our other documentation pages and the [Rust async book](https://rust-lang.github.io/async-book/).
-
-If you encounter any issues or have questions, please don't hesitate to open an issue on our [GitHub repository](https://github.com/tangle-network/blueprint-template/issues). We're here to help you succeed in building with Tangle Blueprints!
+8. Learn about about advanced options when [Deploying Blueprints](./cli/tangle.mdx#deploying-a-blueprint).
 
 For more advanced topics and in-depth information, check out our other documentation pages and the [Rust async book](https://rust-lang.github.io/async-book/).
 
