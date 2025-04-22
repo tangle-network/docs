@@ -27,16 +27,7 @@ Caused by:
   note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 ```
 
-1. Verify your `gadget` version and compare your `rust_toolchain.toml` against the [Blueprint Template](https://github.com/tangle-network/blueprint-template) repository.
-
-<GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint-template/blob/main/rust-toolchain.toml"
-  startLine={1}
-  toLine={7}
-  title="Blueprint Template rust_toolchain.toml"
-/>
-
-2. Verify that your blueprint's jobs and reports are implemented correctly. Occasionally, our SDK may have breaking changes to the error reporting. You will want to consider commenting out metadata generation and then rebuilding to check for errors in the blueprint.
+Verify that your blueprint's jobs and reports are implemented correctly. Occasionally, our SDK may have breaking changes to the error reporting. You will want to consider commenting out metadata generation and then rebuilding to check for errors in the blueprint.
 
 {/* TODO: Add URL */}
 
