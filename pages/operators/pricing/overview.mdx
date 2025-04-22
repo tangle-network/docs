@@ -1,0 +1,96 @@
+---
+title: Blueprint Pricing Overview
+---
+
+# Blueprint Pricing
+
+As a blueprint operator, you'll need to set up pricing for your services to receive fair compensation for the resources you provide. This guide explains how pricing works in the Tangle Network and how to configure it properly.
+
+## Prerequisites
+
+- Basic understanding of Tangle Network operations
+- Familiarity with running and maintaining a Tangle node
+- Knowledge of basic blueprint concepts
+
+## How Blueprint Pricing Works
+
+The pricing process follows these steps:
+
+1. **Registration**: When you register as an operator for a blueprint, you provide your pricing service address in your preferences
+   - **Note**: If your RPC server address changes, you can update it on-chain for any registered blueprint through the `updateRpcAddress` services extrinsic call
+2. **Quote Requests**: Users request price quotes from registered operators like you
+3. **Quote Generation**: Your service calculates prices based on resource requirements, creates security commitments, and signs quotes
+4. **Operator Selection**: Users select operators based on price and other factors
+5. **Service Execution**: Once selected, you'll begin execution of the blueprint and receive payment
+
+## Setting Up Your Pricing Service
+
+Your pricing service needs to be available via gRPC for users to request quotes. Here's how to configure it:
+
+### Pricing Configuration
+
+Create a TOML configuration file with your pricing structure. The file should include both default pricing for all blueprints and specific pricing for particular blueprints:
+
+```toml
+# Default pricing for all blueprints
+[default]
+resources = [
+  { kind = "CPU", count = 1, price_per_unit_rate = 0.001 },
+  { kind = "MemoryMB", count = 1024, price_per_unit_rate = 0.00005 },
+  { kind = "StorageMB", count = 1024, price_per_unit_rate = 0.00002 },
+  { kind = "NetworkEgressMB", count = 1024, price_per_unit_rate = 0.00003 },
+  { kind = "NetworkIngressMB", count = 1024, price_per_unit_rate = 0.00001 },
+  { kind = "GPU", count = 1, price_per_unit_rate = 0.005 }
+]
+
+# Blueprint-specific pricing (overrides default)
+[123]  # Blueprint ID
+resources = [
+  { kind = "CPU", count = 1, price_per_unit_rate = 0.0012 },
+  { kind = "MemoryMB", count = 2048, price_per_unit_rate = 0.00006 },
+  { kind = "StorageMB", count = 1024, price_per_unit_rate = 0.00002 },
+  { kind = "NetworkEgressMB", count = 1024, price_per_unit_rate = 0.00003 },
+  { kind = "NetworkIngressMB", count = 1024, price_per_unit_rate = 0.00001 },
+  { kind = "GPU", count = 1, price_per_unit_rate = 0.005 }
+]
+```
+
+Each resource type defines:
+
+- `kind`: The resource type (CPU, MemoryMB, StorageMB, etc.)
+- `count`: The baseline quantity for the resource
+- `price_per_unit_rate`: The price per unit in USD with decimal precision, where it is generally the price per block for the resource
+
+### How Prices Are Calculated
+
+The formula used to calculate blueprint execution pricing is:
+
+```
+Price = Resource Cost × Duration Factor × Security Factor
+```
+
+Where:
+
+- **Resource Cost** = resource_count × price_per_unit_rate
+- **Duration Factor** = time_blocks × BLOCK_TIME
+- **Security Factor** = Factor based on security commitment parameters
+
+## Security Commitments
+
+When users request your services, they include security requirements that specify what percentage of assets you need to secure. Your pricing service needs to respond with your commitment:
+
+- **Exposure Percentage**: The percentage of assets you guarantee to secure (between the user's minimum and maximum requirements)
+- **Asset Types**: Can be Custom (u64) or ERC20 (H160 address)
+
+This commitment will be included with your signed quote. The commitment used for the quote is automatically the minimum exposure percentage specified in the user's security requirements.
+
+## Quote Security Considerations
+
+### Quote Signature
+
+- To ensure the validity of your quotes, your quotes are automatically signed. Users then verify the signature included in an Operator's quote when they receive it. This ensures a user is getting genuine quotes from you and other operators.
+
+### Protection Against Abuse
+
+- **Proof-of-Work Verification**: Users provide proof-of-work with their requests, defending against Denial-of-Service (DoS) attacks
+- **Quote Expiry**: Quotes include an expiry time (typically 10-15 minutes) to prevent stale quotes
