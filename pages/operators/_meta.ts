@@ -15,6 +15,7 @@ const meta: Meta = {
   },
   operator: "Running an operator",
   pricing: "Pricing",
+  benchmarking: "Blueprint Benchmarking",
   "-- Eigenlayer AVS Operators": {
     type: "separator",
     title: "Eigenlayer AVS Operators",

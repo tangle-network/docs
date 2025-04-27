@@ -1,0 +1,121 @@
+---
+title: Understanding Benchmarking
+---
+
+# Understanding Benchmarking
+
+As a Tangle Network operator, you should understand how the network benchmarks your system to determine pricing for blueprints. This guide explains the automated benchmarking process and how it affects the quotes generated for your node.
+
+## What is Blueprint Benchmarking?
+
+Blueprint benchmarking is an automated process that measures your system's capabilities to determine:
+
+- The cost to run specific blueprints on your node
+- The resource allocation for different blueprint types
+- Your node's competitive position in the operator marketplace
+
+When users request quotes from your node, Tangle's pricing engine uses these benchmark results to calculate fair prices based on your hardware profile.
+
+## How Benchmarking Works
+
+The benchmarking process happens automatically in two key phases:
+
+### 1. During Operator Registration
+
+When you register as an operator, the Tangle Network automatically runs baseline benchmarks on your system:
+
+- Your node's hardware capabilities are measured
+- A baseline profile is created for your specific hardware
+- This profile is stored by blueprint ID in the network
+- The profile is used whenever quotes are requested from your node
+
+### 2. During Blueprint Execution
+
+While blueprints run on your node, the system automatically monitors resource usage:
+
+- Measurements are taken before blueprint execution starts
+- Ongoing monitoring occurs during blueprint runtime
+- Final measurements capture the state after completion
+- This data can be used for future pricing calculations
+
+## Resources That Are Automatically Measured
+
+The benchmarking system automatically collects metrics on these key resources:
+
+| Resource    | What's Measured Automatically             | Why It Matters                              |
+| ----------- | ----------------------------------------- | ------------------------------------------- |
+| **CPU**     | Utilization, Available cores, Performance | Primary factor in blueprint execution speed |
+| **Memory**  | Available RAM, Usage patterns             | Determines capacity for complex operations  |
+| **Storage** | Available space, Read/write speeds        | Affects data processing capabilities        |
+| **Network** | Connection quality, Bandwidth             | Impacts communication performance           |
+| **GPU**     | Utilization, Memory (when applicable)     | Important for specialized workloads         |
+
+These metrics are relevant to the [Pricing Configuration](./pricing/overview.mdx#pricing-configuration) used by the network:
+
+```toml
+# Minimal example of how metrics map to pricing
+[blueprint.resources]
+cpu = { count = 8, price_per_unit = "0.001" }
+memory = { count = 16384, price_per_unit = "0.00005" }
+storage = { count = 1024000, price_per_unit = "0.00002" }
+```
+
+## How Benchmarking Affects Your Node's Quotes
+
+The benchmark results directly influence how the pricing engine generates quotes:
+
+1. When a user requests a blueprint quote from your node, the system retrieves your benchmark profile
+2. It applies the blueprint's resource requirements to your profile
+3. It calculates the quote using this formula:
+
+```
+Quote = Base Resource Cost × Time Multiplier × Security Commitment Factor
+```
+
+Where:
+
+- **Base Resource Cost**: Derived from your node's benchmarking results
+- **Time Multiplier**: Adjusts cost based on how long the service will run
+- **Security Commitment Factor**: Based on the asset security commitments required by the request
+
+### Example Scenario
+
+For example, when a user requests a blueprint using 2 CPU cores, 4GB RAM, and 50GB storage for 24 hours, the pricing engine might calculate the following (note that these values are examples and do not necessarily reflect real costs):
+
+```
+CPU: 2 cores × $0.00001 per core-second × 24 hours (in blocks) = $4.32
+Memory: 4096 MB × $0.000005 per MB-second × 24 hours (in blocks) = $1.024
+Storage: 51200 MB × $0.000002 per MB-second × 24 hours (in blocks) = $0.512
+
+Base Resource Cost = $6.256
+```
+
+The final quote would then be adjusted based on network conditions and security requirements.
+
+## Viewing Benchmark Information
+
+Depending upon the service or blueprint being run, you may have information or metrics available to view. This will be accessible where you submitted your request and job, but it will depend upon the blueprint in question.
+
+## Frequently Asked Questions
+
+**Q: Do I need to manually run benchmarks?**  
+A: No, the benchmarking process is fully automated. It runs during registration and periodically thereafter.
+
+**Q: Can I improve my benchmark scores?**  
+A: While you can't directly modify the benchmarking process, upgrading your hardware or optimizing your system can indirectly improve your node's performance.
+
+**Q: How often are benchmarks updated?**  
+A: Benchmarks are initially created during registration and may be updated periodically or when significant system changes are detected.
+
+**Q: Do benchmark results affect which jobs I receive?**  
+A: Yes, users may choose operators based partly on performance metrics derived from benchmarks.
+
+## Related Information
+
+To learn more about operating on the Tangle Network, you may want to review:
+
+- [Pricing Strategies](/operators/pricing)
+- [Node Configuration](/operators/node-basics)
+- [Monitoring Your Node](/operators/monitoring)
+
+Understanding the benchmarking process helps you better appreciate how the Tangle Network determines pricing for blueprints running on your node.
