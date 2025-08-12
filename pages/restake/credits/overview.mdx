@@ -12,6 +12,7 @@ The Tangle Credits system provides a mechanism for users to earn cloud computing
 ## How Credits Work
 
 The credits system operates on a dual-layer architecture:
+
 - **On-chain tracking**: The blockchain tracks potential credits earned through staking and burning
 - **Off-chain accounting**: External systems manage actual credit balances and redemption
 
@@ -32,14 +33,14 @@ When you stake TNT tokens through the multi-asset delegation system, you automat
 
 The network uses a tiered system to reward larger stakes with better emission rates:
 
-| Tier | Minimum Stake | Credits per Block |
-|------|--------------|-------------------|
-| Basic | 100 TNT | 0.01 credits |
-| Bronze | 1,000 TNT | 0.12 credits |
-| Silver | 10,000 TNT | 1.25 credits |
-| Gold | 100,000 TNT | 13 credits |
+| Tier   | Minimum Stake | Credits per Block |
+| ------ | ------------- | ----------------- |
+| Basic  | 100 TNT       | 0.01 credits      |
+| Bronze | 1,000 TNT     | 0.12 credits      |
+| Silver | 10,000 TNT    | 1.25 credits      |
+| Gold   | 100,000 TNT   | 13 credits        |
 
-*Note: These values are configurable and may be updated through governance*
+_Note: These values are configurable and may be updated through governance_
 
 ### Through Token Burning (Active Generation)
 
@@ -63,6 +64,7 @@ To use your earned credits:
 ### Credit Usage
 
 Credits can be used for:
+
 - **Service payments**: Pay for blueprint service execution
 - **Computational resources**: Access network computational power
 - **Storage services**: Pay for decentralized storage
@@ -73,6 +75,7 @@ Credits can be used for:
 ### For Users
 
 Users can interact with the credits system through:
+
 - **Tangle dApp**: Web interface for viewing and claiming credits
 - **Direct extrinsics**: Substrate API calls for programmatic access
 - **EVM precompile**: Solidity interface for Ethereum-compatible tools
@@ -80,6 +83,7 @@ Users can interact with the credits system through:
 ### For Developers
 
 Developers can integrate credits into their applications:
+
 - **Query credit balances**: Check available credits for users
 - **Accept credit payments**: Build services that accept credits
 - **Monitor credit events**: Track credit claims and burns
@@ -102,6 +106,7 @@ Developers can integrate credits into their applications:
 ### Network Parameters
 
 The following parameters are configurable through governance:
+
 - Stake tier thresholds and rates
 - Maximum accrual window
 - Burn-to-credit conversion ratio
@@ -112,6 +117,7 @@ The following parameters are configurable through governance:
 ### Scenario 1: Long-term Staker
 
 Alice stakes 10,000 TNT tokens:
+
 - Earns 1.25 credits per block
 - After 28,800 blocks (approximately 2 days): 36,000 credits
 - Claims credits weekly for consistent service usage
@@ -119,6 +125,7 @@ Alice stakes 10,000 TNT tokens:
 ### Scenario 2: Immediate Needs
 
 Bob needs credits immediately for a critical service:
+
 - Burns 100 TNT tokens
 - Receives 100 credits instantly (1:1 ratio)
 - Uses credits for immediate service execution
@@ -126,6 +133,7 @@ Bob needs credits immediately for a critical service:
 ### Scenario 3: Hybrid Approach
 
 Charlie combines both methods:
+
 - Stakes 50,000 TNT for passive income
 - Burns small amounts when needing extra credits
 - Maintains consistent credit availability

@@ -93,17 +93,21 @@ interface Services {
 #### Key Concepts
 
 ##### Blueprint Creation
+
 Blueprints define reusable service templates that operators can instantiate. They contain:
+
 - Service metadata and configuration
 - Job definitions and requirements
 - Security and operational parameters
 
 ##### Service Lifecycle
+
 1. **Request**: Users request service instances from blueprints
 2. **Active**: Services run with assigned operators
 3. **Termination**: Services end when TTL expires or manually terminated
 
 ##### Payment System
+
 - Supports multiple asset types (native, ERC20, custom)
 - Payment amount distributed among operators
 - Use `msg.value` for native token payments
@@ -169,6 +173,7 @@ contract ServiceRequestExample {
 #### Error Handling
 
 The interface includes custom errors for better debugging:
+
 - `InvalidPermittedCallers`: Invalid caller restrictions
 - `InvalidOperatorsList`: Invalid operator specification
 - `InvalidRequestArguments`: Malformed request parameters

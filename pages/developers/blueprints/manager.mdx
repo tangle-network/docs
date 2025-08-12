@@ -22,12 +22,14 @@ Blueprints interact with the Tangle Network in several key ways:
 4. **Payment and Incentives**: Service requestors provide payment to operators through the service request, supporting multiple asset types.
 
 Blueprints provide a powerful abstraction for creating reusable service templates. This enables developers to:
+
 - Define complex off-chain computation services
 - Specify security requirements and operator constraints
 - Configure job definitions and execution parameters
 - Set up payment structures and incentive mechanisms
 
 The Blueprint system is implemented in the `pallet-services` module of the Tangle codebase. Key features include:
+
 - **Dynamic Membership**: Services can have fixed or dynamic operator sets
 - **Job System**: Blueprints define callable jobs with specific arguments and permissions
 - **Security Commitments**: Operators provide security deposits when joining services

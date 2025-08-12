@@ -125,6 +125,7 @@ interface TangleLst {
 #### Pool Roles
 
 Each pool has three distinct roles:
+
 - **Root**: Administrator with full control over pool settings
 - **Nominator**: Manages validator selection and staking strategy
 - **Bouncer**: Controls member access and pool state
@@ -132,6 +133,7 @@ Each pool has three distinct roles:
 #### Commission System
 
 Pools can set commission rates on rewards:
+
 - Commission is set as a percentage (0-100)
 - Pool operators can claim accumulated commissions
 - Global maximum commission limits are enforced by the network
@@ -180,7 +182,7 @@ contract PoolOperationsExample {
     ) public returns (uint8) {
         // Nominate validators for a pool
         uint8 statusCode = precompile.nominate(poolId, validators);
-        
+
         require(statusCode == 0, "Nomination failed");
         return statusCode;
     }
