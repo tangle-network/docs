@@ -1,0 +1,22 @@
+# Blueprint Sources
+
+Blueprints can be built and distributed in multiple formats (visible on the sidebar).
+
+A blueprint can define many sources of different types in the manifest of its binary crate:
+
+```toml
+[package.metadata.blueprint]
+sources = [
+    { type = "Container", registry = "docker.io", image = "some-user/my-blueprint", tag = "latest" },
+    # Fallback container source
+    { type = "Container", registry = "ghcr.io", image = "some-user/my-blueprint", tag = "latest" },
+    # Native binary source
+    { type = "Native", owner = "some-github-user", repo = "some-blueprint", tag = "0.1.0", binaries = [
+        { arch = "Amd64", os = "Linux", name = "my-blueprint-bin" },
+    ] },
+]
+```
+
+The above example has two container sources, which allows an operator to attempt a pull from different sources in the event
+that one of the registries is unreachable. Additionally, it has a native source which can act as a fallback for operators
+that either cannot or prefer not to support running containerized blueprints.

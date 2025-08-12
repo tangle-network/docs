@@ -1,0 +1,26 @@
+# Deploying Blueprints
+
+In order for a blueprint to be instance-able, it'll need to be deployed and have one or more sources defined.
+
+## Defining Sources
+
+Before deploying, you must specify the sources from which to fetch the blueprint binaries.
+See [Sources](/developers/deployment/sources/introduction).
+
+## Deploying via the CLI
+
+Once you're ready to deploy your blueprint, simply:
+
+Install the [cargo-tangle] CLI, if you haven't already.
+
+For testing, you can deploy to a local devnet:
+
+```shell
+export SIGNER="//Alice"
+export EVM_SIGNER="0xcb6df9de1efca7a3998a8ead4e02159d5fa99c3e0d4fd6432667390bb4726854"
+cargo tangle blueprint deploy tangle --devnet
+```
+
+See [deploy command reference](/developers/cli/tangle#deploying-a-blueprint) for all options.
+
+[cargo-tangle]: /developers/cli/installation

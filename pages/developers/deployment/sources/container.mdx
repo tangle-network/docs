@@ -1,0 +1,35 @@
+# Container Source
+
+The `Container` source is used for blueprints that are intended to be built as container images and published to image
+registries, such as `docker.io`.
+
+## Requirements
+
+The requirements for running containerized blueprints are available [here](/operators/manager/requirements#container-sources)
+
+## Format
+
+The `Container` source has the following format:
+
+```rust
+pub struct ContainerSource {
+    pub registry: String,
+    pub image: String,
+    pub tag: String,
+}
+```
+
+Where:
+
+* `registry` - The registry to pull the image from (ex. `docker.io`)
+* `image` - The name of the image (ex. `some-user/my-blueprint`)
+* `tag` - The release tag of the image (ex. `latest`)
+
+And they can be specified in the manifest of your binary crate like so:
+
+```toml
+[package.metadata.blueprint]
+sources = [
+    { type = "Container", registry = "docker.io", image = "some-user/my-blueprint", tag = "latest" }
+]
+```

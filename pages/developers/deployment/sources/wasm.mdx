@@ -1,0 +1,39 @@
+# WebAssembly Sources
+
+The `WASM` (WebAssembly) source is used for blueprints that are built as WASM binaries and intended to be executed in
+a WASM runtime such as [Wasmtime].
+
+## Requirements
+
+The requirements for running WASM blueprints are available [here](/operators/manager/requirements#wasm-sources)
+
+## Format
+
+The `WASM` source has the following format:
+
+```rust
+pub struct WasmSource {
+    pub runtime: WasmRuntime,
+    pub fetcher: NativeSource,
+}
+```
+
+Where:
+
+* `runtime` - The WASM runtime this blueprint is intended to execute in (see [WasmRuntime])
+* `fetcher` - The GitHub release information, identical to [NativeSource]
+
+And they can be specified in the manifest of your binary crate like so:
+
+```toml
+[package.metadata.blueprint]
+sources = [
+    { type = "Wasm", runtime = "Wasmtime", fetcher = { owner = "some-github-user", repo = "some-blueprint", tag = "0.1.0", binaries = [
+        { arch = "Wasm", os = "Unknown", name = "my-blueprint-bin" },
+    ] } },
+]
+```
+
+[Wasmtime]: https://wasmtime.dev/
+[NativeSource]: /developers/deployment/sources/native#format
+[WasmRuntime]: https://docs.rs/tangle-subxt/latest/tangle_subxt/tangle_testnet_runtime/api/runtime_types/tangle_primitives/services/sources/enum.WasmRuntime.html

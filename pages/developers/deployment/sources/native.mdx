@@ -1,0 +1,55 @@
+# Native Sources
+
+The `Native` source is used for blueprints that compile to a native binary and release via the [`release.yml`] GitHub workflow
+from the blueprint template.
+
+## Requirements
+
+The requirements for running native blueprints are available [here](/operators/manager/requirements#native-sources)
+
+## Format
+
+The `Native` source has the following format:
+
+```rust
+pub struct NativeSource {
+    pub owner: String,
+    pub repo: String,
+    pub tag: String,
+    pub binaries: Vec<BlueprintBinary>,
+}
+
+pub struct BlueprintBinary {
+    pub arch: Architecture,
+    pub os: OperatingSystem,
+    pub name: String,
+}
+```
+
+Where:
+
+* `owner` - The owner of the GitHub repository (ex. `tangle-network`)
+* `repo` - The name of the repository (ex. `some-blueprint`)
+* `tag` - The release tag of the binary (ex. `0.1.0`)
+* `binaries` - A list of binaries (ex. see below)
+
+And in `BlueprintBinary`:
+
+* `arch` - The architecture the blueprint was built for (see [Architecture])
+* `os` - The operating system the blueprint was built for (see [OperatingSystem])
+* `name` - The name of the binary in the GitHub release (ex. `my-blueprint-bin`)
+
+And they can be specified in the manifest of your binary crate like so:
+
+```toml
+[package.metadata.blueprint]
+sources = [
+    { type = "Native", owner = "some-github-user", repo = "some-blueprint", tag = "0.1.0", binaries = [
+        { arch = "Amd64", os = "Linux", name = "my-blueprint-bin" },
+    ] },
+]
+```
+
+[`release.yml`]: https://github.com/tangle-network/blueprint-template/blob/main/.github/workflows/release.yml
+[Architecture]: https://docs.rs/tangle-subxt/latest/tangle_subxt/tangle_testnet_runtime/api/runtime_types/tangle_primitives/services/sources/enum.Architecture.html
+[OperatingSystem]: https://docs.rs/tangle-subxt/latest/tangle_subxt/tangle_testnet_runtime/api/runtime_types/tangle_primitives/services/sources/enum.OperatingSystem.html
