@@ -186,39 +186,6 @@ contract TierViewer {
 }
 ```
 
-## Best Practices
-
-### Gas Optimization
-
-- Batch credit operations when possible
-- Cache tier information if checking frequently
-- Use view functions to verify before state changes
-
-### Security Considerations
-
-- Validate off-chain account IDs before submission
-- Implement access controls for credit management
-- Handle precompile call failures gracefully
-
-### Integration Tips
-
-- Monitor `CreditsClaimed` events for confirmation
-- Implement retry logic for failed claims
-- Consider credit price volatility in service pricing
-
-## Error Handling
-
-The precompile returns status codes:
-
-- `0`: Success
-- Non-zero: Various error conditions
-
-Common errors:
-
-- Insufficient balance for burning
-- Invalid off-chain account ID format
-- Attempting to claim more than available
-
 ## Events
 
 ### CreditsGrantedFromBurn

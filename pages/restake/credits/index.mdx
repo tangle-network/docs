@@ -1,0 +1,77 @@
+---
+title: Cloud Credits Pallet
+description: Learn about Tangle's cloud credits system that tracks potential usage credits earned through staking and burning TNT tokens.
+---
+
+# Cloud Credits Pallet
+
+## Overview
+
+The Cloud Credits pallet provides an on-chain mechanism for tracking **potential usage credits** earned through staking TNT or burning TNT. It is designed to work with an off-chain system that listens to events to manage actual user credit balances.
+
+The pallet integrates with Tangle's multi-asset delegation system to reward users who stake TNT tokens by tracking passively accrued potential credits within a defined time window.
+
+## Key Features
+
+### Staking-Based Potential Credit Accrual
+
+- Tracks potential credits earned based on TNT stake via `MultiAssetDelegationInfo`
+- Accrual is **capped** to a configurable time window (`ClaimWindowBlocks`)
+- Users do not accrue additional potential credits for periods longer than this window without claiming
+
+### Stake Tier Configuration
+
+- Credit emission rates based on stake size are defined via `StakeTier` structs
+- Configured during genesis and stored on-chain
+- Higher stake amounts unlock higher emission rates per block
+
+### TNT Burning Event
+
+- Burning TNT emits an event (`CreditsGrantedFromBurn`) indicating potential credits granted
+- Credits are available for immediate off-chain use
+- Burned tokens are permanently removed from circulation or sent to a configured recipient
+
+### Credit Claiming Event
+
+- Users initiate a claim on-chain with an off-chain account ID
+- The pallet calculates potential credits accrued within the `ClaimWindowBlocks` ending at the current block
+- Verifies the requested amount against calculated value and emits a `CreditsClaimed` event
+- **No on-chain balance is stored or deducted** - this is purely for event emission
+
+### Window Cap
+
+- Inactivity beyond the `ClaimWindowBlocks` results in no further potential credit accrual for that past period
+- Encourages regular claiming to maximize credit earning
+
+## How It Works
+
+### Earning Credits
+
+**Through Staking (Passive Accrual):**
+
+1. Stake TNT tokens through Tangle's multi-asset delegation system
+2. Credits automatically accrue based on your staked amount and the configured tier rates
+3. Accrual is calculated per block within the claim window
+4. Higher stake amounts may qualify for higher tier emission rates
+
+### Claiming Credits
+
+1. Call the `claim_credits` extrinsic with:
+   - Amount to claim (must not exceed calculated accrued amount)
+   - Off-chain account ID for credit association
+2. The pallet verifies the claim amount against accrued potential credits
+3. Emits a `CreditsClaimed` event for off-chain processing
+4. Updates the reward tracking block to prevent double-claiming
+
+## Terminology
+
+- **TNT**: The utility token used for staking and burning
+- **Potential Credits**: Values calculated on-chain based on staking or burning, used for verification during claims
+- **Claim Window**: A configurable duration representing the maximum period for credit accrual before claiming
+- **Claiming**: An on-chain action that calculates potential credits and emits events for off-chain processing
+- **Stake Tier**: Configuration defining TNT stake thresholds and corresponding credit emission rates per block
+
+## Next Steps
+
+- **[How to Claim Credits](./claiming)** - Learn how to claim your earned credits
+- **[Credits Precompile](./precompile)** - Technical documentation for developers working with the credits system

@@ -1,7 +1,7 @@
 import { Meta } from "nextra";
 
 const meta: Meta = {
-  overview: "Overview",
+  index: "Overview",
   claiming: "How to Claim Credits",
   precompile: "Credits Precompile",
 };

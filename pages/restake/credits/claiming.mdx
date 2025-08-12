@@ -1,154 +1,175 @@
 ---
 title: How to Claim Credits
-description: Step-by-step guide to claiming your earned Tangle Credits
+description: Step-by-step guide to claiming your earned credits from the Cloud Credits pallet
 ---
 
 # How to Claim Credits
 
-This guide walks you through the process of claiming your earned Tangle Credits.
+This guide walks you through the process of claiming your earned credits from TNT staking through the Cloud Credits pallet.
+
+## Understanding the System
+
+### How Credit Claiming Works
+
+The Cloud Credits pallet tracks **potential credits** earned through TNT staking. When you claim:
+
+1. **Calculation**: The pallet calculates credits accrued within the claim window
+2. **Verification**: It verifies your requested amount doesn't exceed the calculated maximum
+3. **Event Emission**: A `CreditsClaimed` event is emitted for off-chain processing
+4. **No On-Chain Balance**: No actual tokens are transferred - this is purely event-based
+
+### Claim Window System
+
+- Credits accrue within a configurable time window (`ClaimWindowBlocks`)
+- Only credits earned within the current window can be claimed
+- Regular claiming prevents losing potential credits from window expiration
 
 ## Prerequisites
 
-- Active TNT stake through the multi-asset delegation system
-- Accumulated credits from staking or burning
-- Off-chain account identifier for credit delivery
+- **Active TNT Stake**: You must have TNT staked through Tangle's multi-asset delegation system
+- **Minimum Stake**: Your stake must meet the lowest tier threshold to earn credits
+- **Off-chain Account**: An identifier linking your claim to off-chain credit management
 
-## Claiming via Tangle dApp
+## Claiming via Polkadot.js Apps
 
-### Step 1: Check Available Credits
+### Step 1: Connect to Tangle Network
 
-1. Navigate to the Credits section in the Tangle dApp
-2. Connect your wallet
-3. View your available credits balance
-4. Check your credit accrual rate based on current stake
+1. Go to [Polkadot.js Apps](https://polkadot.js.org/apps)
+2. Connect to the Tangle Network endpoint
+3. Import or connect your account with TNT stake
 
-### Step 2: Initiate Claim
+### Step 2: Navigate to Extrinsics
 
-1. Click "Claim Credits"
-2. Enter the amount of credits to claim
-3. Provide your off-chain account ID
-4. Review the transaction details
+1. Go to **Developer** → **Extrinsics**
+2. Select your account from the dropdown
+3. Choose `cloudCredits` from the pallet list
+4. Select `claimCredits` from the call dropdown
 
-### Step 3: Confirm Transaction
+### Step 3: Fill Parameters
 
-1. Approve the transaction in your wallet
-2. Wait for blockchain confirmation
-3. Monitor the transaction status
+**Amount to Claim (`amount_to_claim`):**
 
-### Step 4: Verify Credit Receipt
+- Enter the number of credits you want to claim
+- Must not exceed your accrued amount within the claim window
+- Use the RPC query (see below) to check your maximum claimable amount
 
-1. Check your off-chain account for credited amount
-2. Credits should appear within minutes of confirmation
-3. Contact support if credits don't appear within 24 hours
+**Off-chain Account ID (`offchain_account_id`):**
 
-## Claiming via Polkadot.js
+- Your identifier for linking to off-chain credit systems
+- Maximum length is configurable (check pallet constants)
+- Keep this consistent across claims
 
-### Step 1: Navigate to Extrinsics
+![PolkadotJS Claim](/images/claim.png)
 
-1. Open Polkadot.js Apps
-2. Go to Developer > Extrinsics
-3. Select your account
+### Step 4: Submit Transaction
 
-### Step 2: Submit Claim
+1. Click **Submit Transaction**
+2. Enter your password if prompted
+3. Confirm the transaction
+4. Monitor the transaction status in the **Network** → **Explorer**
 
-1. Select `credits` pallet
-2. Choose `claimCredits` extrinsic
-3. Enter parameters:
-   - `amount`: Credits to claim
-   - `offchainAccountId`: Your off-chain identifier
-4. Submit transaction
+## Alternative: Asset-Specific Claims
 
-### Step 3: Monitor Events
+For claiming credits from specific asset stakes:
 
-1. Go to Network > Explorer
-2. Find your transaction
-3. Verify `CreditsClaimed` event emission
+1. Choose `claimCreditsWithAsset` instead of `claimCredits`
+2. Add the **Asset ID** parameter for the specific asset
+3. The same amount and off-chain account ID rules apply
 
-## Claiming via Command Line
+![PolkadotJS Claim](/images/claim-assets.png)
 
-Using the Tangle CLI:
+## Understanding Stake Tiers
 
-```bash
-tangle credits claim \
-  --amount 1000 \
-  --offchain-account "your-account-id" \
-  --account YOUR_ADDRESS
-```
+Credit emission rates depend on your stake tier:
 
-## Best Practices
+### Tier System
 
-### Optimal Claiming Frequency
+- Higher stakes unlock higher emission rates per block
+- Tiers are configured during genesis with thresholds and rates
+- The pallet uses the highest tier your stake qualifies for
 
-- **Weekly claims**: Balance between gas costs and credit availability
-- **Monthly claims**: Minimize transaction fees
-- **Before unstaking**: Claim all available credits
-
-### Maximizing Credit Accrual
-
-1. **Maintain consistent stake**: Avoid frequent stake changes
-2. **Choose appropriate tier**: Stake enough to reach efficient tiers
-3. **Monitor tier changes**: Adjust stake when tiers update
-
-### Security Considerations
-
-- **Verify off-chain account**: Double-check account ID before claiming
-- **Use secure connections**: Always use official dApps and tools
-- **Keep records**: Track claims for accounting purposes
-
-## Troubleshooting
-
-### Credits Not Showing
-
-If your credits aren't appearing:
-
-1. **Check stake status**: Ensure your TNT is properly staked
-2. **Verify time elapsed**: Credits accrue over time
-3. **Review tier requirements**: Confirm you meet minimum stake
-
-### Failed Claims
-
-Common reasons for failed claims:
-
-- **Insufficient credits**: Try claiming a smaller amount
-- **Invalid account ID**: Verify off-chain account format
-- **Network congestion**: Retry with higher gas fees
-
-### Calculation Discrepancies
-
-If calculated credits don't match expectations:
-
-- **Check current tier**: Tiers may have been updated
-- **Review stake changes**: Recent changes affect accrual
-- **Consider time windows**: Accrual may be capped
-
-## Technical Details
-
-### Credit Calculation Formula
+### Example Calculation
 
 ```
-Credits = Staked_Amount × Rate_Per_Block × Blocks_Elapsed
+If you stake 50,000 TNT and qualify for Tier 2 (1.0 credits/block):
+- Claim window: 7200 blocks (24 hours)
+- Last claim: 3600 blocks ago
+- Claimable credits: 3600 blocks × 1.0 = 3,600 credits
 ```
 
-Where:
+## Checking Accrued Credits
 
-- `Staked_Amount`: Your current TNT stake
-- `Rate_Per_Block`: Tier-based emission rate
-- `Blocks_Elapsed`: Blocks since last claim (capped)
+### Using RPC Queries
 
-### Event Structure
+Before claiming, check your accrued amount:
 
-The `CreditsClaimed` event contains:
+1. Go to **Developer** → **RPC calls**
+2. Select the appropriate RPC method
+3. Enter your account ID
+4. Optionally specify a block number
 
-```rust
-{
-  account: AccountId,
-  amount: Balance,
-  offchain_account_id: Vec<u8>
+This shows your maximum claimable amount without submitting a transaction.
+
+## Events and Monitoring
+
+### CreditsClaimed Event
+
+When you successfully claim:
+
+```
+CreditsClaimed {
+    who: Your_Account_ID,
+    amount_claimed: Claimed_Amount,
+    offchain_account_id: Your_Offchain_ID
 }
 ```
 
+### CreditsGrantedFromBurn Event
+
+When you burn TNT:
+
+```
+CreditsGrantedFromBurn {
+    who: Your_Account_ID,
+    tnt_burned: Burned_Amount,
+    credits_granted: Calculated_Credits
+}
+```
+
+## Troubleshooting
+
+### Common Errors
+
+**`ClaimAmountExceedsWindowAllowance`**
+
+- You're trying to claim more than your accrued amount
+- Check your actual accrued credits using RPC queries
+- Reduce the claim amount to within the calculated limit
+
+**`InvalidClaimId`**
+
+- Your off-chain account ID exceeds the maximum length
+- Check the `MaxOffchainAccountIdLength` constant
+- Use a shorter identifier
+
+**`NoValidTier`**
+
+- Your stake is below the minimum tier threshold
+- Increase your TNT stake to qualify for credit accrual
+- Check current tier configuration
+
+**`AmountZero`**
+
+- You entered zero for the amount
+- Specify a positive amount to claim or burn
+
+**`InsufficientTntBalance`**
+
+- You don't have enough TNT to burn
+- Check your free balance before burning
+
 ## Related Documentation
 
-- [Credits Overview](/restake/credits/overview)
-- [Credits Precompile](/restake/credits/precompile)
-- [Staking Guide](/restake/how_to_restake)
+- [Credits Overview](./index) - Understanding the Cloud Credits pallet
+- [Credits Precompile](./precompile) - Technical documentation for developers
+- [How to Restake](../how_to_restake) - Guide to staking TNT tokens
