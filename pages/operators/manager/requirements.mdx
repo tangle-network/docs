@@ -10,7 +10,7 @@ There are two ways to run blueprints with [Native Sources](/developers/deploymen
 
 In either case, the following dependencies will be needed:
 
-* [GitHub CLI] (for binary attestations)
+- [GitHub CLI] (for binary attestations)
 
 Then additionally for the two execution methods:
 
@@ -20,33 +20,33 @@ No extra dependencies, the blueprint will run as a normal host process.
 
 ### Sandboxed (**Linux Only**)
 
-* [cloud-hypervisor]
-  * Note, no additional setup of `cloud-hypervisor` needs to be done. The manager handles downloading the latest kernel
+- [cloud-hypervisor]
+  - Note, no additional setup of `cloud-hypervisor` needs to be done. The manager handles downloading the latest kernel
     and disk images. Simply installing and adding it to `PATH` is enough.
-* Allow `CAP_NET_ADMIN` for the `blueprint-manager` binary
-  * This can be done by running `setcap cap_net_admin+eip /path/to/blueprint-manager`
-  * ***or*** simply running the `blueprint-manager` as root (**not recommended**)
+- Allow `CAP_NET_ADMIN` for the `blueprint-manager` binary
+  - This can be done by running `setcap cap_net_admin+eip /path/to/blueprint-manager`
+  - **_or_** simply running the `blueprint-manager` as root (**not recommended**)
 
 ## Container Sources
 
 The requirements for running blueprints with [Container Sources](/developers/deployment/sources/container) are:
 
-* [Kubernetes]
-* [Docker]
-* The [Kata Containers] runtime
+- [Kubernetes]
+- [Docker]
+- The [Kata Containers] runtime
 
 ## TEE Sources (WIP, **Linux Only**)
 
 The requirements for running blueprints with [TEE Sources](/developers/deployment/sources/tee) are:
 
-* [dstack VMM]
-* TODO?
+- [dstack VMM]
+- TODO?
 
 ## WASM Sources (WIP)
 
 The requirements for running blueprints with [WASM Sources](/developers/deployment/sources/wasm) are:
 
-* TODO
+- TODO
 
 [GitHub CLI]: https://cli.github.com/
 [cloud-hypervisor]: https://www.cloudhypervisor.org/
