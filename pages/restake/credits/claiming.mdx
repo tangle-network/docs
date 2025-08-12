@@ -1,0 +1,152 @@
+---
+title: How to Claim Credits
+description: Step-by-step guide to claiming your earned Tangle Credits
+---
+
+# How to Claim Credits
+
+This guide walks you through the process of claiming your earned Tangle Credits.
+
+## Prerequisites
+
+- Active TNT stake through the multi-asset delegation system
+- Accumulated credits from staking or burning
+- Off-chain account identifier for credit delivery
+
+## Claiming via Tangle dApp
+
+### Step 1: Check Available Credits
+
+1. Navigate to the Credits section in the Tangle dApp
+2. Connect your wallet
+3. View your available credits balance
+4. Check your credit accrual rate based on current stake
+
+### Step 2: Initiate Claim
+
+1. Click "Claim Credits"
+2. Enter the amount of credits to claim
+3. Provide your off-chain account ID
+4. Review the transaction details
+
+### Step 3: Confirm Transaction
+
+1. Approve the transaction in your wallet
+2. Wait for blockchain confirmation
+3. Monitor the transaction status
+
+### Step 4: Verify Credit Receipt
+
+1. Check your off-chain account for credited amount
+2. Credits should appear within minutes of confirmation
+3. Contact support if credits don't appear within 24 hours
+
+## Claiming via Polkadot.js
+
+### Step 1: Navigate to Extrinsics
+
+1. Open Polkadot.js Apps
+2. Go to Developer > Extrinsics
+3. Select your account
+
+### Step 2: Submit Claim
+
+1. Select `credits` pallet
+2. Choose `claimCredits` extrinsic
+3. Enter parameters:
+   - `amount`: Credits to claim
+   - `offchainAccountId`: Your off-chain identifier
+4. Submit transaction
+
+### Step 3: Monitor Events
+
+1. Go to Network > Explorer
+2. Find your transaction
+3. Verify `CreditsClaimed` event emission
+
+## Claiming via Command Line
+
+Using the Tangle CLI:
+
+```bash
+tangle credits claim \
+  --amount 1000 \
+  --offchain-account "your-account-id" \
+  --account YOUR_ADDRESS
+```
+
+## Best Practices
+
+### Optimal Claiming Frequency
+
+- **Weekly claims**: Balance between gas costs and credit availability
+- **Monthly claims**: Minimize transaction fees
+- **Before unstaking**: Claim all available credits
+
+### Maximizing Credit Accrual
+
+1. **Maintain consistent stake**: Avoid frequent stake changes
+2. **Choose appropriate tier**: Stake enough to reach efficient tiers
+3. **Monitor tier changes**: Adjust stake when tiers update
+
+### Security Considerations
+
+- **Verify off-chain account**: Double-check account ID before claiming
+- **Use secure connections**: Always use official dApps and tools
+- **Keep records**: Track claims for accounting purposes
+
+## Troubleshooting
+
+### Credits Not Showing
+
+If your credits aren't appearing:
+
+1. **Check stake status**: Ensure your TNT is properly staked
+2. **Verify time elapsed**: Credits accrue over time
+3. **Review tier requirements**: Confirm you meet minimum stake
+
+### Failed Claims
+
+Common reasons for failed claims:
+
+- **Insufficient credits**: Try claiming a smaller amount
+- **Invalid account ID**: Verify off-chain account format
+- **Network congestion**: Retry with higher gas fees
+
+### Calculation Discrepancies
+
+If calculated credits don't match expectations:
+
+- **Check current tier**: Tiers may have been updated
+- **Review stake changes**: Recent changes affect accrual
+- **Consider time windows**: Accrual may be capped
+
+## Technical Details
+
+### Credit Calculation Formula
+
+```
+Credits = Staked_Amount × Rate_Per_Block × Blocks_Elapsed
+```
+
+Where:
+- `Staked_Amount`: Your current TNT stake
+- `Rate_Per_Block`: Tier-based emission rate
+- `Blocks_Elapsed`: Blocks since last claim (capped)
+
+### Event Structure
+
+The `CreditsClaimed` event contains:
+```rust
+{
+  account: AccountId,
+  amount: Balance,
+  offchain_account_id: Vec<u8>
+}
+```
+
+## Related Documentation
+
+- [Credits Overview](/restake/credits/overview)
+- [Credits Precompile](/restake/credits/precompile)
+- [Staking Guide](/restake/how_to_restake)

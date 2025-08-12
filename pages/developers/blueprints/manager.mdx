@@ -6,9 +6,9 @@ import ExpandableImage from '../../../components/ExpandableImage';
 
 On Tangle, Blueprints have an offchain and an onchain lifecycle. The offchain component is managed by what we call the **Blueprint Manager**. The **Blueprint Manager** can be considered **_Tangle's Operator Node_**. This onchain and offchain logic functions as follows:
 
-1. Operators must register for Blueprints onchain. This indicates an operators willingness to accept requests for Blueprint Instances of that type.
-2. Operators upon registering for Blueprints onchain, download the Blueprint's binary and metadata from the Tangle Network. This is handled by the Blueprint Manager, which listens for new registrations.
-3. Operators upon accepting Blueprint Instance requests, execute the Blueprint's binary. This is where the target environment of the Blueprint is important. The Blueprint Manager is responsible for executing the Blueprint's binary in the correct environment be it natively or in Docker or an alternative VM.
+1. Operators must register for Blueprints onchain. This indicates an operator's willingness to accept requests for Service Instances of that Blueprint type.
+2. Operators, upon registering for Blueprints onchain, download the Blueprint's binary and metadata from the Tangle Network. This is handled by the Blueprint Manager, which listens for new registrations.
+3. Operators, upon accepting Service Instance requests, execute the Blueprint's binary. The Blueprint Manager is responsible for executing the Blueprint's binary in the correct environment, whether natively, in Docker, or an alternative VM.
 
 ### Blueprint and Service Instance Lifecycle
 
@@ -16,10 +16,20 @@ On Tangle, Blueprints have an offchain and an onchain lifecycle. The offchain co
 
 Blueprints interact with the Tangle Network in several key ways:
 
-1. Blueprints are deployed to Tangle, with their metadata and smart contracts stored and deployed on-chain.
-2. Blueprints are instantiated, triggering the creation of an Instance, which represents a single AVS. The Instance runs for some period of time.
-3. Blueprints are destroyed once they reach their time-to-live (TTL) or run out of funds to incentivize operators to run their service.
+1. **Blueprint Creation**: Blueprints are deployed to Tangle, with their metadata and configuration stored on-chain.
+2. **Service Instantiation**: Users request Service Instances from Blueprints, which represent active services run by operators.
+3. **Service Lifecycle**: Service Instances run until their time-to-live (TTL) expires or they are manually terminated.
+4. **Payment and Incentives**: Service requestors provide payment to operators through the service request, supporting multiple asset types.
 
-Blueprints provide a useful abstraction, allowing developers to create reusable service infrastructures as if they were smart contracts. This enables developers to monetize their work and align long-term incentives with the success of their creations, benefiting proportionally to their Blueprint's usage.
+Blueprints provide a powerful abstraction for creating reusable service templates. This enables developers to:
+- Define complex off-chain computation services
+- Specify security requirements and operator constraints
+- Configure job definitions and execution parameters
+- Set up payment structures and incentive mechanisms
 
-The Blueprint object is the core restaking object in Tangle, implemented primarily in the `pallet-services` module of the Tangle codebase. Assets are viewed as being restaked on Blueprints, with Operators running Instances of Blueprints and users restaking/staking their assets with those Operators.
+The Blueprint system is implemented in the `pallet-services` module of the Tangle codebase. Key features include:
+- **Dynamic Membership**: Services can have fixed or dynamic operator sets
+- **Job System**: Blueprints define callable jobs with specific arguments and permissions
+- **Security Commitments**: Operators provide security deposits when joining services
+- **Slashing Mechanisms**: Misbehaving operators can be slashed for violations
+- **Quality of Service**: Heartbeat mechanisms and monitoring for service health
