@@ -13,6 +13,7 @@ const meta: Meta = {
     type: "separator",
     title: "Blueprint Operators",
   },
+  manager: "Blueprint Manager",
   operator: "Running an operator",
   pricing: "Pricing",
   benchmarking: "Blueprint Benchmarking",

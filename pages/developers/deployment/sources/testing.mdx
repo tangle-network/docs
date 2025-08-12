@@ -1,0 +1,53 @@
+# Testing Source
+
+The `Testing` source is a special, automatically generated source that was historically used by the [Blueprint Manager]
+during integration tests. It has since been replaced with the [test harnesses](/developers/testing/introduction).
+
+## Format
+
+The `Testing` source has the following format:
+
+```rust
+pub struct TestingSource {
+    pub cargo_package: String,
+    pub cargo_bin: String,
+    pub base_path: String,
+}
+```
+
+Where:
+
+- `cargo_package` - The Cargo package name of the binary (e.g., `my-blueprint-bin`)
+- `cargo_bin` - The name of the built binary file (e.g., `my-blueprint-bin`)
+- `base_path` - The base path of the binary crate (e.g., `/home/user/my-blueprint/bin`)
+
+And they can be specified in the manifest of your binary crate like so:
+
+```toml
+[package.metadata.blueprint]
+sources = [
+    { type = "Testing", cargo_package = "some-package-name", cargo_bin = "some-binary", base_path = "/home/user/some-blueprint/bin" }
+]
+```
+
+## Output
+
+After building your blueprint, you'll notice something like the following in your `blueprint.json`:
+
+```json
+{
+  // ...
+  "sources": [
+    {
+      "type": "Testing",
+      "cargo_package": "my-blueprint-bin",
+      "cargo_bin": "my-blueprint-bin",
+      "base_path": "/home/user/my-blueprint/bin"
+    }
+  ],
+}
+```
+
+It can safely be ignored (or deleted if you prefer).
+
+[Blueprint Manager]: /operators/manager/introduction

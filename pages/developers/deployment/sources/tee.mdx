@@ -1,0 +1,31 @@
+# Trusted Execution Environment Sources
+
+The `TEE` (Trusted Execution Environment) source is used for blueprints that are built as container images, and intended to
+be deployed to a [dstack] TEE.
+
+## Requirements
+
+The requirements for running TEE blueprints are available [here](/operators/manager/requirements#tee-sources)
+
+## Format
+
+The `TEE` source has the following format:
+
+```rust
+// TBD...
+```
+
+Where:
+
+- TODO
+
+And they can be specified in the manifest of your binary crate like so:
+
+```toml
+[package.metadata.blueprint]
+sources = [
+    { type = "TEE", ... },
+]
+```
+
+[dstack]: https://github.com/Dstack-TEE/dstack

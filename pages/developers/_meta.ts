@@ -19,6 +19,7 @@ const meta: Meta = {
   "tangle-avs": "Build a Tangle Blueprint",
   "eigenlayer-avs": "Build an Eigenlayer AVS",
   "testing-with-tangle": "Testing with Tangle",
+  deployment: "Deployment",
   troubleshooting: "Troubleshooting",
   "-- solution-developers": {
     type: "separator",
