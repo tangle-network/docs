@@ -28,16 +28,16 @@ pub struct BlueprintBinary {
 
 Where:
 
-- `owner` - The owner of the GitHub repository (ex. `tangle-network`)
-- `repo` - The name of the repository (ex. `some-blueprint`)
-- `tag` - The release tag of the binary (ex. `0.1.0`)
-- `binaries` - A list of binaries (ex. see below)
+- `owner` - The owner of the GitHub repository (e.g., `tangle-network`)
+- `repo` - The name of the repository (e.g., `some-blueprint`)
+- `tag` - The release tag of the binary (e.g., `0.1.0`)
+- `binaries` - A list of binaries (e.g., see below)
 
 And in `BlueprintBinary`:
 
 - `arch` - The architecture the blueprint was built for (see [Architecture])
 - `os` - The operating system the blueprint was built for (see [OperatingSystem])
-- `name` - The name of the binary in the GitHub release (ex. `my-blueprint-bin`)
+- `name` - The name of the binary in the GitHub release (e.g., `my-blueprint-bin`)
 
 And they can be specified in the manifest of your binary crate like so:
 
