@@ -75,24 +75,6 @@ interface Credits {
 }
 ```
 
-## Usage Examples
-
-### Burning TNT for Credits
-
-```solidity
-contract CreditBurner {
-    Credits constant credits = Credits(0x0000000000000000000000000000000000000825);
-
-    function burnForCredits(uint256 tntAmount) external {
-        // Burn TNT to receive credits
-        uint8 result = credits.burn(tntAmount);
-        require(result == 0, "Burn failed");
-
-        // Credits are now available for claiming
-    }
-}
-```
-
 ### Claiming Credits
 
 ```solidity
