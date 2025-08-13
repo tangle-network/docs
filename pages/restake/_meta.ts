@@ -15,6 +15,7 @@ const meta: Meta = {
   },
   "restake-introduction": "Tangle Restaking",
   incentives: "Incentives",
+  credits: "Tangle Credits",
   how_to_restake: "How to Restake on Tangle",
   restake_developers: "Developer Docs",
   "-- liquid staking": {

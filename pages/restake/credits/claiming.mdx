@@ -1,0 +1,82 @@
+---
+title: How to Claim Credits
+description: Step-by-step guide to claiming your earned credits from the Cloud Credits pallet
+---
+
+# How to Claim Credits
+
+This guide walks you through the process of claiming your earned credits from TNT staking through the Cloud Credits pallet.
+
+## Prerequisites
+
+- **Active TNT Stake**: You must have TNT staked through Tangle's multi-asset delegation system
+- **Minimum Stake**: Your stake must meet the lowest tier threshold to earn credits
+- **Off-chain Account**: An identifier linking your claim to off-chain credit management
+
+## Claiming via Polkadot.js Apps
+
+### Step 1: Connect to Tangle Network
+
+1. Go to [Polkadot.js Apps](https://polkadot.js.org/apps)
+2. Connect to the Tangle Network endpoint
+3. Import or connect your account with TNT stake
+
+### Step 2: Navigate to Extrinsics
+
+1. Go to **Developer** → **Extrinsics**
+2. Select your account from the dropdown
+3. Choose `cloudCredits` from the pallet list
+4. Select `claimCredits` from the call dropdown
+
+### Step 3: Fill Parameters
+
+**Amount to Claim (`amount_to_claim`):**
+
+- Enter the number of credits you want to claim
+- Must not exceed your accrued amount within the claim window
+- Use the RPC query (see below) to check your maximum claimable amount
+
+**Off-chain Account ID (`offchain_account_id`):**
+
+- Your identifier for linking to off-chain credit systems
+- Maximum length is configurable (check pallet constants)
+- Keep this consistent across claims
+
+![PolkadotJS Claim](/images/claim.png)
+
+### Step 4: Submit Transaction
+
+1. Click **Submit Transaction**
+2. Enter your password if prompted
+3. Confirm the transaction
+4. Monitor the transaction status in the **Network** → **Explorer**
+
+## Alternative: Asset-Specific Claims
+
+For claiming credits from specific asset stakes:
+
+1. Choose `claimCreditsWithAsset` instead of `claimCredits`
+2. Add the **Asset ID** parameter for the specific asset
+3. The same amount and off-chain account ID rules apply
+
+![PolkadotJS Claim](/images/claim-assets.png)
+
+## Events and Monitoring
+
+### CreditsClaimed Event
+
+When you successfully claim:
+
+```
+CreditsClaimed {
+    who: Your_Account_ID,
+    amount_claimed: Claimed_Amount,
+    offchain_account_id: Your_Offchain_ID
+}
+```
+
+## Related Documentation
+
+- [Credits Overview](/restake/credits) - Understanding the Cloud Credits pallet
+- [Credits Precompile](/restake/credits/precompile) - Technical documentation for developers
+- [How to Restake](/restake/how_to_restake) - Guide to staking TNT tokens

@@ -59,9 +59,9 @@ Below are example usages for some core methods on the multi-asset delegation int
 
 1. Expand the `deposit(uint256 assetId, address tokenAddress, uint256 amount, uint8 lockMultiplier)` section.
 2. Set `assetId` to `0` for ERC20 tokens, or provide another valid ID for other assets.
-3. Provide the ERC20 contract address in `tokenAddress` if `assetId` is `0`. If using a native asset ID, this may be ignored depending on your setup.
+3. Provide the ERC20 contract address in `tokenAddress` if `assetId` is `0`. For native assets, set this to the zero address.
 4. Enter the `amount` you wish to deposit (in your asset's smallest unit, e.g., Wei for WETH).
-5. Specify a `lockMultiplier` value if required by your delegation logic (`0` for no lock).
+5. Specify a `lockMultiplier` value for lock duration rewards (`0` for no lock, higher values for increased rewards).
 6. Click "transact" and confirm the MetaMask popup.
 
 ### 2. Schedule a Withdrawal
@@ -69,7 +69,7 @@ Below are example usages for some core methods on the multi-asset delegation int
 1. Expand `scheduleWithdraw(uint256 assetId, address tokenAddress, uint256 amount)`.
 2. Fill in `assetId` (`0` for ERC20), `tokenAddress` (if `assetId` is `0`), and `amount`.
 3. Click "transact" and approve the MetaMask transaction.
-4. The withdrawal is now scheduled; you can later execute or cancel it.
+4. The withdrawal enters an unbonding period; you can execute it after the period ends or cancel it anytime.
 
 ### 3. Execute a Scheduled Withdrawal
 
@@ -87,8 +87,9 @@ Below are example usages for some core methods on the multi-asset delegation int
 ### 5. Delegate to an Operator
 
 1. Expand `delegate(bytes32 operator, uint256 assetId, address tokenAddress, uint256 amount, uint64[] memory blueprintSelection)`.
-2. Enter the operator (as a bytes32 account id), the asset ID, token address if assetId is `0` (ERC20), the amount to delegate, and any required blueprint parameters.
-3. Click "transact" to nominate that account as your operator with a specified stake.
+2. Enter the operator (as a bytes32 account ID), the asset ID, token address if assetId is `0` (ERC20), the amount to delegate.
+3. Provide `blueprintSelection` as an array of blueprint IDs the operator should participate in.
+4. Click "transact" to delegate your assets to the operator.
 
 ### 6. Schedule Unstake for Delegators
 
@@ -112,8 +113,8 @@ Below are example usages for some core methods on the multi-asset delegation int
 ### 9. Check Overall Balance
 
 1. Expand `balanceOf(address who, uint256 assetId, address tokenAddress)`.
-2. Enter the address you want to inspect, assetId (0 for ERC20), and `tokenAddress` if needed.
-3. Click "call" to see the total amount of assets held (deposited + delegated).
+2. Enter the address you want to inspect, assetId (`0` for ERC20), and `tokenAddress` if needed.
+3. Click "call" to see the total amount of assets held (deposited but not yet delegated).
 
 ### 10. Check Delegated Balance
 
@@ -122,6 +123,22 @@ Below are example usages for some core methods on the multi-asset delegation int
 3. Click "call" to see how many of the delegator’s tokens are actively delegated.
 
 ---
+
+## Asset Types
+
+- **Asset ID 0**: ERC20 tokens (requires token address)
+- **Asset ID 1+**: Native or custom assets configured in the runtime
+
+## Lock Multipliers
+
+The `lockMultiplier` parameter in the deposit function allows users to lock their assets for longer periods in exchange for increased rewards:
+
+- `0`: No lock (standard delegation)
+- Higher values: Longer lock periods with proportionally higher reward multipliers
+
+## Blueprint Selection
+
+When delegating, the `blueprintSelection` parameter specifies which service blueprints the operator should run on your behalf. This enables targeted delegation to specific services or applications.
 
 ## More Information
 

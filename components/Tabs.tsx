@@ -13,7 +13,7 @@ export const Tabs: FC<{
   const { data, mutate } = useSWR(storageKey, (key) => {
     try {
       return JSON.parse(localStorage.getItem(key) ?? "");
-    } catch (e) {
+    } catch {
       return null;
     }
   });

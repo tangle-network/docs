@@ -1,0 +1,99 @@
+---
+title: Credits Precompile
+description: Solidity interface for interacting with the Tangle Credits system
+---
+
+# Credits Precompile
+
+The Credits precompile provides an Ethereum-compatible interface for interacting with the Tangle Credits system. This allows smart contracts and dApps to manage credits programmatically.
+
+## Contract Address
+
+- **Mainnet & Testnet**: `0x0000000000000000000000000000000000000825`
+
+## Interface
+
+```solidity
+// SPDX-License-Identifier: GPL-3.0-only
+pragma solidity >=0.8.3;
+
+/// @dev The Credits contract's address.
+address constant CREDITS = 0x0000000000000000000000000000000000000825;
+
+/// @dev The Credits contract's instance.
+Credits constant CREDITS_CONTRACT = Credits(CREDITS);
+
+/// @author The Tangle Team
+/// @title Credits Pallet Interface
+/// @notice Interface for interacting with the Tangle Credits system
+/// @custom:address 0x0000000000000000000000000000000000000825
+interface Credits {
+    /// @dev Burn TNT tokens to generate credits
+    /// @param amount The amount of TNT to burn
+    /// @return Success status (0 for success)
+    function burn(uint256 amount) external returns (uint8);
+
+    /// @dev Claim accumulated credits
+    /// @param amount The amount of credits to claim
+    /// @param offchainAccountId The off-chain account identifier
+    /// @return Success status (0 for success)
+    function claimCredits(
+        uint256 amount,
+        bytes calldata offchainAccountId
+    ) external returns (uint8);
+
+    /// @dev Get the current credit emission rate for a staked amount
+    /// @param stakedAmount The amount of TNT staked
+    /// @return The credits earned per block
+    function getCurrentRate(uint256 stakedAmount) external view returns (uint256);
+
+    /// @dev Calculate accrued credits for an account
+    /// @param account The account to check
+    /// @return The amount of claimable credits
+    function calculateAccruedCredits(address account) external view returns (uint256);
+
+    /// @dev Get the current stake tier configuration
+    /// @return thresholds Array of stake thresholds
+    /// @return rates Array of emission rates per block
+    function getStakeTiers() external view returns (
+        uint256[] memory thresholds,
+        uint256[] memory rates
+    );
+
+    /// @dev Get stake tier for a specific asset
+    /// @param assetId The asset identifier
+    /// @return thresholds Array of stake thresholds
+    /// @return rates Array of emission rates per block
+    function getAssetStakeTiers(uint256 assetId) external view returns (
+        uint256[] memory thresholds,
+        uint256[] memory rates
+    );
+
+    /// @dev Events
+    event CreditsGrantedFromBurn(address indexed account, uint256 burned, uint256 credits);
+    event CreditsClaimed(address indexed account, uint256 amount, bytes offchainAccountId);
+}
+```
+
+### Claiming Credits
+
+```solidity
+contract CreditClaimer {
+    Credits constant credits = Credits(0x0000000000000000000000000000000000000825);
+
+    function claimMyCredits(uint256 amount, string memory accountId) external {
+        // Convert string to bytes for off-chain account ID
+        bytes memory offchainId = bytes(accountId);
+
+        // Claim the credits
+        uint8 result = credits.claimCredits(amount, offchainId);
+        require(result == 0, "Claim failed");
+    }
+}
+```
+
+## Related Documentation
+
+- [Credits Overview](/restake/credits/overview)
+- [Claiming Credits](/restake/credits/claiming)
+- [Multi-Asset Delegation](/developers/precompiles/features/multi-asset-delegation)

@@ -60,7 +60,9 @@ interface TangleLst {
     /// @param root The root account of the pool.
     /// @param nominator The nominator account of the pool.
     /// @param bouncer The bouncer account of the pool.
-    function create(uint256 amount, bytes32 root, bytes32 nominator, bytes32 bouncer) external returns (uint8);
+    /// @param name The name of the pool.
+    /// @param icon The icon for the pool.
+    function create(uint256 amount, bytes32 root, bytes32 nominator, bytes32 bouncer, bytes calldata name, bytes calldata icon) external returns (uint8);
 
     /// @dev Create a new pool with a specific pool ID.
     /// @param amount The initial amount to create the pool with.
@@ -68,7 +70,9 @@ interface TangleLst {
     /// @param nominator The nominator account of the pool.
     /// @param bouncer The bouncer account of the pool.
     /// @param poolId The desired pool ID.
-    function createWithPoolId(uint256 amount, bytes32 root, bytes32 nominator, bytes32 bouncer, uint256 poolId) external returns (uint8);
+    /// @param name The name of the pool.
+    /// @param icon The icon for the pool.
+    function createWithPoolId(uint256 amount, bytes32 root, bytes32 nominator, bytes32 bouncer, uint256 poolId, bytes calldata name, bytes calldata icon) external returns (uint8);
 
     /// @dev Nominate validators for a pool.
     /// @param poolId The ID of the pool.
@@ -85,6 +89,30 @@ interface TangleLst {
     /// @param metadata The metadata to set.
     function setMetadata(uint256 poolId, bytes calldata metadata) external returns (uint8);
 
+    /// @dev Chill a pool (stop nominating validators).
+    /// @param poolId The ID of the pool.
+    function chill(uint256 poolId) external returns (uint8);
+
+    /// @dev Set commission for a pool.
+    /// @param poolId The ID of the pool.
+    /// @param newCommission The new commission rate.
+    function setCommission(uint256 poolId, uint32 newCommission) external returns (uint8);
+
+    /// @dev Claim commission for a pool.
+    /// @param poolId The ID of the pool.
+    function claimCommission(uint256 poolId) external returns (uint8);
+
+    /// @dev Update roles for a pool.
+    /// @param poolId The ID of the pool.
+    /// @param newRoot The new root account.
+    /// @param newNominator The new nominator account.
+    /// @param newBouncer The new bouncer account.
+    function updateRoles(uint256 poolId, bytes32 newRoot, bytes32 newNominator, bytes32 newBouncer) external returns (uint8);
+
+    /// @dev Adjust pool deposit.
+    /// @param poolId The ID of the pool.
+    function adjustPoolDeposit(uint256 poolId) external returns (uint8);
+
     /// @dev Set global configurations (only callable by root).
     /// @param minJoinBond The minimum bond required to join a pool (0 for no change).
     /// @param minCreateBond The minimum bond required to create a pool (0 for no change).
@@ -94,20 +122,68 @@ interface TangleLst {
 }
 ```
 
+#### Pool Roles
+
+Each pool has three distinct roles:
+
+- **Root**: Administrator with full control over pool settings
+- **Nominator**: Manages validator selection and staking strategy
+- **Bouncer**: Controls member access and pool state
+
+#### Commission System
+
+Pools can set commission rates on rewards:
+
+- Commission is set as a percentage (0-100)
+- Pool operators can claim accumulated commissions
+- Global maximum commission limits are enforced by the network
+
 #### Example
 
 ```solidity
-contract JoinPoolExample {
+contract PoolOperationsExample {
     address constant precompileAddress = 0x0000000000000000000000000000000000000809;
     ITangleLstPrecompile precompile = ITangleLstPrecompile(precompileAddress);
 
-    function joinPool(uint256 amount, uint256 poolId) public returns (uint256) {
+    function joinPool(uint256 amount, uint256 poolId) public returns (uint8) {
         // Call the join function on the precompile contract
-        uint256 statusCode = precompile.join(amount, poolId);
+        uint8 statusCode = precompile.join(amount, poolId);
 
         // Handle the status code as needed
         require(statusCode == 0, "Join pool failed");
 
+        return statusCode;
+    }
+
+    function createNewPool(
+        uint256 amount,
+        bytes32 root,
+        bytes32 nominator,
+        bytes32 bouncer,
+        string memory poolName
+    ) public returns (uint8) {
+        // Create a new pool with custom name and icon
+        uint8 statusCode = precompile.create(
+            amount,
+            root,
+            nominator,
+            bouncer,
+            bytes(poolName),
+            "" // Empty icon
+        );
+
+        require(statusCode == 0, "Pool creation failed");
+        return statusCode;
+    }
+
+    function nominateValidators(
+        uint256 poolId,
+        bytes32[] memory validators
+    ) public returns (uint8) {
+        // Nominate validators for a pool
+        uint8 statusCode = precompile.nominate(poolId, validators);
+
+        require(statusCode == 0, "Nomination failed");
         return statusCode;
     }
 }

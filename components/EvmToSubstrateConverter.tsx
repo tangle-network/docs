@@ -37,7 +37,7 @@ const AddressConverter = () => {
     try {
       const convertedAddress = evmToTangle(evmAddress);
       setTangleAddress(convertedAddress);
-    } catch (error) {
+    } catch {
       setTangleAddress("Invalid EVM address.");
     }
   };
