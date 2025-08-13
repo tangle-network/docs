@@ -7,23 +7,6 @@ description: Step-by-step guide to claiming your earned credits from the Cloud C
 
 This guide walks you through the process of claiming your earned credits from TNT staking through the Cloud Credits pallet.
 
-## Understanding the System
-
-### How Credit Claiming Works
-
-The Cloud Credits pallet tracks **potential credits** earned through TNT staking. When you claim:
-
-1. **Calculation**: The pallet calculates credits accrued within the claim window
-2. **Verification**: It verifies your requested amount doesn't exceed the calculated maximum
-3. **Event Emission**: A `CreditsClaimed` event is emitted for off-chain processing
-4. **No On-Chain Balance**: No actual tokens are transferred - this is purely event-based
-
-### Claim Window System
-
-- Credits accrue within a configurable time window (`ClaimWindowBlocks`)
-- Only credits earned within the current window can be claimed
-- Regular claiming prevents losing potential credits from window expiration
-
 ## Prerequisites
 
 - **Active TNT Stake**: You must have TNT staked through Tangle's multi-asset delegation system
@@ -78,38 +61,6 @@ For claiming credits from specific asset stakes:
 
 ![PolkadotJS Claim](/images/claim-assets.png)
 
-## Understanding Stake Tiers
-
-Credit emission rates depend on your stake tier:
-
-### Tier System
-
-- Higher stakes unlock higher emission rates per block
-- Tiers are configured during genesis with thresholds and rates
-- The pallet uses the highest tier your stake qualifies for
-
-### Example Calculation
-
-```
-If you stake 50,000 TNT and qualify for Tier 2 (1.0 credits/block):
-- Claim window: 7200 blocks (24 hours)
-- Last claim: 3600 blocks ago
-- Claimable credits: 3600 blocks × 1.0 = 3,600 credits
-```
-
-## Checking Accrued Credits
-
-### Using RPC Queries
-
-Before claiming, check your accrued amount:
-
-1. Go to **Developer** → **RPC calls**
-2. Select the appropriate RPC method
-3. Enter your account ID
-4. Optionally specify a block number
-
-This shows your maximum claimable amount without submitting a transaction.
-
 ## Events and Monitoring
 
 ### CreditsClaimed Event
@@ -123,50 +74,6 @@ CreditsClaimed {
     offchain_account_id: Your_Offchain_ID
 }
 ```
-
-### CreditsGrantedFromBurn Event
-
-When you burn TNT:
-
-```
-CreditsGrantedFromBurn {
-    who: Your_Account_ID,
-    tnt_burned: Burned_Amount,
-    credits_granted: Calculated_Credits
-}
-```
-
-## Troubleshooting
-
-### Common Errors
-
-**`ClaimAmountExceedsWindowAllowance`**
-
-- You're trying to claim more than your accrued amount
-- Check your actual accrued credits using RPC queries
-- Reduce the claim amount to within the calculated limit
-
-**`InvalidClaimId`**
-
-- Your off-chain account ID exceeds the maximum length
-- Check the `MaxOffchainAccountIdLength` constant
-- Use a shorter identifier
-
-**`NoValidTier`**
-
-- Your stake is below the minimum tier threshold
-- Increase your TNT stake to qualify for credit accrual
-- Check current tier configuration
-
-**`AmountZero`**
-
-- You entered zero for the amount
-- Specify a positive amount to claim or burn
-
-**`InsufficientTntBalance`**
-
-- You don't have enough TNT to burn
-- Check your free balance before burning
 
 ## Related Documentation
 
