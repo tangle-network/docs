@@ -5,6 +5,7 @@ const meta: Meta = {
   quickstart: "Quickstart",
   tangle: "Tangle Blueprints",
   eigenlayer: "Eigenlayer AVSs",
+  debugging: "Debugging Blueprints",
   keys: "Key Management",
 };
 
