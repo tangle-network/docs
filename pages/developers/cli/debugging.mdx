@@ -1,0 +1,89 @@
+# Debugging Blueprints
+
+Blueprints can be deployed to multiple different [sources](/developers/deployment/sources/introduction), with each one
+having its own constraints. The CLI has commands to test your blueprint in these environments, assuming your machine is
+capable of hosting them, see [requirements](/operators/manager/requirements).
+
+Supported spawn methods:
+
+- `native` (no-vm)
+- `vm`
+- `container`
+- `tee` (WIP)
+
+Note that in any case, the commands need to be run at the root of the blueprint's directory, as the CLI will read the
+generated `blueprint.json`.
+
+# Native Debugging
+
+See the [requirements](/operators/manager/requirements#native-sources)
+
+To test your blueprint natively (as a host process):
+
+1. Build the binary
+   ```shell
+   $ cargo build
+   ```
+2. Find the path to the binary
+   For example, `./target/debug/my-blueprint-bin`
+3. Spawn it with the CLI
+   ```shell
+   $ cargo tangle debug spawn --method native --binary "./target/debug/my-blueprint-bin"
+   ```
+
+# VM Debugging
+
+See the [requirements](/operators/manager/requirements#native-sources)
+
+To test your blueprint in a VM sandbox:
+
+1. Build the binary
+   ```shell
+   $ cargo build
+   ```
+2. Find the path to the binary
+   For example, `./target/debug/my-blueprint-bin`
+3. Spawn it with the CLI
+   ```shell
+   $ cargo tangle debug spawn --method vm --binary "./target/debug/my-blueprint-bin"
+   ```
+
+Once spawned, the VM's output will be printed to the terminal (you may need to press `enter` first).
+
+# Container Debugging
+
+See the [requirements](/operators/manager/requirements#container-sources)
+
+For testing, you'll likely want to set up a [local registry](https://www.docker.com/blog/how-to-use-your-own-registry-2/).
+
+1. Build, tag, and push the image to your registry
+   If your blueprint is based off the [blueprint template], it will come with a basic [Dockerfile] that should be suitable
+   for most blueprints, and can be edited if necessary.
+2. Spawn it with the CLI
+   ```shell
+   $ cargo tangle debug spawn --method container --image "my.registry:5000/my-blueprint:latest"
+   ```
+
+This will start a Pod named `service` under the `blueprint-manager` namespace.
+
+You can view its logs with:
+
+```shell
+$ kubectl logs service -n blueprint-manager
+```
+
+And its status with:
+
+```shell
+$ kubectl describe pod service -n blueprint-manager
+```
+
+# TEE Debugging
+
+See the [requirements](/operators/manager/requirements#tee-sources-wip-linux-only)
+
+1. Create a Docker image for your blueprint, see [Container Debugging](#container-debugging)
+2. TODO
+
+[blueprint template]: https://github.com/tangle-network/blueprint-template
+[Dockerfile]: https://github.com/tangle-network/blueprint-template/blob/main/Dockerfile
