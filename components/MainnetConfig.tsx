@@ -94,19 +94,18 @@ const NetworkInfo = () => {
       chainId: "5845",
       rpcUrl: "https://rpc.tangle.tools",
       wssUrl: "wss://rpc.tangle.tools",
-      wssUrl2: "wss://tangle-mainnet-rpc.dwellir.com/",
+      wssUrl2: "wss://tangle-mainnet-rpc.n.dwellir.com/",
       explorerUrls: [
-        { name: "BlockScout", url: "https://testnet-explorer.tangle.tools" }, // Update this
+        { name: "BlockScout", url: "https://explorer.tangle.tools" },
         {
           name: "PolkadotJS",
-          url: "TBD", // Update this
+          url: "https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer",
         },
       ],
       fundingInfo: {
         url: "https://discord.gg/PQDYv5GT",
       },
     },
-    // Add Tangle Mainnet details here when available
   ];
 
   return (
