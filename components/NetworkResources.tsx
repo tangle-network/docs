@@ -75,7 +75,7 @@ const NETWORK_DATA = {
     },
     {
       property: "Public WSS URL by Dwellir",
-      value: { type: "wss", url: "wss://tangle-mainnet-rpc.dwellir.com" },
+      value: { type: "wss", url: "wss://tangle-mainnet-rpc.n.dwellir.com" },
     },
     {
       property: "Runtime Types",
