@@ -1,0 +1,87 @@
+---
+title: ITangleJobs
+description: Auto-generated Solidity API reference.
+---
+
+# ITangleJobs
+
+Source: https://github.com/tangle-network/tnt-core/blob/feature/modular-protocol/src/v2/interfaces/ITangleJobs.sol
+
+### ITangleJobs
+
+Job submission and result management interface
+
+#### Functions
+
+#### submitJob
+
+```solidity
+function submitJob(uint64 serviceId, uint8 jobIndex, bytes inputs) external payable returns (uint64 callId)
+```
+
+Submit a job to a service
+
+#### submitResult
+
+```solidity
+function submitResult(uint64 serviceId, uint64 callId, bytes result) external
+```
+
+Submit a job result (as operator)
+
+#### submitResults
+
+```solidity
+function submitResults(uint64 serviceId, uint64[] callIds, bytes[] results) external
+```
+
+Submit multiple results in one transaction
+
+#### submitAggregatedResult
+
+```solidity
+function submitAggregatedResult(uint64 serviceId, uint64 callId, bytes output, uint256 signerBitmap, uint256[2] aggregatedSignature, uint256[4] aggregatedPubkey) external
+```
+
+Submit an aggregated BLS result for a job
+
+_Only valid for jobs where requiresAggregation returns true_
+
+##### Parameters
+
+| Name                | Type       | Description                                                              |
+| ------------------- | ---------- | ------------------------------------------------------------------------ |
+| serviceId           | uint64     | The service ID                                                           |
+| callId              | uint64     | The job call ID                                                          |
+| output              | bytes      | The aggregated output data                                               |
+| signerBitmap        | uint256    | Bitmap indicating which operators signed (bit i = operator i in service) |
+| aggregatedSignature | uint256[2] | The aggregated BLS signature [x, y]                                      |
+| aggregatedPubkey    | uint256[4] | The aggregated public key [x0, x1, y0, y1]                               |
+
+#### getJobCall
+
+```solidity
+function getJobCall(uint64 serviceId, uint64 callId) external view returns (struct Types.JobCall)
+```
+
+Get job call info
+
+#### Events
+
+#### JobSubmitted
+
+```solidity
+event JobSubmitted(uint64 serviceId, uint64 callId, uint8 jobIndex, address caller, bytes inputs)
+```
+
+#### JobResultSubmitted
+
+```solidity
+event JobResultSubmitted(uint64 serviceId, uint64 callId, address operator, bytes result)
+```
+
+#### JobCompleted
+
+```solidity
+event JobCompleted(uint64 serviceId, uint64 callId)
+```

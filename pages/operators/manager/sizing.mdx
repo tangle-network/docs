@@ -1,0 +1,29 @@
+# Sizing and Capacity Planning
+
+Blueprints vary widely in resource needs. Use the guidance below as a starting point and adjust based on the specific blueprint workloads you operate.
+
+## Suggested tiers
+
+| Tier | Use case | vCPU | RAM | Storage | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Dev / Test | Local validation, dry runs | 2-4 | 8-16 GB | 50+ GB SSD | Single service, minimal load |
+| Standard | Single blueprint, steady traffic | 8 | 32 GB | 200+ GB SSD | Good baseline for production |
+| High Throughput | Multiple services or heavy workloads | 16+ | 64-128 GB | 500+ GB NVMe | Reserve headroom for spikes |
+
+## Storage planning
+
+- Allocate space for `data_dir` (per-service state) and the manager cache.
+- Prefer SSD or NVMe for fast artifact download and startup time.
+- Budget extra space for logs, metrics, and any blueprint-specific datasets.
+
+## Network planning
+
+- Stable HTTP and WebSocket RPC endpoints are required.
+- Low latency improves job pickup time and QoS reporting.
+- Ensure inbound connectivity for your `OPERATOR_RPC_ADDRESS`.
+
+## Scaling strategies
+
+- Start with one manager instance per host.
+- Scale horizontally by running multiple operators on separate hosts and keystores.
+- Prefer the VM sandbox for untrusted or high-risk blueprints (see [Sandboxing and Security](/operators/manager/security)).

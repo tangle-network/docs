@@ -1,0 +1,212 @@
+---
+title: Operator Onboarding
+description: "Do this now: register, opt into blueprints, and run the operator runtime on Tangle."
+---
+
+# Operator Onboarding
+
+This page is the shortest path to becoming an operator on Tangle: register in restaking, register for blueprints, and run the runtime that executes services.
+
+## What You Need
+
+- An **EVM wallet** funded for gas and the operator bond/self-stake.
+- A host that can run your target blueprint runtimes (native, containers, or VM sandbox).
+- `foundry` (`cast`) for on-chain calls.
+- The Blueprint SDK CLI (`cargo-tangle`) for heartbeats and operational helpers.
+
+## Deployment Inputs (Fill These In)
+
+You will need:
+
+- `RPC_URL` (HTTP) and optionally `WS_RPC_URL` (WebSocket)
+- `TANGLE_CONTRACT` (core protocol contract)
+- `RESTAKING_CONTRACT` (restaking / `MultiAssetDelegation`)
+- `STATUS_REGISTRY_CONTRACT` (heartbeats; optional but recommended)
+- One or more `BLUEPRINT_ID`s you plan to operate
+- A reachable `OPERATOR_RPC_ADDRESS` you will publish (used by customers for RFQ pricing and other out-of-band calls)
+
+See also:
+
+- [Endpoints and Integration](/developers/endpoints)
+- [Contract addresses](/developers/endpoints)
+
+## 1) Register in Restaking (Required)
+
+Operator status and stake live in the restaking contract (`MultiAssetDelegation`). You must be an **active operator** before registering for any blueprint.
+
+```bash
+export RPC_URL="https://..."
+export PRIVATE_KEY="0x..."
+export RESTAKING_CONTRACT="0x..." # MultiAssetDelegation
+
+# Read minimum operator stake (native asset)
+cast call "$RESTAKING_CONTRACT" "minOperatorStake()(uint256)" --rpc-url "$RPC_URL"
+
+# Register as an operator (send at least minOperatorStake as value)
+cast send "$RESTAKING_CONTRACT" "registerOperator()" \
+  --rpc-url "$RPC_URL" \
+  --private-key "$PRIVATE_KEY" \
+  --value "<BOND_AMOUNT_WEI>"
+```
+
+## 2) Opt Into Blueprints for Delegation (Recommended)
+
+The restaking contract also tracks which blueprints you support for delegation/exposure.
+
+```bash
+export BLUEPRINT_ID="123"
+cast send "$RESTAKING_CONTRACT" "addBlueprint(uint64)" "$BLUEPRINT_ID" \
+  --rpc-url "$RPC_URL" \
+  --private-key "$PRIVATE_KEY"
+```
+
+Repeat for each blueprint you plan to support.
+
+## 3) Register for Blueprints in the Core Protocol
+
+Blueprint registration publishes your **operator preferences** for a specific blueprint:
+
+- `ecdsaPublicKey`: gossip/network identity key (65 bytes, uncompressed)
+- `rpcAddress`: your operator endpoint string (used by customers/off-chain tooling)
+
+### Recommended: use `cargo-tangle` (handles key formatting + optional registration inputs)
+
+Install the CLI if you haven’t:
+
+```bash
+cargo install cargo-tangle --git https://github.com/tangle-network/blueprint --branch v2 --force
+```
+
+Import (or generate) an ECDSA key into the keystore used by operator tooling:
+
+```bash
+mkdir -p ./keystore
+# Secret is hex without 0x prefix
+cargo tangle key import --keystore-path ./keystore --key-type ecdsa --secret "<YOUR_PRIVATE_KEY_HEX>"
+```
+
+Then register:
+
+```bash
+export OPERATOR_RPC_ADDRESS="https://operator.example.com"
+export TANGLE_CONTRACT="0x..."
+export STATUS_REGISTRY_CONTRACT="0x..."
+
+cargo tangle blueprint register \
+  --http-rpc-url "$RPC_URL" \
+  --tangle-contract "$TANGLE_CONTRACT" \
+  --restaking-contract "$RESTAKING_CONTRACT" \
+  --status-registry-contract "$STATUS_REGISTRY_CONTRACT" \
+  --keystore-path ./keystore \
+  --blueprint-id "$BLUEPRINT_ID" \
+  --rpc-endpoint "$OPERATOR_RPC_ADDRESS"
+```
+
+### Alternative: `cast` (manual pubkey formatting)
+
+`cast wallet public-key` returns `x||y` (64 bytes). The on-chain API expects an **uncompressed** key with a `0x04` prefix (65 bytes).
+
+```bash
+ECDSA_XY=$(cast wallet public-key --private-key "$PRIVATE_KEY")
+ECDSA_PUBKEY="0x04${ECDSA_XY#0x}"
+
+cast send "$TANGLE_CONTRACT" "registerOperator(uint64,bytes,string)" \
+  "$BLUEPRINT_ID" "$ECDSA_PUBKEY" "$OPERATOR_RPC_ADDRESS" \
+  --rpc-url "$RPC_URL" \
+  --private-key "$PRIVATE_KEY"
+```
+
+## 4) Run the Blueprint Manager (Required)
+
+To actually serve jobs, run the long-lived Blueprint Manager. It listens for on-chain service events and spawns the right runtime when services activate.
+
+First, create a `settings.env` with your protocol addresses:
+
+```bash
+cat > settings.env <<'EOF'
+BLUEPRINT_ID=123
+TANGLE_CONTRACT=0x...
+RESTAKING_CONTRACT=0x...
+STATUS_REGISTRY_CONTRACT=0x...
+# SERVICE_ID=456 # optional; omit to follow on-chain activations
+EOF
+```
+
+Then start the manager:
+
+```bash
+cargo tangle blueprint run \
+  --protocol tangle-evm \
+  --http-rpc-url "$RPC_URL" \
+  --ws-rpc-url "${WS_RPC_URL:-ws://localhost:8546}" \
+  --keystore-path ./keystore \
+  --settings-file ./settings.env
+```
+
+### Optional: Dry-run a single service (local validation only)
+
+If you want to validate a single service locally without submitting any on-chain transactions, use the spawn helper with `--dry-run`. This is useful for smoke tests or benchmarking before you join a service.
+
+```bash
+export SERVICE_ID="456"
+cargo tangle blueprint service spawn \
+  --http-rpc-url "$RPC_URL" \
+  --ws-rpc-url "${WS_RPC_URL:-ws://localhost:8546}" \
+  --tangle-contract "$TANGLE_CONTRACT" \
+  --restaking-contract "$RESTAKING_CONTRACT" \
+  --status-registry-contract "$STATUS_REGISTRY_CONTRACT" \
+  --keystore-path ./keystore \
+  --blueprint-id "$BLUEPRINT_ID" \
+  --service-id "$SERVICE_ID" \
+  --dry-run
+```
+
+Dry run skips operator registration, result submission, and heartbeats from the runtime. If your blueprint code submits its own transactions, those are not blocked.
+
+For production operations, keep the Blueprint Manager running and configure your preferred execution runtime(s):
+
+- [Blueprint Manager](/operators/manager/introduction)
+- [Runtime Requirements](/operators/manager/requirements)
+- [Manager Setup](/operators/manager/setup)
+
+## 5) Keep Heartbeats Healthy
+
+Heartbeats are an on-chain liveness signal and can be used as evidence during slashing disputes. Ensure your runtime is emitting them.
+
+You can also submit a heartbeat manually:
+
+```bash
+cargo tangle operator heartbeat \
+  --http-rpc-url "$RPC_URL" \
+  --tangle-contract "$TANGLE_CONTRACT" \
+  --restaking-contract "$RESTAKING_CONTRACT" \
+  --status-registry-contract "$STATUS_REGISTRY_CONTRACT" \
+  --keystore-path ./keystore \
+  --blueprint-id "$BLUEPRINT_ID" \
+  --service-id "$SERVICE_ID" \
+  --status-code 0
+```
+
+If you launched a runtime with `--dry-run`, heartbeats and result submissions are skipped by design.
+
+## 6) Optional: Manage Service Requests (CLI)
+
+The manager will auto-spawn services after activation, but you can inspect and act on requests with the CLI:
+
+```bash
+# List pending requests
+cargo tangle blueprint service requests --http-rpc-url "$RPC_URL" --tangle-contract "$TANGLE_CONTRACT"
+
+# Approve a request (operator action)
+cargo tangle blueprint service approve \
+  --http-rpc-url "$RPC_URL" \
+  --tangle-contract "$TANGLE_CONTRACT" \
+  --restaking-contract "$RESTAKING_CONTRACT" \
+  --status-registry-contract "$STATUS_REGISTRY_CONTRACT" \
+  --request-id 42
+```
+
+## Next
+
+- Pricing server (RFQ): [Blueprint Pricing](/operators/pricing/overview)
+- QoS dashboards: [Quality of Service](/operators/quality-of-service)

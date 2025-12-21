@@ -1,0 +1,413 @@
+---
+title: ITangleServices
+description: Auto-generated Solidity API reference.
+---
+
+# ITangleServices
+
+Source: https://github.com/tangle-network/tnt-core/blob/feature/modular-protocol/src/v2/interfaces/ITangleServices.sol
+
+### ITangleServices
+
+Service lifecycle management interface
+
+#### Functions
+
+#### requestService
+
+```solidity
+function requestService(uint64 blueprintId, address[] operators, bytes config, address[] permittedCallers, uint64 ttl, address paymentToken, uint256 paymentAmount) external payable returns (uint64 requestId)
+```
+
+Request a new service
+
+#### requestServiceWithExposure
+
+```solidity
+function requestServiceWithExposure(uint64 blueprintId, address[] operators, uint16[] exposureBps, bytes config, address[] permittedCallers, uint64 ttl, address paymentToken, uint256 paymentAmount) external payable returns (uint64 requestId)
+```
+
+Request a service with explicit exposure commitments
+
+#### requestServiceWithSecurity
+
+```solidity
+function requestServiceWithSecurity(uint64 blueprintId, address[] operators, struct Types.AssetSecurityRequirement[] securityRequirements, bytes config, address[] permittedCallers, uint64 ttl, address paymentToken, uint256 paymentAmount) external payable returns (uint64 requestId)
+```
+
+Request a service with multi-asset security requirements
+
+_Each operator must provide security commitments matching these requirements when approving_
+
+#### approveService
+
+```solidity
+function approveService(uint64 requestId, uint8 restakingPercent) external
+```
+
+Approve a service request (as operator) - simple version
+
+#### approveServiceWithCommitments
+
+```solidity
+function approveServiceWithCommitments(uint64 requestId, struct Types.AssetSecurityCommitment[] commitments) external
+```
+
+Approve a service request with multi-asset security commitments
+
+_Commitments must match the security requirements specified in the request_
+
+#### rejectService
+
+```solidity
+function rejectService(uint64 requestId) external
+```
+
+Reject a service request (as operator)
+
+#### createServiceFromQuotes
+
+```solidity
+function createServiceFromQuotes(uint64 blueprintId, struct Types.SignedQuote[] quotes, bytes config, address[] permittedCallers, uint64 ttl) external payable returns (uint64 serviceId)
+```
+
+Create a service instantly using pre-signed operator quotes
+
+_No approval flow needed - operators have pre-committed via signatures_
+
+##### Parameters
+
+| Name             | Type                       | Description                              |
+| ---------------- | -------------------------- | ---------------------------------------- |
+| blueprintId      | uint64                     | The blueprint to use                     |
+| quotes           | struct Types.SignedQuote[] | Array of signed quotes from operators    |
+| config           | bytes                      | Service configuration                    |
+| permittedCallers | address[]                  | Addresses allowed to call jobs           |
+| ttl              | uint64                     | Service time-to-live (must match quotes) |
+
+#### extendServiceFromQuotes
+
+```solidity
+function extendServiceFromQuotes(uint64 serviceId, struct Types.SignedQuote[] quotes, uint64 extensionDuration) external payable
+```
+
+Extend a service using pre-signed operator quotes
+
+#### terminateService
+
+```solidity
+function terminateService(uint64 serviceId) external
+```
+
+Terminate a service (as owner)
+
+#### addPermittedCaller
+
+```solidity
+function addPermittedCaller(uint64 serviceId, address caller) external
+```
+
+Add a permitted caller to a service
+
+#### removePermittedCaller
+
+```solidity
+function removePermittedCaller(uint64 serviceId, address caller) external
+```
+
+Remove a permitted caller from a service
+
+#### joinService
+
+```solidity
+function joinService(uint64 serviceId, uint16 exposureBps) external
+```
+
+Join an active service (Dynamic membership only)
+
+#### joinServiceWithCommitments
+
+```solidity
+function joinServiceWithCommitments(uint64 serviceId, uint16 exposureBps, struct Types.AssetSecurityCommitment[] commitments) external
+```
+
+Join an active service with per-asset security commitments (Dynamic membership only)
+
+#### leaveService
+
+```solidity
+function leaveService(uint64 serviceId) external
+```
+
+Leave an active service (Dynamic membership only)
+
+#### scheduleExit
+
+```solidity
+function scheduleExit(uint64 serviceId) external
+```
+
+Schedule exit from an active service when exit queues are enabled
+
+#### executeExit
+
+```solidity
+function executeExit(uint64 serviceId) external
+```
+
+Execute a scheduled exit after the queue delay
+
+#### cancelExit
+
+```solidity
+function cancelExit(uint64 serviceId) external
+```
+
+Cancel a scheduled exit before execution
+
+#### forceExit
+
+```solidity
+function forceExit(uint64 serviceId, address operator) external
+```
+
+Force exit an operator from a service (if permitted by config)
+
+#### forceRemoveOperator
+
+```solidity
+function forceRemoveOperator(uint64 serviceId, address operator) external
+```
+
+Force remove an operator from a service (blueprint manager only)
+
+##### Parameters
+
+| Name      | Type    | Description            |
+| --------- | ------- | ---------------------- |
+| serviceId | uint64  | The service ID         |
+| operator  | address | The operator to remove |
+
+#### billSubscription
+
+```solidity
+function billSubscription(uint64 serviceId) external
+```
+
+Bill a subscription service for the current period
+
+#### billSubscriptionBatch
+
+```solidity
+function billSubscriptionBatch(uint64[] serviceIds) external returns (uint256 totalBilled, uint256 billedCount)
+```
+
+Bill multiple subscription services in one call
+
+#### getBillableServices
+
+```solidity
+function getBillableServices(uint64[] serviceIds) external view returns (uint64[] billable)
+```
+
+Get billable services from a list of candidates
+
+#### fundService
+
+```solidity
+function fundService(uint64 serviceId, uint256 amount) external payable
+```
+
+Fund a service escrow balance
+
+#### getServiceRequest
+
+```solidity
+function getServiceRequest(uint64 requestId) external view returns (struct Types.ServiceRequest)
+```
+
+Get service request
+
+#### getServiceRequestSecurityRequirements
+
+```solidity
+function getServiceRequestSecurityRequirements(uint64 requestId) external view returns (struct Types.AssetSecurityRequirement[])
+```
+
+Get security requirements for a service request
+
+#### getServiceRequestSecurityCommitments
+
+```solidity
+function getServiceRequestSecurityCommitments(uint64 requestId, address operator) external view returns (struct Types.AssetSecurityCommitment[])
+```
+
+Get security commitments for a service request by operator
+
+#### getService
+
+```solidity
+function getService(uint64 serviceId) external view returns (struct Types.Service)
+```
+
+Get service info
+
+#### isServiceActive
+
+```solidity
+function isServiceActive(uint64 serviceId) external view returns (bool)
+```
+
+Check if service is active
+
+#### isServiceOperator
+
+```solidity
+function isServiceOperator(uint64 serviceId, address operator) external view returns (bool)
+```
+
+Check if address is operator in service
+
+#### getServiceOperator
+
+```solidity
+function getServiceOperator(uint64 serviceId, address operator) external view returns (struct Types.ServiceOperator)
+```
+
+Get operator info for a service
+
+#### getServiceOperators
+
+```solidity
+function getServiceOperators(uint64 serviceId) external view returns (address[])
+```
+
+Get the list of operators for a service
+
+#### getServiceSecurityRequirements
+
+```solidity
+function getServiceSecurityRequirements(uint64 serviceId) external view returns (struct Types.AssetSecurityRequirement[])
+```
+
+Get persisted security requirements for an active service
+
+#### getServiceEscrow
+
+```solidity
+function getServiceEscrow(uint64 serviceId) external view returns (struct PaymentLib.ServiceEscrow)
+```
+
+Get service escrow details
+
+#### getExitRequest
+
+```solidity
+function getExitRequest(uint64 serviceId, address operator) external view returns (struct Types.ExitRequest)
+```
+
+Get exit request for an operator
+
+#### getExitStatus
+
+```solidity
+function getExitStatus(uint64 serviceId, address operator) external view returns (enum Types.ExitStatus)
+```
+
+Get exit status for an operator
+
+#### getExitConfig
+
+```solidity
+function getExitConfig(uint64 serviceId) external view returns (struct Types.ExitConfig)
+```
+
+Get exit configuration for a service
+
+#### canScheduleExit
+
+```solidity
+function canScheduleExit(uint64 serviceId, address operator) external view returns (bool canExit, string reason)
+```
+
+Check if operator can schedule exit now
+
+#### getServiceSecurityCommitments
+
+```solidity
+function getServiceSecurityCommitments(uint64 serviceId, address operator) external view returns (struct Types.AssetSecurityCommitment[])
+```
+
+Get persisted security commitments for an active service by operator
+
+#### isPermittedCaller
+
+```solidity
+function isPermittedCaller(uint64 serviceId, address caller) external view returns (bool)
+```
+
+Check if address can call jobs on service
+
+#### serviceCount
+
+```solidity
+function serviceCount() external view returns (uint64)
+```
+
+Get current service count
+
+#### Events
+
+#### ServiceRequested
+
+```solidity
+event ServiceRequested(uint64 requestId, uint64 blueprintId, address requester)
+```
+
+#### ServiceRequestedWithSecurity
+
+```solidity
+event ServiceRequestedWithSecurity(uint64 requestId, uint64 blueprintId, address requester, address[] operators, struct Types.AssetSecurityRequirement[] securityRequirements)
+```
+
+#### ServiceApproved
+
+```solidity
+event ServiceApproved(uint64 requestId, address operator)
+```
+
+#### ServiceRejected
+
+```solidity
+event ServiceRejected(uint64 requestId, address operator)
+```
+
+#### ServiceActivated
+
+```solidity
+event ServiceActivated(uint64 serviceId, uint64 requestId, uint64 blueprintId)
+```
+
+#### ServiceTerminated
+
+```solidity
+event ServiceTerminated(uint64 serviceId)
+```
+
+#### OperatorJoinedService
+
+```solidity
+event OperatorJoinedService(uint64 serviceId, address operator, uint16 exposureBps)
+```
+
+#### OperatorLeftService
+
+```solidity
+event OperatorLeftService(uint64 serviceId, address operator)
+```
+
+#### SubscriptionBilled
+
+```solidity
+event SubscriptionBilled(uint64 serviceId, uint256 amount, uint64 period)
+```

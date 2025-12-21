@@ -27,6 +27,8 @@ No extra dependencies, the blueprint will run as a normal host process.
   - This can be done by running `setcap cap_net_admin+eip /path/to/blueprint-manager`
   - **_or_** simply running the `blueprint-manager` as root (**not recommended**)
 
+For secure production deployments, see [Sandboxing and Security](/operators/manager/security).
+
 ## Container Sources
 
 The requirements for running blueprints with [Container Sources](/developers/deployment/sources/container) are:
@@ -40,13 +42,15 @@ The requirements for running blueprints with [Container Sources](/developers/dep
 The requirements for running blueprints with [TEE Sources](/developers/deployment/sources/tee) are:
 
 - [dstack VMM]
-- TODO?
+- A compatible TEE environment (requirements vary by provider and hardware)
+- Container image build pipeline for your blueprint
 
 ## WASM Sources (WIP)
 
 The requirements for running blueprints with [WASM Sources](/developers/deployment/sources/wasm) are:
 
-- TODO
+- A WASM runtime compatible with the blueprint source (e.g., [Wasmtime])
+- Any additional system dependencies required by your blueprint’s host bindings (if applicable)
 
 [GitHub CLI]: https://cli.github.com/
 [cloud-hypervisor]: https://www.cloudhypervisor.org/
@@ -54,3 +58,4 @@ The requirements for running blueprints with [WASM Sources](/developers/deployme
 [Docker]: https://www.docker.com/get-started/
 [Kata Containers]: https://katacontainers.io/
 [dstack VMM]: https://github.com/Dstack-TEE/dstack/tree/master?tab=readme-ov-file#-getting-started
+[Wasmtime]: https://wasmtime.dev/

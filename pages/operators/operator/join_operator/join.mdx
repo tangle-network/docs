@@ -1,41 +1,38 @@
 ## Operators
 
-Operators are noderunners that have tokens at stake and choose to restake them to enable participation in roles, which conduct the jobs produced by a blueprint instance. In esssence, Operators are service providers whose effectiveness and security is guarenteed by their restaked assets.
+Operators are service providers who restake assets to run blueprint services. Restaking gives customers and developers an enforceable security boundary (exposure + slashing) around off-chain work.
 
 ### Joining as an Operator
 
-To participate in restaking, a user can join as an operator by providing a bond amount through the ``join_operators function. This registers the user as an operator and locks their bond, which is necessary for participating in the network and receiving rewards.
+This page covers **restaking-layer** operator registration (becoming an active operator in `MultiAssetDelegation`). You must also register for each blueprint you want to operate in the core protocol.
 
-### Step 1: Access the PolkadotJS Interface
+- Full guide: [Operator Onboarding](/operators/onboarding)
 
-- Open [PolkadotJS Apps](https://polkadot.js.org/apps/).
-- Connect to the Tangle Network by selecting the appropriate network from the dropdown list.
+### Step 1: Prepare an EVM wallet
 
-For convenience, here are the PolkadotJS direct links for Tangle Testnet and Mainnet:
+- Use an EVM wallet (e.g., MetaMask/Rabby) and ensure you’re connected to the correct EVM chain where Tangle is deployed.
+- Ensure you have enough balance to cover the operator bond and gas.
 
-- Tangle Testnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet-rpc.tangle.tools#/explorer
-- Tangle Mainnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer
+### Step 2: Register as an Operator
 
-### Step 2: Join as an Operator
+Operator registration is performed by calling the restaking contract’s `registerOperator()` function and sending the required bond amount.
 
-- Navigate to the **Developer** → **Extrinsics** tab on PolkadotJS.
+Use Foundry’s `cast`:
 
-![PolkadotJS Extrinsics](./images/extrinsic.png)
+```bash
+# Set these for your deployment
+export RPC_URL="https://..."
+export PRIVATE_KEY="0x..."
+export RESTAKING_CONTRACT="0x..." # MultiAssetDelegation contract
 
-- Under the **MultiAssetDelegation** section, select **Join Operators** and enter the bond amount.
+# Read the minimum operator bond (native asset)
+cast call "$RESTAKING_CONTRACT" "minOperatorStake()(uint256)" --rpc-url "$RPC_URL"
 
-![PolkadotJS Join Operators](./images/join.png)
+# Register (send at least the minOperatorStake as value)
+cast send "$RESTAKING_CONTRACT" "registerOperator()" \
+  --rpc-url "$RPC_URL" \
+  --private-key "$PRIVATE_KEY" \
+  --value "<BOND_AMOUNT_WEI>"
+```
 
-Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee and bond.
-
-![PolkadotJS Transaction](./images/sign.png)
-
-If successful, you should see the following confirmation toast notification:
-
-![PolkadotJS Operator Joined](./images/success.png)
-
-Lets break down the events, navigate to the **Network** tab, you should see the following events:
-
-![PolkadotJS Events](./images/events.png)
-
-- multi_asset_delegation.OperatorJoined : tells you that the operator has joined successfully.
+If successful, the transaction emits `OperatorRegistered(operator, stake)`.

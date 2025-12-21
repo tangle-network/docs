@@ -1,0 +1,59 @@
+# Blueprint Manager Setup
+
+This page covers the operator flow for configuring and running the Blueprint Manager against Tangle's EVM protocol.
+
+## 1) Create a settings file
+
+The manager reads protocol addresses (and optional service scope) from `settings.env`:
+
+```bash
+cat > settings.env <<'EOF'
+BLUEPRINT_ID=123
+TANGLE_CONTRACT=0x...
+RESTAKING_CONTRACT=0x...
+STATUS_REGISTRY_CONTRACT=0x...
+# SERVICE_ID=456 # optional; omit to follow all activations
+EOF
+```
+
+## 2) Start the manager
+
+```bash
+cargo tangle blueprint run \
+  --protocol tangle-evm \
+  --http-rpc-url "$RPC_URL" \
+  --ws-rpc-url "$WS_RPC_URL" \
+  --keystore-path ./keystore \
+  --settings-file ./settings.env
+```
+
+This process should run continuously. Use a process supervisor (systemd, docker, or Kubernetes) for restarts and health checks.
+
+## 3) Choose runtime preferences
+
+You can control how services are executed:
+
+- `--spawn-method` selects the preferred runtime (`native`, `vm`, `container`).
+- `--vm` or `--no-vm` force or disable the VM sandbox.
+- `--preferred-source` lets you override the blueprint's preferred source type.
+- `--save-runtime-prefs` persists `PREFERRED_SOURCE` and `USE_VM` into `settings.env`.
+
+Example:
+
+```bash
+cargo tangle blueprint run \
+  --protocol tangle-evm \
+  --http-rpc-url "$RPC_URL" \
+  --ws-rpc-url "$WS_RPC_URL" \
+  --keystore-path ./keystore \
+  --settings-file ./settings.env \
+  --spawn-method vm \
+  --save-runtime-prefs
+```
+
+## 4) Data and cache directories
+
+- `--data-dir` controls the per-service working directory (defaults to `./data`).
+- The manager maintains a cache for downloaded artifacts (defaults to `./cache`).
+
+Plan capacity based on the number of services you expect to host. See [Sizing and Capacity](/operators/manager/sizing).

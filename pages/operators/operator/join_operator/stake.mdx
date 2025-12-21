@@ -1,125 +1,50 @@
 ## Staking as an Operator
 
-Operators can increase their stake to participate to increase their chances of being selected for roles or to signal their commitment to the network.
+Operators can increase their self-stake to increase capacity, qualify for higher minimums, or signal commitment to customers.
 
 ## Bond More
 
-### Step 1: Access the PolkadotJS Interface
+### Increase Operator Stake (Native)
 
-- Open [PolkadotJS Apps](https://polkadot.js.org/apps/).
-- Connect to the Tangle Network by selecting the appropriate network from the dropdown list.
+Operators can increase their self-stake by calling `increaseStake()` and sending value.
 
-For convenience, here are the PolkadotJS direct links for Tangle Testnet and Mainnet:
+```bash
+export RPC_URL="https://..."
+export PRIVATE_KEY="0x..."
+export RESTAKING_CONTRACT="0x..." # MultiAssetDelegation contract
 
-- Tangle Testnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet-rpc.tangle.tools#/explorer
-- Tangle Mainnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer
+cast send "$RESTAKING_CONTRACT" "increaseStake()" \
+  --rpc-url "$RPC_URL" \
+  --private-key "$PRIVATE_KEY" \
+  --value "<AMOUNT_WEI>"
+```
 
-### Step 2: Bond More as an Operator
-
-Ensure you have joined as an operator first, see [Join as an Operator](./join.mdx).
-
-- Navigate to the **Developer** → **Extrinsics** tab on PolkadotJS.
-
-![PolkadotJS Extrinsics](./images/extrinsic.png)
-
-- Under the **MultiAssetDelegation** section, select **Operator Bond More** and enter the bond amount.
-
-![PolkadotJS Bond More](./images/bondmore.png)
-
-Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee and bond.
-
-![PolkadotJS Transaction](./images/signstake.png)
-
-If successful, you should see the following confirmation toast notification:
-
-![PolkadotJS Operator Joined](./images/successstake.png)
+If successful, the transaction emits `OperatorStakeIncreased(operator, amount)`.
 
 ## Schedule Operator Unstake
 
-### Step 1: Access the PolkadotJS Interface
+### Step 1: Schedule Operator Unstake
 
-- Open [PolkadotJS Apps](https://polkadot.js.org/apps/).
-- Connect to the Tangle Network by selecting the appropriate network from the dropdown list.
+Ensure you have joined as an operator first, see [Join as an Operator](./join).
 
-For convenience, here are the PolkadotJS direct links for Tangle Testnet and Mainnet:
-
-- Tangle Testnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet-rpc.tangle.tools#/explorer
-- Tangle Mainnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer
-
-### Step 2: Schedule Operator Unstake
-
-Ensure you have joined as an operator first, see [Join as an Operator](./join.mdx).
-
-- Navigate to the **Developer** → **Extrinsics** tab on PolkadotJS.
-
-![PolkadotJS Extrinsics](./images/extrinsic.png)
-
-- Under the **MultiAssetDelegation** section, select **Schedule Operator Unstake** and enter the amount to unstake.
-
-![PolkadotJS Bond More](./images/operatorunstake.png)
-
-Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee and bond.
-
-![PolkadotJS Transaction](./images/signstake.png)
+```bash
+cast send "$RESTAKING_CONTRACT" "scheduleOperatorUnstake(uint256)" <AMOUNT_WEI> \
+  --rpc-url "$RPC_URL" \
+  --private-key "$PRIVATE_KEY"
+```
 
 If successful, your tokens will be unlocked after the unstake delay period.
 
-## Cancel Operator Unstake
-
-### Step 1: Access the PolkadotJS Interface
-
-- Open [PolkadotJS Apps](https://polkadot.js.org/apps/).
-- Connect to the Tangle Network by selecting the appropriate network from the dropdown list.
-
-For convenience, here are the PolkadotJS direct links for Tangle Testnet and Mainnet:
-
-- Tangle Testnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet-rpc.tangle.tools#/explorer
-- Tangle Mainnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer
-
-### Step 2: Cancel Operator Unstake
-
-Ensure you have joined as an operator first, see [Join as an Operator](./join.mdx) and have scheduled an unstake.
-
-- Navigate to the **Developer** → **Extrinsics** tab on PolkadotJS.
-
-![PolkadotJS Extrinsics](./images/extrinsic.png)
-
-- Under the **MultiAssetDelegation** section, select **Cancel Operator Unstake** and enter the amount to cancel.
-
-![PolkadotJS Cancel Operator Unstake](./images/canceloperatorunstake.png)
-
-Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee and bond.
-
-![PolkadotJS Transaction](./images/signstake.png)
-
-If successful, your unstake will be canceled.
-
 ## Execute Operator Unstake
-
-### Step 1: Access the PolkadotJS Interface
-
-- Open [PolkadotJS Apps](https://polkadot.js.org/apps/).
-- Connect to the Tangle Network by selecting the appropriate network from the dropdown list.
-
-For convenience, here are the PolkadotJS direct links for Tangle Testnet and Mainnet:
-
-- Tangle Testnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet-rpc.tangle.tools#/explorer
-- Tangle Mainnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer
 
 ### Step 2: Execute Operator Unstake
 
-Ensure you have joined as an operator first, see [Join as an Operator](./join.mdx) and have scheduled an unstake, also ensure the unstake delay period has passed.
+Ensure you have scheduled an unstake and the delay period has passed.
 
-- Navigate to the **Developer** → **Extrinsics** tab on PolkadotJS.
-
-![PolkadotJS Extrinsics](./images/extrinsic.png)
-
-- Under the **MultiAssetDelegation** section, select **Execute Operator Unstake**
-
-![PolkadotJS Execute Operator Unstake](./images/executeoperatorunstake.png)
-
-Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee and bond.
-
-![PolkadotJS Transaction](./images/signstake.png)
+```bash
+cast send "$RESTAKING_CONTRACT" "executeOperatorUnstake()" \
+  --rpc-url "$RPC_URL" \
+  --private-key "$PRIVATE_KEY"
+```
 
 If successful, all unstaked tokens will be unlocked and returned to the operator.

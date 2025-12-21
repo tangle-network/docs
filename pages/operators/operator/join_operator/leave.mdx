@@ -1,88 +1,35 @@
 ## Leave as an Operator
 
-Operators can leave the operator role by unstaking their tokens. The leave process is similar to the unstake process, which means its a two step process, first you schedule a leave operation
-and then you execute the leave operation after the leave delay period has passed. You can cancel the leave operation before it is executed.
+Operators can leave the operator role by scheduling a leave and then completing it after the leave delay period has passed.
 
 ## Schedule Operator Leave
 
-### Step 1: Access the PolkadotJS Interface
+### Step 1: Schedule Operator Leave
 
-- Open [PolkadotJS Apps](https://polkadot.js.org/apps/).
-- Connect to the Tangle Network by selecting the appropriate network from the dropdown list.
+Ensure you have joined as an operator first, see [Join as an Operator](./join).
 
-For convenience, here are the PolkadotJS direct links for Tangle Testnet and Mainnet:
+```bash
+export RPC_URL="https://..."
+export PRIVATE_KEY="0x..."
+export RESTAKING_CONTRACT="0x..." # MultiAssetDelegation contract
 
-- Tangle Testnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet-rpc.tangle.tools#/explorer
-- Tangle Mainnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer
-
-### Step 2: Schedule Operator Leave
-
-Ensure you have joined as an operator first, see [Join as an Operator](./join.mdx).
-
-- Navigate to the **Developer** → **Extrinsics** tab on PolkadotJS.
-
-![PolkadotJS Extrinsics](./images/extrinsic.png)
-
-- Under the **MultiAssetDelegation** section, select **Schedule Operator Leave**
-
-![PolkadotJS Schedule Operator Leave](./images/scheduleleaevoperator.png)
-
-Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee and bond.
+cast send "$RESTAKING_CONTRACT" "startLeaving()" \
+  --rpc-url "$RPC_URL" \
+  --private-key "$PRIVATE_KEY"
+```
 
 If successful, your leave will be scheduled.
 
-## Cancel Operator Leave
-
-### Step 1: Access the PolkadotJS Interface
-
-- Open [PolkadotJS Apps](https://polkadot.js.org/apps/).
-- Connect to the Tangle Network by selecting the appropriate network from the dropdown list.
-
-For convenience, here are the PolkadotJS direct links for Tangle Testnet and Mainnet:
-
-- Tangle Testnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet-rpc.tangle.tools#/explorer
-- Tangle Mainnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer
-
-### Step 2: Cancel Operator Unstake
-
-Ensure you have joined as an operator first, see [Join as an Operator](./join.mdx) and have scheduled an leave.
-
-- Navigate to the **Developer** → **Extrinsics** tab on PolkadotJS.
-
-![PolkadotJS Extrinsics](./images/extrinsic.png)
-
-- Under the **MultiAssetDelegation** section, select **Cancel Operator Leave**
-
-![PolkadotJS Cancel Operator Leave](./images/cancelleaveoperator.png)
-
-Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee and bond.
-
-If successful, your unstake will be canceled.
-
 ## Execute Operator Leave
-
-### Step 1: Access the PolkadotJS Interface
-
-- Open [PolkadotJS Apps](https://polkadot.js.org/apps/).
-- Connect to the Tangle Network by selecting the appropriate network from the dropdown list.
-
-For convenience, here are the PolkadotJS direct links for Tangle Testnet and Mainnet:
-
-- Tangle Testnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet-rpc.tangle.tools#/explorer
-- Tangle Mainnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer
 
 ### Step 2: Execute Operator Leave
 
-Ensure you have joined as an operator first, see [Join as an Operator](./join.mdx) and have scheduled a leave, also ensure the leave delay period has passed.
+Ensure you have scheduled a leave and the leave delay period has passed.
 
-- Navigate to the **Developer** → **Extrinsics** tab on PolkadotJS.
-
-![PolkadotJS Extrinsics](./images/extrinsic.png)
-
-- Under the **MultiAssetDelegation** section, select **Execute Operator Leave**
-
-![PolkadotJS Execute Operator Leave](./images/executeleaveoperator.png)
-
-Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee and bond.
+```bash
+cast send "$RESTAKING_CONTRACT" "completeLeaving()" \
+  --rpc-url "$RPC_URL" \
+  --private-key "$PRIVATE_KEY"
+```
 
 If successful, you will no longer be an operator.
