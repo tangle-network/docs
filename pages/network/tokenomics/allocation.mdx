@@ -18,6 +18,11 @@ The canonical distribution inputs are produced from an audited snapshot and publ
   Snapshot (legacy chain): block `8116528` at `2025-12-10T19:12:10Z` (hash `0xcdbe79d8cdedd544dbbe38bcc754c1d5f406dd834884268c7264fd06d6d7be37`).
 </Callout>
 
+To verify:
+
+- Snapshot metadata is checked into `dapp/scripts/migration/tangle_migration_snapshot_8116528.json`.
+- You can independently query the legacy chain RPC for the block hash at `8116528` (e.g. `chain_getBlockHash(8116528)`).
+
 ## What’s Included
 
 TNT distribution is built from three artifact types:
