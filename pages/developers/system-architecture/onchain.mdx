@@ -1,0 +1,56 @@
+---
+title: On-chain Protocol
+description: How blueprints, services, jobs, and payments are represented and enforced on-chain.
+---
+
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
+
+# On-chain Protocol
+
+Tangle’s on-chain layer defines the **state machine** for blueprints and services, plus the rules for payments, security commitments, and disputes.
+
+## Blueprint Definition
+
+A blueprint is a structured definition that includes:
+
+- **Schemas** (registration, request, per-job params/result)
+- **Metadata** (human-readable information + capabilities)
+- **Execution sources** (native/container/wasm/testing artifacts + hashes)
+- Optional **service manager** contract hooks
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Blueprints.sol"
+  fromLine={10}
+  toLine={74}
+  title="Blueprint creation: definition storage + manager hooks"
+/>
+
+## Service Creation
+
+Services can be created via two primary paths:
+
+- **Request / approve**: a customer specifies operators, config, permitted callers, TTL, and payment.
+- **RFQ / quotes**: operators sign quotes; the customer creates service from a quote bundle.
+
+The RFQ path is optimized for “instant activation” and avoids a multi-transaction approval dance.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Quotes.sol"
+  fromLine={19}
+  toLine={120}
+  title="RFQ flow: create service from signed operator quotes"
+/>
+
+## Jobs and Results
+
+Once active, a service acts like a restricted execution surface:
+
+- Only **permitted callers** can submit jobs.
+- **Operators** submit results (and optionally aggregated results when required).
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Jobs.sol"
+  fromLine={37}
+  toLine={70}
+  title="Jobs: submitJob + submitResult entrypoints"
+/>

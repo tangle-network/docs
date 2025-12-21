@@ -1,0 +1,60 @@
+---
+title: ITangleRewards
+description: Auto-generated Solidity API reference.
+---
+
+# ITangleRewards
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/ITangleRewards.sol
+
+### ITangleRewards
+
+Reward distribution and claiming interface
+
+#### Functions
+
+#### claimRewards
+
+```solidity
+function claimRewards() external
+```
+
+Claim accumulated rewards (native token)
+
+#### claimRewards
+
+```solidity
+function claimRewards(address token) external
+```
+
+Claim accumulated rewards for a specific token
+
+#### pendingRewards
+
+```solidity
+function pendingRewards(address account) external view returns (uint256)
+```
+
+Get pending rewards for an account (native token)
+
+#### pendingRewards
+
+```solidity
+function pendingRewards(address account, address token) external view returns (uint256)
+```
+
+Get pending rewards for an account and token
+
+#### Events
+
+#### RewardsDistributed
+
+```solidity
+event RewardsDistributed(uint64 serviceId, uint256 developerAmount, uint256 protocolAmount, uint256 operatorAmount, uint256 restakerAmount)
+```
+
+#### RewardsClaimed
+
+```solidity
+event RewardsClaimed(address account, uint256 amount)
+```

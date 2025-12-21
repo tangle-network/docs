@@ -1,0 +1,48 @@
+---
+title: Metrics and Scoring
+description: How Tangle records protocol activity and uses it for incentive distribution.
+---
+
+# Metrics and Scoring
+
+Tangle’s incentive programs can be driven by on-chain activity metrics. Metrics are optional: the protocol is designed so that core actions still work even if metrics recording is disabled or temporarily unavailable.
+
+## Core Components
+
+- **`TangleMetrics`**: an on-chain activity recorder implementing `IMetricsRecorder`.
+- **Metrics hooks**: best-effort calls from core contracts (wrapped in `try/catch`) that emit or aggregate activity data.
+- **`InflationPool`**: a pre-funded TNT budget that can distribute TNT based on recorded metrics.
+- **`ServiceFeeDistributor`**: distributes the restaker share of service fees and can record “exposure” scores that feed restaker rewards.
+
+## What Gets Recorded
+
+Depending on what is configured on-chain, the protocol can record:
+
+- **Blueprint activity**: blueprint creation and operator registrations.
+- **Service activity**: service creation/termination, job calls, job completion success rates.
+- **Payments**: total fees paid by customers.
+- **Operator liveness**: heartbeats for active services.
+- **Slashing**: executed slash events (and the slashed amount).
+
+## Restaker “Exposure” Scoring
+
+For restaker rewards (from `InflationPool`), the protocol can compute an exposure score based on service participation:
+
+- Exposure is tracked as a **value × time** measure (for example, USD-weighted exposure over the duration of a streamed payment).
+- If a price oracle is configured, scoring can be normalized in USD terms; if not, the protocol falls back to raw amounts.
+
+This scoring is separate from (and in addition to) per-asset APY-like incentives paid through `RewardVaults`.
+
+## Heartbeats and QoS
+
+Operators (often via their blueprint manager) can submit service heartbeats to `OperatorStatusRegistry`. Heartbeats:
+
+- Provide an on-chain signal of liveness for a given `(serviceId, operator)`.
+- Can mark operators offline for a service when heartbeats are missed.
+- Are often used as part of off-chain monitoring, and may be referenced when proposing a slash.
+
+Heartbeats do not automatically slash an operator by themselves; slashing requires an authorized on-chain proposal and execution.
+
+## Important Note on Budgets
+
+Merit-based rewards only exist if `InflationPool` is funded with TNT. If it has a zero balance, there is nothing to distribute—even if metrics are recorded.

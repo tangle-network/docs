@@ -6,7 +6,7 @@ import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
 # Building a Blueprint Runner
 
-This guide provides a step-by-step approach to building a Blueprint Runner, the primary component of a Blueprint.
+This guide shows the minimal wiring for a production-style runner: **jobs + router + producer + consumer**.
 
 ## Prerequisites
 
@@ -15,18 +15,17 @@ Before you start building your Blueprint Runner, ensure you have:
 1. [Rust](https://www.rust-lang.org/tools/install) installed
 2. [Tangle CLI](../cli/installation.mdx) installed
 3. A basic understanding of [Blueprints](../blueprints/introduction.mdx)
-4. A Blueprint created with the CLI as seen in [Step 1](#step-1-setting-up-the-project-structure) below
+4. A Blueprint created with the CLI (Step 1 below)
 
-## Blueprint Runner Structure
+## Runner Structure
 
 A Blueprint Runner consists of:
 
-1. **Entry Point**: The runner is the primary component in a blueprint's `main.rs`
-2. **[Jobs](/developers/blueprint-runner/jobs) Configuration**: Build the jobs that will be executed
-3. **[Router](/developers/blueprint-runner/routers) Configuration**: Setup for directing job calls to the jobs themselves for handling
-4. **[Producer](/developers/blueprint-runner/producers) Configuration**: Setup for the source of events (e.g. blockchain, external APIs)
-5. **[Consumer](/developers/blueprint-runner/consumers) Configuration**: Setup for the handling of results from jobs
-6. **[Background Service](/developers/blueprint-runner/background-services) Configuration**: Setup for supporting services (e.g. databases, servers, etc.)
+1. **Jobs**: async functions that do work and return outputs
+2. **Router**: routes job calls (`jobIndex`) to job handlers
+3. **Producer**: turns event sources into `JobCall`s (e.g., EVM logs)
+4. **Consumer**: turns job results into side effects (e.g., submit results on-chain)
+5. **Background services** (optional): long-running support tasks
 
 ## Step-by-Step Guide
 
@@ -38,142 +37,57 @@ If you haven't already created a Blueprint project, you can use the Tangle CLI (
 cargo tangle blueprint create --name <BLUEPRINT_NAME>
 ```
 
-This creates a workspace with two main packages:
+Depending on the template, you’ll get either a single crate or a small workspace split into:
 
 - **Library Package**: Contains your job definitions and core logic
-- **Binary Package**: Contains your Blueprint Runner implementation
+- **Binary Package**: Contains your runner wiring (producer + consumer + router)
 
-### Step 2: Defining Your Jobs
+### Step 2: Define Jobs
 
-Before building the runner, define the jobs that your Blueprint will execute. Jobs are defined in the library package:
-
-<GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/a9860d2e3a161af63a75d6d800f662d303e92e5b/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
-  fromLine={7}
-  toLine={21}
-  title="Job Definition from our Incredible Squaring Example"
-/>
-
-For more details on defining jobs, see the [Jobs documentation](/developers/blueprint-runner/jobs).
-
-### Step 3: Creating a Producer and a Consumer
-
-To build a Blueprint Runner, you need a producer to listen for events and a consumer to handle the results from jobs.
+Jobs live in your library crate and typically use extractors like `TangleEvmArg<T>` to ABI-decode inputs:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/a9860d2e3a161af63a75d6d800f662d303e92e5b/examples/incredible-squaring/incredible-squaring-bin/src/main.rs"
-  fromLine={28}
-  toLine={31}
-  title="Creating a Producer and a Consumer"
+  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
+  fromLine={16}
+  toLine={80}
+  title="Jobs: handlers and job indices (Incredible Squaring)"
 />
 
-### Step 4: Configuring the Router
+### Step 3: Build the Router
 
-The [router](/developers/blueprint-runner/routers) directs job calls to the appropriate handlers. In the example below, we configure the router with a single route for our defined job and specify that it is on Tangle with the `TangleLayer`:
+The router is the “job table” for your blueprint:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/a9860d2e3a161af63a75d6d800f662d303e92e5b/examples/incredible-squaring/incredible-squaring-bin/src/main.rs"
-  fromLine={33}
-  toLine={48}
-  title="Configuring the Router"
+  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
+  fromLine={109}
+  toLine={126}
+  title="Router: route(jobIndex, handler.layer(TangleEvmLayer))"
 />
 
-This configuration:
+### Step 4: Wire Producer + Consumer
 
-1. Creates a new router
-2. Adds a route for the `square` job with ID `XSQUARE_JOB_ID`
-3. Applies the `TangleLayer` to add metadata to job results
-4. Adds a filter layer to only process jobs that match the service ID
-
-For more details on routers, see the [Routers documentation](/developers/blueprint-runner/routers).
-
-### Step 5: Defining a Background Service
-
-Some blueprints may require one or more services to run in the background. Any number of background services can be set to run for a Blueprint Runner.
+In the binary crate, you load the environment, create the Tangle EVM producer/consumer, and start the runner:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/a9860d2e3a161af63a75d6d800f662d303e92e5b/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
-  fromLine={23}
-  toLine={34}
-  title="Defining a Background Service"
+  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring/incredible-squaring-bin/src/main.rs"
+  fromLine={14}
+  toLine={92}
+  title="Runner wiring: TangleEvmProducer + TangleEvmConsumer + BlueprintRunner"
 />
 
-With a background service defined, it just needs to be added to the Blueprint Runner:
+### Step 5 (Optional): Add Background Services
+
+Background services run alongside job processing (health checks, caches, watchers, etc.):
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/a9860d2e3a161af63a75d6d800f662d303e92e5b/examples/incredible-squaring/incredible-squaring-bin/src/main.rs"
-  fromLine={36}
-  toLine={49}
-  title="Adding a Background Service to the Blueprint Runner"
+  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
+  fromLine={131}
+  toLine={147}
+  title="Background service example"
 />
-
-### Step 6: Configuring a Producer with the Blueprint Runner's Builder
-
-[Producers](/developers/blueprint-runner/producers) listen for events and prepare them for processing. The following example uses a `TangleProducer` as seen in [Step 3](#step-3-creating-a-producer-and-a-consumer):
-
-<GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/a9860d2e3a161af63a75d6d800f662d303e92e5b/examples/incredible-squaring/incredible-squaring-bin/src/main.rs"
-  fromLine={36}
-  toLine={54}
-  title="Adding a Producer to the Blueprint Runner"
-/>
-
-This producer listens for finalized blocks on the Tangle network and converts them into job calls that can be processed by the router.
-
-For more details on producers, see the [Producers documentation](/developers/blueprint-runner/producers).
-
-### Step 7: Configuring a Consumer with the Blueprint Runner's Builder
-
-[Consumers](/developers/blueprint-runner/consumers) handle the results of processed jobs. In the example above, we set up a Tangle consumer as seen in [Step 3](#step-3-creating-a-producer-and-a-consumer):
-
-<GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/a9860d2e3a161af63a75d6d800f662d303e92e5b/examples/incredible-squaring/incredible-squaring-bin/src/main.rs"
-  fromLine={36}
-  toLine={60}
-  title="Adding a Consumer to the Blueprint Runner"
-/>
-
-This consumer processes job results and can send transactions to the Tangle network based on those results.
-
-For more details on consumers, see the [Consumers documentation](/developers/blueprint-runner/consumers).
-
-### Step 8: Custom Shutdown Logic
-
-Implement customized shutdown logic to handle cleanup and resource release:
-
-<GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/a9860d2e3a161af63a75d6d800f662d303e92e5b/examples/incredible-squaring/incredible-squaring-bin/src/main.rs"
-  fromLine={36}
-  toLine={65}
-  title="Custom Shutdown Logic"
-/>
-
-The above example simply prints a message when the Blueprint Runner is shutting down.
-
-### Step 9: Running the Blueprint Runner
-
-Finally, we run the Blueprint Runner:
-
-```rust
-// Build and run the Blueprint Runner
-let result = BlueprintRunner::builder(tangle_config, env)
-    // ... configuration ...
-    .run()
-    .await;
-```
-
-The `run` method starts the Blueprint Runner and returns a result indicating whether it ran successfully or encountered an error.
-
-With this, the Blueprint Runner, the centerpoint of your Blueprint is ready to be used!
 
 ## Next Steps
 
-After building your Blueprint Runner, you might want to explore:
-
-- [Advanced Router Features](/developers/blueprint-runner/routers#advanced-router-features)
-- [Producer Patterns](/developers/blueprint-runner/producers#producer-patterns)
-- [Consumer Patterns](/developers/blueprint-runner/consumers#consumer-patterns)
-
-## Conclusion
-
-Building a Blueprint Runner involves setting up various components that work together to execute your Tangle Blueprint. By following this guide and adhering to best practices, you can create a robust and efficient Blueprint Runner for your Actively Validated Service on the Tangle Network.
+- [Producers](/developers/blueprint-runner/producers)
+- [Consumers](/developers/blueprint-runner/consumers)
+- [Build a Tangle Blueprint](/developers/tangle-avs)

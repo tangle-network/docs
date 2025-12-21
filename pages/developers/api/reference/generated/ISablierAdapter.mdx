@@ -1,0 +1,162 @@
+---
+title: ISablierAdapter
+description: Auto-generated Solidity API reference.
+---
+
+# ISablierAdapter
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IStreamingPaymentAdapter.sol
+
+### ISablierAdapter
+
+Extended interface for Sablier-specific features
+
+#### Types
+
+#### StreamType
+
+Stream type for Sablier
+
+```solidity
+enum StreamType {
+  Linear,
+  Dynamic,
+  Tranched
+}
+```
+
+#### Segment
+
+Segment for dynamic streams
+
+```solidity
+struct Segment {
+  uint128 amount;
+  uint64 exponent;
+  uint40 timestamp;
+}
+```
+
+#### Functions
+
+#### createLinearStream
+
+```solidity
+function createLinearStream(uint64 serviceId, address token, uint128 totalAmount, uint40 durationSeconds, uint40 cliffSeconds) external returns (uint256 streamId)
+```
+
+Create a linear stream (constant rate)
+
+##### Parameters
+
+| Name            | Type    | Description            |
+| --------------- | ------- | ---------------------- |
+| serviceId       | uint64  | The Tangle service ID  |
+| token           | address | The ERC-20 token       |
+| totalAmount     | uint128 | Total amount to stream |
+| durationSeconds | uint40  | Total duration         |
+| cliffSeconds    | uint40  | Cliff period           |
+
+##### Return Values
+
+| Name     | Type    | Description           |
+| -------- | ------- | --------------------- |
+| streamId | uint256 | The created stream ID |
+
+#### createDynamicStream
+
+```solidity
+function createDynamicStream(uint64 serviceId, address token, uint128 totalAmount, struct ISablierAdapter.Segment[] segments) external returns (uint256 streamId)
+```
+
+Create a dynamic stream with custom curve
+
+##### Parameters
+
+| Name        | Type                             | Description                          |
+| ----------- | -------------------------------- | ------------------------------------ |
+| serviceId   | uint64                           | The Tangle service ID                |
+| token       | address                          | The ERC-20 token                     |
+| totalAmount | uint128                          | Total amount to stream               |
+| segments    | struct ISablierAdapter.Segment[] | Array of segments defining the curve |
+
+##### Return Values
+
+| Name     | Type    | Description           |
+| -------- | ------- | --------------------- |
+| streamId | uint256 | The created stream ID |
+
+#### isCancelable
+
+```solidity
+function isCancelable(uint256 streamId) external view returns (bool cancelable)
+```
+
+Check if a stream is cancelable
+
+##### Parameters
+
+| Name     | Type    | Description   |
+| -------- | ------- | ------------- |
+| streamId | uint256 | The stream ID |
+
+##### Return Values
+
+| Name       | Type | Description                     |
+| ---------- | ---- | ------------------------------- |
+| cancelable | bool | True if stream can be cancelled |
+
+#### wasCancelled
+
+```solidity
+function wasCancelled(uint256 streamId) external view returns (bool cancelled)
+```
+
+Check if a stream was cancelled
+
+##### Parameters
+
+| Name     | Type    | Description   |
+| -------- | ------- | ------------- |
+| streamId | uint256 | The stream ID |
+
+##### Return Values
+
+| Name      | Type | Description                  |
+| --------- | ---- | ---------------------------- |
+| cancelled | bool | True if stream was cancelled |
+
+#### getStreamNFT
+
+```solidity
+function getStreamNFT(uint256 streamId) external view returns (uint256 tokenId)
+```
+
+Get the NFT token ID for a stream (Sablier streams are NFTs)
+
+##### Parameters
+
+| Name     | Type    | Description   |
+| -------- | ------- | ------------- |
+| streamId | uint256 | The stream ID |
+
+##### Return Values
+
+| Name    | Type    | Description          |
+| ------- | ------- | -------------------- |
+| tokenId | uint256 | The ERC-721 token ID |
+
+#### transferStream
+
+```solidity
+function transferStream(uint256 streamId, address newRecipient) external
+```
+
+Transfer stream ownership (NFT transfer)
+
+##### Parameters
+
+| Name         | Type    | Description           |
+| ------------ | ------- | --------------------- |
+| streamId     | uint256 | The stream ID         |
+| newRecipient | address | New recipient address |

@@ -6,9 +6,7 @@ const meta: Meta = {
     title: "Introduction",
   },
   introduction: "Get Started",
-  "node-basics": "Node Basics",
-  validator: "Running a Validator",
-  monitoring: "Node Monitoring",
+  onboarding: "Operator Onboarding (Do This Now)",
   "-- Tangle Blueprint Operators": {
     type: "separator",
     title: "Blueprint Operators",
@@ -18,11 +16,6 @@ const meta: Meta = {
   pricing: "Pricing",
   benchmarking: "Blueprint Benchmarking",
   "quality-of-service": "Quality of Service",
-  "-- Eigenlayer AVS Operators": {
-    type: "separator",
-    title: "Eigenlayer AVS Operators",
-  },
-  "tangle-avs": "Tangle AVS",
 };
 
 export default meta;

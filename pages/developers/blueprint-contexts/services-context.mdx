@@ -1,49 +1,33 @@
 ---
-title: Services Context
+title: Tangle Services Helpers
 ---
 
 import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
-# Services Context
+# Tangle Services Helpers
 
-The `ServicesContext` trait provides a standardized interface for interacting with the Tangle network in your Blueprint through a Subxt `OnlineClient` with a PolkadotConfig.
+The Tangle EVM client includes helper APIs for reading blueprint/service state and submitting service lifecycle transactions.
 
 ## Overview
 
-The `ServicesContext` trait provides access to a Subxt client that enables:
+These helpers cover:
 
-- Fetching Blueprints - Retrieve Blueprints by ID
-- Querying Blueprints - Query Blueprints for an operator
-- Retrieving Blueprint Owners - Return the Owner for a Blueprint
-- Fetching Service Operators - Return a list of operators for a service
+- Blueprint metadata and config queries
+- Service status and request queries
+- Request/approve flows and dynamic joins
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/7d97147417af83ce30f52714c60840c50b9142be/crates/contexts/src/services.rs"
-  fromLine={3}
-  toLine={9}
-  title="ServicesContext Trait Definition"
+  url="https://github.com/tangle-network/blueprint/blob/v2/crates/clients/tangle-evm/src/services.rs"
+  fromLine={1}
+  toLine={120}
+  title="Service and blueprint query helpers (client-side types)"
 />
 
-## Using the Context
-
-### 1. Define Your Context
-
-First, define your context struct that implements the `ServicesContext` trait:
+## Using These Helpers
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/7d97147417af83ce30f52714c60840c50b9142be/crates/macros/context-derive/tests/ui/basic.rs"
-  fromLine={13}
-  toLine={22}
-  title="Services Context Definition"
-/>
-
-### 2. Access Services Client Functionality
-
-You can then use this context to access the services client and interact with Tangle services:
-
-<GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/7d97147417af83ce30f52714c60840c50b9142be/crates/macros/context-derive/tests/ui/basic.rs"
-  fromLine={38}
-  toLine={38}
-  title="Accessing Services Client Functionality"
+  url="https://github.com/tangle-network/blueprint/blob/v2/crates/clients/tangle-evm/src/client.rs"
+  fromLine={720}
+  toLine={812}
+  title="Submitting a service request from the Tangle EVM client"
 />

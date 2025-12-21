@@ -1,0 +1,316 @@
+---
+title: IStreamingPaymentAdapter
+description: Auto-generated Solidity API reference.
+---
+
+# IStreamingPaymentAdapter
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IStreamingPaymentAdapter.sol
+
+### IStreamingPaymentAdapter
+
+Common interface for streaming payment adapters (Superfluid, Sablier, etc.)
+
+_Adapters implement this interface to provide streaming payment capabilities
+to Tangle services without tight coupling to specific protocols._
+
+#### Functions
+
+#### createStream
+
+```solidity
+function createStream(uint64 serviceId, address token, uint256 totalAmount, uint64 durationSeconds, uint64 cliffSeconds) external payable returns (uint256 streamId)
+```
+
+Create a streaming payment for a service
+
+##### Parameters
+
+| Name            | Type    | Description                                        |
+| --------------- | ------- | -------------------------------------------------- |
+| serviceId       | uint64  | The Tangle service ID                              |
+| token           | address | The ERC-20 token to stream (address(0) for native) |
+| totalAmount     | uint256 | Total amount to stream                             |
+| durationSeconds | uint64  | Stream duration in seconds                         |
+| cliffSeconds    | uint64  | Optional cliff period (0 for no cliff)             |
+
+##### Return Values
+
+| Name     | Type    | Description           |
+| -------- | ------- | --------------------- |
+| streamId | uint256 | The created stream ID |
+
+#### updateStreamRate
+
+```solidity
+function updateStreamRate(uint256 streamId, uint256 newRatePerSecond) external
+```
+
+Update the rate of an existing stream
+
+##### Parameters
+
+| Name             | Type    | Description             |
+| ---------------- | ------- | ----------------------- |
+| streamId         | uint256 | The stream ID to update |
+| newRatePerSecond | uint256 | New streaming rate      |
+
+#### cancelStream
+
+```solidity
+function cancelStream(uint256 streamId) external returns (uint256 refundedAmount)
+```
+
+Cancel a stream and refund remaining balance
+
+##### Parameters
+
+| Name     | Type    | Description             |
+| -------- | ------- | ----------------------- |
+| streamId | uint256 | The stream ID to cancel |
+
+##### Return Values
+
+| Name           | Type    | Description                  |
+| -------------- | ------- | ---------------------------- |
+| refundedAmount | uint256 | Amount refunded to the payer |
+
+#### withdrawFromStream
+
+```solidity
+function withdrawFromStream(uint256 streamId) external returns (uint256 withdrawnAmount)
+```
+
+Withdraw available funds from a stream
+
+##### Parameters
+
+| Name     | Type    | Description   |
+| -------- | ------- | ------------- |
+| streamId | uint256 | The stream ID |
+
+##### Return Values
+
+| Name            | Type    | Description      |
+| --------------- | ------- | ---------------- |
+| withdrawnAmount | uint256 | Amount withdrawn |
+
+#### settleAndDistribute
+
+```solidity
+function settleAndDistribute(uint256 streamId) external
+```
+
+Settle a stream's accumulated funds and distribute to operators
+
+_This triggers distribution through Tangle's payment system_
+
+##### Parameters
+
+| Name     | Type    | Description             |
+| -------- | ------- | ----------------------- |
+| streamId | uint256 | The stream ID to settle |
+
+#### getWithdrawableAmount
+
+```solidity
+function getWithdrawableAmount(uint256 streamId) external view returns (uint256 amount)
+```
+
+Get the current withdrawable amount for a stream
+
+##### Parameters
+
+| Name     | Type    | Description   |
+| -------- | ------- | ------------- |
+| streamId | uint256 | The stream ID |
+
+##### Return Values
+
+| Name   | Type    | Description                  |
+| ------ | ------- | ---------------------------- |
+| amount | uint256 | Amount available to withdraw |
+
+#### getStreamRate
+
+```solidity
+function getStreamRate(uint256 streamId) external view returns (uint256 ratePerSecond)
+```
+
+Get the current streaming rate
+
+##### Parameters
+
+| Name     | Type    | Description   |
+| -------- | ------- | ------------- |
+| streamId | uint256 | The stream ID |
+
+##### Return Values
+
+| Name          | Type    | Description                      |
+| ------------- | ------- | -------------------------------- |
+| ratePerSecond | uint256 | Tokens per second being streamed |
+
+#### getStreamInfo
+
+```solidity
+function getStreamInfo(uint256 streamId) external view returns (uint64 serviceId, address payer, address token, uint256 totalAmount, uint256 withdrawnAmount, uint256 startTime, uint256 endTime, uint256 cliffTime, bool active)
+```
+
+Get full stream information
+
+##### Parameters
+
+| Name     | Type    | Description   |
+| -------- | ------- | ------------- |
+| streamId | uint256 | The stream ID |
+
+##### Return Values
+
+| Name            | Type    | Description                     |
+| --------------- | ------- | ------------------------------- |
+| serviceId       | uint64  | Associated Tangle service       |
+| payer           | address | Address funding the stream      |
+| token           | address | Token being streamed            |
+| totalAmount     | uint256 | Total stream amount             |
+| withdrawnAmount | uint256 | Amount already withdrawn        |
+| startTime       | uint256 | Stream start timestamp          |
+| endTime         | uint256 | Stream end timestamp            |
+| cliffTime       | uint256 | Cliff timestamp (0 if no cliff) |
+| active          | bool    | Whether stream is active        |
+
+#### getStreamServiceId
+
+```solidity
+function getStreamServiceId(uint256 streamId) external view returns (uint64 serviceId)
+```
+
+Get the service ID associated with a stream
+
+##### Parameters
+
+| Name     | Type    | Description   |
+| -------- | ------- | ------------- |
+| streamId | uint256 | The stream ID |
+
+##### Return Values
+
+| Name      | Type   | Description           |
+| --------- | ------ | --------------------- |
+| serviceId | uint64 | The Tangle service ID |
+
+#### getServiceStreams
+
+```solidity
+function getServiceStreams(uint64 serviceId) external view returns (uint256[] streamIds)
+```
+
+Get all active streams for a service
+
+##### Parameters
+
+| Name      | Type   | Description           |
+| --------- | ------ | --------------------- |
+| serviceId | uint64 | The Tangle service ID |
+
+##### Return Values
+
+| Name      | Type      | Description                |
+| --------- | --------- | -------------------------- |
+| streamIds | uint256[] | Array of active stream IDs |
+
+#### getAccruedAmount
+
+```solidity
+function getAccruedAmount(uint256 streamId) external view returns (uint256 accruedAmount)
+```
+
+Calculate real-time accrued amount (not yet settled)
+
+##### Parameters
+
+| Name     | Type    | Description   |
+| -------- | ------- | ------------- |
+| streamId | uint256 | The stream ID |
+
+##### Return Values
+
+| Name          | Type    | Description                          |
+| ------------- | ------- | ------------------------------------ |
+| accruedAmount | uint256 | Amount accrued since last settlement |
+
+#### protocolName
+
+```solidity
+function protocolName() external view returns (string name)
+```
+
+Get the name of the underlying protocol
+
+##### Return Values
+
+| Name | Type   | Description                                   |
+| ---- | ------ | --------------------------------------------- |
+| name | string | Protocol name (e.g., "Superfluid", "Sablier") |
+
+#### isTokenSupported
+
+```solidity
+function isTokenSupported(address token) external view returns (bool supported)
+```
+
+Check if a token is supported for streaming
+
+##### Parameters
+
+| Name  | Type    | Description       |
+| ----- | ------- | ----------------- |
+| token | address | The token address |
+
+##### Return Values
+
+| Name      | Type | Description                   |
+| --------- | ---- | ----------------------------- |
+| supported | bool | True if token can be streamed |
+
+#### Events
+
+#### StreamCreated
+
+```solidity
+event StreamCreated(uint64 serviceId, uint256 streamId, address payer, address token, uint256 ratePerSecond, uint256 totalAmount)
+```
+
+Emitted when a stream is created for a service
+
+#### StreamUpdated
+
+```solidity
+event StreamUpdated(uint64 serviceId, uint256 streamId, uint256 newRatePerSecond)
+```
+
+Emitted when a stream is updated
+
+#### StreamCancelled
+
+```solidity
+event StreamCancelled(uint64 serviceId, uint256 streamId, uint256 refundedAmount)
+```
+
+Emitted when a stream is cancelled
+
+#### StreamWithdrawn
+
+```solidity
+event StreamWithdrawn(uint64 serviceId, uint256 streamId, uint256 amount, address recipient)
+```
+
+Emitted when funds are withdrawn from a stream
+
+#### StreamSettled
+
+```solidity
+event StreamSettled(uint64 serviceId, uint256 streamId, uint256 amount)
+```
+
+Emitted when a stream is settled and distributed

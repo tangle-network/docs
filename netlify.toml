@@ -16,3 +16,58 @@ status = 301
 from = "/operators"
 to = "/operators/introduction"
 status = 301
+
+[[redirects]]
+from = "/resources"
+to = "/network/resources"
+status = 301
+
+[[redirects]]
+from = "/resources/press-release"
+to = "/network/press-release"
+status = 301
+
+[[redirects]]
+from = "/resources/resources"
+to = "/network/resources"
+status = 301
+
+[[redirects]]
+from = "/resources/*"
+to = "/network/resources"
+status = 301
+
+[[redirects]]
+from = "/app"
+to = "/network/claim-airdrop"
+status = 301
+
+[[redirects]]
+from = "/app/migration-claim"
+to = "/network/claim-airdrop"
+status = 301
+
+[[redirects]]
+from = "/app/restaking"
+to = "/restake/introduction"
+status = 301
+
+[[redirects]]
+from = "/app/services"
+to = "/developers/blueprints/introduction"
+status = 301
+
+[[redirects]]
+from = "/app/operators"
+to = "/operators/onboarding"
+status = 301
+
+[[redirects]]
+from = "/app/architecture"
+to = "/developers/system-architecture/offchain"
+status = 301
+
+[[redirects]]
+from = "/app/*"
+to = "/network/overview"
+status = 301

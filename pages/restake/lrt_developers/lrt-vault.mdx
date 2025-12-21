@@ -1,230 +1,81 @@
-import GithubFileReaderDisplay from "../../../components/GithubFileReaderDisplay";
+---
+title: "Liquid Delegation Vaults (Bolts): Deep Dive"
+description: How bolts are keyed, how shares map to delegation, and how ERC-7540 redemptions work.
+---
 
-# Creating a LRT Vault on Tangle
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
-## Overview
+# Liquid Delegation Vaults (Bolts): Deep Dive
 
-This tutorial walks through creating a Liquid Restaking Token (LRT) Vault on Tangle Network using the reference implementation from the [tangle-lrt](https://github.com/tangle-network/lrt) repository. LRT vaults allow users to receive liquid tokens representing their staked assets while participating in Tangle's restaking mechanism.
+This page documents the on-chain bolt primitives used for liquid delegation on Tangle EVM:
 
-## Prerequisites
+- `LiquidDelegationFactory`: deploys vaults per `(operator, asset, blueprintIds)` tuple.
+- `LiquidDelegationVault`: holds custody of assets, delegates into `MultiAssetDelegation`, and mints transferable shares.
 
-- Basic knowledge of Solidity and EVM development
-- [Foundry](https://book.getfoundry.sh/) installed for smart contract development
-- MetaMask wallet connected to Tangle Network
-- Some test tokens for deployment (on testnet)
+## Vault Identity (Tuple) and Deterministic Lookup
 
-Install Foundry:
+The factory uses a deterministic key derived from:
 
-```bash
-curl -L https://foundry.paradigm.xyz | bash
-foundryup
-```
+- `operator`
+- `asset`
+- `blueprintIds` (empty means `All` mode)
 
-## Understanding the Components
-
-The Tangle Liquid Restaking implementation consists of the following key components:
-
-1. **Vault Contract (TangleLiquidRestakingVault)**: An ERC4626-compliant vault that:
-
-   - Manages deposits and withdrawals
-   - Implements reward distribution with index-based accounting
-   - Handles delegation through the MultiAssetDelegation precompile
-   - Provides liquid token representation of staked assets
-
-2. **MultiAssetDelegation Wrapper**: Interfaces with Tangle's MultiAssetDelegation precompile at `0x0000000000000000000000000000000000000822`
-3. **Rewards Wrapper**: Interfaces with Tangle's Rewards precompile at `0x0000000000000000000000000000000000000825`
-
-Core features include:
+This lets integrators look up “the vault for operator X and blueprint set Y” without scanning events.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/lrt/blob/main/src/TangleLiquidRestakingVault.sol"
-  title="Solidity Interface for Tangle Liquid Restaking Vault"
-  fromLine={12}
-  toLine={44}
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/LiquidDelegationFactory.sol"
+  fromLine={70}
+  toLine={149}
+  title="LiquidDelegationFactory: createVault + computeVaultKey + getVault"
 />
 
-## Step 1: Setting Up the Project
+## Share Accounting (What `totalAssets()` Means)
 
-First, clone the reference implementation:
+The reference vault implements ERC-4626-like conversions but uses the restaking delegation as `totalAssets()`.
 
-```bash
-git clone https://github.com/tangle-network/lrt
-cd lrt
-forge soldeer update -d
-```
-
-## Step 2: Core Implementation Details
-
-### Reward Distribution System
-
-The vault implements a sophisticated reward distribution system using index-based accounting:
+Implication: if a vault holds idle balances (or harvests rewards into its own balance), integrators must verify whether those balances are included in `totalAssets()` for share pricing.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/lrt/blob/main/src/TangleLiquidRestakingVault.sol"
-  title="Solidity Interface for Tangle Liquid Restaking Vault"
-  fromLine={504}
-  toLine={522}
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/LiquidDelegationVault.sol"
+  fromLine={125}
+  toLine={206}
+  title="LiquidDelegationVault: totalAssets() + deposit() delegation path"
 />
 
-### Delegation Management
+## Withdrawals (ERC-7540 Request / Redeem)
 
-The vault handles delegation through the MultiAssetDelegation precompile, managing deposits and withdrawals:
+Withdrawals are asynchronous:
+
+- `requestRedeem(...)` burns shares and schedules an underlying unstake in `MultiAssetDelegation`.
+- After the exit delay (round-based), `redeem(...)` executes the unstake and transfers assets to the receiver.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/lrt/blob/main/src/TangleLiquidRestakingVault.sol"
-  title="Solidity Interface for Tangle Liquid Restaking Vault"
-  fromLine={251}
-  toLine={283}
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/LiquidDelegationVault.sol"
+  fromLine={231}
+  toLine={374}
+  title="LiquidDelegationVault: requestRedeem + claimable checks + redeem"
 />
 
-## Step 3: Testing the Implementation
+### Integration Notes for `requestId`
 
-Create test files in the `test` directory using Foundry's Solidity testing framework. Here's an example test structure:
+The vault records requests as `(controller, requestId) → { shares, requestedRound, claimed }` and emits `RedeemRequest(...)`.
 
-```solidity
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+The reference `redeem(...)` currently locates a claimable request by matching `shares` rather than taking `requestId` as an explicit parameter. If you are building a production integration, treat “request identification” as a core UX/API concern (index and track `requestId` from the emitted event).
 
-import "forge-std/Test.sol";
-import "../src/TangleLiquidRestakingVault.sol";
+## What UIs/Indexers Typically Track
 
-contract TangleLiquidRestakingVaultTest is Test {
-    TangleLiquidRestakingVault vault;
-    address baseToken;
-    bytes32 operator;
-    uint64[] blueprintSelection;
+- `currentRound()` and `delegationBondLessDelay()` on `MultiAssetDelegation` to show when a redeem becomes claimable.
+- The vault’s `RedeemRequest(controller, owner, requestId, ...)` events to display pending requests.
+- The vault’s tuple `(operator, asset, selectionMode, blueprintIds)` to explain exposure.
 
-    function setUp() public {
-        // Setup test environment
-        baseToken = address(new ERC20("Test Token", "TEST"));
-        operator = bytes32(uint256(1));
-        blueprintSelection = new uint64[](1);
-        blueprintSelection[0] = 1;
+## Rewards (Vault-Level)
 
-        // Deploy vault
-        vault = new TangleLiquidRestakingVault(
-            baseToken,
-            operator,
-            blueprintSelection,
-            MULTI_ASSET_DELEGATION_CONTRACT,
-            "Liquid Restaked Test",
-            "lrTEST"
-        );
-    }
+Bolts operate as a single delegator address at the restaking layer. Any delegator-level rewards accrue to the vault address.
 
-    function testDeposit() public {
-        uint256 amount = 1000e18;
-        deal(baseToken, address(this), amount);
+The reference contract includes `harvestRewards()` as a hook; how rewards are reflected to share holders (share price vs separate claims) is an implementation decision and should be made explicit in your vault UX.
 
-        ERC20(baseToken).approve(address(vault), amount);
-        vault.deposit(amount, address(this));
+## Risks and Caveats
 
-        assertEq(vault.balanceOf(address(this)), amount);
-    }
-}
-```
-
-Run the tests using Forge:
-
-```bash
-forge test -vv
-```
-
-## Step 4: Deployment
-
-The vault can be deployed using Forge's deployment capabilities:
-
-1. Create a deployment script in `script/DeployVault.s.sol`:
-
-```solidity
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
-
-import "forge-std/Script.sol";
-import "../src/TangleLiquidRestakingVault.sol";
-
-contract DeployVault is Script {
-    function run() external {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        vm.startBroadcast(deployerPrivateKey);
-
-        // Deploy vault
-        bytes32 operator = bytes32(uint256(vm.envUint("OPERATOR_ID")));
-        uint64[] memory blueprintSelection = new uint64[](1);
-        blueprintSelection[0] = uint64(vm.envUint("BLUEPRINT_ID"));
-
-        TangleLiquidRestakingVault vault = new TangleLiquidRestakingVault(
-            vm.envAddress("BASE_TOKEN"),
-            operator,
-            blueprintSelection,
-            MULTI_ASSET_DELEGATION_CONTRACT,
-            "Liquid Restaked Token",
-            "LRT"
-        );
-
-        vm.stopBroadcast();
-    }
-}
-```
-
-2. Configure deployment variables in `.env`:
-
-```env
-TANGLE_RPC_URL="https://testnet-rpc.tangle.tools"  # or mainnet
-PRIVATE_KEY="your-private-key"
-BASE_TOKEN="0x..."
-OPERATOR_ID="1"  # your operator ID
-BLUEPRINT_ID="1"  # your blueprint ID
-```
-
-3. Deploy using Forge:
-
-```bash
-forge script script/DeployVault.s.sol:DeployVault --rpc-url $TANGLE_RPC_URL --broadcast
-```
-
-## Step 5: Interacting with the Vault
-
-The vault exposes several key functions for user interaction:
-
-### Deposits and Withdrawals
-
-<GithubFileReaderDisplay
-  url="https://github.com/tangle-network/lrt/blob/main/src/TangleLiquidRestakingVault.sol"
-  title="Solidity Interface for Tangle Liquid Restaking Vault"
-  fromLine={357}
-  toLine={388}
-/>
-
-### Reward Management
-
-<GithubFileReaderDisplay
-  url="https://github.com/tangle-network/lrt/blob/main/src/TangleLiquidRestakingVault.sol"
-  title="Solidity Interface for Tangle Liquid Restaking Vault"
-  fromLine={197}
-  toLine={226}
-/>
-
-## Security Considerations
-
-The vault implements several security measures:
-
-1. **Access Control**: Uses Solmate's `Owned` for admin functions
-2. **Reward Accounting**: Index-based accounting prevents double-claiming
-3. **Withdrawal Process**: Two-step withdrawal process with unstaking period
-4. **Math Safety**: Uses `FixedPointMathLib` for safe calculations
-
-Key security features from the contract:
-
-```solidity
-/// @notice Scale factor for reward index calculations
-uint256 private constant REWARD_FACTOR = 1e18;
-
-/// @notice Uses mulDivUp for final reward calculation
-uint256 newRewards = snapshot.shareBalance.mulDivUp(indexDelta, REWARD_FACTOR);
-
-/// @notice Validates withdrawal amounts
-if (scheduledWithdrawAmount[owner] < assets) revert NoScheduledAmount();
-```
-
-For more information on the MultiAssetDelegation precompile and its features, see the [precompile documentation](../../developers/precompiles/features/multi-asset-delegation.mdx).
+- Redemptions are delayed by the restaking exit delay (round-based).
+- Slashing can reduce the underlying delegation and change the assets received on exit.
+- Blueprint selection (`All` vs `Fixed`) determines the service surface area a bolt is exposed to.

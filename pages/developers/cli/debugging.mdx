@@ -57,8 +57,7 @@ See the [requirements](/operators/manager/requirements#container-sources)
 For testing, you'll likely want to set up a [local registry](https://www.docker.com/blog/how-to-use-your-own-registry-2/).
 
 1. Build, tag, and push the image to your registry
-   If your blueprint is based off the [blueprint template], it will come with a basic [Dockerfile] that should be suitable
-   for most blueprints, and can be edited if necessary.
+   Use a Dockerfile suitable for your blueprint (example reference: [Dockerfile]).
 2. Spawn it with the CLI
    ```shell
    $ cargo tangle debug spawn --method container --image "my.registry:5000/my-blueprint:latest"
@@ -82,8 +81,8 @@ $ kubectl describe pod service -n blueprint-manager
 
 See the [requirements](/operators/manager/requirements#tee-sources-wip-linux-only)
 
-1. Create a Docker image for your blueprint, see [Container Debugging](#container-debugging)
-2. TODO
+TEE execution is not supported for general use yet.
 
-[blueprint template]: https://github.com/tangle-network/blueprint-template
-[Dockerfile]: https://github.com/tangle-network/blueprint-template/blob/main/Dockerfile
+If you are building toward a future TEE deployment, use [Container Debugging](#container-debugging) as your primary local workflow (it matches the packaging model TEE will use), and track updates in the Blueprint SDK repository.
+
+[Dockerfile]: https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring-eigenlayer/Dockerfile

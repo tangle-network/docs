@@ -8,7 +8,7 @@ As an operator, the Quality of Service (QoS) system provides you with comprehens
 
 ## What is the QoS System?
 
-The Quality of Service (QoS) system in Tangle Network provides a complete observability stack that gives you access to optional insights into your running blueprints:
+The Quality of Service (QoS) system on Tangle provides a complete observability stack that gives you access to optional insights into your running blueprints:
 
 - Real-time monitoring of blueprint health and performance
 - Centralized logs for troubleshooting and audit trails
@@ -61,7 +61,7 @@ The heartbeat section shows you the operational status of your blueprint:
 - **Heartbeat Success Rate**: Percentage of successful heartbeats
 - **Chain Confirmation Status**: Verification that heartbeats are being recorded on-chain
 
-These heartbeats ensure that an operator is punished (slashed) if they do not run the blueprint as they should.
+These heartbeats provide an on-chain liveness signal and can be used for off-chain monitoring and as evidence when proposing a slash. Heartbeats do not automatically slash an operator on their own.
 
 ### 4. Log Visualization with Loki
 
@@ -126,7 +126,7 @@ A: This data is only retained during the duration of the service, unless otherwi
 
 ## Related Information
 
-To learn more about operating with Tangle Network blueprints, you may want to review:
+To learn more about operating with Tangle blueprints, you may want to review:
 
 - [Blueprint Benchmarking](/operators/benchmarking)
 - [Pricing Strategies](/operators/pricing)

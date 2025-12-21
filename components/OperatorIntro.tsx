@@ -4,25 +4,18 @@ import CallToActionCard from "./CallToActionCard";
 
 const OperatorIntroCards = () => {
   const cards = [
-    // {
-    //   icon: <SquareDashedBottomCode />,
-    //   title: <span className="text-xl font-bold ">Service Operators</span>,
-    //   description: "Run Blueprint instances and earn job revenue.",
-    //   link: "../operators/service-operator/service-provider",
-    // },
     {
       icon: <BetweenVerticalEnd />,
-      title: <span className="text-xl font-bold ">Validators</span>,
+      title: <span className="text-xl font-bold ">Operator Onboarding</span>,
       description:
-        "Secure the network by participating in Nominated Proof-of-Stake (nPoS).",
-      link: "../operators/validator/introduction",
+        "Do this now: register, opt into blueprints, and run the operator runtime.",
+      link: "../operators/onboarding",
     },
     {
       icon: <GrNodes />,
-      title: <span className="text-xl font-bold ">Run a Node</span>,
-      description:
-        "Get started with Tangle by running a node, a great way to get familiar with operating.",
-      link: "../operators/node-basics/quickstart",
+      title: <span className="text-xl font-bold ">Blueprint Manager</span>,
+      description: "Operate and manage blueprint runtimes and requirements.",
+      link: "../operators/manager/introduction",
     },
   ];
 

@@ -1,29 +1,34 @@
-# Integrating with Tangle Restaking
+---
+title: Integrating with Restaking
+description: Contract addresses and integration approach for building on Tangle restaking.
+---
 
-To integrate with Tangle Restaking for the purposes of building a DApp or interacting with the restake functionality, you can use the Tangle MultiAssetDelegation and Services precompiles. These contracts provide logic to build new liquid restaking token pools and UIs over Tangle Restaking.
+import NetworkInfo from "/components/NetworkResources";
 
-Tangle MultiAssetDelegation data provides information about the current state of the Tangle network restake functionality.
-If you are looking to use this restake data in your project or build your DAPP, you can use the tangle-restake-precompile library to interact with the restake functionality.
+# Integrating with Restaking
 
-A precompiled contract is native Substrate code that has an Ethereum-style address and can be called using the Ethereum API, like any other smart contract.
-The precompiles allow you to call the Substrate runtime directly which is not normally accessible from the Ethereum side of Tangle.
+To integrate with Tangle restaking (for building a dApp, indexer, or integration), you interact with Tangle’s **EVM protocol contracts**.
 
-### How to use the precompile
+Key contracts:
 
-The precompile can be used like any other Solidity interface.
+- `Tangle`: blueprint registration, service requests, jobs, payments, and slashing coordination.
+- `MultiAssetDelegation`: deposits, delegation, operator registration/lifecycle, and withdrawal scheduling.
+- `LiquidDelegationFactory` / `LiquidDelegationVault`: liquid restaking via transferable vault shares over delegated positions.
 
-You can import the precompile in your Solidity project like this:
+## Addresses and Deployment
 
-```solidity
-import "MultiAssetDelegationPrecompile.sol";
-```
+Contract addresses depend on **where Tangle is deployed** (mainnet/testnet and the underlying EVM chain). Use the canonical deployment list below:
 
-To then deposit tokens into the precompile, you can use the `deposit` function:
+<NetworkInfo />
 
-```solidity
-function deposit(uint256 amount, address to) external;
-```
+If a contract is listed as `TBD`, it has not been finalized for that network yet.
 
-This function will deposit the specified amount of tokens into the precompile and assign the corresponding amount of tokens to the `to` address.
+## ABIs / Integration Approach
 
-More information about the precompile can be found [here](./restake_precompile.mdx).
+Integrations typically use one of:
+
+- Ethers/viem + published ABIs
+- Foundry `cast` for scripting
+- An indexer that listens to protocol events for operator/service activity
+
+Once launch endpoints are published, update your integration to point to the correct RPC and deployed contract addresses.

@@ -1,182 +1,59 @@
-import NonuniformTableOfContentCards from "../../../components/NonuniformTableOfContentCards";
-import GithubRepoCard, { GithubRepoList } from "../../../components/GithubRepoCard";
+import { GithubRepoList } from "../../../components/GithubRepoCard";
 
-# Use Cases
+# Blueprint Use Cases
 
-Tangle Network enables developers to rapidly build and deploy secure multi-party services through our Blueprint system. Blueprints are reusable templates that can be instantly deployed as live services backed by Tangle's decentralized operator network.
+This page links to maintained blueprint examples and templates. All links are pinned to the `v2` branch.
 
-## Bridges
+## Start Here (Examples)
 
-<GithubRepoCard
-  name="layerzero-dvn-blueprint-template"
-  description="Template for creating LayerZero DVN (Decentralized Verifier Network) blueprints"
-  url="https://github.com/tangle-network/layerzero-dvn-blueprint-template"
-  displayStyle="row"
+<GithubRepoList
+  displayStyle="column"
+  repos={[
+    {
+      name: "Hello Tangle Blueprint",
+      description: "Minimal end-to-end blueprint: publish → register → run → submit jobs.",
+      url: "https://github.com/tangle-network/blueprint/tree/v2/examples/hello-tangle",
+    },
+    {
+      name: "OAuth Blueprint",
+      description: "Reference blueprint showing OAuth-style flows and request authorization patterns.",
+      url: "https://github.com/tangle-network/blueprint/tree/v2/examples/oauth-blueprint",
+    },
+    {
+      name: "API Key Blueprint",
+      description: "Reference blueprint showing API key issuance/validation patterns for services.",
+      url: "https://github.com/tangle-network/blueprint/tree/v2/examples/apikey-blueprint",
+    },
+    {
+      name: "Incredible Squaring (Tangle)",
+      description: "More complete example: multi-job workflow, result submission, and local testing harness.",
+      url: "https://github.com/tangle-network/blueprint/tree/v2/examples/incredible-squaring",
+    },
+    {
+      name: "Incredible Squaring (EigenLayer)",
+      description: "Same runner and contexts, wired to EigenLayer as a reference integration.",
+      url: "https://github.com/tangle-network/blueprint/tree/v2/examples/incredible-squaring-eigenlayer",
+    },
+  ]}
 />
 
-<GithubRepoCard
-  name="hyperlane-relayer-blueprint"
-  description="Blueprint for implementing Hyperlane relayer functionality"
-  url="https://github.com/tangle-network/hyperlane-relayer-blueprint"
-  displayStyle="row"
-/>
+## Common Service Patterns
 
-{/* TODO: Add URL */}
+Blueprints are used to operationalize off-chain infrastructure with explicit on-chain authorization, payments, and slashing hooks. Common patterns include:
 
-<GithubRepoCard
-  url=""
-  name="hyperlane-ism-blueprint-template"
-  description="Template for creating Hyperlane Interchain Security Module blueprints"
-  displayStyle="row"
-/>
+- **Key management + signing** (threshold signing, custodial APIs, signing relays)
+- **Secure compute** (job execution, attestations, verifiable pipelines)
+- **Oracles and automation** (event listeners, action routers, schedulers)
+- **Interop** (relayers, message verification, bridge co-processors)
 
-{/* TODO: Add URL */}
+Most teams start from one of the examples above and then:
 
-<GithubRepoCard
-  url=""
-  name="hyperbridge-relayer-blueprint"
-  description="Blueprint for implementing Hyperbridge relayer functionality"
-  displayStyle="row"
-/>
+1. Define job schemas and handlers in the runner.
+2. Decide how customers pay (pay-once, subscription, per-job).
+3. Decide what counts as misbehavior (and how evidence is produced) for slashing.
 
-## AI
+Related docs:
 
-<GithubRepoCard
-  name="coinbase-agentkit-blueprint"
-  description="Coinbase AgentKit Blueprint"
-  url="https://github.com/tangle-network/coinbase-agentkit-blueprint"
-  displayStyle="row"
-/>
-<GithubRepoCard
-  name="rig-ai-agent-blueprint"
-  description="A template showcasing Rig AI agent integration with Tangle Blueprints, which contains an example agent for spell checking and improving code documentation of requested repos."
-  url="https://github.com/tangle-network/rig-ai-agent-blueprint"
-  displayStyle="row"
-/>
-
-<GithubRepoCard
-  name="gaia-ai-agent-template"
-  description="Template for creating AI agents using the Gaia framework"
-  url="https://github.com/tangle-network/gaia-ai-agent-template"
-  displayStyle="row"
-/>
-
-<GithubRepoCard
-  name="discord-summarizer-rig-blueprint"
-  description="Template for creating AI agents that summarizes discord channels daily"
-  url="https://github.com/tangle-network/discord-summarizer-rig-blueprint/"
-  displayStyle="row"
-/>
-
-## Key Management
-
-<GithubRepoCard
-  name="turnkey-blueprint-template"
-  description="A template that contains Turnkey APIs for interacting with Turnkey for use in a Tangle blueprint."
-  url="https://github.com/tangle-network/turnkey-blueprint-template"
-  displayStyle="row"
-/>
-
-## MPC
-
-<GithubRepoCard
-  name="frost-blueprint"
-  description="Blueprint for implementing FROST (Flexible Round-Optimized Schnorr Threshold) signatures"
-  url="https://github.com/tangle-network/frost-blueprint"
-  displayStyle="row"
-/>
-
-<GithubRepoCard
-  name="dfns-cggmp21-blueprint"
-  description="Blueprint for implementing DFNS CGGMP21 distributed key generation"
-  url="https://github.com/tangle-network/dfns-cggmp21-blueprint"
-  displayStyle="row"
-/>
-
-<GithubRepoCard
-  name="schnorr-musig2-blueprint"
-  description="Blueprint for Musig2 Schnorr signatures over Secp256k1"
-  url="https://github.com/tangle-network/schnorr-musig2-blueprint"
-  displayStyle="row"
-/>
-
-<GithubRepoCard
-  name="bls-blueprint"
-  description="Blueprint for threshold BLS signatures using BLS381"
-  url="https://github.com/tangle-network/bls-blueprint"
-  displayStyle="row"
-/>
-
-<GithubRepoCard
-  name="silent-timelock-encryption-blueprint"
-  description="Blueprint for silent setup timelock encryptions and threshold decryptions."
-  url="https://github.com/tangle-network/silent-timelock-encryption-blueprint"
-  displayStyle="row"
-/>
-
-<GithubRepoCard
-  name="bte-blueprint"
-  description="Blueprint for batch threshold decryption, includes examples for MEV-resistent orderflow."
-  url="https://github.com/tangle-network/bte-blueprint"
-  displayStyle="row"
-/>
-
-## Distributed Validators
-
-<GithubRepoCard
-  name="obol-dvt-blueprint"
-  description="Blueprint for implementing Obol Distributed Validator Technology"
-  url="https://github.com/tangle-network/obol-dvt-blueprint"
-  displayStyle="row"
-/>
-
-## Web Services
-
-<GithubRepoCard
-  name="secure-code-execution-blueprint"
-  description="A template for code execution service supporting Rust, Golang, Python, JS/TS"
-  url="https://github.com/tangle-network/secure-code-execution-blueprint"
-  displayStyle="row"
-/>
-
-<GithubRepoCard
-  name="txrelayer-blueprint"
-  description="Blueprint for feeless transaction relayers to support any EVM."
-  url="https://github.com/tangle-network/txrelayer-blueprint"
-  displayStyle="row"
-/>
-
-<GithubRepoCard
-  name="tls-notary-blueprint"
-  description="Blueprint for implementing TLS notary services"
-  url="https://github.com/tangle-network/tls-notary-blueprint"
-  displayStyle="row"
-/>
-
-<GithubRepoCard
-  name="apillon-simplet-blueprint-template"
-  description="Template for creating Apillon Simplet web services"
-  url="https://github.com/tangle-network/apillon-simplet-blueprint-template"
-  displayStyle="row"
-/>
-
-## Rollups
-
-<GithubRepoCard
-  name="avail-arbitrum-orbit-raas"
-  description="Rollup-as-a-Service implementation for Arbitrum Orbit using Avail DA"
-  url="https://github.com/tangle-network/avail-arbitrum-orbit-raas"
-  displayStyle="row"
-/>
-<GithubRepoCard
-  name="raas-blueprints"
-  description="Collection of Rollup-as-a-Service blueprints"
-  url="https://github.com/tangle-network/raas-blueprints"
-  displayStyle="row"
-/>
-<GithubRepoCard
-  name="espresso-raas-blueprint"
-  description="Espresso Rollup-as-a-Service Blueprint"
-  url="https://github.com/tangle-network/espresso-raas-blueprint"
-  displayStyle="row"
-/>
+- [Build a Tangle Blueprint](/developers/tangle-avs)
+- [Blueprint Pricing (RFQ)](/developers/blueprints/pricing-engine)
+- [Quality of Service Integration](/developers/blueprint-qos)

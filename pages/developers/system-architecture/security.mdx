@@ -1,0 +1,32 @@
+---
+title: Security Model
+description: How authorization, slashing proposals, exposure scaling, and disputes fit together.
+---
+
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
+
+# Security Model
+
+Tangle’s security model is service-scoped: the parties who can trigger enforcement are tied to the service owner, blueprint owner, and (optionally) a blueprint manager contract.
+
+## Slashing: Authorization + Exposure Scaling
+
+Slashes are proposed on a per-service basis and can be disputed within a window before execution. When a service declares per-asset security requirements, “effective exposure” can be scaled by the operator’s commitments.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Slashing.sol"
+  fromLine={13}
+  toLine={110}
+  title="Slashing: who can propose + how exposure is scaled by commitments"
+/>
+
+## Liveness (Heartbeats)
+
+Heartbeats are emitted by operators (or their manager) and can be consumed for monitoring and, depending on policy, escalated to slashable status.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/OperatorStatusRegistry.sol"
+  fromLine={10}
+  toLine={120}
+  title="OperatorStatusRegistry: heartbeat interface + status codes"
+/>

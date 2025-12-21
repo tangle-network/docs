@@ -1,0 +1,29 @@
+---
+title: Restaking & Exposure
+description: Delegation, blueprint selection constraints, and how “exposure” is expressed and enforced.
+---
+
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
+
+# Restaking & Exposure
+
+Tangle’s security model starts with restaking: delegators deposit assets and delegate to operators. A delegation can optionally constrain _where_ that capital is used via **blueprint selection mode**.
+
+## What “Exposure” Means
+
+When a service is created, each operator is assigned an **exposure basis-points value** (0–10,000). Exposure is used to:
+
+- Weight **fee distribution** between operators and restakers
+- Bound **effective slashing** and dispute calculations
+- Tie security commitments to restaked capital (optionally per-asset)
+
+## Delegation + Blueprint Selection
+
+Delegators can delegate “globally” (all blueprints) or restrict delegation to a fixed set of blueprint IDs.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/MultiAssetDelegation.sol"
+  fromLine={20}
+  toLine={220}
+  title="MultiAssetDelegation: deposits, delegation, and blueprint selection mode inputs"
+/>

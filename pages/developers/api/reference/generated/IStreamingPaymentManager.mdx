@@ -1,0 +1,78 @@
+---
+title: IStreamingPaymentManager
+description: Auto-generated Solidity API reference.
+---
+
+# IStreamingPaymentManager
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IStreamingPaymentManager.sol
+
+### IStreamingPaymentManager
+
+Interface for streaming payment management
+
+#### Functions
+
+#### createStream
+
+```solidity
+function createStream(uint64 serviceId, uint64 blueprintId, address operator, address paymentToken, uint256 amount, uint64 startTime, uint64 endTime) external payable
+```
+
+Create a streaming payment for a service
+
+#### dripAndGetChunk
+
+```solidity
+function dripAndGetChunk(uint64 serviceId, address operator) external returns (uint256 amount, uint256 durationSeconds, uint64 blueprintId, address paymentToken)
+```
+
+Drip a specific stream and return chunk info
+
+#### dripOperatorStreams
+
+```solidity
+function dripOperatorStreams(address operator) external returns (uint64[] serviceIds, uint64[] blueprintIds, address[] paymentTokens, uint256[] amounts, uint256[] durations)
+```
+
+Drip all active streams for an operator
+
+#### onServiceTerminated
+
+```solidity
+function onServiceTerminated(uint64 serviceId, address refundRecipient) external
+```
+
+Called when service is terminated
+
+#### onOperatorLeaving
+
+```solidity
+function onOperatorLeaving(uint64 serviceId, address operator) external
+```
+
+Called when operator is leaving
+
+#### getOperatorActiveStreams
+
+```solidity
+function getOperatorActiveStreams(address operator) external view returns (uint64[])
+```
+
+Get active stream IDs for an operator
+
+#### getStreamingPayment
+
+```solidity
+function getStreamingPayment(uint64 serviceId, address operator) external view returns (uint64 _serviceId, uint64 blueprintId, address _operator, address paymentToken, uint256 totalAmount, uint256 distributed, uint64 startTime, uint64 endTime, uint64 lastDripTime)
+```
+
+Get streaming payment details
+
+#### pendingDrip
+
+```solidity
+function pendingDrip(uint64 serviceId, address operator) external view returns (uint256)
+```
+
+Calculate pending drip amount

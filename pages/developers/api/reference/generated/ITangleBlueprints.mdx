@@ -1,0 +1,156 @@
+---
+title: ITangleBlueprints
+description: Auto-generated Solidity API reference.
+---
+
+# ITangleBlueprints
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/ITangleBlueprints.sol
+
+### ITangleBlueprints
+
+Blueprint management interface
+
+#### Functions
+
+#### createBlueprint
+
+```solidity
+function createBlueprint(struct Types.BlueprintDefinition definition) external returns (uint64 blueprintId)
+```
+
+Create a blueprint from an encoded definition that includes schemas and job metadata
+
+##### Parameters
+
+| Name       | Type                             | Description                                 |
+| ---------- | -------------------------------- | ------------------------------------------- |
+| definition | struct Types.BlueprintDefinition | Fully populated blueprint definition struct |
+
+##### Return Values
+
+| Name        | Type   | Description          |
+| ----------- | ------ | -------------------- |
+| blueprintId | uint64 | The new blueprint ID |
+
+#### updateBlueprint
+
+```solidity
+function updateBlueprint(uint64 blueprintId, string metadataUri) external
+```
+
+Update blueprint metadata
+
+#### transferBlueprint
+
+```solidity
+function transferBlueprint(uint64 blueprintId, address newOwner) external
+```
+
+Transfer blueprint ownership
+
+#### deactivateBlueprint
+
+```solidity
+function deactivateBlueprint(uint64 blueprintId) external
+```
+
+Deactivate a blueprint
+
+#### getBlueprint
+
+```solidity
+function getBlueprint(uint64 blueprintId) external view returns (struct Types.Blueprint)
+```
+
+Get blueprint info
+
+#### getBlueprintConfig
+
+```solidity
+function getBlueprintConfig(uint64 blueprintId) external view returns (struct Types.BlueprintConfig)
+```
+
+Get blueprint configuration
+
+#### blueprintOperatorCount
+
+```solidity
+function blueprintOperatorCount(uint64 blueprintId) external view returns (uint256)
+```
+
+Get number of operators for a blueprint
+
+#### blueprintCount
+
+```solidity
+function blueprintCount() external view returns (uint64)
+```
+
+Get current blueprint count
+
+#### getBlueprintDefinition
+
+```solidity
+function getBlueprintDefinition(uint64 blueprintId) external view returns (struct Types.BlueprintDefinition definition)
+```
+
+Get the original blueprint definition
+
+#### blueprintMetadata
+
+```solidity
+function blueprintMetadata(uint64 blueprintId) external view returns (struct Types.BlueprintMetadata metadata, string metadataUri)
+```
+
+Get blueprint metadata and URI
+
+#### blueprintSources
+
+```solidity
+function blueprintSources(uint64 blueprintId) external view returns (struct Types.BlueprintSource[] sources)
+```
+
+Get blueprint sources
+
+#### blueprintSupportedMemberships
+
+```solidity
+function blueprintSupportedMemberships(uint64 blueprintId) external view returns (enum Types.MembershipModel[] memberships)
+```
+
+Get blueprint supported membership models
+
+#### blueprintMasterRevision
+
+```solidity
+function blueprintMasterRevision(uint64 blueprintId) external view returns (uint32)
+```
+
+Get master blueprint revision
+
+#### Events
+
+#### BlueprintCreated
+
+```solidity
+event BlueprintCreated(uint64 blueprintId, address owner, address manager, string metadataUri)
+```
+
+#### BlueprintUpdated
+
+```solidity
+event BlueprintUpdated(uint64 blueprintId, string metadataUri)
+```
+
+#### BlueprintTransferred
+
+```solidity
+event BlueprintTransferred(uint64 blueprintId, address from, address to)
+```
+
+#### BlueprintDeactivated
+
+```solidity
+event BlueprintDeactivated(uint64 blueprintId)
+```

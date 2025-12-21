@@ -1,76 +1,52 @@
-# Tangle Network Concepts
+# Core Restaking Concepts
 
-This document introduces the core concepts necessary for understanding restaking and Actively Validated Services (AVS) in the Tangle Network ecosystem. It assumes the reader has a basic understanding of staking in a Proof-of-Stake (PoS) system.
+This page introduces the core concepts behind Tangle’s restaking system and how it secures blueprint services.
 
-## Introduction
+## Roles
 
-Tangle Network is a decentralized infrastructure platform that enables the creation and deployment of secure, actively validated services called Blueprints. The network is powered by a unique restaking mechanism, which allows operators to stake their assets and earn rewards for providing computing resources and ensuring the security of the network.
+- **Blueprint developer**: creates a blueprint (a reusable service template).
+- **Operator**: registers for blueprints and runs customer services off-chain.
+- **Customer**: requests a service instance, selects operators, and pays service fees.
+- **Restaker (delegator)**: deposits assets and delegates them to operators, earning fees and incentives while accepting slashing risk.
 
-At its core, Tangle Network consists of three main components:
+## The Restaking Contract (`MultiAssetDelegation`)
 
-1. **Blueprints**: Developers create Blueprints, which are specifications for decentralized services. Blueprints define the functionality, requirements, and incentive structure of a service.
+Restaking is implemented on-chain via `MultiAssetDelegation`:
 
-2. **Restaking**: Operators stake their assets on Blueprints to participate in the network and earn rewards. Delegators can also restake their assets with operators to share in the rewards.
+1. You **deposit** an asset (native or ERC-20).
+2. You **delegate** a portion of your deposit to a specific operator.
+3. Your delegation can earn:
+   - TNT incentives (if a rewards vault is configured for that asset)
+   - Service-fee revenue share (if the protocol is distributing fees to restakers)
 
-3. **Service Instances**: Users can request the deployment of live service instances based on Blueprints. Operators are then selected to run these instances based on their staked assets and other criteria defined by the requester.
+## Blueprint Selection (`All` vs `Fixed`)
 
-Tangle Network's modular architecture and restaking mechanism create a powerful incentive system that encourages the development of valuable services, ensures the security of the network, and enables users to access a wide range of decentralized applications.
+When you delegate, you choose how broad your exposure is:
 
-## Restaking
+- **`All`**: your delegation participates in rewards (and slashing) from all blueprints the operator is running.
+- **`Fixed`**: your delegation participates only in the blueprint IDs you explicitly select.
 
-Restaking is the process of automatically reinvesting staking rewards earned by operators and nominators back into staking. This mechanism helps to compound staking returns over time, as the reinvested rewards increase the staked amount and, consequently, the potential future rewards.
+`Fixed` mode is the primary tool for restakers to scope slashing risk by blueprint.
 
-Key points about restaking:
+## Exposure and Security Requirements
 
-1. In Tangle, noderunners who have restaked tokens delegated to them or restake their own tokens may become Operators who can complete jobs related to deployed blueprints.
-1. Restaking is optional and can be enabled or disabled by operators and delegators, who delegate their restaked tokens to an operator.
-1. When enabled, a specified percentage of staking rewards are automatically added to the staked amount at the end of each era.
-1. Restaked rewards are subject to the same unbonding period as regular staked funds when a operator or nominator chooses to withdraw them.
+When a customer requests a service, they can specify:
 
-Restaking encourages long-term commitment to the network and helps to maintain a stable and predictable staking participation rate.
+- A set of **operators**
+- A per-operator **exposure** (basis points) that weights payments and scales slashing
+- Optional **security requirements** (per-asset min/max exposure)
 
-## Blueprints
+Operators can respond with per-asset **security commitments**. These commitments can be used by the protocol to scale effective exposure for slashing and to weight restaker fee distributions.
 
-Blueprints are specifications that define a service, similar to an actively validated service (AVS). However, Blueprints themselves are not live service instances. Developers create Blueprints by specifying a "gadget" binary, the jobs involved, a set of smart contracts for registration and requesting instances, and additional metadata.
+## Exits and Delays
 
-Key aspects of Blueprints:
+Restaking exits are multi-step:
 
-1. Blueprints are meant to be leveraged infinitely many times, allowing developers to define a service once and have it instantiated multiple times by different users with varying operator requirements.
-2. Operators restake their assets on Blueprints to participate in running service instances, ensuring the security of the services.
-3. Users can deploy live service instances using a Blueprint by specifying criteria such as the number of operators or other operator attributes.
-4. Service instances are not guaranteed to involve all restaking operators; the service requester may only require a threshold of participants or participants satisfying certain registration criteria.
+- You typically **schedule an unstake** from an operator, wait a protocol delay, then execute.
+- You then **withdraw** from your deposit balance (subject to availability and any active deposit locks).
 
-Examples of services that can be built using Blueprints include:
+Delay parameters are protocol-configurable; see the Tangle app for current timings.
 
-1. Oracle services for providing external data to smart contracts.
-2. Privacy-preserving computation services for executing sensitive business logic.
-3. Specialized data feeds or APIs for specific use cases.
+## Liquid Restaking (Vault Shares)
 
-## Actively Validated Services (AVS) Instances
-
-Actively Validated Services (AVS) are a unique feature of the Tangle Network that allows operators to offer additional services beyond block production and finalization. These services are "actively validated," meaning they are executed by the operator nodes and the results are included in the blockchain's state.
-
-Examples of AVS include:
-
-1. Oracle services for providing external data to smart contracts.
-2. Privacy-preserving computation services for executing sensitive business logic.
-3. Specialized data feeds or APIs for specific use cases.
-
-Key aspects of AVS:
-
-1. Operators can choose to offer one or more AVS, depending on their technical capabilities and business interests.
-2. AVS providers can charge fees for their services, creating additional revenue streams beyond staking rewards.
-3. The security and correctness of AVS are enforced by the same consensus mechanism that secures the Tangle Network blockchain.
-4. AVS expand the utility and versatility of the Tangle Network, enabling a wider range of applications and use cases.
-
-Operators interested in providing AVS should carefully assess the technical requirements, market demand, and potential risks associated with offering such services.
-
-## Interaction between Restaking and AVS
-
-Restaking and AVS are complementary mechanisms that can enhance the overall sustainability and growth of the Tangle Network ecosystem:
-
-1. Operators that provide valuable AVS can attract more staking support from nominators, leading to higher staking rewards and more funds available for restaking.
-2. Restaking helps operators to accumulate more stake over time, increasing their chances of being selected for block production and AVS execution.
-3. The additional revenue from AVS fees can be partially restaked, further compounding the operator's staking returns.
-
-By understanding and leveraging the synergies between restaking and AVS, operators can maximize their participation in the Tangle Network and contribute to its long-term success.
+Tangle supports liquid delegation vaults (ERC-7540 style) that wrap a delegated position into transferable shares. See [Liquid Delegation Vaults](/restake/lrt-concepts).

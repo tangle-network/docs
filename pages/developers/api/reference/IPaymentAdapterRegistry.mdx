@@ -1,0 +1,125 @@
+---
+title: IPaymentAdapterRegistry
+description: Auto-generated Solidity API reference.
+---
+
+# IPaymentAdapterRegistry
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IStreamingPaymentAdapter.sol
+
+### IPaymentAdapterRegistry
+
+Registry for managing multiple payment adapters
+
+#### Functions
+
+#### registerAdapter
+
+```solidity
+function registerAdapter(string name, address adapter) external
+```
+
+Register a new payment adapter
+
+##### Parameters
+
+| Name    | Type    | Description     |
+| ------- | ------- | --------------- |
+| name    | string  | Adapter name    |
+| adapter | address | Adapter address |
+
+#### removeAdapter
+
+```solidity
+function removeAdapter(string name) external
+```
+
+Remove a payment adapter
+
+##### Parameters
+
+| Name | Type   | Description            |
+| ---- | ------ | ---------------------- |
+| name | string | Adapter name to remove |
+
+#### getAdapter
+
+```solidity
+function getAdapter(string name) external view returns (address adapter)
+```
+
+Get an adapter by name
+
+##### Parameters
+
+| Name | Type   | Description  |
+| ---- | ------ | ------------ |
+| name | string | Adapter name |
+
+##### Return Values
+
+| Name    | Type    | Description     |
+| ------- | ------- | --------------- |
+| adapter | address | Adapter address |
+
+#### getDefaultAdapter
+
+```solidity
+function getDefaultAdapter() external view returns (address adapter)
+```
+
+Get the default adapter
+
+##### Return Values
+
+| Name    | Type    | Description             |
+| ------- | ------- | ----------------------- |
+| adapter | address | Default adapter address |
+
+#### setDefaultAdapter
+
+```solidity
+function setDefaultAdapter(string name) external
+```
+
+Set the default adapter
+
+##### Parameters
+
+| Name | Type   | Description                       |
+| ---- | ------ | --------------------------------- |
+| name | string | Name of adapter to set as default |
+
+#### isRegistered
+
+```solidity
+function isRegistered(string name) external view returns (bool registered)
+```
+
+Check if an adapter is registered
+
+##### Parameters
+
+| Name | Type   | Description  |
+| ---- | ------ | ------------ |
+| name | string | Adapter name |
+
+##### Return Values
+
+| Name       | Type | Description            |
+| ---------- | ---- | ---------------------- |
+| registered | bool | True if adapter exists |
+
+#### getRegisteredAdapters
+
+```solidity
+function getRegisteredAdapters() external view returns (string[] names)
+```
+
+Get all registered adapter names
+
+##### Return Values
+
+| Name  | Type     | Description            |
+| ----- | -------- | ---------------------- |
+| names | string[] | Array of adapter names |

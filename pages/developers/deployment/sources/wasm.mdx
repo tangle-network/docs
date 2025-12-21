@@ -1,3 +1,5 @@
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
+
 # WebAssembly Sources
 
 The `WASM` (WebAssembly) source is used for blueprints that are built as WASM binaries and intended to be executed in
@@ -7,33 +9,16 @@ a WASM runtime such as [Wasmtime].
 
 The requirements for running WASM blueprints are available [here](/operators/manager/requirements#wasm-sources)
 
-## Format
+## Support Status
 
-The `WASM` source has the following format:
+WASM sources exist as a reserved blueprint source kind, but the operator manager may ignore them until WASM execution is enabled in the runtime.
 
-```rust
-pub struct WasmSource {
-    pub runtime: WasmRuntime,
-    pub fetcher: NativeSource,
-}
-```
-
-Where:
-
-- `runtime` - The WASM runtime this blueprint is intended to execute in (see [WasmRuntime])
-- `fetcher` - The GitHub release information, identical to [NativeSource]
-
-And they can be specified in the manifest of your binary crate like so:
-
-```toml
-[package.metadata.blueprint]
-sources = [
-    { type = "Wasm", runtime = "Wasmtime", fetcher = { owner = "some-github-user", repo = "some-blueprint", tag = "0.1.0", binaries = [
-        { arch = "Wasm", os = "Unknown", name = "my-blueprint-bin" },
-    ] } },
-]
-```
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/v2/crates/manager/src/protocol/tangle_evm/metadata.rs"
+  fromLine={114}
+  toLine={139}
+  title="Manager source resolution: WASM is currently ignored"
+/>
 
 [Wasmtime]: https://wasmtime.dev/
 [NativeSource]: /developers/deployment/sources/native#format
-[WasmRuntime]: https://docs.rs/tangle-subxt/latest/tangle_subxt/tangle_testnet_runtime/api/runtime_types/tangle_primitives/services/sources/enum.WasmRuntime.html

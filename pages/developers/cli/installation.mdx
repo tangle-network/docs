@@ -1,5 +1,5 @@
 ---
-title: Installation
+title: Tangle CLI Installation
 ---
 
 # Tangle CLI Installation
@@ -16,12 +16,16 @@ or run the following command:
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-Install from source
+## Install `cargo-tangle`
 
-1. From source (nightly)
-
-> The script supports Linux, MacOS, and Windows (WSL2)
+### From source (recommended for now)
 
 ```shell
-cargo install cargo-tangle --git https://github.com/tangle-network/blueprint --force
+cargo install cargo-tangle --git https://github.com/tangle-network/blueprint --branch v2 --force
+```
+
+### Verify
+
+```shell
+cargo tangle --help
 ```

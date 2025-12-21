@@ -1,240 +1,131 @@
-import React, { ReactNode } from "react";
+import React from "react";
 
-interface HeaderCellProps {
-  children: ReactNode;
+type Bucket = {
+  label: string;
+  amountTnt: number;
+  mechanism: string;
+  claimable: string;
+  launchLiquidity: string;
+};
+
+const TOTAL_TNT = 109_255_636.919212;
+
+const BUCKETS: Bucket[] = [
+  {
+    label: "Substrate migration claims (SS58)",
+    amountTnt: 51_244_581.812207,
+    mechanism: "Merkle + ZK claim (TangleMigration)",
+    claimable: "Yes",
+    launchLiquidity: "Default: 10% unlocked / 90% cliff-locked",
+  },
+  {
+    label: "EVM claims (0x...)",
+    amountTnt: 1_125_776.519168,
+    mechanism: "Batch distribution",
+    claimable: "No (sent to recipients)",
+    launchLiquidity: "As configured for the distribution",
+  },
+  {
+    label: "Treasury carveout (legacy module accounts)",
+    amountTnt: 41_844_468.761091,
+    mechanism: "Deploy-time transfer to treasury recipient",
+    claimable: "No",
+    launchLiquidity: "Fully liquid at launch",
+  },
+  {
+    label: "Foundation carveout (tangle-foundation)",
+    amountTnt: 15_040_809.826744,
+    mechanism: "Deploy-time transfer to foundation recipient",
+    claimable: "No",
+    launchLiquidity: "Fully liquid at launch",
+  },
+];
+
+const TNT_FORMAT = new Intl.NumberFormat("en-US", {
+  minimumFractionDigits: 6,
+  maximumFractionDigits: 6,
+});
+
+const PCT_FORMAT = new Intl.NumberFormat("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+function formatTnt(value: number): string {
+  return TNT_FORMAT.format(value);
 }
 
-const HeaderCell = ({ children }: HeaderCellProps) => (
-  <th className="py-2 px-3 bg-gray-100 font-semibold border border-gray-300 dark:bg-gray-700 dark:border-gray-600 whitespace-nowrap">
-    {children}
-  </th>
-);
-
-interface CellProps {
-  children: ReactNode;
+function formatPercent(value: number, total: number): string {
+  if (total === 0) return "0.00%";
+  return `${PCT_FORMAT.format((value / total) * 100)}%`;
 }
-
-const Cell = ({ children }: CellProps) => (
-  <td className="py-2 px-3 border border-gray-300 dark:border-gray-600 whitespace-nowrap">
-    {children}
-  </td>
-);
-
-interface RowProps {
-  children: ReactNode;
-  isEven: boolean;
-}
-
-const Row = ({ children, isEven }: RowProps) => (
-  <tr
-    className={`border-b ${
-      isEven ? "bg-gray-100 dark:bg-gray-700" : "dark:bg-gray-800"
-    }`}
-  >
-    {children}
-  </tr>
-);
-
-interface SubtotalRowProps {
-  children: ReactNode;
-}
-
-const SubtotalRow = ({ children }: SubtotalRowProps) => (
-  <tr className="bg-blue-100 font-semibold dark:bg-blue-900 dark:text-blue-300">
-    {children}
-  </tr>
-);
-
-interface TotalRowProps {
-  children: ReactNode;
-}
-
-const TotalRow = ({ children }: TotalRowProps) => (
-  <tr className="bg-green-100 font-semibold dark:bg-green-900 dark:text-green-300">
-    {children}
-  </tr>
-);
 
 export default function AllocationTable() {
   return (
-    <div className="overflow-x-auto m-5">
+    <div className="overflow-x-auto my-6">
       <table className="w-full border-collapse text-left text-sm text-gray-800 dark:text-gray-300">
         <thead>
-          <TotalRow>
-            <HeaderCell>Allocation Category</HeaderCell>
-            <HeaderCell>Entity Name</HeaderCell>
-            <HeaderCell>Allocated Share (%)</HeaderCell>
-            <HeaderCell>Vesting Plan</HeaderCell>
-            <HeaderCell>Cliff (Months)</HeaderCell>
-            <HeaderCell>Vesting Period (Months)</HeaderCell>
-            <HeaderCell>Immediate Liquidity (%)</HeaderCell>
-            <HeaderCell>Initial Liquid Tokens</HeaderCell>
-            <HeaderCell>Cliff-Release Tokens</HeaderCell>
-            <HeaderCell>Monthly Vesting Rate</HeaderCell>
-            <HeaderCell>Total Tokens Allocated</HeaderCell>
-          </TotalRow>
+          <tr className="bg-gray-100 font-semibold dark:bg-gray-800">
+            <th className="py-2 px-3 border border-gray-300 dark:border-gray-700">
+              Bucket
+            </th>
+            <th className="py-2 px-3 border border-gray-300 dark:border-gray-700">
+              Amount (TNT)
+            </th>
+            <th className="py-2 px-3 border border-gray-300 dark:border-gray-700">
+              % of Total
+            </th>
+            <th className="py-2 px-3 border border-gray-300 dark:border-gray-700">
+              Mechanism
+            </th>
+            <th className="py-2 px-3 border border-gray-300 dark:border-gray-700">
+              Claimable
+            </th>
+            <th className="py-2 px-3 border border-gray-300 dark:border-gray-700">
+              Launch Liquidity
+            </th>
+          </tr>
         </thead>
         <tbody>
-          <Row isEven={false}>
-            <Cell>Contributors</Cell>
-            <Cell>Webb Technologies (Developer)</Cell>
-            <Cell>28.56500%</Cell>
-            <Cell>A-Vesting</Cell>
-            <Cell>12</Cell>
-            <Cell>48</Cell>
-            <Cell>0%</Cell>
-            <Cell>0.00</Cell>
-            <Cell>7,141,250.00</Cell>
-            <Cell>595,104.17</Cell>
-            <Cell>28,565,000.00</Cell>
-          </Row>
-          <Row isEven={true}>
-            <Cell>Contributors</Cell>
-            <Cell>Investors</Cell>
-            <Cell>13.64000%</Cell>
-            <Cell>A-Vesting</Cell>
-            <Cell>12</Cell>
-            <Cell>48</Cell>
-            <Cell>0%</Cell>
-            <Cell>0.00</Cell>
-            <Cell>3,410,000.00</Cell>
-            <Cell>284,166.67</Cell>
-            <Cell>13,640,000.00</Cell>
-          </Row>
-          <Row isEven={false}>
-            <Cell>Contributors</Cell>
-            <Cell>Indiv. Contributors</Cell>
-            <Cell>1.43500%</Cell>
-            <Cell>A-Vesting</Cell>
-            <Cell>12</Cell>
-            <Cell>48</Cell>
-            <Cell>0%</Cell>
-            <Cell>0.00</Cell>
-            <Cell>358,750.00</Cell>
-            <Cell>29,895.83</Cell>
-            <Cell>1,435,000.00</Cell>
-          </Row>
-          <SubtotalRow>
-            <Cell col-span={2}>
-              <strong>Contributors Total</strong>
-            </Cell>
-            <Cell>43.64000%</Cell>
-            <td colSpan={4}></td>
-            <Cell>0.00</Cell>
-            <Cell>10,910,000.00</Cell>
-            <td colSpan={1}></td>
-            <Cell>43,640,000.00</Cell>
-          </SubtotalRow>
-          <Row isEven={true}>
-            <Cell>Governance-Managed</Cell>
-            <Cell>On-chain Treasury</Cell>
-            <Cell>36.36000%</Cell>
-            <Cell>n/a</Cell>
-            <Cell>n/a</Cell>
-            <Cell>n/a</Cell>
-            <Cell>100%</Cell>
-            <Cell>36,360,000.00</Cell>
-            <Cell>n/a</Cell>
-            <Cell>n/a</Cell>
-            <Cell>36,360,000.00</Cell>
-          </Row>
-          <Row isEven={false}>
-            <Cell>Governance-Managed</Cell>
-            <Cell>Foundation</Cell>
-            <Cell>15.00000%</Cell>
-            <Cell>A-Vesting</Cell>
-            <Cell>12</Cell>
-            <Cell>48</Cell>
-            <Cell>5%</Cell>
-            <Cell>750,000.00</Cell>
-            <Cell>3,562,500.00</Cell>
-            <Cell>296,875.00</Cell>
-            <Cell>15,000,000.00</Cell>
-          </Row>
-          <SubtotalRow>
-            <Cell col-span={2}>
-              <strong>Governance-Managed Total</strong>
-            </Cell>
-            <Cell>51.36000%</Cell>
-            <td colSpan={4}></td>
-            <Cell>37,110,000.00</Cell>
-            <Cell>3,562,500.00</Cell>
-            <td colSpan={1}></td>
-            <Cell>51,360,000.00</Cell>
-          </SubtotalRow>
-          <Row isEven={true}>
-            <Cell>Airdrop Pool</Cell>
-            <Cell>Leaderboard Participants</Cell>
-            <Cell>2.00000%</Cell>
-            <Cell>B-Vesting</Cell>
-            <Cell>1</Cell>
-            <Cell>24</Cell>
-            <Cell>5%</Cell>
-            <Cell>100,000.00</Cell>
-            <Cell>79,166.67</Cell>
-            <Cell>82,608.70</Cell>
-            <Cell>2,000,000.00</Cell>
-          </Row>
-          <Row isEven={false}>
-            <Cell>Airdrop Pool</Cell>
-            <Cell>DOT Validators Snapshot</Cell>
-            <Cell>1.00000%</Cell>
-            <Cell>B-Vesting</Cell>
-            <Cell>1</Cell>
-            <Cell>24</Cell>
-            <Cell>5%</Cell>
-            <Cell>50,000.00</Cell>
-            <Cell>39,583.33</Cell>
-            <Cell>41,304.35</Cell>
-            <Cell>1,000,000.00</Cell>
-          </Row>
-          <Row isEven={true}>
-            <Cell>Airdrop Pool</Cell>
-            <Cell>EDG Genesis Participants</Cell>
-            <Cell>1.00000%</Cell>
-            <Cell>B-Vesting</Cell>
-            <Cell>1</Cell>
-            <Cell>24</Cell>
-            <Cell>5%</Cell>
-            <Cell>50,000.00</Cell>
-            <Cell>39,583.33</Cell>
-            <Cell>41,304.35</Cell>
-            <Cell>1,000,000.00</Cell>
-          </Row>
-          <Row isEven={false}>
-            <Cell>Airdrop Pool</Cell>
-            <Cell>EDG 2023 Snapshot</Cell>
-            <Cell>1.00000%</Cell>
-            <Cell>B-Vesting</Cell>
-            <Cell>1</Cell>
-            <Cell>24</Cell>
-            <Cell>5%</Cell>
-            <Cell>50,000.00</Cell>
-            <Cell>39,583.33</Cell>
-            <Cell>41,304.35</Cell>
-            <Cell>1,000,000.00</Cell>
-          </Row>
-          <SubtotalRow>
-            <Cell col-span={2}>
-              <strong>Airdrop Pools Total</strong>
-            </Cell>
-            <Cell>5.00000%</Cell>
-            <td colSpan={4}></td>
-            <Cell>250,000.00</Cell>
-            <Cell>197,916.67</Cell>
-            <Cell>206,521.74</Cell>
-            <Cell>5,000,000.00</Cell>
-          </SubtotalRow>
-          <TotalRow>
-            <Cell col-span={2}>
-              <strong>Total Supply</strong>
-            </Cell>
-            <Cell>100.00000%</Cell>
-            <td colSpan={4}></td>
-            <Cell>37,360,000.00</Cell>
-            <td colSpan={2}></td>
-            <Cell>100,000,000.00</Cell>
-          </TotalRow>
+          {BUCKETS.map((b) => (
+            <tr key={b.label} className="border-b dark:border-gray-700">
+              <td className="py-2 px-3 border border-gray-300 dark:border-gray-700">
+                {b.label}
+              </td>
+              <td className="py-2 px-3 border border-gray-300 dark:border-gray-700 whitespace-nowrap">
+                {formatTnt(b.amountTnt)}
+              </td>
+              <td className="py-2 px-3 border border-gray-300 dark:border-gray-700 whitespace-nowrap">
+                {formatPercent(b.amountTnt, TOTAL_TNT)}
+              </td>
+              <td className="py-2 px-3 border border-gray-300 dark:border-gray-700">
+                {b.mechanism}
+              </td>
+              <td className="py-2 px-3 border border-gray-300 dark:border-gray-700">
+                {b.claimable}
+              </td>
+              <td className="py-2 px-3 border border-gray-300 dark:border-gray-700">
+                {b.launchLiquidity}
+              </td>
+            </tr>
+          ))}
+          <tr className="bg-gray-100 font-semibold dark:bg-gray-800">
+            <td className="py-2 px-3 border border-gray-300 dark:border-gray-700">
+              Total
+            </td>
+            <td className="py-2 px-3 border border-gray-300 dark:border-gray-700 whitespace-nowrap">
+              {formatTnt(TOTAL_TNT)}
+            </td>
+            <td className="py-2 px-3 border border-gray-300 dark:border-gray-700">
+              100.00%
+            </td>
+            <td
+              className="py-2 px-3 border border-gray-300 dark:border-gray-700"
+              colSpan={3}
+            >
+              Snapshot-distributed TNT (migration + carveouts)
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>

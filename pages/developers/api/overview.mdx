@@ -1,0 +1,34 @@
+---
+title: API Reference
+description: Generated Solidity API docs plus practical guidance for integrating with a facet-based protocol.
+---
+
+# API Reference
+
+Tangle’s on-chain protocol is implemented as a **facet-based system** to stay within EVM contract size limits while keeping a single cohesive API surface.
+
+For integrations (dApps, indexers, operator tooling), treat the **interfaces** as the source of truth.
+
+## How to Use These Docs
+
+- Use the generated interface pages under **API Reference (Generated)** for the exact function and event surface.
+- Use the architecture pages for semantics and end-to-end flows:
+  - [System Architecture](/developers/system-architecture/overview)
+  - [Protocol Architecture](/developers/protocol-architecture)
+  - [Payments & Streaming](/developers/payments/overview)
+
+Quick links:
+
+- [`ITangleFull`](/developers/api/reference/generated/ITangleFull)
+- [`IMultiAssetDelegation`](/developers/api/reference/generated/IMultiAssetDelegation)
+- [`IServiceFeeDistributor`](/developers/api/reference/generated/IServiceFeeDistributor)
+
+## Regenerating API Docs
+
+These pages are generated from `tnt-core/src/v2/interfaces` using `solidity-docgen`.
+
+From this docs repo:
+
+```bash
+TNT_CORE_DIR=../tnt-core yarn api:generate
+```

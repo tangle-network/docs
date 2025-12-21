@@ -1,47 +1,24 @@
 # Developer Incentives
 
-Tangle Network provides developers with automated revenue streams through blueprint deployment and usage. When users instance your blueprints, smart contracts automatically distribute fees according to a fixed model: 50% to you as the developer, 30% to operators and restakers via Boosted TNT, and 20% to the protocol treasury.
+Blueprint developers earn revenue when customers instance and run their services. Incentives come from:
 
-## Core Revenue Mechanisms
+1. **Service fee revenue share** on every instance of your blueprint.
+2. **Protocol developer rewards** (paid in TNT from a pre-funded pool, if enabled).
 
-### Direct Blueprint Revenue
+## Service Fees
 
-- Earn 50% of all instance fees automatically
-- Control your revenue share through EVM-based distribution logic
-- Implement custom tokenization and revenue-sharing models
-- Configure automated payment collection and distribution
+For each service payment, the protocol sends the **developer portion** to the blueprint owner by default. A blueprint’s service manager can optionally return a different payout address (for example, to route revenue into a multisig, splitter, or DAO treasury).
 
-### Whitelisting Benefits
+The default protocol split is **50% developer / 10% protocol / 20% operators / 20% restakers** (governance configurable).
 
-Blueprints demonstrating high utility can access additional revenue through whitelisting:
+## Protocol Developer Rewards (TNT)
 
-- Receive protocol inflation rewards
-- Gain enhanced network visibility
-- Qualification based on metrics like active instances, transaction volume, and security capital
+If the protocol is running `InflationPool` incentives, developers can earn additional TNT based on on-chain activity metrics (e.g., blueprints created, services created, jobs executed, and fees generated). These rewards are claimable from `InflationPool`.
 
-## Technical Integration
+## Design Tips
 
-Your blueprint automatically inherits Tangle's security infrastructure:
+- Be explicit about slashing conditions and the evidence you expect to be submitted on-chain.
+- Use security requirements and operator commitments to express what “secure enough” means for your service.
+- Provide observability where possible (heartbeats and optional QoS metrics) to help operators and customers assess performance.
 
-- TNT-based restaking mechanism
-- Native LST support
-- Configurable security parameters
-- Smart contract-based revenue distribution
-
-## Economic Dynamics
-
-Successful blueprints benefit from natural market forces:
-
-- Higher usage → increased instance fees
-- Utility drives restaking capital allocation
-- Operator registration follows valuable blueprints
-- Self-reinforcing cycle of adoption and security
-
-## Implementation
-
-1. Deploy your blueprint (open or closed source)
-2. Set revenue distribution parameters
-3. Monitor usage and metrics
-4. Optionally pursue whitelisting for additional benefits
-
-The system is designed to let you focus on building valuable software while the network handles monetization, security, and distribution infrastructure.
+See [Metrics and Scoring](/network/metrics-and-scoring) and [Slashing](/network/slashing).

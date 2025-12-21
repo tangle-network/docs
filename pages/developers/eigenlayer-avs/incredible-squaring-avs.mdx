@@ -1,5 +1,5 @@
 ---
-title: EigenLayer Incredible Squaring AVS
+title: Incredible Squaring AVS Example
 ---
 
 import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
@@ -9,7 +9,7 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 ## Introduction
 
 This guide will walk you through building an EigenLayer AVS (Actively Validated Service) using Tangle Blueprints, using examples from the
-[Incredible Squaring blueprint implementation](https://github.com/tangle-network/blueprint/tree/main/examples/incredible-squaring-eigenlayer).
+[Incredible Squaring blueprint implementation](https://github.com/tangle-network/blueprint/tree/v2/examples/incredible-squaring-eigenlayer).
 
 The Incredible Squaring AVS is a simple example that demonstrates how to build an AVS that squares numbers. While the computation is trivial, the example showcases the key components of an EigenLayer AVS built with Tangle Blueprints.
 
@@ -25,7 +25,7 @@ The Incredible Squaring AVS blueprint follows the basic library and binary struc
 Jobs are the core computational units in your Blueprint. For the Incredible Squaring AVS, we define jobs to handle various tasks:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/d47f974b008712787982366a7ff1945d67e0035f/examples/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
+  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring-eigenlayer/src/jobs/initialize_task.rs"
   fromLine={13}
   toLine={46}
   title="Initialize Task Job Definition"
@@ -34,9 +34,9 @@ Jobs are the core computational units in your Blueprint. For the Incredible Squa
 This job initializes a new task in the Incredible Squaring AVS. It takes parameters from an EVM event and processes them.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/d47f974b008712787982366a7ff1945d67e0035f/examples/incredible-squaring-eigenlayer/src/jobs/compute_x_square.rs"
+  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring-eigenlayer/src/jobs/compute_x_square.rs"
   fromLine={21}
-  toLine={109}
+  toLine={106}
   title="Compute X Square Job Definition"
 />
 
@@ -47,9 +47,9 @@ This job computes the square of a number in the Incredible Squaring AVS and send
 To interact with EVM smart contracts, the blueprint uses the `alloy` crate
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/d47f974b008712787982366a7ff1945d67e0035f/examples/incredible-squaring-eigenlayer/src/lib.rs"
-  fromLine={27}
-  toLine={41}
+  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring-eigenlayer/src/lib.rs"
+  fromLine={9}
+  toLine={48}
   title="Contract Definitions using Alloy's sol! macro"
 />
 
@@ -62,9 +62,9 @@ The Blueprint Runner is the core component that orchestrates the execution of yo
 First, create an HTTP provider to connect to the Ethereum network with a wallet enabled for transacting:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/d47f974b008712787982366a7ff1945d67e0035f/examples/incredible-squaring-eigenlayer/src/main.rs"
-  fromLine={32}
-  toLine={36}
+  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring-eigenlayer/src/main.rs"
+  fromLine={41}
+  toLine={47}
   title="Provider Setup"
 />
 
@@ -73,9 +73,9 @@ First, create an HTTP provider to connect to the Ethereum network with a wallet 
 Next, create the contexts that will be used by your jobs:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/d47f974b008712787982366a7ff1945d67e0035f/examples/incredible-squaring-eigenlayer/src/main.rs"
-  fromLine={39}
-  toLine={43}
+  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring-eigenlayer/src/main.rs"
+  fromLine={49}
+  toLine={74}
   title="Context Creation"
 />
 
@@ -84,9 +84,9 @@ Next, create the contexts that will be used by your jobs:
 Producers listen for events and prepare them for processing. In the Incredible Squaring AVS, we set up producers to listen for EVM events:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/d47f974b008712787982366a7ff1945d67e0035f/examples/incredible-squaring-eigenlayer/src/main.rs"
-  fromLine={63}
-  toLine={69}
+  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring-eigenlayer/src/main.rs"
+  fromLine={75}
+  toLine={83}
   title="Producer Setup"
 />
 
@@ -95,9 +95,9 @@ Producers listen for events and prepare them for processing. In the Incredible S
 Finally, set up the Blueprint Runner with the router, producers, consumers, and background services:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/d47f974b008712787982366a7ff1945d67e0035f/examples/incredible-squaring-eigenlayer/src/main.rs"
-  fromLine={72}
-  toLine={86}
+  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring-eigenlayer/src/main.rs"
+  fromLine={115}
+  toLine={140}
   title="BlueprintRunner Setup"
 />
 
@@ -122,7 +122,7 @@ Before you begin, ensure you have the following installed:
 Clone this repository:
 
 ```shell
-git clone https://github.com/tangle-network/blueprint.git
+git clone --branch v2 https://github.com/tangle-network/blueprint.git
 cd blueprint
 ```
 

@@ -1,11 +1,13 @@
-# Building LRT on Tangle Network
+# Building Liquid Delegation Vaults
 
-Tangle Multi-Asset Delegations (MADs) pallet precompile provides information about the current state of the Tangle network restaking functionality.
-A precompiled contract is native Substrate code that has an Ethereum-style address and can be called using the Ethereum API, like any other smart contract.
-The precompiles allow you to call the Substrate runtime directly which is not normally accessible from the Ethereum side of Tangle.
+Tangle’s liquid restaking is implemented via EVM smart contracts that wrap the protocol’s restaking system into transferable vault shares.
 
-### How to use the precompile
+At a high level:
 
-We have a detailed page about the [Multi-Asset Delegation Precompile](../../developers/precompiles/features/multi-asset-delegation.mdx).
+- `MultiAssetDelegation` tracks deposits, delegation, and undelegation.
+- `LiquidDelegationVault` is an ERC-7540 vault that delegates to a specific `(operator, asset, blueprint selection)` configuration and issues liquid shares.
+- `LiquidDelegationFactory` deploys vaults deterministically per configuration.
 
-In the next page, we will have a tutorial about how to use this precompile to build a LRT on Tangle.
+This section focuses on building or integrating with liquid delegation vaults (“bolts”) on Tangle’s EVM deployment.
+
+Start with the vault deep dive: [Vault Deep Dive](/restake/lrt_developers/lrt-vault)

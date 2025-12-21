@@ -1,0 +1,48 @@
+---
+title: Rewards & Incentives
+description: How service fees are split, how restakers earn, and how optional TNT incentives are budgeted.
+---
+
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
+
+# Rewards & Incentives
+
+Tangle separates **service fees** (paid by customers) from **incentives** (TNT budgets funded explicitly).
+
+## Service Fee Split (Developer / Protocol / Operator / Restakers)
+
+When a service pays a fee, `Payments.sol` calculates and routes the split:
+
+- Developer payment (blueprint owner or manager override)
+- Protocol payment (treasury)
+- Operator rewards (pending claims)
+- Restaker share (via `ServiceFeeDistributor`, when configured)
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Payments.sol"
+  fromLine={259}
+  toLine={403}
+  title="Payments: fee distribution + restaker routing via ServiceFeeDistributor"
+/>
+
+## Restaker Distribution (USD-weighted)
+
+`ServiceFeeDistributor` accounts for:
+
+- Delegation score (principal × lock multiplier)
+- Optional USD weighting (oracle-enabled)
+- Blueprint selection mode (All vs Fixed)
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/ServiceFeeDistributor.sol"
+  fromLine={19}
+  toLine={241}
+  title="ServiceFeeDistributor: state + delegation-change hook"
+/>
+
+## Optional TNT Incentives
+
+The “inflation” surface is intentionally **budget-driven**: TNT incentives are funded by explicit budgets rather than assuming continuous minting.
+
+- [Incentives Overview](/network/incentives-overview)
+- [Tokenomics: Incentive Budgets](/network/tokenomics/inflation)

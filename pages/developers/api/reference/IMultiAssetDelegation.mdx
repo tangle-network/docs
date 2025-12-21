@@ -1,0 +1,766 @@
+---
+title: IMultiAssetDelegation
+description: Auto-generated Solidity API reference.
+---
+
+# IMultiAssetDelegation
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IMultiAssetDelegation.sol
+
+### IMultiAssetDelegation
+
+Full interface for the multi-asset restaking contract
+
+#### Functions
+
+#### registerOperator
+
+```solidity
+function registerOperator() external payable
+```
+
+#### registerOperatorWithAsset
+
+```solidity
+function registerOperatorWithAsset(address token, uint256 amount) external
+```
+
+#### increaseStake
+
+```solidity
+function increaseStake() external payable
+```
+
+#### scheduleOperatorUnstake
+
+```solidity
+function scheduleOperatorUnstake(uint256 amount) external
+```
+
+#### executeOperatorUnstake
+
+```solidity
+function executeOperatorUnstake() external
+```
+
+#### addBlueprint
+
+```solidity
+function addBlueprint(uint64 blueprintId) external
+```
+
+#### removeBlueprint
+
+```solidity
+function removeBlueprint(uint64 blueprintId) external
+```
+
+#### startLeaving
+
+```solidity
+function startLeaving() external
+```
+
+#### completeLeaving
+
+```solidity
+function completeLeaving() external
+```
+
+#### deposit
+
+```solidity
+function deposit() external payable
+```
+
+#### depositWithLock
+
+```solidity
+function depositWithLock(enum Types.LockMultiplier lockMultiplier) external payable
+```
+
+#### depositERC20
+
+```solidity
+function depositERC20(address token, uint256 amount) external
+```
+
+#### depositERC20WithLock
+
+```solidity
+function depositERC20WithLock(address token, uint256 amount, enum Types.LockMultiplier lockMultiplier) external
+```
+
+#### scheduleWithdraw
+
+```solidity
+function scheduleWithdraw(address token, uint256 amount) external
+```
+
+#### executeWithdraw
+
+```solidity
+function executeWithdraw() external
+```
+
+#### depositAndDelegate
+
+```solidity
+function depositAndDelegate(address operator) external payable
+```
+
+#### depositAndDelegateWithOptions
+
+```solidity
+function depositAndDelegateWithOptions(address operator, address token, uint256 amount, enum Types.BlueprintSelectionMode selectionMode, uint64[] blueprintIds) external payable
+```
+
+#### delegate
+
+```solidity
+function delegate(address operator, uint256 amount) external
+```
+
+#### delegateWithOptions
+
+```solidity
+function delegateWithOptions(address operator, address token, uint256 amount, enum Types.BlueprintSelectionMode selectionMode, uint64[] blueprintIds) external
+```
+
+#### scheduleDelegatorUnstake
+
+```solidity
+function scheduleDelegatorUnstake(address operator, address token, uint256 amount) external
+```
+
+#### undelegate
+
+```solidity
+function undelegate(address operator, uint256 amount) external
+```
+
+#### executeDelegatorUnstake
+
+```solidity
+function executeDelegatorUnstake() external
+```
+
+#### addBlueprintToDelegation
+
+```solidity
+function addBlueprintToDelegation(uint256 delegationIndex, uint64 blueprintId) external
+```
+
+#### removeBlueprintFromDelegation
+
+```solidity
+function removeBlueprintFromDelegation(uint256 delegationIndex, uint64 blueprintId) external
+```
+
+#### notifyRewardForBlueprint
+
+```solidity
+function notifyRewardForBlueprint(address operator, uint64 blueprintId, uint64 serviceId, uint256 amount) external
+```
+
+#### notifyReward
+
+```solidity
+function notifyReward(address operator, uint64 serviceId, uint256 amount) external
+```
+
+#### claimDelegatorRewards
+
+```solidity
+function claimDelegatorRewards() external returns (uint256 totalRewards)
+```
+
+#### claimOperatorRewards
+
+```solidity
+function claimOperatorRewards() external
+```
+
+#### claimOperatorRewardsTo
+
+```solidity
+function claimOperatorRewardsTo(address payable recipient) external
+```
+
+#### slashForBlueprint
+
+```solidity
+function slashForBlueprint(address operator, uint64 blueprintId, uint64 serviceId, uint256 amount, bytes32 evidence) external returns (uint256 actualSlashed)
+```
+
+#### slashForService
+
+```solidity
+function slashForService(address operator, uint64 blueprintId, uint64 serviceId, struct Types.AssetSecurityCommitment[] commitments, uint256 amount, bytes32 evidence) external returns (uint256 actualSlashed)
+```
+
+#### slash
+
+```solidity
+function slash(address operator, uint64 serviceId, uint256 amount, bytes32 evidence) external returns (uint256 actualSlashed)
+```
+
+#### advanceRound
+
+```solidity
+function advanceRound() external
+```
+
+#### snapshotOperator
+
+```solidity
+function snapshotOperator(address operator) external
+```
+
+#### enableAsset
+
+```solidity
+function enableAsset(address token, uint256 minOperatorStake, uint256 minDelegation, uint256 depositCap, uint16 rewardMultiplierBps) external
+```
+
+#### disableAsset
+
+```solidity
+function disableAsset(address token) external
+```
+
+#### getAssetConfig
+
+```solidity
+function getAssetConfig(address token) external view returns (struct Types.AssetConfig)
+```
+
+#### registerAdapter
+
+```solidity
+function registerAdapter(address token, address adapter) external
+```
+
+#### removeAdapter
+
+```solidity
+function removeAdapter(address token) external
+```
+
+#### setRequireAdapters
+
+```solidity
+function setRequireAdapters(bool required) external
+```
+
+#### enableAssetWithAdapter
+
+```solidity
+function enableAssetWithAdapter(address token, address adapter, uint256 minOperatorStake, uint256 minDelegation, uint256 depositCap, uint16 rewardMultiplierBps) external
+```
+
+#### isOperator
+
+```solidity
+function isOperator(address operator) external view returns (bool)
+```
+
+#### isOperatorActive
+
+```solidity
+function isOperatorActive(address operator) external view returns (bool)
+```
+
+#### getOperatorStake
+
+```solidity
+function getOperatorStake(address operator) external view returns (uint256)
+```
+
+#### getOperatorSelfStake
+
+```solidity
+function getOperatorSelfStake(address operator) external view returns (uint256)
+```
+
+#### getOperatorDelegatedStake
+
+```solidity
+function getOperatorDelegatedStake(address operator) external view returns (uint256)
+```
+
+#### getDelegation
+
+```solidity
+function getDelegation(address delegator, address operator) external view returns (uint256)
+```
+
+#### getTotalDelegation
+
+```solidity
+function getTotalDelegation(address delegator) external view returns (uint256 total)
+```
+
+#### minOperatorStake
+
+```solidity
+function minOperatorStake() external view returns (uint256)
+```
+
+#### meetsStakeRequirement
+
+```solidity
+function meetsStakeRequirement(address operator, uint256 required) external view returns (bool)
+```
+
+#### isSlasher
+
+```solidity
+function isSlasher(address account) external view returns (bool)
+```
+
+#### getOperatorMetadata
+
+```solidity
+function getOperatorMetadata(address operator) external view returns (struct Types.OperatorMetadata)
+```
+
+#### getOperatorBlueprints
+
+```solidity
+function getOperatorBlueprints(address operator) external view returns (uint256[])
+```
+
+#### operatorCount
+
+```solidity
+function operatorCount() external view returns (uint256)
+```
+
+#### operatorAt
+
+```solidity
+function operatorAt(uint256 index) external view returns (address)
+```
+
+#### getDeposit
+
+```solidity
+function getDeposit(address delegator, address token) external view returns (struct Types.Deposit)
+```
+
+#### getPendingWithdrawals
+
+```solidity
+function getPendingWithdrawals(address delegator) external view returns (struct Types.WithdrawRequest[])
+```
+
+#### getLocks
+
+```solidity
+function getLocks(address delegator, address token) external view returns (struct Types.LockInfo[])
+```
+
+#### getDelegations
+
+```solidity
+function getDelegations(address delegator) external view returns (struct Types.BondInfoDelegator[])
+```
+
+#### getDelegationBlueprints
+
+```solidity
+function getDelegationBlueprints(address delegator, uint256 idx) external view returns (uint64[])
+```
+
+#### getPendingUnstakes
+
+```solidity
+function getPendingUnstakes(address delegator) external view returns (struct Types.BondLessRequest[])
+```
+
+#### getOperatorRewardPool
+
+```solidity
+function getOperatorRewardPool(address operator) external view returns (struct Types.OperatorRewardPool)
+```
+
+#### getPendingDelegatorRewards
+
+```solidity
+function getPendingDelegatorRewards(address delegator) external view returns (uint256)
+```
+
+#### getPendingOperatorRewards
+
+```solidity
+function getPendingOperatorRewards(address operator) external view returns (uint256)
+```
+
+#### getOperatorDelegators
+
+```solidity
+function getOperatorDelegators(address operator) external view returns (address[])
+```
+
+#### getOperatorDelegatorCount
+
+```solidity
+function getOperatorDelegatorCount(address operator) external view returns (uint256)
+```
+
+#### rewardsManager
+
+```solidity
+function rewardsManager() external view returns (address)
+```
+
+#### serviceFeeDistributor
+
+```solidity
+function serviceFeeDistributor() external view returns (address)
+```
+
+#### getSlashImpact
+
+```solidity
+function getSlashImpact(address operator, uint64 slashIndex, address delegator) external view returns (uint256)
+```
+
+#### getSlashCount
+
+```solidity
+function getSlashCount(address operator) external view returns (uint64)
+```
+
+#### getSlashRecord
+
+```solidity
+function getSlashRecord(address operator, uint64 slashIndex) external view returns (struct SlashingManager.SlashRecord)
+```
+
+#### getSlashCountForService
+
+```solidity
+function getSlashCountForService(uint64 serviceId, address operator) external view returns (uint64)
+```
+
+#### getSlashCountForBlueprint
+
+```solidity
+function getSlashCountForBlueprint(uint64 blueprintId, address operator) external view returns (uint64)
+```
+
+#### currentRound
+
+```solidity
+function currentRound() external view returns (uint64)
+```
+
+#### roundDuration
+
+```solidity
+function roundDuration() external view returns (uint64)
+```
+
+#### delegationBondLessDelay
+
+```solidity
+function delegationBondLessDelay() external view returns (uint64)
+```
+
+#### leaveDelegatorsDelay
+
+```solidity
+function leaveDelegatorsDelay() external view returns (uint64)
+```
+
+#### leaveOperatorsDelay
+
+```solidity
+function leaveOperatorsDelay() external view returns (uint64)
+```
+
+#### operatorCommissionBps
+
+```solidity
+function operatorCommissionBps() external view returns (uint16)
+```
+
+#### LOCK_ONE_MONTH
+
+```solidity
+function LOCK_ONE_MONTH() external view returns (uint64)
+```
+
+#### LOCK_TWO_MONTHS
+
+```solidity
+function LOCK_TWO_MONTHS() external view returns (uint64)
+```
+
+#### LOCK_THREE_MONTHS
+
+```solidity
+function LOCK_THREE_MONTHS() external view returns (uint64)
+```
+
+#### LOCK_SIX_MONTHS
+
+```solidity
+function LOCK_SIX_MONTHS() external view returns (uint64)
+```
+
+#### MULTIPLIER_NONE
+
+```solidity
+function MULTIPLIER_NONE() external view returns (uint16)
+```
+
+#### MULTIPLIER_ONE_MONTH
+
+```solidity
+function MULTIPLIER_ONE_MONTH() external view returns (uint16)
+```
+
+#### MULTIPLIER_TWO_MONTHS
+
+```solidity
+function MULTIPLIER_TWO_MONTHS() external view returns (uint16)
+```
+
+#### MULTIPLIER_THREE_MONTHS
+
+```solidity
+function MULTIPLIER_THREE_MONTHS() external view returns (uint16)
+```
+
+#### MULTIPLIER_SIX_MONTHS
+
+```solidity
+function MULTIPLIER_SIX_MONTHS() external view returns (uint16)
+```
+
+#### addSlasher
+
+```solidity
+function addSlasher(address slasher) external
+```
+
+#### removeSlasher
+
+```solidity
+function removeSlasher(address slasher) external
+```
+
+#### setOperatorCommission
+
+```solidity
+function setOperatorCommission(uint16 bps) external
+```
+
+#### setDelays
+
+```solidity
+function setDelays(uint64 delegationBondLessDelay, uint64 leaveDelegatorsDelay, uint64 leaveOperatorsDelay) external
+```
+
+#### setRewardsManager
+
+```solidity
+function setRewardsManager(address manager) external
+```
+
+#### setServiceFeeDistributor
+
+```solidity
+function setServiceFeeDistributor(address distributor) external
+```
+
+#### pause
+
+```solidity
+function pause() external
+```
+
+#### unpause
+
+```solidity
+function unpause() external
+```
+
+#### rescueTokens
+
+```solidity
+function rescueTokens(address token, address to, uint256 amount) external
+```
+
+#### Events
+
+#### AssetEnabled
+
+```solidity
+event AssetEnabled(address token, uint256 minOperatorStake, uint256 minDelegation)
+```
+
+#### AssetDisabled
+
+```solidity
+event AssetDisabled(address token)
+```
+
+#### RoundAdvanced
+
+```solidity
+event RoundAdvanced(uint64 round)
+```
+
+#### OperatorRegistered
+
+```solidity
+event OperatorRegistered(address operator, uint256 stake)
+```
+
+#### OperatorStakeIncreased
+
+```solidity
+event OperatorStakeIncreased(address operator, uint256 amount)
+```
+
+#### OperatorUnstakeScheduled
+
+```solidity
+event OperatorUnstakeScheduled(address operator, uint256 amount, uint64 readyRound)
+```
+
+#### OperatorUnstakeExecuted
+
+```solidity
+event OperatorUnstakeExecuted(address operator, uint256 amount)
+```
+
+#### OperatorLeavingScheduled
+
+```solidity
+event OperatorLeavingScheduled(address operator, uint64 readyRound)
+```
+
+#### OperatorLeft
+
+```solidity
+event OperatorLeft(address operator)
+```
+
+#### OperatorBlueprintAdded
+
+```solidity
+event OperatorBlueprintAdded(address operator, uint64 blueprintId)
+```
+
+#### OperatorBlueprintRemoved
+
+```solidity
+event OperatorBlueprintRemoved(address operator, uint64 blueprintId)
+```
+
+#### Deposited
+
+```solidity
+event Deposited(address delegator, address token, uint256 amount, enum Types.LockMultiplier lock)
+```
+
+#### WithdrawScheduled
+
+```solidity
+event WithdrawScheduled(address delegator, address token, uint256 amount, uint64 readyRound)
+```
+
+#### Withdrawn
+
+```solidity
+event Withdrawn(address delegator, address token, uint256 amount)
+```
+
+#### ExpiredLocksHarvested
+
+```solidity
+event ExpiredLocksHarvested(address delegator, address token, uint256 count, uint256 totalAmount)
+```
+
+#### Delegated
+
+```solidity
+event Delegated(address delegator, address operator, address token, uint256 amount, uint256 shares, enum Types.BlueprintSelectionMode selectionMode)
+```
+
+#### DelegatorUnstakeScheduled
+
+```solidity
+event DelegatorUnstakeScheduled(address delegator, address operator, address token, uint256 shares, uint256 estimatedAmount, uint64 readyRound)
+```
+
+#### DelegatorUnstakeExecuted
+
+```solidity
+event DelegatorUnstakeExecuted(address delegator, address operator, address token, uint256 shares, uint256 amount)
+```
+
+#### BlueprintAddedToDelegation
+
+```solidity
+event BlueprintAddedToDelegation(address delegator, uint256 delegationIndex, uint64 blueprintId)
+```
+
+#### BlueprintRemovedFromDelegation
+
+```solidity
+event BlueprintRemovedFromDelegation(address delegator, uint256 delegationIndex, uint64 blueprintId)
+```
+
+#### Slashed
+
+```solidity
+event Slashed(address operator, uint64 serviceId, uint256 operatorSlashed, uint256 delegatorsSlashed, uint256 newExchangeRate)
+```
+
+#### SlashedForService
+
+```solidity
+event SlashedForService(address operator, uint64 serviceId, uint64 blueprintId, uint256 totalSlashed, uint256 commitmentCount)
+```
+
+#### SlashRecorded
+
+```solidity
+event SlashRecorded(address operator, uint64 slashId, uint256 totalSlashed, uint256 exchangeRateBefore, uint256 exchangeRateAfter)
+```
+
+#### RewardDistributed
+
+```solidity
+event RewardDistributed(address operator, uint256 amount)
+```
+
+#### RewardClaimed
+
+```solidity
+event RewardClaimed(address account, uint256 amount)
+```
+
+#### AdapterRegistered
+
+```solidity
+event AdapterRegistered(address token, address adapter)
+```
+
+#### AdapterRemoved
+
+```solidity
+event AdapterRemoved(address token)
+```
+
+#### RequireAdaptersUpdated
+
+```solidity
+event RequireAdaptersUpdated(bool required)
+```

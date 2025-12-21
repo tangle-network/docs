@@ -7,7 +7,7 @@ const meta: Meta = {
   },
   blueprints: "Blueprints",
   cli: "Blueprint CLI",
-  "-- gadget-tutorial": {
+  "-- blueprint-developers": {
     type: "separator",
     title: "Blueprint Developers",
   },
@@ -26,8 +26,10 @@ const meta: Meta = {
     title: "Solution Developers",
   },
   endpoints: "Endpoints and Integration",
-  precompiles: "EVM Precompiles",
-  technicals: "EVM Development",
+  "system-architecture": "System Architecture",
+  "protocol-architecture": "Protocol Architecture",
+  api: "API Reference",
+  payments: "Payments & Streaming",
   "-- contribute": {
     type: "separator",
     title: "Contribute",

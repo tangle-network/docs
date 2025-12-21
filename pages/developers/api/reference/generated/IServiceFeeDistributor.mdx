@@ -1,0 +1,73 @@
+---
+title: IServiceFeeDistributor
+description: Auto-generated Solidity API reference.
+---
+
+# IServiceFeeDistributor
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IServiceFeeDistributor.sol
+
+### IServiceFeeDistributor
+
+Tracks service-fee payouts to restakers across payment tokens
+
+_Receives delegation-change hooks from MultiAssetDelegation and fee-distribution calls from Tangle._
+
+#### Functions
+
+#### distributeServiceFee
+
+```solidity
+function distributeServiceFee(uint64 serviceId, uint64 blueprintId, address operator, address paymentToken, uint256 amount) external payable
+```
+
+#### onDelegationChanged
+
+```solidity
+function onDelegationChanged(address delegator, address operator, struct Types.Asset asset, uint256 amount, bool isIncrease, enum Types.BlueprintSelectionMode selectionMode, uint64[] blueprintIds, uint16 lockMultiplierBps) external
+```
+
+#### onBlueprintAdded
+
+```solidity
+function onBlueprintAdded(address delegator, address operator, struct Types.Asset asset, uint64 blueprintId) external
+```
+
+#### onBlueprintRemoved
+
+```solidity
+function onBlueprintRemoved(address delegator, address operator, struct Types.Asset asset, uint64 blueprintId) external
+```
+
+#### getPoolScore
+
+```solidity
+function getPoolScore(address operator, uint64 blueprintId, struct Types.Asset asset) external view returns (uint256 allScore, uint256 fixedScore)
+```
+
+#### onOperatorLeaving
+
+```solidity
+function onOperatorLeaving(uint64 serviceId, address operator) external
+```
+
+Called when an operator is about to leave a service
+
+_Drips all active streams for the operator BEFORE they're removed_
+
+#### onServiceTerminated
+
+```solidity
+function onServiceTerminated(uint64 serviceId, address refundRecipient) external
+```
+
+Called when a service is terminated early
+
+_Cancels streaming payments and refunds remaining amounts to the service owner_
+
+##### Parameters
+
+| Name            | Type    | Description                                                   |
+| --------------- | ------- | ------------------------------------------------------------- |
+| serviceId       | uint64  | The terminated service ID                                     |
+| refundRecipient | address | Where to send the remaining payment (typically service owner) |

@@ -1,122 +1,76 @@
 # Testing Multi-node Blueprints
 
-This guide explains how to test blueprints that require multiple nodes for distributed computation, such as threshold cryptography protocols or consensus protocols. We'll walk through setting up a test environment and running multi-node tests using our SDK's testing utilities.
+This guide covers practical testing patterns for blueprints that require multiple nodes (threshold cryptography, aggregation, consensus-style coordination).
 
-## Overview
+## What “multi-node” means in practice
 
-When developing multi-node blueprints, testing requires simulating a network of nodes that can communicate and coordinate with each other. Our SDK provides testing utilities that make it easy to:
+You generally need two layers in tests:
 
-- Set up a simulated multi-node network environment
-- Configure individual nodes with custom handlers
-- Submit jobs and verify results across nodes
-- Test distributed protocols and consensus mechanisms
+- A **deterministic chain** seeded with Tangle EVM contracts (so addresses, IDs, and event shapes match production).
+- Multiple **runner instances** (processes or tasks) configured with distinct keystores and networking ports.
 
-## Test Environment Setup
+## Deterministic local chain (Tangle EVM)
 
-### Prerequisites
-
-First, include the necessary testing utilities in your project:
+The SDK ships an Anvil harness that replays `tnt-core/script/v2/LocalTestnet.s.sol` broadcast artifacts so the local chain matches the canonical devnet deployment.
 
 ```rust
-use blueprint_sdk::testing::utils::tangle::TangleTestHarness;
-use blueprint_sdk::testing::utils::harness::TestHarness;
-use blueprint_sdk::testing::tempfile;
-use blueprint_sdk::logging;
-```
+use blueprint_sdk::testing::utils::anvil::{
+    harness_builder_from_env, LOCAL_BLUEPRINT_ID, LOCAL_SERVICE_ID,
+};
 
-### Basic Setup
+#[tokio::test]
+async fn spins_up_seeded_tangle_evm() -> anyhow::Result<()> {
+    let harness = harness_builder_from_env().spawn().await?;
 
-1. **Initialize Logging and Error Handling**:
+    // The seeded contracts are exposed on the harness.
+    let tangle = harness.tangle_contract;
+    let restaking = harness.restaking_contract;
+    let status_registry = harness.status_registry_contract;
 
-```rust
-logging::setup_log();
-```
+    // Seeded IDs baked into LocalTestnet.
+    let blueprint_id = LOCAL_BLUEPRINT_ID;
+    let service_id = LOCAL_SERVICE_ID;
 
-2. **Create Test Harness**:
-
-```rust
-let tmp_dir = tempfile::TempDir::new()?;
-let harness = TangleTestHarness::setup(tmp_dir).await?
-```
-
-## Setting Up Multi-node Services
-
-### Node Configuration
-
-1. **Initialize Test Environment**:
-
-```rust
-// N specifies number of nodes (e.g. N = 3)
-let (mut test_env, service_id, blueprint_id) = harness.setup_services::<N>(false).await?;
-test_env.initialize().await?;
-```
-
-2. **Configure Individual Nodes**:
-
-```rust
-let handles = test_env.node_handles().await;
-for handle in handles {
-// Get node configuration
-let config = handle.gadget_config().await;
-// Initialize node-specific context
-let blueprint_ctx = YourContext::new(config.clone()).await?;
-// Add job handlers
-let job_handler = YourJobHandler::new(&config, blueprint_ctx.clone()).await?;
-handle.add_job(job_handler).await;
+    Ok(())
 }
 ```
 
-3. **Allow Time for Network Setup**:
+## Running your blueprint logic in-process
+
+For unit/integration tests that don’t need full operator processes, use the `TestRunner` utility to build a `BlueprintRunner` with a router and context.
 
 ```rust
-// Wait for network handshakes
-tokio::time::sleep(std::time::Duration::from_secs(10)).await;
-```
+use blueprint_sdk::runner::config::BlueprintEnvironment;
+use blueprint_sdk::testing::utils::runner::TestRunner;
 
-4. **Start the Environment**:
+#[tokio::test]
+async fn runs_a_blueprint_router() -> anyhow::Result<()> {
+    let env = BlueprintEnvironment::default();
+    let config = /* your BlueprintConfig (tangle-evm, eigenlayer, etc.) */;
+    let mut runner = TestRunner::new(config, env);
 
-```rust
-test_env.start().await?;
-```
+    runner.add_job(my_job);
+    runner.add_background_service(my_background_service);
 
-## Running Tests
-
-### Submitting Jobs
-
-To test your blueprint's functionality, submit jobs and verify their results:
-
-```rust
-// Submit a job with arguments
-let job = harness
-    .submit_job(
-    service_id,
-    JOB_ID,
-    vec![InputValue::Uint16(2)] // Example job argument
-)
-.await?;
-logging::info!("Submitted job {JOB_ID} with service ID {service_id}");
-```
-
-### Verifying Results
-
-Wait for job completion and verify the results:
-
-```rust
-// Wait for job execution
-let results = harness.wait_for_job_execution(service_id, job).await?;
-assert_eq!(results.service_id, service_id);
-
-// Verify outputs
-if !expected_outputs.is_empty() {
-assert_eq!(
-    results.result.len(),
-    expected_outputs.len(),
-    "Number of outputs doesn't match expected"
-);
-
-// Add more verification logic as needed...
+    runner.run(my_context).await?;
+    Ok(())
 }
 ```
+
+## Full multi-node testing
+
+For protocols that require real peer-to-peer behavior:
+
+- Run **N runner processes**, each with:
+  - a unique `keystore_uri`
+  - a unique `network_bind_port` (if using P2P networking)
+  - the same chain RPC endpoints (from the Anvil harness)
+- Use your test to:
+  - create (or reuse) a service on-chain
+  - wait for heartbeats / peer discovery to stabilize
+  - submit jobs and assert results
+
+If you need an end-to-end reference, see the SDK’s deterministic harness implementation in `crates/testing-utils/anvil/src/tangle_evm.rs` (it documents what is seeded and how).
 
 ## Best Practices
 

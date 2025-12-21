@@ -1,0 +1,107 @@
+---
+title: ITangleSlashing
+description: Auto-generated Solidity API reference.
+---
+
+# ITangleSlashing
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/ITangleSlashing.sol
+
+### ITangleSlashing
+
+Slashing interface for Tangle protocol
+
+#### Functions
+
+#### proposeSlash
+
+```solidity
+function proposeSlash(uint64 serviceId, address operator, uint256 amount, bytes32 evidence) external returns (uint64 slashId)
+```
+
+Propose a slash against an operator
+
+##### Parameters
+
+| Name      | Type    | Description                          |
+| --------- | ------- | ------------------------------------ |
+| serviceId | uint64  | The service where violation occurred |
+| operator  | address | The operator to slash                |
+| amount    | uint256 | Amount to slash                      |
+| evidence  | bytes32 | Evidence hash                        |
+
+##### Return Values
+
+| Name    | Type   | Description                          |
+| ------- | ------ | ------------------------------------ |
+| slashId | uint64 | The ID of the created slash proposal |
+
+#### disputeSlash
+
+```solidity
+function disputeSlash(uint64 slashId, string reason) external
+```
+
+Dispute a slash proposal
+
+#### executeSlash
+
+```solidity
+function executeSlash(uint64 slashId) external returns (uint256 actualSlashed)
+```
+
+Execute a slash proposal
+
+#### executeSlashBatch
+
+```solidity
+function executeSlashBatch(uint64[] slashIds) external returns (uint256 totalSlashed, uint256 executedCount)
+```
+
+Execute a batch of slashes
+
+#### getExecutableSlashes
+
+```solidity
+function getExecutableSlashes(uint64 fromId, uint64 toId) external view returns (uint64[] ids)
+```
+
+Get list of executable slash IDs in a range
+
+#### cancelSlash
+
+```solidity
+function cancelSlash(uint64 slashId, string reason) external
+```
+
+Cancel a slash proposal
+
+#### setSlashConfig
+
+```solidity
+function setSlashConfig(uint64 disputeWindow, bool instantSlashEnabled, uint16 maxSlashBps) external
+```
+
+Update slashing configuration
+
+#### getSlashProposal
+
+```solidity
+function getSlashProposal(uint64 slashId) external view returns (struct SlashingLib.SlashProposal)
+```
+
+Get slash proposal details
+
+#### Events
+
+#### SlashProposed
+
+```solidity
+event SlashProposed(uint64 serviceId, address operator, uint256 amount, bytes32 evidence)
+```
+
+#### SlashExecuted
+
+```solidity
+event SlashExecuted(uint64 serviceId, address operator, uint256 amount)
+```

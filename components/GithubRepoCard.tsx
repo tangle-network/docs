@@ -67,9 +67,25 @@ const GithubRepoCard: React.FC<GithubRepoCardProps> = ({
   useEffect(() => {
     let isMounted = true;
 
+    const toGithubRepoApiUrl = (repoUrl: string) => {
+      try {
+        const parsed = new URL(repoUrl);
+        if (parsed.hostname !== "github.com") return repoUrl;
+
+        const parts = parsed.pathname.split("/").filter(Boolean);
+        const owner = parts[0];
+        const repo = parts[1];
+        if (!owner || !repo) return repoUrl;
+
+        return `https://api.github.com/repos/${owner}/${repo}`;
+      } catch {
+        return repoUrl;
+      }
+    };
+
     const fetchRepoData = async () => {
       try {
-        const apiUrl = url.replace("github.com", "api.github.com/repos");
+        const apiUrl = toGithubRepoApiUrl(url);
         const response = await fetch(apiUrl, {
           headers: {
             Accept: "application/vnd.github+json",
@@ -94,8 +110,8 @@ const GithubRepoCard: React.FC<GithubRepoCardProps> = ({
         setRepoData({
           stars: parsedData.stargazers_count,
           forks: parsedData.forks_count,
-          description: parsedData.description || description,
-          name: parsedData.name || name,
+          description,
+          name,
           organization: parsedData.owner,
           language: parsedData.language || undefined,
           license: parsedData.license || undefined,

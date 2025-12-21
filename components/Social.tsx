@@ -36,7 +36,7 @@ function Twitter() {
     <a
       href="https://twitter.com/tangle_network"
       className="hidden p-2 text-current sm:flex hover:opacity-75"
-      title="Tangle Network Twitter"
+      title="Tangle Twitter"
       target="_blank"
       rel="noreferrer"
     >

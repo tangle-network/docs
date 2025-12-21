@@ -4,22 +4,35 @@ import ExpandableImage from '../../../components/ExpandableImage';
 
 <ExpandableImage src="/images/blueprint-manager-diagram.png" alt="Blueprint Manager Diagram" />
 
-On Tangle, Blueprints have an offchain and an onchain lifecycle. The offchain component is managed by what we call the **Blueprint Manager**. The **Blueprint Manager** can be considered **_Tangle's Operator Node_**. This onchain and offchain logic functions as follows:
+On Tangle, blueprints have an on-chain lifecycle (creation, registration, service requests) and an off-chain lifecycle (running the actual service). The off-chain component is managed by the **Blueprint Manager**.
+
+You can think of the Blueprint Manager as the operator-side agent that:
+
+- Runs blueprint service instances for customers
+- Talks to the chain for job calls, heartbeats, and service lifecycle events
+- Coordinates payout “drips” for streamed payments (when enabled)
 
 1. Operators must register for Blueprints onchain. This indicates an operators willingness to accept requests for Blueprint Instances of that type.
-2. Operators upon registering for Blueprints onchain, download the Blueprint's binary and metadata from the Tangle Network. This is handled by the Blueprint Manager, which listens for new registrations.
-3. Operators upon accepting Blueprint Instance requests, execute the Blueprint's binary. This is where the target environment of the Blueprint is important. The Blueprint Manager is responsible for executing the Blueprint's binary in the correct environment be it natively or in Docker or an alternative VM.
+2. Operators (via the Blueprint Manager) fetch and verify blueprint artifacts and metadata based on the declared sources (native, container, WASM, etc.).
+3. When a service is activated, the Blueprint Manager starts the service instance in the correct execution environment, and begins reporting liveness via heartbeats.
 
 ### Blueprint and Service Instance Lifecycle
 
 <ExpandableImage src="/images/ServiceInstanceFlow.png" alt="Service Instance Flow" />
 
-Blueprints interact with the Tangle Network in several key ways:
+Blueprints interact with Tangle in several key ways:
 
 1. Blueprints are deployed to Tangle, with their metadata and smart contracts stored and deployed on-chain.
-2. Blueprints are instantiated, triggering the creation of an Instance, which represents a single AVS. The Instance runs for some period of time.
-3. Blueprints are destroyed once they reach their time-to-live (TTL) or run out of funds to incentivize operators to run their service.
+2. Blueprints are instantiated, triggering the creation of a **service** (a customer-owned instance). The service runs until it is terminated or expires.
+3. Services are terminated once they reach their time-to-live (TTL) or are explicitly terminated; the underlying blueprint remains available unless the developer deactivates it.
 
-Blueprints provide a useful abstraction, allowing developers to create reusable service infrastructures as if they were smart contracts. This enables developers to monetize their work and align long-term incentives with the success of their creations, benefiting proportionally to their Blueprint's usage.
+Blueprints provide a useful abstraction, allowing developers to define reusable service infrastructure with clear monetization and security hooks.
 
-The Blueprint object is the core restaking object in Tangle, implemented primarily in the `pallet-services` module of the Tangle codebase. Assets are viewed as being restaked on Blueprints, with Operators running Instances of Blueprints and users restaking/staking their assets with those Operators.
+On-chain, the core objects live in the `Tangle` contract:
+
+- Blueprints (creation, metadata, schemas)
+- Operator registration (identity key + endpoint)
+- Service requests and service lifecycle
+- Payment splitting and slashing coordination
+
+Security and delegation are handled by the `MultiAssetDelegation` restaking contract, and service-fee restaker payouts are handled by `ServiceFeeDistributor`.

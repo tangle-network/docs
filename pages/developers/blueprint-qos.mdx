@@ -1,5 +1,5 @@
 ---
-title: Quality of Service (QoS) Integration
+title: Quality of Service (QoS) Integration Guide
 ---
 
 # Quality of Service (QoS) Integration Guide
@@ -9,7 +9,7 @@ This guide explains how to integrate and use the Blueprint SDK's Quality of Serv
 ## Prerequisites
 
 - Understanding of Blueprint concepts and execution model
-- Familiarity with Tangle Network architecture
+- Familiarity with Tangle architecture
 - Basic knowledge of observability concepts (metrics, logging, monitoring)
 
 ## QoS Overview
@@ -57,7 +57,7 @@ async fn main() -> Result<(), blueprint_sdk::Error> {
 
 ### Implementing HeartbeatConsumer
 
-To enable the heartbeat service, you must implement the `HeartbeatConsumer` trait, which is responsible for sending heartbeat signals to the Tangle Network:
+To enable the heartbeat service, you must implement the `HeartbeatConsumer` trait, which is responsible for sending heartbeat signals to Tangle:
 
 ```rust
 #[derive(Clone)]

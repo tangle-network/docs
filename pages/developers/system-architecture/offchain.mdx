@@ -1,0 +1,49 @@
+---
+title: Off-chain Runtime
+description: What operators run (manager/runner), how jobs are consumed, and how results and heartbeats are submitted.
+---
+
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
+
+# Off-chain Runtime
+
+Operators run a blueprint **manager/runner** that:
+
+- Watches chain events (job submissions, service activations, stream drips)
+- Executes blueprint handlers (your code)
+- Submits results back to chain
+- Emits heartbeats and optional metrics
+
+## App and Indexer Surfaces (Optional)
+
+Many deployments include a hosted app and an indexer to improve UX:
+
+- **Direct RPC reads** for critical “source of truth” checks (e.g., migration claim status).
+- **An indexer / GraphQL** for list views, aggregates, and pagination (deployment-dependent).
+
+If you are integrating, treat the indexer as a convenience layer and anchor correctness to contract reads/events.
+
+## Tangle EVM Context
+
+Blueprints typically interact with Tangle through an EVM-aware context that exposes typed clients and operator identity.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/v2/crates/contexts/src/tangle_evm.rs"
+  fromLine={1}
+  toLine={120}
+  title="Blueprint SDK: Tangle EVM context (client wiring + identity)"
+/>
+
+## EVM Producer / Consumer
+
+The runtime usually splits “listen” and “submit”:
+
+- **Producer** subscribes to EVM logs and turns them into job calls.
+- **Consumer** submits results back to the on-chain `Tangle` contract.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/v2/crates/tangle-evm-extra/src/consumer.rs"
+  fromLine={1}
+  toLine={160}
+  title="Blueprint SDK: Tangle EVM consumer (submit results)"
+/>

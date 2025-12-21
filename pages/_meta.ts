@@ -18,16 +18,16 @@ const meta: Meta = {
     title: "Developers",
     type: "page",
   },
+  protocols: {
+    title: "Protocols",
+    type: "page",
+  },
   restake: {
     title: "Restaking",
     type: "page",
   },
   operators: {
     title: "Operators",
-    type: "page",
-  },
-  resources: {
-    title: "Resources",
     type: "page",
   },
 };

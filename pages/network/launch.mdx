@@ -1,62 +1,26 @@
 import { Callout } from 'nextra/components'
 
-# Tangle Network Mainnet Launch
+# Tangle Launch
 
-## Launch Date
+## Overview
 
-- **Mainnet Activation**: Scheduled for April 10, 2024, Tangle Network will make its entrance as a fully operational NPoS network, virtually permissionless, decentralized and community governed from the start. **Validators will be able to participate in validation at 2:00:00 UTC on April 10 2024.**
+Tangle is an **EVM protocol** that enables restaking-secured applications and programmable infrastructure (via blueprints). Launch refers to the protocol contracts being deployed and activated on an underlying EVM chain, along with initial incentive programs and the TNT migration distribution.
 
-<Callout emoji="⚠️">
-  You can claim your airdrop at https://app.tangle.tools/claim. See our [guide at Docs:Claim Airdrop](./claim-airdrop) Note that participants will have 1 year to claim their distribution, **the deadline is April 10 2025.** otherwise the amount is sent to the Tangle Network on-chain treasury.
+<Callout>
+  Claim TNT via the migration flow at `https://app.tangle.tools/claim` and follow the guide at [Claim TNT (Migration)](./claim-airdrop).
 </Callout>
 
-## NPoS Launch and Operations
+## What To Do At Launch
 
-- nPoS Framework: Tangle Network has adopted a Nominated Proof of Stake model as its foundational security mechanism. This allows TNT holders to engage directly in the network's security by nominating validators they trust to be responsible for block production and transaction validation.
-- Validator Participation: Validators are essential to the network's integrity and performance. Validators are encouraged to stake TNT tokens and signal their commitment to maintaining network protocols.
+- **Token holders**: migrate/claim TNT and verify balances/locks.
+- **Restakers**: opt into restaking and review incentive programs and risks.
+- **Operators**: provision infrastructure, register, and maintain uptime/SLAs.
+- **Developers**: start building and deploying blueprints.
 
-## Governance Activation
+## Governance
 
-- Initial Governance: Governance modules are now activated, granting TNT holders the power to participate in decision-making processes through proposals, referenda, and council elections, ensuring a democratic approach to the network's development.
-- Tangle's Sudo Key Role: Initially, Webb, a core development team, holds a Sudo key to ensure smooth operations and governance transitions. This temporary measure allows for efficient implementation of critical updates and decisions during the early stages of the network.
-- Sudo Key Deactivation: A timeline is in place for deactivating the Sudo key, transitioning to a fully decentralized governance model. This significant step is expected to occur within the first few months, with input from the token holders to affirm the network's readiness.
+Tangle governance controls key protocol configuration and treasury-managed incentive budgets. Governance processes and interfaces are documented in [On-chain Governance](./governance).
 
-## Core Functionality
+## Legacy Note
 
-- Balances and Transfers: TNT token balances are active, with token transfer capabilities generally enabled to ensure liquidity and participation in the network's economy. If you receive tokens through the airdrop or other allocation processes, up to 95% of these may be subject to a lockup. See the Allocation page for details.
-- Community Proposals for Additional Features: The community is empowered to propose and vote on activating additional core functionalities. This encompasses enhanced transaction types, new governance mechanisms, and network upgrades, among others.
-
-# Mainnet Genesis Participation
-
-1. Update to the latest Tangle node release:
-
-- Visit the releases page on GitHub: https://github.com/tangle-network/tangle/releases
-- Download and install the latest version of the Tangle node software.
-
-2. Obtain the mainnet genesis script:
-
-- Download the mainnet genesis script from the following URL: https://github.com/tangle-network/tangle/blob/main/chainspecs/mainnet/tangle-mainnet.json
-- Save the script in the appropriate directory on your validator node.
-
-3. Configure your node for mainnet:
-
-- Update your node's configuration to use the mainnet genesis script.
-- Ensure your node is configured to connect to the mainnet network.
-
-4. Wait for the mainnet activation:
-
-- The Tangle Network mainnet is scheduled to activate at 02:00:00 UTC on April 10, 2024.
-- Keep your node running and connected to the network until the activation time.
-
-5. Participate in validation:
-
-- Once the mainnet is activated, your node will automatically start participating in block production and transaction validation.
-- Ensure your node has sufficient TNT tokens staked to meet the minimum staking requirements for validators.
-
-### Important Network Settings
-
-- Native Asset Symbol: TNT
-- Native Asset Decimals: 18
-- Chain ID: `5845`
-- Public RPC URL: `https://rpc.tangle.tools`
-- Public WSS URL: `wss://rpc.tangle.tools`
+Some older documentation referenced a Substrate-based “Tangle Network” with NPoS validators, chain IDs, and PolkadotJS tooling. That information is legacy and does not apply to Tangle’s current EVM deployment.

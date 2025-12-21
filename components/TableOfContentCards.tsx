@@ -96,16 +96,16 @@ export default TableOfContentCards;
 /*
 const tocItems = [
   {
-    title: "Distributed Validator Infrastructure",
-    href: "#distributed-validator-infrastructure",
+    title: "Blueprint Operators",
+    href: "#blueprint-operators",
     subItems: [
       { 
-        title: "Obol DVT and validator clusters",
-        href: "#obol-dvt" // Optional specific anchor
+        title: "Running the Blueprint Manager",
+        href: "#blueprint-manager" // Optional specific anchor
       },
       { 
-        title: "Secure multi-party validation",
-        href: "#secure-validation"
+        title: "Pricing and quality of service",
+        href: "#pricing-and-qos"
       }
     ]
   },

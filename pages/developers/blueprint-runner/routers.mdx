@@ -35,7 +35,7 @@ A simple router setup might look like this, assuming you have already created a 
 use blueprint_sdk::runner::BlueprintRunner;
 use blueprint_sdk::Router;
 
-let router = Router::builder()
+let router = Router::new()
     .route(MY_JOB_ID, my_job)
     .with_context(my_context);
 ```
@@ -43,10 +43,10 @@ let router = Router::builder()
 Below is a real example from our Incredible Squaring Blueprint Example:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/a9860d2e3a161af63a75d6d800f662d303e92e5b/examples/incredible-squaring/incredible-squaring-bin/src/main.rs"
-  fromLine={33}
-  toLine={48}
-  title="Router Configuration in Incredible Squaring Example"
+  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
+  fromLine={109}
+  toLine={126}
+  title="Router configuration (TangleEvmLayer routes)"
 />
 
 ## Layers
@@ -54,9 +54,9 @@ Below is a real example from our Incredible Squaring Blueprint Example:
 Layers are used to filter job calls based on certain criteria. There are two places layers can be used:
 
 1. A specific Route:
-   - A job can be given a layer. This can be seen in the above code example, where the job is in the `TangleLayer`. This allows the consumer, which operates in that layer, to see the results from that job. This simplifies your Blueprint when you have many jobs, routes, and consumers.
+   - A job can be given a layer (e.g., `TangleEvmLayer`) so results include the metadata expected by a matching consumer.
 2. A whole Router:
-   - A layer can be used to filter job calls based on some criteria. This can also be seen in the above code example, where the router is given a filter for the service ID. This allows the router to only process jobs with a matching service ID.
+   - A layer can filter job calls globally (e.g., only accept calls for a particular service ID).
 
 ## Integration with Other Components
 
@@ -75,4 +75,4 @@ Now that you understand routers, check out:
 
 ## Conclusion
 
-Routers are a fundamental component of Blueprint Runners, enabling efficient job execution and management. By properly configuring and utilizing routers, you can build robust and performant Blueprints and AVSs.
+Routers are a fundamental component of Blueprint Runners, enabling efficient job execution and management.

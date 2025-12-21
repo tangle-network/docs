@@ -1,6 +1,7 @@
 import { Meta } from "nextra";
 
 const meta: Meta = {
+  "press-release": "Press Release",
   overview: "Overview",
   tokenomics: "Tokenomics",
   "-- incentives": {
@@ -11,6 +12,7 @@ const meta: Meta = {
   "incentives-restakers": "For Restakers",
   "incentives-operators": "For Operators",
   "incentives-developers": "For Developers",
+  "metrics-and-scoring": "Metrics and Scoring",
   slashing: "Slashing",
   "-- restaking infrastructure": {
     type: "separator",
@@ -21,9 +23,8 @@ const meta: Meta = {
     type: "separator",
     title: "Network Launch",
   },
-  "claim-airdrop": "Claim the Airdrop",
+  "claim-airdrop": "Claim TNT (Migration)",
   launch: "About the Launch",
-  "points-mechanics": "Points Mechanics",
   "-- governance": {
     type: "separator",
     title: "Governance",
@@ -31,9 +32,9 @@ const meta: Meta = {
   governance: "On-chain Governance",
   "-- various": {
     type: "separator",
-    title: "Miscellaenous",
+    title: "Miscellaneous",
   },
-  "network-parameters": "Network Parameters",
+  resources: "Resources and Tools",
 };
 
 export default meta;

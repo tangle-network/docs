@@ -1,8 +1,9 @@
 ## Liquid Restaking Tokens (LRT) vs Liquid Staking Tokens (LST)
 
-| Feature          | LRT (Tangle Network)                         | LST (Traditional)                    |
-| ---------------- | -------------------------------------------- | ------------------------------------ |
-| Primary Function | Enables restaking across multiple Blueprints | Provides liquidity for staked assets |
-| Risk Profile     | Shared security across services              | Single network exposure              |
-| Reward Sources   | Multiple Services rewards + staking yields   | Base chain staking rewards           |
-| Use Cases        | Cross-service validation, Blueprint creation | Trading, lending, DeFi integrations  |
+| Feature          | LRT (Tangle)                                                                                                                  | LST (Traditional)                                                                |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Primary function | Liquid shares over a **restaking delegation position** (operator + blueprint exposure).                                       | Liquid shares over a **consensus staking** position.                             |
+| Risk profile     | Service-level misbehavior can lead to **slashing** based on exposure; risk depends on blueprint selection (`All` vs `Fixed`). | Primarily validator downtime/misbehavior under the base chain’s consensus rules. |
+| Reward sources   | Service fees (payment tokens) and optional incentive programs; depends on which services the operator runs.                   | Base chain staking rewards (typically native).                                   |
+| Exit mechanics   | Often **asynchronous** (unbonding/round delays).                                                                              | Often asynchronous (unbonding) depending on the chain.                           |
+| Use cases        | Service-backed infrastructure, delegated operator portfolios, blueprint-specific exposure control.                            | DeFi composability for base-chain staking yield.                                 |

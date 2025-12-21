@@ -1,0 +1,68 @@
+---
+title: Restaker Risks
+description: Understand exposure, slashing, and exit mechanics for restakers on Tangle.
+---
+
+# Restaker Risks
+
+Restaking can be a high-yield activity, but it introduces service-level risks beyond “holding a token”. This page summarizes the main risks restakers should understand before delegating.
+
+## Slashing Exposure
+
+When an operator is slashed for a blueprint service, both:
+
+- The operator’s self-stake, and
+- Delegations exposed to that blueprint
+
+can lose value. Slashing reduces withdrawable value using share/exchange-rate accounting.
+
+### `All` vs `Fixed`
+
+- **`All` mode**: your delegation is exposed to every blueprint the operator participates in.
+- **`Fixed` mode**: your delegation is exposed only to the blueprint IDs you selected.
+
+If you want to scope risk, prefer `Fixed` mode and keep your blueprint list intentionally small.
+
+## Operator Concentration Risk
+
+Delegating to a single operator concentrates risk:
+
+- Operational outages
+- Software bugs
+- Misbehavior leading to slashing
+
+Diversify across operators and blueprint types if your risk tolerance requires it.
+
+## Payment Token and Oracle Risk
+
+Service fee revenue may be paid in different tokens per service. If the protocol uses USD normalization (via a price oracle) for some scoring paths, oracle configuration and oracle failure modes can affect reward distribution.
+
+## Exit and Liquidity Risk
+
+Exiting restaking is typically not instant:
+
+- Unstaking is delayed by a protocol-defined waiting period.
+- Withdrawals require that your assets are not currently delegated.
+
+Plan for delayed liquidity, especially if you are delegating to high-risk services.
+
+## Deposit Lock Risk (Multipliers)
+
+Some incentive paths allow deposit locks (e.g., 1–6 month multipliers). While locked:
+
+- You cannot withdraw the locked portion.
+- You remain exposed to slashing for the selected blueprints.
+
+## Liquid Delegation Vault Risk
+
+If you use a liquid delegation vault:
+
+- You are taking on additional smart-contract risk (the vault wrapper).
+- Redemptions are asynchronous and depend on the underlying unstake delay.
+- Vault shares can trade at a discount/premium to underlying due to liquidity and exit timing.
+
+## Smart Contract Risk
+
+Tangle’s protocol contracts are on-chain software. Bugs, upgrades, or configuration changes can affect funds and rewards. Consider the risk of upgrades and governance decisions when delegating.
+
+See [Slashing](/network/slashing) for the on-chain slashing lifecycle.

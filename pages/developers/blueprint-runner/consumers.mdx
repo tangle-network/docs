@@ -33,19 +33,16 @@ Consumers are typically configured in the `main.rs` file of your Blueprint binar
 
 ### Basic Consumer Setup
 
-First, you define the consumer you want to use. For example, a `TangleConsumer` that listens for finalized blocks on Tangle. After which, you pass the consumer to the Blueprint Runner's builder.
+First, you define the consumer you want to use. For example, a `TangleEvmConsumer` that submits `JobResult`s back to Tangle by calling `submitResult(serviceId, callId, output)`.
 
 ```rust
 let env = BlueprintEnvironment::load()?;
-let sr25519_signer = env.keystore().first_local::<SpSr25519>()?;
-let sr25519_pair = env.keystore().get_secret::<SpSr25519>(&sr25519_signer)?;
-let sr25519_signer = TanglePairSigner::new(sr25519_pair.0);
+let tangle_client = env.tangle_evm_client().await?;
+let service_id = env.protocol_settings.tangle_evm()?.service_id.expect("service id");
+let tangle_producer = TangleEvmProducer::new(tangle_client.clone(), service_id);
+let tangle_consumer = TangleEvmConsumer::new(tangle_client);
 
-let tangle_client = env.tangle_client().await?;
-let tangle_producer = TangleProducer::finalized_blocks(tangle_client.rpc_client.clone()).await?;
-let tangle_consumer = TangleConsumer::new(tangle_client.rpc_client.clone(), sr25519_signer);
-
-BlueprintRunner::builder(tangle_config, env)
+BlueprintRunner::builder(TangleEvmConfig::default(), env)
     .router(router) // Assuming your router is already defined
     .producer(tangle_producer)
     .consumer(tangle_consumer)
@@ -59,13 +56,13 @@ Blueprint Runners can utilize various types of consumers depending on the requir
 
 ### Tangle Consumer
 
-A Tangle Consumer is a consumer that handles transactions on the Tangle, submitting job results for a Blueprint.
+A Tangle EVM consumer submits job results to the on-chain `Tangle` contract.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/7774ea42c4d3ec3ff7e170626de3ddce511d1f2f/crates/tangle-extra/src/consumer/mod.rs"
-  fromLine={39}
-  toLine={51}
-  title="Tangle Consumer Definition"
+  url="https://github.com/tangle-network/blueprint/blob/v2/crates/tangle-evm-extra/src/consumer.rs"
+  fromLine={1}
+  toLine={120}
+  title="TangleEvmConsumer: submit results back to Tangle EVM"
 />
 
 ### EVM Consumer
@@ -73,9 +70,9 @@ A Tangle Consumer is a consumer that handles transactions on the Tangle, submitt
 An EVM Consumer is a consumer that handles transactions on the EVM, submitting job results for a Blueprint.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/7774ea42c4d3ec3ff7e170626de3ddce511d1f2f/crates/evm-extra/src/consumer/mod.rs"
-  fromLine={44}
-  toLine={54}
+  url="https://github.com/tangle-network/blueprint/blob/v2/crates/evm-extra/src/consumer/mod.rs"
+  fromLine={51}
+  toLine={88}
   title="EVM Consumer Definition"
 />
 

@@ -1,0 +1,58 @@
+---
+title: Streaming & Refunds
+description: How streamed fee drips work for restaker payouts, and how termination refunds are handled.
+---
+
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
+
+# Streaming & Refunds
+
+Streaming payments apply to the **restaker share** of service fees when a service has a TTL and streaming is enabled in the deployment. The goal is to distribute the restaker share over the lifetime of the service (value × time), rather than all at once.
+
+## When Streaming Is Used
+
+When the protocol routes the restaker share to `ServiceFeeDistributor`, the distributor checks:
+
+- service has `ttl > 0`
+- `StreamingPaymentManager` is configured
+
+If both are true, it creates a stream from `max(now, createdAt)` to `createdAt + ttl`. Otherwise, it distributes immediately.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/ServiceFeeDistributor.sol"
+  fromLine={364}
+  toLine={440}
+  title="ServiceFeeDistributor: stream creation vs immediate distribution"
+/>
+
+## Stream Creation and Drips
+
+Streams are tracked per `(serviceId, operator)` and drip linearly over time. Drip operations transfer a chunk of funds back to the distributor so it can distribute using the current delegation scores.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/StreamingPaymentManager.sol"
+  fromLine={136}
+  toLine={235}
+  title="StreamingPaymentManager: createStream + linear drip accounting"
+/>
+
+Operational notes:
+
+- Drips are **lazy**: they are triggered when the distributor is invoked (for example, on delegation changes or when a delegator claims rewards).
+- Before delegation scores change, the distributor drips outstanding streams so rewards are distributed under the scores that were active during the streamed interval.
+
+## Termination Refunds
+
+If a service is terminated early, remaining (undripped) streamed balances are refunded to a recipient designated by the protocol.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/StreamingPaymentManager.sol"
+  fromLine={320}
+  toLine={337}
+  title="StreamingPaymentManager: terminate → drip → refund remaining"
+/>
+
+## What Customers Should Expect
+
+- Streaming affects the **timing** of restaker distribution, not whether fees are owed.
+- Ending a service early can refund unearned streamed portions (deployment-dependent policy and refund recipient).

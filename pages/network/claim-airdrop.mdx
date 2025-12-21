@@ -1,63 +1,74 @@
 import { Callout } from 'nextra/components'
 
-# Claiming Your TNT Airdrop
+# Claiming TNT (Migration)
 
-This is step-by-step guide on how to claim your airdrop tokens through our claims interface.
+This guide explains how to claim TNT as part of the **TNT migration** to Tangle’s EVM protocol.
 
 <Callout emoji="⚠️">
-  Genesis participants will have 1 year to claim their distribution, **the deadline is April 10 2025.** otherwise the amount is sent to the Tangle Network on-chain treasury.
+  Some balances from the legacy chain are **not claimable** (e.g., Substrate module accounts). Those balances are carved out and transferred directly to the EVM treasury. The foundation allocation is also handled as a carveout so it is fully liquid at launch.
 </Callout>
 
 ## Prerequisites
 
 Before you begin, please ensure you have the following:
 
-- **A compatible wallet**: Ensure your digital wallet is compatible with our platform. Most users will claim with a Substrate compatible wallet like Polkadot.js Extension. Some will use their favorite EVM wallet. [See the full Wallet compatibile page on our Docs.](/wallets)
+- **An EVM wallet**: Claiming happens on an EVM chain (e.g., Base). You will need an EVM wallet such as MetaMask, Rainbow, or WalletConnect.
+- **Network Connection**: Make sure your wallet is connected to the correct chain for the migration portal.
 
-We support major EVM wallets such as :
+> Historical note: older documentation may reference Substrate wallets and Polkadot.js flows. The TNT migration claim is EVM-based.
 
-- MetaMask
-- Rainbow Wallet
-- Walletconnect
+## What You Receive
 
-For Substrate wallets we support:
+For most migrating balances, the claim is split into:
 
-- Polkadot.js Browser Extension
-- Talisman Wallet
-- SubWallet
+- **Unlocked at claim:** 10%
+- **Locked:** 90% in a cliff lock (typically ~180 days)
 
-- **Network Connection**: Ensure you're connected to the correct blockchain network, Tangle Network.
+## Step 1: Open the Migration Portal
 
-## Step 1: Access the Airdrop UI
-
-1. Navigate to our official claims portal: [https://app.tangle.tools/claim](https://app.tangle.tools/claim)
-2. Click on the appropriate "Connect Wallet" button in the interface.
+1. Navigate to the official claims portal: [https://app.tangle.tools/claim](https://app.tangle.tools/claim)
+2. Select the **Migration** claim flow.
 
 ## Step 2: Connect Your Wallet
 
-1. A pop-up window will appear, asking you to either sign a message for Polkadot.js Extension, or if using EVM, to select your wallet provider (We support major EVM wallets such as MetaMask, Rainbow Wallet, and Walletconnect.) Choose the one that corresponds to your wallet,
-2. To connect your wallet to our platform, you may need to add a custom network to your wallet:
+1. Click **Connect Wallet**.
+2. Confirm the connection in your wallet.
 
-## Step 3: Verify Airdrop Eligibility
+## Step 3: Verify Eligibility
 
-1. Once your wallet is connected, the system will automatically check for your eligibility to claim the airdrop.
-2. If eligible, you will see a message indicating that you have unclaimed TNT, and the amount you can claim..
+1. The portal will check whether you have an allocation in the TNT migration snapshot.
+2. If eligible, you will see your claimable amount.
 
-## Step 4: Claim Your Airdrop
+## Step 4: Claim
 
-1. **Airdrop Recipient Field** With our interface, you can claim from one address but send the tokens to a different Substrate or Tangle EVM address. Enter in your preferred address or leave the Airdrop Recipient field with your claiming account address already present.
-1. Click on the "Claim Now" button.
-1. A transaction will be initiated. You may need to confirm the transaction in your wallet.
-1. Depending on the network traffic, it may take a few minutes for the transaction to be processed.
-1. Once confirmed, your tokens will be deposited into your connected wallet.
+1. Choose the recipient EVM address (defaults to your connected wallet).
+2. Submit the claim transaction and confirm in your wallet.
+3. After confirmation, the unlocked portion is transferred immediately and the locked portion is sent to a time-locked vault contract.
 
-## Step 5: Confirmation
+## How the Claim Works (Technical)
 
-1. You will receive a confirmation message on the UI, confirming the successful claim of your airdrop.
-2. You can verify the token receipt by checking your wallet balance or clicking through the displayed link to view the transaction on a block explorer.
+Most claim entries are validated by:
+
+1. A Merkle proof (membership in the snapshot distribution), and
+2. A ZK proof that the claimant controls the legacy key (binding the claim to an EVM recipient address).
+
+The on-chain migration contract exposes simple status/config reads:
+
+- `getClaimedAmount(pubkey)`
+- `claimDeadline()`
+- `paused()`
+
+## Self-hosting the Claim UI (Optional)
+
+If you want to self-host the claim UI, you will typically need:
+
+- An RPC endpoint used for reads (`VITE_MIGRATION_RPC_URL`)
+- `TangleMigration` contract address (`VITE_TANGLE_MIGRATION_ADDRESS`)
+- Merkle proof JSON URL (`VITE_MIGRATION_PROOFS_URL`)
+- Optional relayer URL (`VITE_CLAIM_RELAYER_URL`)
 
 ## Additional Tips
 
-- **Gas Fees?**: For the genesis claiming process, there is no gas fee charged to claimed tokens.
-- **Security**: Never share your private keys or wallet password with anyone.
+- **Gas fees**: Claims are on-chain transactions and require gas (paid in the chain’s native gas token, e.g., ETH on Base).
+- **Security**: Never share your private keys or seed phrase with anyone.
 - **Support**: If you encounter any issues or have questions, please contact our support team through the official channels listed on our website.

@@ -1,0 +1,7 @@
+{
+  "name": "tangle-docs-solidity-docgen-helpers",
+  "private": true,
+  "type": "commonjs",
+  "main": "index.cjs"
+}
+

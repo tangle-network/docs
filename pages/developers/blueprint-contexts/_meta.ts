@@ -5,8 +5,8 @@ const meta: Meta = {
   "eigenlayer-context": "Eigenlayer Context",
   "evm-provider-context": "EVM Provider Context",
   "keystore-context": "Keystore Context",
-  "services-context": "Services Context",
-  "tangle-client-context": "Tangle Client Context",
+  "tangle-client-context": "Tangle EVM Client Context",
+  "services-context": "Tangle Services Helpers",
 };
 
 export default meta;

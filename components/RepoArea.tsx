@@ -8,16 +8,32 @@ export const RepoArea = () => {
       <DetailedFeatureLink
         feature={{
           Icon: GitHubIcon,
-          description: `A marketplace for on-demand, multi-party crypto infrastructure`,
-          name: "Tangle Network Repo",
+          description: "Core protocol contracts and deployment logic (EVM).",
+          name: "tnt-core",
         }}
-        href="https://github.com/tangle-network/tangle"
+        href="https://github.com/tangle-network/tnt-core/tree/v2"
       />
       <DetailedFeatureLink
         feature={{
           Icon: GitHubIcon,
-          description: `Documentation for the Tangle Network`,
-          name: "Tangle Docs Repo",
+          description: "Blueprint SDK, operator runtime, and CLI tooling.",
+          name: "blueprint-sdk",
+        }}
+        href="https://github.com/tangle-network/blueprint/tree/v2"
+      />
+      <DetailedFeatureLink
+        feature={{
+          Icon: GitHubIcon,
+          description: "UI and shared libraries for the Tangle app.",
+          name: "dapp",
+        }}
+        href="https://github.com/tangle-network/dapp/tree/v2"
+      />
+      <DetailedFeatureLink
+        feature={{
+          Icon: GitHubIcon,
+          description: "Documentation site source.",
+          name: "docs",
         }}
         href="https://github.com/tangle-network/tangle-docs"
       />
@@ -31,26 +47,26 @@ export const StatsdApp = () => {
       <DetailedFeatureLink
         feature={{
           Icon: GitHubIcon,
-          description: "Monorepo for Tangle DApps",
-          name: "dApp",
+          description: "Monorepo for the Tangle app.",
+          name: "dapp",
         }}
-        href="https://github.com/tangle-network/dapp"
+        href="https://github.com/tangle-network/dapp/tree/v2"
       ></DetailedFeatureLink>
       <DetailedFeatureLink
         feature={{
           Icon: CodeIcon,
-          description: `The GraphQL Playground provides a way to query the SubQuery API`,
+          description: "Find RPC, GraphQL, and explorer endpoints.",
           name: "GraphQL Playground",
         }}
-        href="https://standalone-subql.tangle.tools/graphql"
+        href="/developers/endpoints"
       ></DetailedFeatureLink>
       <DetailedFeatureLink
         feature={{
           Icon: GitHubIcon,
-          description: "SubQuery implementation for Tangle Network",
-          name: "tangle-subql",
+          description: "Indexer and ingestion tooling (deployment-dependent).",
+          name: "Indexer",
         }}
-        href="https://github.com/tangle-network/tangle-subql"
+        href="/developers/endpoints"
       ></DetailedFeatureLink>
     </div>
   );

@@ -4,10 +4,14 @@ import ExpandableImage from "../../components/ExpandableImage";
 
 ## Introduction
 
-Tangle Network is a blockchain designed to provide secure, decentralized infrastructure services. Developers can build and deploy composable services called Blueprints. Operators provide validator services to secure Blueprint instances requested by users, and together they form a decentralized cloud infrastructure provider where incentives and rewards are distributed based on usage and contribution to the network.
+Tangle is an **EVM protocol** for building and running decentralized services secured by restaked assets.
+
+Developers publish composable services called **Blueprints**. Users instantiate Blueprint-based services on demand. Operators run those services, and restakers supply the economic security backing them.
+
+> Historical note: earlier iterations of the Tangle network included Substrate-native components and UX (e.g., Polkadot.js flows). This documentation is being migrated to focus on Tangle’s EVM protocol; Substrate-specific pages should be treated as legacy unless explicitly labeled otherwise.
 
 **Build Composable Service:**
-Blueprints are composable services that can be instantiated by users. They are built using our [blueprint](https://github.com/tangle-network/blueprint) framework, which also integrates with Eigenlayer and other restaking networks.
+Blueprints are composable services that can be instantiated by users. They are built using the Blueprint SDK: https://github.com/tangle-network/blueprint/tree/v2
 
 **Earn as a Service Operator**
 Operators can earn rewards by operating Blueprint instances requested by users. Operators can register for Blueprints and maintain control over the services they operate, selecting the assets they want to expose for securing the Blueprint.
@@ -19,15 +23,15 @@ Tangle enables shared security across Blueprints, allowing operators to secure m
 
 <ExpandableImage src="/images/ServiceInstanceFlow.png" alt="Service Instance Flow" allowZoom={true} />
 
-Tangle Network employs a modular architecture to enable the creation and deployment of complex cryptographic services called Blueprints:
+Tangle employs a modular architecture to enable the creation and deployment of complex cryptographic services called Blueprints:
 
 #### Blueprints
 
-A Blueprint is a specification that defines a service, similar to an actively validated service (AVS). However, Blueprints themselves are not live service instances. Developers create Blueprints by specifying a "gadget" binary, the jobs involved, a set of smart contracts for registration and requesting instances, and additional metadata. Users can instance AVSes from Blueprints, similar to EC2 instances, by configuring the operator set and paying the necessary fees. [Read more about Blueprints](../developers/blueprints/introduction.mdx)
+A Blueprint is an on-chain definition that describes how an off-chain service behaves (jobs + schemas + sources + metadata). A Blueprint is not a live service instance; users create **services** from blueprints by selecting operators and paying fees. [Read more about Blueprints](/developers/blueprints/introduction)
 
 #### Restaking on Blueprints
 
-Asset issuers restake their assets on operators who run services based on Blueprints. Asset issuers can restake any fungible asset and can restake these assets on a single operator at a time. Operators register for services and agree through the smart contract logic to run Blueprint service instances when requested. [Read more about restaking](../restake/introduction.mdx)
+Asset issuers restake their assets on operators who run services based on Blueprints. Asset issuers can restake any fungible asset and can restake these assets on a single operator at a time. Operators register for services and agree through the smart contract logic to run Blueprint service instances when requested. [Read more about restaking](/restake/introduction)
 
 #### Requesting Service Instances
 
@@ -37,13 +41,13 @@ We aim to support fine-grained controls over requesting instances, such as speci
 
 #### Incentives
 
-Operators perform the service and earn inflationary rewards for executing Blueprint service instances. Importantly, developers who create popular Blueprints also earn a share of these rewards, incentivizing valuable Blueprint creation.
+Operators earn service fees for running services and may earn TNT incentives funded by explicit budgets. Developers can earn a share of service fees and, depending on configuration, may be eligible for incentive programs tied to usage and performance.
 
 This separation into Blueprints and instances allows services to be defined once but instantiated multiple times by different users with varying operator requirements. Blueprint developers benefit from their work being utilized widely across ecosystems and applications.
 
 ## Use Cases
 
-Tangle Network is designed to function as a highly-specialized crypto cloud platform. It is meant to support a wide range of complex cryptographic services and applications built by developers in a reusable and instanceable fashion. Some key service areas include:
+Tangle is designed to function as a highly-specialized crypto cloud platform. It is meant to support a wide range of complex cryptographic services and applications built by developers in a reusable and instanceable fashion. Some key service areas include:
 
 - **Privacy Infrastructure**: Tangle provides a foundation for enabling privacy-preserving solutions through technologies like multi-party computation (MPC) and zero-knowledge proofs.
 

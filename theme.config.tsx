@@ -20,7 +20,7 @@ function Head() {
 
   // Get the title and description from the front matter, or use the default values
   const title = frontMatter.title
-    ? `${frontMatter.title} - Tangle Network`
+    ? `${frontMatter.title} - Tangle`
     : defaultTitle;
 
   const description = frontMatter.description || defaultDescription;
@@ -71,7 +71,7 @@ function Head() {
         content="https://assets-global.website-files.com/6494562b44a28080aafcbad4/6494599436915879aa403230_Tangle%20Logo.png"
       />
       <meta property="og:locale" content="en_IE" />
-      <meta property="og:site_name" content="Tangle Network" />
+      <meta property="og:site_name" content="Tangle" />
       <link rel="prefetch" href="/" as="document" />
     </>
   );

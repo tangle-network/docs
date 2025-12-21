@@ -1,0 +1,271 @@
+---
+title: ITangleGovernance
+description: Auto-generated Solidity API reference.
+---
+
+# ITangleGovernance
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/ITangleGovernance.sol
+
+### ITangleGovernance
+
+Interface for Tangle governance components
+
+#### Types
+
+#### ProposalState
+
+Proposal states
+
+```solidity
+enum ProposalState {
+  Pending,
+  Active,
+  Canceled,
+  Defeated,
+  Succeeded,
+  Queued,
+  Expired,
+  Executed
+}
+```
+
+#### Functions
+
+#### propose
+
+```solidity
+function propose(address[] targets, uint256[] values, bytes[] calldatas, string description) external returns (uint256 proposalId)
+```
+
+Create a new proposal
+
+##### Parameters
+
+| Name        | Type      | Description                |
+| ----------- | --------- | -------------------------- |
+| targets     | address[] | Contract addresses to call |
+| values      | uint256[] | ETH values to send         |
+| calldatas   | bytes[]   | Encoded function calls     |
+| description | string    | Human-readable description |
+
+##### Return Values
+
+| Name       | Type    | Description                    |
+| ---------- | ------- | ------------------------------ |
+| proposalId | uint256 | The unique proposal identifier |
+
+#### queue
+
+```solidity
+function queue(address[] targets, uint256[] values, bytes[] calldatas, bytes32 descriptionHash) external returns (uint256 proposalId)
+```
+
+Queue a successful proposal for execution
+
+##### Parameters
+
+| Name            | Type      | Description                      |
+| --------------- | --------- | -------------------------------- |
+| targets         | address[] | Contract addresses to call       |
+| values          | uint256[] | ETH values to send               |
+| calldatas       | bytes[]   | Encoded function calls           |
+| descriptionHash | bytes32   | Hash of the proposal description |
+
+##### Return Values
+
+| Name       | Type    | Description             |
+| ---------- | ------- | ----------------------- |
+| proposalId | uint256 | The proposal identifier |
+
+#### execute
+
+```solidity
+function execute(address[] targets, uint256[] values, bytes[] calldatas, bytes32 descriptionHash) external payable returns (uint256 proposalId)
+```
+
+Execute a queued proposal
+
+##### Parameters
+
+| Name            | Type      | Description                      |
+| --------------- | --------- | -------------------------------- |
+| targets         | address[] | Contract addresses to call       |
+| values          | uint256[] | ETH values to send               |
+| calldatas       | bytes[]   | Encoded function calls           |
+| descriptionHash | bytes32   | Hash of the proposal description |
+
+##### Return Values
+
+| Name       | Type    | Description             |
+| ---------- | ------- | ----------------------- |
+| proposalId | uint256 | The proposal identifier |
+
+#### cancel
+
+```solidity
+function cancel(address[] targets, uint256[] values, bytes[] calldatas, bytes32 descriptionHash) external returns (uint256 proposalId)
+```
+
+Cancel a proposal
+
+##### Parameters
+
+| Name            | Type      | Description                      |
+| --------------- | --------- | -------------------------------- |
+| targets         | address[] | Contract addresses to call       |
+| values          | uint256[] | ETH values to send               |
+| calldatas       | bytes[]   | Encoded function calls           |
+| descriptionHash | bytes32   | Hash of the proposal description |
+
+##### Return Values
+
+| Name       | Type    | Description             |
+| ---------- | ------- | ----------------------- |
+| proposalId | uint256 | The proposal identifier |
+
+#### castVote
+
+```solidity
+function castVote(uint256 proposalId, uint8 support) external returns (uint256 weight)
+```
+
+Cast a vote on a proposal
+
+##### Parameters
+
+| Name       | Type    | Description                 |
+| ---------- | ------- | --------------------------- |
+| proposalId | uint256 | The proposal to vote on     |
+| support    | uint8   | 0=Against, 1=For, 2=Abstain |
+
+##### Return Values
+
+| Name   | Type    | Description            |
+| ------ | ------- | ---------------------- |
+| weight | uint256 | The voting weight used |
+
+#### castVoteWithReason
+
+```solidity
+function castVoteWithReason(uint256 proposalId, uint8 support, string reason) external returns (uint256 weight)
+```
+
+Cast a vote with reason
+
+##### Parameters
+
+| Name       | Type    | Description                 |
+| ---------- | ------- | --------------------------- |
+| proposalId | uint256 | The proposal to vote on     |
+| support    | uint8   | 0=Against, 1=For, 2=Abstain |
+| reason     | string  | Explanation for the vote    |
+
+##### Return Values
+
+| Name   | Type    | Description            |
+| ------ | ------- | ---------------------- |
+| weight | uint256 | The voting weight used |
+
+#### castVoteBySig
+
+```solidity
+function castVoteBySig(uint256 proposalId, uint8 support, address voter, bytes signature) external returns (uint256 weight)
+```
+
+Cast a vote using EIP-712 signature
+
+##### Parameters
+
+| Name       | Type    | Description                 |
+| ---------- | ------- | --------------------------- |
+| proposalId | uint256 | The proposal to vote on     |
+| support    | uint8   | 0=Against, 1=For, 2=Abstain |
+| voter      | address | The voter address           |
+| signature  | bytes   | The EIP-712 signature       |
+
+##### Return Values
+
+| Name   | Type    | Description            |
+| ------ | ------- | ---------------------- |
+| weight | uint256 | The voting weight used |
+
+#### state
+
+```solidity
+function state(uint256 proposalId) external view returns (enum ITangleGovernance.ProposalState)
+```
+
+Get the current state of a proposal
+
+#### proposalSnapshot
+
+```solidity
+function proposalSnapshot(uint256 proposalId) external view returns (uint256)
+```
+
+Get the block number when voting starts
+
+#### proposalDeadline
+
+```solidity
+function proposalDeadline(uint256 proposalId) external view returns (uint256)
+```
+
+Get the block number when voting ends
+
+#### proposalProposer
+
+```solidity
+function proposalProposer(uint256 proposalId) external view returns (address)
+```
+
+Get the proposer of a proposal
+
+#### hasVoted
+
+```solidity
+function hasVoted(uint256 proposalId, address account) external view returns (bool)
+```
+
+Check if an account has voted on a proposal
+
+#### getVotes
+
+```solidity
+function getVotes(address account, uint256 blockNumber) external view returns (uint256)
+```
+
+Get voting power of an account at a specific block
+
+#### quorum
+
+```solidity
+function quorum(uint256 blockNumber) external view returns (uint256)
+```
+
+Get the required quorum at a specific block
+
+#### votingDelay
+
+```solidity
+function votingDelay() external view returns (uint256)
+```
+
+Get the voting delay (blocks before voting starts)
+
+#### votingPeriod
+
+```solidity
+function votingPeriod() external view returns (uint256)
+```
+
+Get the voting period (blocks for voting)
+
+#### proposalThreshold
+
+```solidity
+function proposalThreshold() external view returns (uint256)
+```
+
+Get the proposal threshold (tokens needed to propose)

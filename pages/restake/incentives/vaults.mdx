@@ -1,49 +1,33 @@
 ---
-title: Restaking Incentives
-description: Learn about the restaking system in the Tangle Network, which encourages operators to execute multi-party computation (MPC) service roles, and understand the reward mechanisms and benefits for operators and delegators.
+title: Vaults (Terminology)
+description: Clarify the different “vault” concepts used in restaking and incentives.
 ---
 
-# What are Vaults?
+# Vaults (Terminology)
 
-Vaults are used to store and whitelist restaked tokens in the Tangle Network. They are used to distribute rewards to operators and delegators.
+In Tangle documentation, “vault” can refer to different on-chain components. This page clarifies the terminology.
 
-## Whitelisting Blueprints for Rewards
+## `RewardVaults` (TNT Incentives Per Asset)
 
-The network allows developers to create blueprints for restaking services. These blueprints can be whitelisted for rewards, meaning services built using these blueprints can attract incentivized staking.
+- `RewardVaults` is an on-chain system that pays **TNT incentives** for delegated assets.
+- It maintains **one vault per asset** (native, TNT, etc.).
+- Vaults are configured by governance (APY, deposit cap, incentive cap).
+- Rewards are funded from `InflationPool` (pre-funded, no minting).
 
-- **Function:** `whitelist_blueprint_for_rewards`
-- **Description:** Whitelists a blueprint, allowing services using this blueprint to be eligible for reward distribution.
+## `LiquidDelegationVault` (Liquid Restaking Shares)
 
-### Reward Calculation
+Liquid restaking uses a different vault concept:
 
-- **Total Reward Calculation:** The total reward is calculated by multiplying the APY by the total staked amount, capped at the Vault's limit.
-- **Individual Reward Calculation:** Each delegator's reward is calculated as a percentage of the total reward based on the delegator’s stake in relation to the cap.
+- `LiquidDelegationVault` is an ERC-7540-style wrapper around a delegated position.
+- It mints transferable shares representing a vault’s delegation to a specific `(operator, asset, blueprint selection)` tuple.
+- Redemptions are asynchronous and follow the underlying unstake delay.
 
-### Example:
+See [Liquid Delegation Vaults](/restake/lrt-concepts).
 
-- If a Vault has a cap of 1000 tokens and an APY of 10%, the total reward distributed will be 100 tokens (10% of 1000).
-- If a delegator staked 100 tokens, they will receive 10 tokens as a reward (10% of the total reward).
+## `ServiceFeeDistributor` (Service Fee Revenue)
 
-## Managing Assets in Vaults
+Service-fee revenue share to restakers is handled by `ServiceFeeDistributor`:
 
-Assets can be added or removed from reward Vaults using the following functions:
-
-### Adding an Asset to a Vault
-
-- **Function:** `add_asset_to_Vault`
-- **Description:** Adds a new asset to an existing reward Vault.
-- **Inputs:**
-  - `Vault_id`: The ID of the Vault to which the asset is being added.
-  - `asset_id`: The ID of the asset being added to the Vault.
-
-This function ensures that the asset is not already associated with a Vault before adding it.
-
-### Removing an Asset from a Vault
-
-- **Function:** `remove_asset_from_Vault`
-- **Description:** Removes an asset from a reward Vault.
-- **Inputs:**
-  - `Vault_id`: The ID of the Vault from which the asset is being removed.
-  - `asset_id`: The ID of the asset being removed.
-
-This function ensures that the asset is part of the specified Vault before removing it.
+- It receives the restaker portion of service payments, per operator.
+- It accounts for `All` vs `Fixed` blueprint selection and optional per-asset security commitments.
+- Delegators claim rewards from the distributor (or through the protocol UI).

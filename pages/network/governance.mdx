@@ -1,0 +1,27 @@
+---
+title: Governance
+---
+
+# Governance
+
+Tangle governance coordinates protocol changes and treasury-managed incentive budgets on the EVM deployment.
+
+## What Governance Controls
+
+Depending on the deployment, governance can control:
+
+- Protocol parameter changes (through approved upgrades or configuration transactions)
+- Treasury budgeting and incentive program funding
+- Contract administration (e.g., timelock or multisig permissions)
+
+## Execution Model
+
+Tangle governance actions are executed on the underlying EVM chain. In practice, this typically means a combination of:
+
+- A governance process (off-chain coordination and/or on-chain voting, depending on the deployment)
+- A **timelock** for delayed execution of approved actions
+- A **multisig** (e.g., Safe) for operational control and emergency response
+
+## Transparency
+
+For each deployment, Tangle publishes governance addresses and operational roles (timelock, treasury, upgrade admin) via official release notes and deployment artifacts.

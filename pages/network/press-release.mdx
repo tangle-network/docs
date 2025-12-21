@@ -1,0 +1,70 @@
+---
+title: Tangle Relaunches as an EVM Protocol for Restaking and Blueprints
+description: Migration snapshot details, claim mechanics, lockups, and operator guidance.
+---
+
+# Tangle Relaunches as an EVM Protocol for Restaking and Blueprints
+
+**December 2025** — The Tangle Foundation announced the relaunch of **Tangle** as an EVM protocol built for restaking-secured infrastructure and programmable services (“blueprints”). The relaunch introduces an EVM-first deployment model, an updated operator and developer experience, and a migration system for TNT holders from the legacy (Substrate) chain.
+
+## For Legacy Node Operators
+
+Tangle’s legacy Substrate network will be deprecated. Operators who are currently running legacy nodes can plan to **shut down their nodes by the end of 2025**, following guidance posted through official Tangle channels.
+
+The TNT migration snapshot has already been taken, so legacy node operation is no longer required for migration eligibility.
+
+## TNT Migration and Claim Details
+
+TNT distribution on the EVM deployment is based on a snapshot of the legacy chain:
+
+- **Snapshot block**: `8116528`
+- **Timestamp**: `2025-12-10T19:12:10Z`
+- **Block hash**: `0xcdbe79d8cdedd544dbbe38bcc754c1d5f406dd834884268c7264fd06d6d7be37`
+
+Eligible participants can claim via `https://app.tangle.tools/claim`.
+
+### Snapshot Totals (TNT)
+
+The snapshot-based distribution totals **≈109,255,636.919212 TNT**, split across:
+
+- **Substrate migration claims (SS58)**: ≈51,244,581.812207 TNT
+- **EVM claims (0x...)**: ≈1,125,776.519168 TNT
+- **Treasury carveout (module accounts)**: ≈41,844,468.761091 TNT
+- **Foundation carveout (`tangle-foundation`)**: ≈15,040,809.826744 TNT
+
+### How Claims Work
+
+Tangle uses an on-chain migration claim contract that combines:
+
+- A **Merkle proof** (to prove an allocation exists in the snapshot), and
+- An **SP1/ZK proof** (to prove control of the legacy Substrate public key while binding the claim to an EVM recipient address).
+
+### Lockups
+
+By default, migration claims are split into:
+
+- **10% unlocked** at claim time, transferred immediately to the recipient EVM address
+- **90% locked** in a per-recipient cliff lock until the configured unlock timestamp (commonly `deployTime + 180 days`)
+
+### Treasury and Foundation Carveouts
+
+Two carveouts are handled at deployment time rather than through the claim flow:
+
+- **Treasury carveout**: legacy Substrate module accounts (non-claimable by design) are removed from the Merkle tree and transferred to the EVM treasury recipient at deploy.
+- **Foundation carveout**: the foundation allocation (`tangle-foundation`, ≈15.04M TNT) is transferred to a designated EVM address at deploy and is **fully liquid at launch**.
+
+## What’s Next
+
+With the relaunch, Tangle focuses on:
+
+- **Blueprints**: developers can publish and operate programmable services secured by restaked assets.
+- **Restaking**: users can participate as restakers and allocate assets to operators.
+- **Liquid restaking**: liquid delegation vaults (“bolts”) provide transferable shares over delegated positions.
+
+## Getting Involved
+
+- **Token holders**: claim/migrate TNT at `https://app.tangle.tools/claim`.
+- **Developers**: start with the Blueprints introduction in the docs and build an integration or blueprint.
+- **Operators**: review operator documentation for onboarding, pricing, and quality-of-service expectations.
+
+_This announcement is for informational purposes only and does not constitute financial advice._

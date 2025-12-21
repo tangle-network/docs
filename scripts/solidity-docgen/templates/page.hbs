@@ -1,0 +1,17 @@
+{{#with (lookup items 0)}}
+---
+title: {{name}}
+description: Auto-generated Solidity API reference.
+---
+
+# {{name}}
+
+Source: {{githubSourceUrl __item_context.file.absolutePath}}
+{{/with}}
+
+{{#each items}}
+{{#hsection 2}}
+{{>item}}
+{{/hsection}}
+
+{{/each}}

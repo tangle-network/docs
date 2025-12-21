@@ -1,0 +1,59 @@
+---
+title: Observability & Metrics
+description: How on-chain metrics recording works and how operators expose optional QoS dashboards.
+---
+
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
+
+# Observability & Metrics
+
+Tangle supports observability at two layers:
+
+- **On-chain metrics recording** (optional): protocol contracts emit best-effort “activity signals” to a configured metrics recorder contract.
+- **Off-chain QoS** (optional): operators can expose dashboards/logs for their blueprint runtimes.
+
+## On-chain Metrics Recorder (Optional)
+
+The core protocol can be configured with a metrics recorder (typically `TangleMetrics`). If the recorder is unset (`address(0)`), metrics are disabled.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Base.sol"
+  fromLine={120}
+  toLine={169}
+  title="Base: setMetricsRecorder + related configuration"
+/>
+
+### Fail-safe Hooks
+
+Metrics hooks are designed to be **non-blocking**: core actions should not revert if metrics recording is unavailable or faulty.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Base.sol"
+  fromLine={372}
+  toLine={428}
+  title="Base: best-effort metrics hooks (try/catch)"
+/>
+
+### What Gets Recorded
+
+`TangleMetrics` is a lightweight recorder that emits events and stores minimal aggregates for incentive distribution.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/TangleMetrics.sol"
+  fromLine={1}
+  toLine={120}
+  title="TangleMetrics: events + minimal aggregate state"
+/>
+
+## Off-chain QoS (Optional)
+
+Blueprint runtimes can expose:
+
+- **Health** and service liveness (e.g., heartbeat visibility)
+- **Job success rate** and latency distributions
+- **Logs** for debugging / audit trails
+
+QoS and dashboards are blueprint/operator dependent. For operator-facing expectations, see:
+
+- [Quality of Service Monitoring](/operators/quality-of-service)
+- [Metrics and Scoring](/network/metrics-and-scoring)

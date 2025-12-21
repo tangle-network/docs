@@ -1,58 +1,42 @@
-import ExpandableImage from "../../../components/ExpandableImage";
-
-# Tangle Network's Inflation Model
+# Incentives and Supply
 
 ## Overview
 
-Tangle Network utilizes a Nominated Proof of Stake (NPoS) system to secure its network and incentivize participation. The creation (minting) of new Tangle Network Tokens (TNT) serves as the primary mechanism for rewarding validators and nominators, which in turn introduces inflation into the system. This document outlines the key aspects of how rewards are distributed and how inflation is managed within Tangle Network.
+Tangle is an **EVM protocol**. TNT is an **ERC-20 governance/alignment token** used for protocol coordination and incentive programs; it is not the gas token of any underlying EVM chain.
 
-## NPoS Payments and Inflation
+This page explains how incentive programs relate to TNT supply, and what “inflation” means in an EVM-first context.
 
-- **Purpose**: Rewards are distributed to validators and nominators for their roles in block production and network security.
-- **Inflation**: The minting of new TNT for rewards is the main source of inflation within Tangle Network.
-- **Exclusions**: This overview **does not** account for penalties (slashings), rewards for reporting misconduct, or transaction fee rewards, which are covered separately.
+## Incentives (How Rewards Are Funded)
 
-## Inflation Model Simplified
+Tangle incentive programs can distribute TNT to:
 
-- **Staking Rate:**
+- Restakers (security providers)
+- Operators (infrastructure providers)
+- Developers (builders and blueprint authors)
 
-($x$)
+The concrete program rules (eligibility, scoring, payout cadence) are documented in the incentives section of the docs. From a tokenomics perspective, the key point is that incentives are funded via **explicit budgets** rather than an automatic NPoS-style block reward.
 
-Represents the proportion of total TNT supply that is staked in the NPoS system.
+Typical funding sources include:
 
-- **Ideal Staking Rate**
+- Governance-controlled treasury allocations
+- Protocol revenue and fees (when applicable)
+- Time-bounded incentive programs approved by governance
 
-($\chi_\text{ideal}$)
+## “Inflation” (When Does TNT Supply Change?)
 
-The target staking rate Tangle Network aims to achieve for optimal security and liquidity balance.
+In legacy Substrate-era designs, “inflation” often meant continuous minting to pay NPoS validators/nominators. Tangle’s EVM distribution and incentives do not assume that model.
 
-- **Yearly Interest Rate:**
+Instead:
 
-($i(x)$)
+- If TNT has a **fixed supply**, then incentives are paid from existing allocations (e.g., treasury/incentive pools), and there is no protocol inflation.
+- If TNT supports **governed minting**, then supply can change only via explicit, on-chain authorized actions (e.g., a governance vote), and any “inflation” is a policy decision rather than an automatic per-block mechanism.
 
-The rate at which rewards are paid out relative to the amount staked, adjusted based on the staking rate to incentivize desired staking levels.
+## Transparency
 
-### Key Concepts:
+For each incentive program, Tangle publishes (or can publish) the program’s:
 
-- **Incentives**: The system adjusts rewards to encourage a staking rate close to $\chi_{ideal}$, reducing rewards as staking exceeds this target to prevent liquidity issues.
-- **Inflation Rate ($I$)**: Calculated based on several factors, including rewards for NPoS participation, treasury funding, penalties, and transaction fees. The goal is to balance inflation with network security and operational needs.
-- **Adjustable Parameters**: The model includes variables like the ideal interest rate ($i_{ideal}$) and inflation limits that can be tuned to manage the network's economic dynamics effectively.
+- Budget (total TNT allocated)
+- Time window
+- Distribution rules and recipients (where appropriate)
 
-<ExpandableImage src="/images/desmos-graph.png" alt="Inflation Graph" allowZoom={true} />
-
-## Reward Distribution Mechanism
-
-- Validators and nominators receive rewards for their contributions to block production and network security, with rewards calculated based on several factors including the total points earned for various actions within the network.
-- **Payment Details**: Rewards are allocated based on a point system, where different network contributions earn different points. The total payout is then distributed proportionally to the points earned by each participant.
-
-## Inflation Control and Staking Incentives
-
-- The inflation model is designed to encourage a balanced staking rate by adjusting rewards based on the current staking rate relative to the ideal target.
-- **Ideal Staking Rate Adjustment**: Factors such as network growth and operational needs may lead to adjustments in the ideal staking rate to maintain network security and efficiency.
-
-## Simplifying Complexities
-
-- While the underlying mechanics are complex, the essence is to incentivize behaviors that secure the network and ensure its smooth operation, balancing between rewarding participation and controlling inflation.
-- **Governance Role**: The community and governance processes play a crucial role in adjusting parameters within the inflation model to respond to evolving network needs and conditions.
-
-This simplified overview aims to provide a clearer understanding of how Tangle Network manages inflation and rewards within its NPoS system, making the information accessible to a broader audience without diminishing the intricacies of the underlying mechanisms.
+This keeps incentive emissions auditable and makes supply changes (if any) attributable to governance decisions.

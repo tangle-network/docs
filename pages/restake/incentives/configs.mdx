@@ -1,26 +1,35 @@
 ---
-title: Restaking Incentives
-description: Learn about the restaking system in the Tangle Network, which encourages operators to execute multi-party computation (MPC) service roles, and understand the reward mechanisms and benefits for operators and delegators.
+title: Reward Configs
+description: Key on-chain knobs for incentive programs and fee splits.
 ---
 
-# Restaking Rewards Configs
+# Reward Configs
 
-## Setting Incentive APY and Cap
+This page summarizes the main on-chain configuration points for restaking incentives. Exact addresses are deployment-dependent.
 
-The `set_incentive_apy_and_cap` function allows the network (democracy) to configure the APY and cap for a specific asset Vault, ensuring that stakers know the potential rewards and the upper limits of participation for rewards.
+## `RewardVaults` (Asset Incentives)
 
-- **Function:** `set_incentive_apy_and_cap`
-- **Description:** Sets the APY (Annual Percentage Yield) and cap for a specific asset Vault.
-- **Inputs:**
-  - `Vault_id`: The ID of the Vault for which the APY and cap are being set.
-  - `apy`: The APY (percent) to be applied to the Vault.
-  - `cap`: The maximum amount of staked assets eligible for rewards in this Vault.
+Governance configures per-asset incentive vaults:
 
-Once set, the APY and cap are used to calculate the total rewards distributed among operators and delegators based on their staked amounts.
+- `createVault(asset, apyBps, depositCap, incentiveCap, boostMultiplierBps)`
+- `updateVaultConfig(asset, apyBps, depositCap, incentiveCap, boostMultiplierBps)`
+- `deactivateVault(asset)`
 
-## Whitelisting Blueprints for Rewards
+## `InflationPool` (Funding and Distribution)
 
-The network allows developers to create blueprints for restaking services. These blueprints can be whitelisted for rewards, meaning services built using these blueprints can attract incentivized staking.
+`InflationPool` is pre-funded with TNT and distributes it in epochs:
 
-- **Function:** `whitelist_blueprint_for_rewards`
-- **Description:** Whitelists a blueprint, allowing services using this blueprint to be eligible for reward distribution.
+- `fund(amount)` (requires funder role)
+- `distributeEpoch()` (anyone can call when ready)
+- `setWeights(stakingBps, operatorsBps, customersBps, developersBps, restakersBps)`
+- `setEpochLength(seconds)`
+
+The staking portion of each epoch is transferred to `RewardVaults`.
+
+## Service Fee Splits
+
+Service payments are split between developer / protocol / operators / restakers:
+
+- `Tangle.setPaymentSplit({ developerBps, protocolBps, operatorBps, restakerBps })`
+
+If restaker fee distribution is enabled, the protocol routes restaker shares to `ServiceFeeDistributor`.

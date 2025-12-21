@@ -1,0 +1,44 @@
+---
+title: ITangleSecurityView
+description: Auto-generated Solidity API reference.
+---
+
+# ITangleSecurityView
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/ITangleSecurityView.sol
+
+### ITangleSecurityView
+
+Minimal view interface for reading service security requirements + operator commitments.
+
+#### Functions
+
+#### getServiceSecurityRequirements
+
+```solidity
+function getServiceSecurityRequirements(uint64 serviceId) external view returns (struct Types.AssetSecurityRequirement[])
+```
+
+#### getServiceSecurityCommitmentBps
+
+```solidity
+function getServiceSecurityCommitmentBps(uint64 serviceId, address operator, enum Types.AssetKind kind, address token) external view returns (uint16)
+```
+
+#### treasury
+
+```solidity
+function treasury() external view returns (address payable)
+```
+
+#### getService
+
+```solidity
+function getService(uint64 serviceId) external view returns (struct Types.Service)
+```
+
+#### getServiceOperators
+
+```solidity
+function getServiceOperators(uint64 serviceId) external view returns (address[])
+```

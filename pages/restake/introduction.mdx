@@ -1,53 +1,32 @@
 import CardGrid from "../../components/CardGrid";
 
-# Staking & Restaking
-
-Tangle's core staking infrastructure is composed of three major pieces. The first is the base nominator proof of stake (NPos) mechanism for validator selection. The second is a native liquid staking protocol for validator specific staking operations and liquid staked tokens (LSTs). The third is the shared security restaking infrastructure for Tangle Blueprints that leverages any asset, especially the LSTs.
+# Restaking
 
 <CardGrid cards={[
   {
-    title: "Validator Staking",
-    description: "Learn about Tangle's Nominated Proof of Stake (NPoS) system for validator selection and rewards.",
-    link: "../restake/staking-intro"
-  },
-  {
-    title: "Restaking", 
+    title: "Overview",
     description: "Discover Tangle's permissionless and asset-configurable restaking system for Blueprints and shared security.",
     link: "../restake/restake-introduction"
   },
   {
-    title: "Liquid Staking",
-    description: "Explore Tangle's liquid staking protocols for validator-specific staking operations and liquid staked tokens (LSTs).",
-    link: "../restake/lst-concepts"
+    title: "Core Concepts",
+    description: "Key roles and mechanics: restakers, operators, assets, and slashing.",
+    link: "../restake/restake-concepts"
   },
   {
-    title: "Liqued Restaking", 
-    description: "Learn about how to build a LRT (Liquid Restaking Token) vaults and how to use it for restaking.",
-    link: "../restake/lrt-concepts"
+    title: "Incentives",
+    description: "How restakers, operators, and developers earn rewards.",
+    link: "../restake/incentives"
+  },
+  {
+    title: "How to Restake",
+    description: "Step-by-step guides using the Tangle app.",
+    link: "../restake/how_to_restake"
   },
 ]} />
 
-## Nominated Staking
-
-The NPoS system is a validator selection and reward system. Users stake TNT on validators to select the validators that will secure the base layer and produce and finalize blocks. Validators are expected to adhere to the rules of the system's consensus protocol and are subject to slashing if they fail to provide validation operations. Stakers earn rewards proportional to their nominated stake on a validator.
-
-The NPoS staking system also determines one's eligibility for membership into Tangle's operator set under the restaking infrastructure. An operator must be a Tangle validator with some minimum nominated stake in the base staking system in order to be a valid operator in the restaking system and to be eligible for Blueprint registrations and service requests.
-
 ## Restaking
 
-Tangle provides permissionless and asset-configurable restaking for Blueprints. Any asset created on and bridged to Tangle can be used as collateral to stake on operators. These restaked assets, commonly in the form of LSTs, act as security collateral for service instances that are requested on-demand. The restaking providers (the restakers) earn rewards proportional to the rewards issued to the services and Blueprints on Tangle, depending on the usage and utility of the services themselves.
+Tangle provides permissionless, multi-asset restaking for blueprints. Any supported asset (native or ERC-20, including bridged assets) can be deposited into the on-chain restaking system and delegated to operators.
 
-The restaking infrastructure divides assets into pools, which can be created to represent a single asset or a basket of similarly valued assets. Pools of assets are used to secure Tangle Blueprint service instances and are rewarded collectively as pools. This is beneficial when integrating many liquid staked tokens of a single protocol, such as validator-specific liquid staking protocols, or when bundling lots of different LSTs of a single ecosystem such as a basket of ETH LSTs.
-
-Users deposit assets into the restaking infrastructure by depositing into a pool. The user then stakes (similarly delegates) their asset on an operator who will leverage these assets to provide shared security to their service providing operations. If a validator misbehaves or fails to provide a service as outlined by their Blueprint specification, the user's assets will be liable to be slashed.
-
-## Liquid Staking
-
-Tangle includes a variety of liquid staking protocol implementations for partner projects and blockchain ecosystems, providing the restaking infrastructure with unique liquid staking tokens to be used in securing new services. The tokens Tangle takes an active part in developing and leveraging bear the prefix `tg...`. The `tg` LST protocols are stake operation specific liquid staking protocols. By stake operation, we mean a unique staking action that exists separate to another, such as staking on Validator A versus Validator B or staking on Vault A or Vault B for an arbitrary staking protocol. These examples would create `tgXYZ_A` and `tgXYZ_B` liquid staked tokens which are not fungible with respect to one another.
-
-In doing so, Tangle's LST protocol creates a plethora of new LSTs and a well-defined pool in the restaking infrastructure. Validators, node operators, and vaults of various protocols have unique assets to represent their operations, and Tangle's liquid staking tokens provides these communities with additional product opportunities for leveraging those assets and actions.
-
-## Liquid Restaking
-
-Liquid Restaking Tokens (LRTs) are used to restake any assets into the restaking infrastructure.
-LRT in the nutshell is a way where you take any asset (usually an already staked asset, like stETH) and stake it again by depositing it into a the Tangle Restaking infrastructure and receive extra rewards for doing so.
+Restaked assets act as security collateral for blueprint services requested on-demand by customers. Restakers earn incentives and service fee revenue, and accept slashing risk for the blueprints they choose to be exposed to.

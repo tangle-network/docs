@@ -2,7 +2,7 @@ import Image from "next/image";
 import { FaWallet } from "react-icons/fa";
 import { GiPlatform, GiToken } from "react-icons/gi";
 import { GrNodes } from "react-icons/gr";
-import { MdApps, MdAppShortcut } from "react-icons/md";
+import { MdAppShortcut } from "react-icons/md";
 import { RiToolsLine } from "react-icons/ri";
 import { SiBlueprint } from "react-icons/si";
 import CallToActionCard from "./CallToActionCard";
@@ -12,7 +12,7 @@ const getStartedCards = [
     icon: <SiBlueprint />,
     title: "Get started building Blueprints",
     description:
-      "Tangle Network is a decentralized cloud infrastructure that allows users to deploy and monetize Blueprints across any blockchain ecosystem.",
+      "Build and monetize Blueprints: composable services secured by restaked assets.",
     link: "../developers/blueprints/introduction",
   },
   {
@@ -24,16 +24,15 @@ const getStartedCards = [
   },
   {
     icon: <GrNodes />,
-    title: "Run a Node, Validator, or Service Operator",
+    title: "Run a Blueprint Operator",
     description:
-      "Noderunners can earn staking rewards, secure the network, and operators earn income from services.",
+      "Operators run Blueprint services and earn protocol incentives and fees.",
     link: "../operators/introduction",
   },
   {
     icon: <GiPlatform />,
     title: "Learn more about the network and platform",
-    description:
-      "Discover Tangle network's unique decentralized cloud infrastructure.",
+    description: "Discover Tangle’s decentralized cloud infrastructure.",
     link: "../network/overview",
   },
 ];
@@ -54,15 +53,8 @@ const resourcesCards = [
   {
     icon: <MdAppShortcut />,
     title: "Tangle DApp",
-    description: "Nominate your TNT at Tangle DApp",
-    link: "http://app.tangle.tools/",
-  },
-  {
-    icon: <MdApps />,
-    title: "Polkadot Apps",
-    description:
-      "For advanced interactions, Polkadot Apps supports Tangle Network.",
-    link: "https://polkadot.js.org/apps/?rpc=wss://rpc.tangle.tools#/explorer",
+    description: "Claim/migrate TNT, restake assets, and manage positions.",
+    link: "https://app.tangle.tools/",
   },
 ];
 
@@ -93,7 +85,7 @@ const LandingPage = () => {
             <Image
               priority
               src="/images/TangleNetworkMap.png"
-              alt="A visualization of the Tangle Network"
+              alt="A visualization of Tangle"
               className="z-0 w-auto h-auto"
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

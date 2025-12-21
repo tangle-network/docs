@@ -1,53 +1,55 @@
-# Liquid Restaking on Tangle Network
+# Liquid Delegation Vaults (LRT “Bolts”)
 
-## Introduction
+Liquid delegation vaults (“bolts”) wrap a restaking delegation position into an ERC-20 share token. Users can hold and transfer shares while the underlying stake remains delegated to an operator.
 
-Liquid restaking allows users to participate in restaking while simultaneously maintaining liquidity of their assets.
-This mechanism is implemented through smart contracts that define their own liquid restaking mechanics while proxying calls to the underlying staking system. This allows users to stake their tokens, earn rewards, and maintain liquidity without being subject to traditional staking lock-up periods.
+## What a Bolt Represents
 
-## Core Concepts
+Each vault delegates to exactly one tuple:
 
-### Delegation Vaults
+- `operator`
+- `asset` (native or ERC-20)
+- `blueprint selection`:
+  - `All` (shares are exposed to every blueprint the operator runs)
+  - `Fixed` (shares are exposed only to a specific set of blueprint IDs)
 
-Delegation vaults are the backbone of liquid restaking on Tangle Network. These vaults:
+This tuple matters for both **rewards** and **slashing**.
 
-- Allow users to deposit tokens which are then delegated to Tangle operators running blueprint services
-- Issue shares (liquid tokens) representing the user's deposited assets
-- Handle the complexities of managing deposits, unstaking, and withdrawals
-- Rewards distribution and claiming.
+## Deposit Flow (Synchronous)
 
-### Liquid Tokens
+When a user deposits:
 
-When users deposit assets into a liquid restaking vault, they receive shares in return. These shares:
+1. The vault takes custody of the asset.
+2. The vault deposits into `MultiAssetDelegation`.
+3. The vault delegates to the configured operator with the configured blueprint selection.
+4. The vault mints ERC-20 shares to the receiver.
 
-- Represent ownership of the underlying staked assets
-- Can be transferred or traded while the underlying assets remain staked
-- Serve as a claim ticket for both the original deposit and earned rewards
-- Do not automatically increase in value like traditional LSTs but instead provide access to claim rewards
+## Redemption Flow (Asynchronous, ERC-7540)
 
-### Multi-step Withdrawal Process
+Withdrawals are asynchronous to respect the restaking system’s exit delays:
 
-The withdrawal process in liquid restaking involves multiple steps:
+1. `requestRedeem(shares, controller, owner)` burns shares and schedules an underlying unstake.
+2. Wait until the exit delay is satisfied (round-based).
+3. `redeem(shares, receiver, controller)` executes the underlying unstake and transfers assets out.
 
-1. **Schedule Unstake**: User initiates the unstaking process from the operator
-2. **Execute Unstake**: The unstaking request is processed after the unbonding period
-3. **Schedule Withdrawal**: User requests to withdraw their assets from the vault
-4. **Execute Withdrawal**: The final withdrawal is processed, returning assets to the user
+## Rewards and Accounting
 
-This process ensures orderly exits while maintaining the security of the network.
+At the protocol layer, the vault is the delegator. Any rewards/fees that accrue to the delegator accrue to the vault address.
 
-### Rewards Distribution
+How those rewards are reflected to share holders is an implementation choice:
 
-Liquid restaking vaults use an accumulator-based system for tracking and distributing rewards:
+- Some vaults model rewards as an **increasing share price** (assets-per-share rises).
+- Others keep share price stable and pay rewards via a **separate claim path**.
 
-- Each reward token has a global accumulator tracking rewards-per-share over time
-- User positions are tracked by snapshots recording their share balance and last claim point
-- Rewards are calculated based on the difference between current and last-seen accumulator values
-- This system ensures fair distribution regardless of when users entered the pool or how many shares they hold
+If you are integrating a vault, treat “what `totalAssets()` includes” as a critical detail.
 
-### Operator Delegation
+## Risks
 
-Vaults will automatically delegate deposited assets to selected Tangle operators who:
+- **Exit delays**: redemptions are not instant.
+- **Slashing**: operator misbehavior can reduce the value of the underlying delegation position.
+- **Blueprint selection risk**: `All` mode increases potential surface area; `Fixed` mode scopes exposure.
 
-- Run blueprint services on the network
-- Generate rewards through their participation
+See [Restaker Risks](/restake/risks) and [Slashing](/network/slashing).
+
+## Developer Docs
+
+- [Vault Developer Docs](/restake/lrt_developers/intro)

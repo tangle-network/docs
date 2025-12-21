@@ -1,0 +1,107 @@
+---
+title: IRewardsManager
+description: Auto-generated Solidity API reference.
+---
+
+# IRewardsManager
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IRewardsManager.sol
+
+### IRewardsManager
+
+Interface for reward vault management - called by MultiAssetDelegation
+
+_Mirrors the Substrate RewardsManager trait pattern_
+
+#### Functions
+
+#### recordDelegate
+
+```solidity
+function recordDelegate(address delegator, address operator, address asset, uint256 amount, uint16 lockMultiplierBps) external
+```
+
+Records a delegation for reward tracking
+
+##### Parameters
+
+| Name              | Type    | Description                                               |
+| ----------------- | ------- | --------------------------------------------------------- |
+| delegator         | address | The account making the delegation                         |
+| operator          | address | The operator being delegated to                           |
+| asset             | address | The asset being delegated (address(0) for native)         |
+| amount            | uint256 | The amount being delegated                                |
+| lockMultiplierBps | uint16  | Lock multiplier in basis points (10000 = 1x, 0 = no lock) |
+
+#### recordUndelegate
+
+```solidity
+function recordUndelegate(address delegator, address operator, address asset, uint256 amount) external
+```
+
+Records an undelegation
+
+##### Parameters
+
+| Name      | Type    | Description                         |
+| --------- | ------- | ----------------------------------- |
+| delegator | address | The account making the undelegation |
+| operator  | address | The operator being undelegated from |
+| asset     | address | The asset being undelegated         |
+| amount    | uint256 | The amount being undelegated        |
+
+#### recordServiceReward
+
+```solidity
+function recordServiceReward(address operator, address asset, uint256 amount) external
+```
+
+Records a service reward for an operator
+
+##### Parameters
+
+| Name     | Type    | Description                       |
+| -------- | ------- | --------------------------------- |
+| operator | address | The operator receiving the reward |
+| asset    | address | The reward asset                  |
+| amount   | uint256 | The reward amount                 |
+
+#### getAssetDepositCapRemaining
+
+```solidity
+function getAssetDepositCapRemaining(address asset) external view returns (uint256 remaining)
+```
+
+Get remaining deposit capacity for an asset vault
+
+##### Parameters
+
+| Name  | Type    | Description        |
+| ----- | ------- | ------------------ |
+| asset | address | The asset to query |
+
+##### Return Values
+
+| Name      | Type    | Description                    |
+| --------- | ------- | ------------------------------ |
+| remaining | uint256 | The remaining deposit capacity |
+
+#### getAssetIncentiveCap
+
+```solidity
+function getAssetIncentiveCap(address asset) external view returns (uint256 cap)
+```
+
+Get incentive cap for an asset vault
+
+##### Parameters
+
+| Name  | Type    | Description        |
+| ----- | ------- | ------------------ |
+| asset | address | The asset to query |
+
+##### Return Values
+
+| Name | Type    | Description       |
+| ---- | ------- | ----------------- |
+| cap  | uint256 | The incentive cap |

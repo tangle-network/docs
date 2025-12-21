@@ -1,5 +1,5 @@
 ---
-title: Genesis Allocations and Token Allocation Details
+title: Token Distribution
 tags:
   - Token
   - Tokenomics
@@ -7,127 +7,47 @@ tags:
 
 import AllocationTable from 'components/AllocationTable.tsx';
 import { Callout } from 'nextra/components'
-import { Bleed } from 'nextra-theme-docs'
 
-### Overview: Genesis Allocations
+## Overview
 
-Observing successful networks as a benchmark, Tangle Network has tailored its genesis allocation to meet its unique needs and goals.
+TNT is distributed via a one-time **migration** from the legacy (Substrate) chain to Tangle’s EVM deployment.
 
-![Allocation Pie Chart](/images/allocation-pie-chart.png)
+The canonical distribution inputs are produced from an audited snapshot and published alongside the deployment (Merkle root, totals, and carveouts).
 
-### Vesting Schedules
-
-<Callout emoji="⚠️">
-  Genesis participants will have 1 year to claim their distribution, **the deadline is April 10 2025.** otherwise the amount is sent to the Tangle Network on-chain treasury.
+<Callout>
+  Snapshot (legacy chain): block `8116528` at `2025-12-10T19:12:10Z` (hash `0xcdbe79d8cdedd544dbbe38bcc754c1d5f406dd834884268c7264fd06d6d7be37`).
 </Callout>
 
-Tangle Network implements two distinct vesting schedules designed to promote long-term commitment while ensuring a balanced token distribution:
+## What’s Included
 
-**A-Vesting (4-Year Schedule):**
+TNT distribution is built from three artifact types:
 
-- Total Duration: 4 years (48 months)
-- Cliff Period: 12 months
-- Initial Release: No tokens are released during the cliff period
-- Post-Cliff Distribution:
-  - At cliff end (12 months): 25% of total allocation released
-  - Remaining 75%: Vested monthly over 36 months in equal increments
-- Monthly Release Rate: ~2.778% of total allocation (post-cliff)
+- **Substrate claims (SS58)**: a Merkle tree of `(pubkey, amount)` entries, claimed on EVM via `TangleMigration` using an SP1/ZK proof of key ownership.
+- **EVM claims (0x...)**: an explicit recipient list used for a batch airdrop distribution.
+- **Carveouts**: allocations intentionally removed from the claim set and transferred at deploy time.
 
-**B-Vesting (Airdrop Schedule):**
+## Claimable Substrate Allocations
 
-- Total Duration: 2 years (24 months)
-- Cliff Period: 1 month
-- Initial Release: Predefined percentage available at launch
-- Post-Cliff Distribution: Remaining tokens released monthly over 23 months
-- Designed specifically for airdrop participants to balance immediate utility with long-term alignment
+For Substrate snapshot holders, TNT is claimed on EVM through the on-chain migration contract:
 
-Both schedules follow the principle of Immediate Vesting Post-Cliff with Retroactive Accumulation, ensuring a predictable and fair distribution mechanism.
+- The claim is validated by **(1)** a Merkle proof and **(2)** a ZK proof that the claimant controls the Substrate public key.
+- By default, claims are split into **10% unlocked** (transferred immediately) and **90% locked** in a per-recipient cliff lock until the configured unlock timestamp (commonly `deployTime + 180 days`).
 
-![Liquid Tokens Over Time](/images/liquid-tokens-over-time-chart.png)
+## Carveouts (Non-Claimable → Fully Liquid at Deploy)
 
-### Detailed Allocation Overview
+Some allocations cannot (or should not) be claimed via the Merkle/ZK flow, so they are **removed from the Merkle tree** and transferred during deployment:
 
-The Tangle Network's allocation model is structured around three core pillars:
+- **Treasury carveout**: legacy Substrate **module accounts** (pubkeys starting with `modl…`) do not have private keys, so they are non-claimable and are transferred to the EVM treasury recipient at deploy.
+- **Foundation carveout**: the foundation allocation (`tangle-foundation`, ≈15.04M TNT) is transferred to a designated EVM recipient at deploy and is **fully liquid at launch**.
 
-1. **Contributors**
+## Configuration Notes
 
-   - Supports core teams, core-team investors, and advisors
-   - Essential for sustained network development and strategic guidance
-   - Subject to A-Vesting schedule for long-term alignment
+The lock configuration (unlock timestamp and unlocked/locked split) can be configured before the first claim. After claims begin, parameters are fixed to prevent changing terms mid-stream.
 
-2. **Airdrops**
+<Callout>
+  Some legacy pages and charts referenced Substrate-era “genesis allocations” and A/B vesting schedules. Those were specific to the legacy chain and are no longer the source of truth for the EVM migration distribution.
+</Callout>
 
-   - Rewards validators, early supporters, and active participants
-   - Follows B-Vesting schedule to encourage community engagement
-   - Designed to foster a robust and participatory ecosystem
+## Distribution Table
 
-3. **Governance-Managed**
-   - Allocated for:
-     - Community-driven development initiatives
-     - Network success programs
-     - Strategic liquidity provisions
-     - Key partnerships and ecosystem growth
-   - Managed through transparent on-chain governance
-
-<Bleed>
 <AllocationTable />
-</Bleed>
-
-# Token Allocation and Vesting Schedule Formulas
-
-This section outlines the formulas used to calculate various aspects of our token allocation and vesting schedules.
-
-### Initial Liquid Tokens
-
-```plaintext
-=Total_Tokens_Allocated * Immediate_Liquidity_Percentage
-```
-
-**Description:** Calculates the number of tokens that are immediately liquid and available at launch, based on the total tokens allocated to an entity and the percentage designated as immediately liquid.
-
-### Cliff-Release Tokens (for entities with a retroactive vesting cliff)
-
-```plaintext
-=Total_Tokens_Allocated * (Cliff_Duration / Total_Vesting_Period)
-```
-
-**Description:** For allocations with a retroactive vesting cliff, this calculates the number of tokens released at the end of the cliff period, based on the total allocation and the proportion of the vesting period represented by the cliff.
-
-### Monthly Vesting Rate (for entities with post-cliff monthly vesting)
-
-```plaintext
-=(Total_Tokens_Allocated - Initial_Liquid_Tokens - Cliff_Release_Tokens) / (Vesting_Period - Cliff_Duration)
-```
-
-**Description:** Determines the monthly rate at which tokens vest after the cliff period, considering the total tokens allocated minus any initially liquid tokens and tokens released at the cliff, divided by the remaining months of the vesting period.
-
-### Special Considerations
-
-For entities without a vesting plan (e.g., Treasury, Foundation)
-**Entire allocation is considered liquid at launch,** though it is only utilized through governance and so not 'liquid' in the traditional tokenomic sense.
-
-```plaintext
-=Total_Tokens_Allocated
-```
-
-## Definitions
-
-1. **Allocation Category**: A grouping used to categorize the distribution of tokens or shares within a project or organization, typically indicating the purpose or recipient of the allocation.
-2. **Entity Name**: The name of the individual or organization receiving the allocation of tokens or shares.
-3. **Allocated Share (%)**: The percentage of the total token supply allocated to a specific entity or category.
-4. **Vesting Plan**: A structured timeline outlining how allocated tokens or shares become available to the recipient over a period, usually to incentivize long-term commitment or performance.
-5. **Cliff (Months)**: The initial period after which a portion of the allocated tokens or shares becomes accessible to the recipient, often used as a safeguard against early departures or underperformance.
-6. **Vesting Period (Months)**: The total duration over which allocated tokens or shares gradually become available to the recipient according to the vesting schedule.
-7. **Immediate Liquidity (%)**: The percentage of allocated tokens or shares that are immediately accessible or liquid upon allocation, without being subject to vesting restrictions.
-8. **Initial Liquid Tokens**: The number of tokens or shares initially available for immediate use or transfer upon allocation.
-9. **Cliff-Release Tokens**: The number of tokens or shares released after the cliff period, becoming accessible to the recipient according to the vesting schedule.
-10. **Monthly Vesting Rate**: The rate at which tokens or shares vest on a monthly basis after the cliff period, determining the pace of distribution to the recipient.
-11. **Total Tokens Allocated**: The overall sum of tokens or shares allocated to a specific entity or category, representing the total amount of ownership or participation assigned.
-12. **Contributors**: Individuals or entities actively involved in contributing to the project's development, growth, or success.
-13. **Governance-Managed**: Tokens allocated for governance purposes and managed by a designated entity or organization within the project, typically used for decision-making or protocol governance.
-14. **Airdrops**: Distribution of tokens to a specific group of recipients, often as a promotional or community-building activity, without requiring direct financial investment.
-15. **Leaderboard Participants**: Participants who engage with the project's leaderboard, often in competitions or challenges, and receive tokens as rewards or incentives.
-16. **DOT Validators Snapshot**: Participants included in a specific snapshot of DOT (Polkadot) validators and rewarded with tokens accordingly.
-17. **EDG Genesis Participants**: Participants involved in the project's genesis event or initial launch phase and eligible for token rewards.
-18. **EDG 2023 Snapshot**: Participants included in a snapshot of block 18070680 (July-31-2023 06:28:12 AM +-5 UTC) and eligible for token rewards based on their inclusion in the snapshot.
-19. **Total Supply**: The overall quantity of tokens or shares in existence within the project or organization, representing the maximum potential ownership or participation.

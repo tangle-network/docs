@@ -1,22 +1,11 @@
 # Blueprint Sources
 
-Blueprints can be built and distributed in multiple formats (visible on the sidebar).
+Blueprints can be distributed in multiple formats. A blueprint definition can include **multiple sources**, and the operator runtime can try them in order until it finds a runnable artifact.
 
-A blueprint can define many sources of different types in the manifest of its binary crate:
+At a high level, sources cover:
 
-```toml
-[package.metadata.blueprint]
-sources = [
-    { type = "Container", registry = "docker.io", image = "some-user/my-blueprint", tag = "latest" },
-    # Fallback container source
-    { type = "Container", registry = "ghcr.io", image = "some-user/my-blueprint", tag = "latest" },
-    # Native binary source
-    { type = "Native", owner = "some-github-user", repo = "some-blueprint", tag = "0.1.0", binaries = [
-        { arch = "Amd64", os = "Linux", name = "my-blueprint-bin" },
-    ] },
-]
-```
+- **Container images** (OCI registries like Docker Hub or GHCR)
+- **Native binaries** (downloaded from GitHub releases or from remote artifact endpoints)
+- **Testing sources** (local-only, used by harnesses/CI)
 
-The above example has two container sources, which allows an operator to attempt a pull from different sources in the event
-that one of the registries is unreachable. Additionally, it has a native source which can act as a fallback for operators
-that either cannot or prefer not to support running containerized blueprints.
+Some source kinds are reserved but not necessarily supported by all operator runtimes yet (see the per-source pages).

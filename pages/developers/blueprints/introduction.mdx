@@ -1,4 +1,9 @@
-import CardGrid from "../../../components/CardGrid.tsx"
+---
+title: Blueprints
+description: Publish reusable services, run them as operators, and instantiate them as customers.
+---
+
+import CardGrid from "../../../components/CardGrid.tsx";
 
 # Blueprints
 
@@ -7,64 +12,66 @@ import CardGrid from "../../../components/CardGrid.tsx"
 <CardGrid
   cards={[
     {
-      title: "Tangle's Blueprint Gadget SDK",
-      description: "Learn about the Gadget SDK and how to get started building your own gadgets.",
-      link: "/developers/gadget-sdk"
+      title: "Blueprint SDK",
+      description: "Install the SDK and learn the runner primitives.",
+      link: "/developers/blueprint-sdk",
     },
     {
-      title: "Hello World Blueprint", 
-      description: "Get started with a simple Hello World example using Tangle Blueprints.",
-      link: "/developers/tangle-avs"
+      title: "Hello Tangle Blueprint",
+      description: "Write a job + router and run it end-to-end against Tangle EVM.",
+      link: "/developers/tangle-avs",
     },
     {
-      title: "Build an Eigenlayer AVS",
-      description: "Build an Eigenlayer AVS with the Tangle Blueprint SDK and hook into a variety of EVM compatible utilities for task automation, slashing, and more.",
-      link: "/developers/eigenlayer-avs/overview"
-    }
+      title: "Build an EigenLayer AVS",
+      description: "Use the same runner and context system for EigenLayer integrations.",
+      link: "/developers/eigenlayer-avs/overview",
+    },
   ]}
 />
 
-**Blueprints** are Infrastructure as Code templates and **Instances** are their instantiations on the Tangle Network. Developers build Blueprints using our [Blueprint SDK](https://github.com/tangle-network/blueprint) and deploy them to the Tangle Network. Users can discover Blueprints and create Instances of them, which are run by Tangle Operators. The Tangle Network incentivizes operators to run these instances by rewarding them with TNT tokens and fees from execution.
+Blueprints are reusable service definitions that let developers publish off-chain workloads (“jobs”) with clear on-chain interfaces and security assumptions. A blueprint becomes usable when operators run its off-chain runtime and customers create services from it.
 
-A Blueprint Instance is a computational service. Blueprints are reusable templates so that useful services can be leveraged by many customers. A key benefit of instancing Blueprints is that each instance can have different operators and different restaked assets securing them.
+## Blueprint vs Service
 
-A Tangle Blueprint is defined by:
+- **Blueprint**: a developer-owned definition stored on-chain (schemas, sources, metadata, optional manager hooks).
+- **Service**: a customer-owned instance created from a blueprint (operator set, permitted callers, TTL, payment model, security requirements).
 
-- An native program binary, a docker image, or a virtual machine binary.
-- A set of smart contracts that provide programmability over the service's output verification and handling of malicious failures
+## What a Blueprint Contains
 
-Tangle Blueprints specify their target environment for program execution. The Blueprint's binary can run natively on the operator's machine, in a virtual machine, or in a containerized environment.
+A blueprint definition typically includes:
 
-## Detailed Interactions
+- **Schemas** (registration, request, per-job params/result)
+- **Execution sources** (native binaries and/or container images; WASM sources are reserved but may not be supported by all operator runtimes yet)
+- Optional **service manager** hooks (an EVM contract the protocol calls during lifecycle events)
+
+## How Each Role Uses Blueprints
 
 ### Developers
 
-Developers interact with Tangle Blueprints by developing and deploying them to the blockchain. The smart contracts are deployed to the Tangle EVM, while the metadata is stored in Tangle's runtime.
-
-The Blueprint includes smart contracts responsible with all aspects of customizing a Blueprint's behavior and features. Developers have the flexibility to extend this contract, create child contracts, and anything that adheres to the function signatures expected by the runtime when executing logic. The Blueprint smart contract handles:
-
-1. **Registration**: Specifies how Operators register for the Blueprint, allowing the developer to add additional fees, access control, KYC, and any other EVM-deployable functionality to the registration process.
-2. **Request**: Defines how customer of Blueprints initiates Service Instances, providing the same customizability as the EVM for the initialization process of Service Instances.
-3. **On Job Hooks**: Allows developers to specify custom logic to be executed when a job is created.
-4. **On Job Result Hooks**: Allows developers to specify custom logic to be executed when a job is completed, such as verifying a job's output.
-5. **Custom slashing conditions**: Allows developers to specify custom slashing conditions for Operators, such as failing to provide a service or providing a malicious service. These would be callable by anyone or privileged callers but is entirely up to the developer to design.
-
-Blueprints empower developers to create, customize, and monetize technical service configurations on the Tangle Network, defining features, behavior, resource requirements, and the Gadget binary for services such as Threshold MPC, zero-knowledge provers, AI infrastructure, and more. Developers can programmatically incentivize operators to restake on their services and update them to improve and benefit from their long-term success. Tangle Blueprints are designed for reuse by various users and projects.
+- Publish blueprints and (optionally) implement a manager contract for custom lifecycle logic.
+- Define what “correct” results mean for jobs and when misbehavior should be slashed.
 
 ### Customers
 
-Tangle Network provides a user-friendly platform for customers to discover, deploy, and manage Blueprint Instances. Customers can access tailored technical services with varying configurations and features, specify their requirements (e.g., threshold of participants, registration criteria), and select a subset of Operators to provide the service. The stake recursion process increases the economic security of reliable services.
-
-Customers interact with Tangle by instancing Blueprints, which create Blueprint Instances. To initialize an Instance, a customer:
-
-1. Selects a participation selection strategy that satisfies the Blueprint's Request smart contract constraints.
-2. Provides metadata required by the Instance.
-3. Pays the fee required for the Instance configuration.
+- Create services via request/approve (explicit operator set) or RFQ/quotes (operators sign quotes).
+- Submit jobs and pay service fees.
 
 ### Operators
 
-Operators are incentivized to operate the Blueprint Instances by receiving rewards from the Tangle Network and fees from users who pay for the service. The rewards and incentives are distributed proportionally to the amount of stake that the Operator has restaked on the Instance.
+- Register for blueprints, advertise preferences, and run the off-chain runtime.
+- Consume job calls from chain and submit results + heartbeats.
 
-## Composability and Ecosystem
+### Restakers / Delegators
 
-Blueprints can be composed and linked together to create sophisticated, interoperable applications, fostering innovation and collaboration within the Tangle ecosystem. The Tangle architecture is uniquely suited for complex cryptographic applications, such as multi-party computation (MPC) and zero-knowledge (ZK) services, as well as oracles, custody solutions, bridge co-processors, and proving networks. Developers are encouraged to collaborate and contribute to expanding the library of apps and services on Tangle, and will be rewarded with incentives for their valuable contributions.
+- Delegate assets to operators and optionally constrain exposure to specific blueprints.
+- Earn a share of service fees and (optionally) TNT incentives funded by explicit budgets.
+
+## Architecture Reference
+
+- [System Architecture](/developers/system-architecture/overview)
+- [On-chain Protocol](/developers/system-architecture/onchain)
+- [Off-chain Runtime](/developers/system-architecture/offchain)
+
+## Composability
+
+Blueprints can be composed to create larger systems (e.g., MPC + attestations + orchestration). The protocol is designed to support services like MPC, ZK proving, agent automation, oracles, bridge co-processors, and other restaking-secured infrastructure.

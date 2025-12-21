@@ -1,36 +1,27 @@
 # Operator Incentives
 
-Tangle Network operators earn revenue by running Blueprint instances for customers. The platform provides multiple revenue streams through an automated distribution system that rewards reliable infrastructure operation and service delivery.
+Operators earn revenue by running blueprint services for customers. Incentives come from:
 
-## Revenue Streams
+1. **Service fees** (paid in the service’s payment token).
+2. **Restaker-commission flows** (configured in the restaking contract).
+3. **Protocol performance rewards** (paid in TNT from a pre-funded pool, if enabled).
 
-### Core Service Fees
+## Service Fees
 
-- Earn 30% of all Blueprint instance fees (shared with restakers)
-- Automatic distribution through smart contracts
-- Additional direct customer payments for compute and storage
+For each service payment, the protocol allocates an **operator portion** and splits it across service operators by that service’s per-operator exposure. Operator shares accrue as claimable balances in the core protocol contract.
 
-### Validator Synergies
+## Restaker Commission
 
-Operators can increase earnings by also running network validators:
+Some restaker-side reward flows include an operator commission (`operatorCommissionBps`) set in the restaking system. This is separate from service fee splits and is intended to compensate operators for maintenance and operational overhead.
 
-- Enhanced protocol rewards
-- Higher visibility to delegators
+## Protocol Performance Rewards (TNT)
 
-## Technical Requirements
+If the protocol is running `InflationPool` incentives, operators can earn TNT based on on-chain activity metrics (e.g., completed jobs, successful jobs, heartbeats, and stake). These rewards are claimable from `InflationPool`.
 
-Successful operation requires:
+## Keeping Your Score Healthy
 
-- Reliable infrastructure and monitoring
-- High uptime maintenance
-- Performance benchmark compliance
-- Secure asset management
+- Stay online: submit heartbeats for services you operate (often via your blueprint manager).
+- Complete jobs successfully and on time.
+- Avoid overcommitting: exposure settings affect both payouts and potential slashing impact.
 
-## Economic Model
-
-The system creates natural incentives for quality service:
-
-- Better performance → more customer instances
-- Reliable operation → increased restaking delegation
-- Strong reputation → premium service opportunities
-- Operational excellence → enhanced protocol rewards
+See [Metrics and Scoring](/network/metrics-and-scoring) and [Slashing](/network/slashing).

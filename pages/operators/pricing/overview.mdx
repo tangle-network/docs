@@ -1,35 +1,37 @@
 ---
-title: Blueprint Pricing Overview
+title: Blueprint Pricing
 ---
 
 # Blueprint Pricing
 
-As a blueprint operator, you'll need to set up pricing for your services to receive fair compensation for the resources you provide. This guide explains how pricing works in the Tangle Network and how to configure it properly.
+Operators can optionally run a pricing service that issues **signed quotes** for blueprint services. Customers use these quotes to create services via the on-chain RFQ flow.
 
 ## Prerequisites
 
-- Basic understanding of Tangle Network operations
-- Familiarity with running and maintaining a Tangle node
+- Familiarity with operating a blueprint runner
 - Knowledge of basic blueprint concepts
 
 ## How Blueprint Pricing Works
 
 The pricing process follows these steps:
 
-1. **Registration**: When you register as an operator for a blueprint, you provide your pricing service address in your preferences
-   - **Note**: If your RPC server address changes, you can update it on-chain for any registered blueprint through the `updateRpcAddress` services extrinsic call
-2. **Quote Requests**: Users request price quotes from registered operators like you
-3. **Quote Generation**: Your service calculates prices based on resource requirements, creates security commitments, and signs quotes
-4. **Operator Selection**: Users select operators based on price and other factors
-5. **Service Execution**: Once selected, you'll begin execution of the blueprint and receive payment
+1. **Registration**: When you register as an operator for a blueprint, you publish a reachable `rpcAddress` in your operator preferences.
+2. **Quote requests**: Customers request quotes from operators (typically via gRPC).
+3. **Quote generation**: Your pricing server benchmarks your node (optional), applies your local pricing policy, and returns a signed quote.
+4. **Service creation**: Customers submit quote bundles on-chain via `createServiceFromQuotes(...)` and pay the total cost.
+5. **Service execution**: You run the blueprint service and earn fees according to the service’s pricing model.
 
 ## Setting Up Your Pricing Service
 
-Your pricing service needs to be available via gRPC for users to request quotes. Here's how to configure it:
+The Blueprint SDK includes an RFQ pricing server (`pricing-engine-server`) that:
 
-### Pricing Configuration
+- Watches Tangle contract events for activation/termination
+- Benchmarks node resources and caches results
+- Serves `GetPrice` via gRPC and returns quotes compatible with the on-chain RFQ flow
 
-Create a TOML configuration file with your pricing structure. The file should include both default pricing for all blueprints and specific pricing for particular blueprints:
+### Pricing Configuration (TOML)
+
+Create a TOML file with resource rates (defaults + per-blueprint overrides):
 
 ```toml
 # Default pricing for all blueprints
@@ -59,11 +61,32 @@ Each resource type defines:
 
 - `kind`: The resource type (CPU, MemoryMB, StorageMB, etc.)
 - `count`: The baseline quantity for the resource
-- `price_per_unit_rate`: The price per unit in USD with decimal precision, where it is generally the price per block for the resource
+- `price_per_unit_rate`: The price per unit rate used by your local policy
 
-### How Prices Are Calculated
+### Run the Pricing Server
 
-The formula used to calculate blueprint execution pricing is:
+Run the daemon with deployment-dependent contract addresses and RPC endpoints:
+
+```bash
+OPERATOR_HTTP_RPC=https://... \
+OPERATOR_WS_RPC=wss://... \
+OPERATOR_TANGLE_CONTRACT=0x... \
+OPERATOR_RESTAKING_CONTRACT=0x... \
+OPERATOR_STATUS_REGISTRY_CONTRACT=0x... \
+cargo run -p blueprint-pricing-engine --bin pricing-engine-server
+```
+
+### Quote Format and Security
+
+Quotes are:
+
+- Time-bounded (TTL + expiry)
+- Signed by the operator’s EVM key (replay-protected on-chain)
+- Optionally protected by proof-of-work in the request to reduce abuse of the pricing endpoint
+
+## How Prices Are Calculated
+
+Operators can use any internal pricing model. A common shape is:
 
 ```
 Price = Resource Cost × Duration Factor × Security Factor
