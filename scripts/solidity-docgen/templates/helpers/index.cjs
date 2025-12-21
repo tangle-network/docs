@@ -25,7 +25,7 @@ function githubSourceUrl(absolutePath) {
   const ref =
     process.env.TNT_CORE_GITHUB_REF && process.env.TNT_CORE_GITHUB_REF.length > 0
       ? process.env.TNT_CORE_GITHUB_REF
-      : "feature/modular-protocol";
+      : "v2";
   const rel = path.relative(repoRoot, absolutePath).split(path.sep).join("/");
   return `${repo}/blob/${ref}/${rel}`;
 }

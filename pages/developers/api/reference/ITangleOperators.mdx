@@ -5,11 +5,13 @@ description: Auto-generated Solidity API reference.
 
 # ITangleOperators
 
-Source: https://github.com/tangle-network/tnt-core/blob/feature/modular-protocol/src/v2/interfaces/ITangleOperators.sol
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/ITangleOperators.sol
 
 ### ITangleOperators
 
 Operator registration and management interface
+
+Note: Operator liveness is tracked via `OperatorStatusRegistry` heartbeats submitted by the operator runtime/CLI. Use `submitHeartbeat` and read `isOnline`, `getOperatorStatus`, or `getLastHeartbeat` from the registry.
 
 #### Functions
 
