@@ -31,7 +31,7 @@ The following example defines a single job (`CREATE_DOCUMENT_JOB`) that accepts 
 
 ## Run End-to-End (Local Harness)
 
-The SDK includes an Anvil-backed harness that spins up a local EVM node seeded with a known protocol state, runs the blueprint runner, submits a job, and waits for `JobResultSubmitted`.
+The SDK includes an Anvil-backed harness that spins up a local chain seeded with a known protocol state, runs the blueprint runner, submits a job, and waits for `JobResultSubmitted`.
 
 ```bash
 cargo test -p hello-tangle-blueprint --test anvil -- --nocapture
@@ -49,7 +49,7 @@ cargo test -p hello-tangle-blueprint --test anvil -- --nocapture
 To run as an operator against a live RPC, you typically:
 
 1. Configure contract coordinates and IDs (blueprint/service).
-2. Start the runner via the CLI with the `tangle-evm` protocol selected.
+2. Start the runner via the CLI with the `tangle-evm` protocol selected (this flag denotes Tangle).
 
 Deployment-dependent addresses and endpoints are published per environment:
 
@@ -58,5 +58,5 @@ Deployment-dependent addresses and endpoints are published per environment:
 ## Next Reading
 
 - [Blueprint Runner](/developers/blueprint-runner/introduction)
-- [Tangle EVM Client Context](/developers/blueprint-contexts/tangle-client-context)
+- [Tangle Client Context](/developers/blueprint-contexts/tangle-client-context)
 - [System Architecture](/developers/system-architecture/overview)

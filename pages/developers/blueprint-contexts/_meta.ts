@@ -5,7 +5,7 @@ const meta: Meta = {
   "eigenlayer-context": "Eigenlayer Context",
   "evm-provider-context": "EVM Provider Context",
   "keystore-context": "Keystore Context",
-  "tangle-client-context": "Tangle EVM Client Context",
+  "tangle-client-context": "Tangle Client Context",
   "services-context": "Tangle Services Helpers",
 };
 

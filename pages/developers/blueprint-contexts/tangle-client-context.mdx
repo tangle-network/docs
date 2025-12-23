@@ -1,10 +1,10 @@
 ---
-title: Tangle EVM Client Context
+title: Tangle Client Context
 ---
 
 import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
-# Tangle EVM Client Context
+# Tangle Client Context
 
 The `TangleEvmClientContext` trait provides a standardized interface for interacting with Tangle’s on-chain protocol from your Blueprint via an Alloy-powered EVM client.
 
@@ -36,7 +36,7 @@ Derive the context trait on a struct that includes a `BlueprintEnvironment` fiel
   title="Deriving TangleEvmClientContext on a custom context"
 />
 
-### 2. Use the Tangle EVM Client
+### 2. Use the Tangle Client
 
 Call `tangle_evm_client()` to get a configured client instance:
 

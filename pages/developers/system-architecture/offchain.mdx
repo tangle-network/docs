@@ -23,7 +23,7 @@ Many deployments include a hosted app and an indexer to improve UX:
 
 If you are integrating, treat the indexer as a convenience layer and anchor correctness to contract reads/events.
 
-## Tangle EVM Context
+## Tangle Context
 
 Blueprints typically interact with Tangle through an EVM-aware context that exposes typed clients and operator identity.
 
@@ -31,7 +31,7 @@ Blueprints typically interact with Tangle through an EVM-aware context that expo
   url="https://github.com/tangle-network/blueprint/blob/v2/crates/contexts/src/tangle_evm.rs"
   fromLine={1}
   toLine={120}
-  title="Blueprint SDK: Tangle EVM context (client wiring + identity)"
+  title="Blueprint SDK: Tangle context (client wiring + identity)"
 />
 
 ## EVM Producer / Consumer
@@ -45,5 +45,5 @@ The runtime usually splits “listen” and “submit”:
   url="https://github.com/tangle-network/blueprint/blob/v2/crates/tangle-evm-extra/src/consumer.rs"
   fromLine={1}
   toLine={160}
-  title="Blueprint SDK: Tangle EVM consumer (submit results)"
+  title="Blueprint SDK: Tangle consumer (submit results)"
 />

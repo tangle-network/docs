@@ -8,12 +8,12 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
 # Blueprint SDK
 
-The Blueprint SDK is the Rust toolkit for building **blueprints** (off-chain services) and running them as an operator against Tangle’s EVM protocol.
+The Blueprint SDK is the Rust toolkit for building **blueprints** (off-chain services) and running them as an operator against Tangle (legacy: Tangle Substrate). In CLI flags and code you will still see `tangle-evm` for the protocol selection.
 
 It includes:
 
 - The **Blueprint Runner** (router + producers + consumers + background services)
-- Typed **contexts** (keystore, EVM provider, Tangle EVM client, EigenLayer)
+- Typed **contexts** (keystore, EVM provider, Tangle client, EigenLayer)
 - The `cargo-tangle` **CLI** for creating, preregistering, and running blueprints
 
 **Source of truth repos**
@@ -27,7 +27,7 @@ It includes:
 - `blueprint-manager`: long-lived operator runtime that watches chain events and runs services
 - `pricing-engine-server`: optional RFQ server that issues signed quotes
 
-## Configuration Surface (Tangle EVM)
+## Configuration Surface (Tangle)
 
 Most tooling needs the same deployment addresses and endpoints:
 
@@ -80,7 +80,7 @@ The CLI exposes these as shared flags:
       subItems: [
         { title: "Keystore", href: "/developers/blueprint-contexts/keystore-context", description: "Local and remote signing" },
         { title: "EVM Provider", href: "/developers/blueprint-contexts/evm-provider-context", description: "Instrumented EVM provider access" },
-        { title: "Tangle EVM Client", href: "/developers/blueprint-contexts/tangle-client-context", description: "Interact with Tangle contracts" },
+        { title: "Tangle Client", href: "/developers/blueprint-contexts/tangle-client-context", description: "Interact with Tangle contracts" },
         { title: "EigenLayer", href: "/developers/blueprint-contexts/eigenlayer-context", description: "EigenLayer integration utilities" },
       ],
     },

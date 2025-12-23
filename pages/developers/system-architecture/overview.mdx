@@ -7,7 +7,7 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
 # System Architecture
 
-Tangle is an EVM protocol for instantiating and operating **services (“blueprints”)** secured by restaked capital. The system is intentionally split into:
+Tangle is the current protocol (EVM-based; legacy: Tangle Substrate) for instantiating and operating **services (“blueprints”)** secured by restaked capital. The system is intentionally split into:
 
 - **On-chain contracts** (service lifecycle, payments, restaking, incentives, slashing)
 - **Off-chain runtime** (operators running blueprint managers/runners that react to events and submit results)
@@ -50,8 +50,8 @@ Tangle is an EVM protocol for instantiating and operating **services (“bluepri
 | Component                    | Responsibility                                                      | Code                                                                                  |
 | ---------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | Manager                      | Loads services from chain, selects runtime sources, runs blueprints | https://github.com/tangle-network/blueprint/tree/v2/crates/manager                    |
-| Tangle EVM contexts          | Provides typed clients + operator identity + env                    | https://github.com/tangle-network/blueprint/blob/v2/crates/contexts/src/tangle_evm.rs |
-| Tangle EVM producer/consumer | EVM event ingestion + result submission helpers                     | https://github.com/tangle-network/blueprint/tree/v2/crates/tangle-evm-extra/src       |
+| Tangle contexts              | Provides typed clients + operator identity + env                    | https://github.com/tangle-network/blueprint/blob/v2/crates/contexts/src/tangle_evm.rs |
+| Tangle producer/consumer     | Event ingestion + result submission helpers                         | https://github.com/tangle-network/blueprint/tree/v2/crates/tangle-evm-extra/src       |
 
 ## The Entrypoint Contract (Composition)
 
