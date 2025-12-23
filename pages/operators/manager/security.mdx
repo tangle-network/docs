@@ -4,14 +4,16 @@ Running the Blueprint Manager in production should prioritize isolation and key 
 
 ## Recommended: VM sandbox for native blueprints (Linux)
 
-The native VM sandbox uses `cloud-hypervisor` to isolate blueprint binaries.
+The native VM sandbox uses `cloud-hypervisor` to isolate blueprint binaries. For a step-by-step host setup, see [Sandbox Provisioning](/operators/manager/sandbox-provisioning).
 
 1. Install `cloud-hypervisor` and make sure it is in `PATH`.
-2. Grant the manager `CAP_NET_ADMIN` so it can manage VM networking:
+2. Grant `CAP_NET_ADMIN` to the binary that runs the manager:
 
 ```bash
-sudo setcap cap_net_admin+eip /path/to/blueprint-manager
+sudo setcap cap_net_admin+eip /path/to/cargo-tangle
 ```
+
+If you run `blueprint-manager` directly, set the capability on that binary instead.
 
 3. Run with VM preferences enabled:
 

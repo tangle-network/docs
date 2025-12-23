@@ -1,0 +1,62 @@
+# VM Sandbox Provisioning (Linux)
+
+This page is the fastest safe path to run untrusted native blueprints inside the VM sandbox. The sandbox relies on `cloud-hypervisor` and requires KVM access plus `CAP_NET_ADMIN`.
+
+If you are running container-based blueprints only, you can skip this page.
+
+## Quick start (Ubuntu/Debian)
+
+1) Verify hardware virtualization
+
+```bash
+egrep -c '(vmx|svm)' /proc/cpuinfo
+```
+
+The output should be greater than 0. If it is 0, enable virtualization in BIOS/UEFI.
+
+2) Install dependencies
+
+```bash
+sudo apt-get update
+sudo apt-get install -y cloud-hypervisor qemu-utils libcap2-bin
+```
+
+3) Enable KVM access for your user
+
+```bash
+sudo usermod -aG kvm "$USER"
+```
+
+Log out and back in (or run `newgrp kvm`) so group membership applies.
+
+4) Grant `CAP_NET_ADMIN` to the runtime binary
+
+If you run the manager via `cargo tangle`, grant the capability to `cargo-tangle`:
+
+```bash
+BIN="$(command -v cargo-tangle)"
+sudo setcap cap_net_admin+eip "$BIN"
+getcap "$BIN"
+```
+
+If you run `blueprint-manager` directly, set the capability on that binary instead.
+
+5) Run the manager with the VM sandbox
+
+```bash
+cargo tangle blueprint run \
+  --protocol tangle-evm \
+  --http-rpc-url "$RPC_URL" \
+  --ws-rpc-url "$WS_RPC_URL" \
+  --keystore-path ./keystore \
+  --settings-file ./settings.env \
+  --spawn-method vm
+```
+
+The manager will download kernel and disk images automatically on first run.
+
+## Troubleshooting
+
+- `permission denied: /dev/kvm`: ensure KVM is enabled and your user is in the `kvm` group.
+- `cloud-hypervisor` not found: confirm it is installed and in `PATH`.
+- `missing CAP_NET_ADMIN`: re-run `setcap` on the binary you execute, or run the process with elevated privileges.

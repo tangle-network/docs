@@ -21,13 +21,12 @@ No extra dependencies, the blueprint will run as a normal host process.
 ### Sandboxed (**Linux Only**)
 
 - [cloud-hypervisor]
-  - Note, no additional setup of `cloud-hypervisor` needs to be done. The manager handles downloading the latest kernel
-    and disk images. Simply installing and adding it to `PATH` is enough.
-- Allow `CAP_NET_ADMIN` for the `blueprint-manager` binary
-  - This can be done by running `setcap cap_net_admin+eip /path/to/blueprint-manager`
-  - **_or_** simply running the `blueprint-manager` as root (**not recommended**)
+  - The manager handles downloading kernel and disk images automatically, but the host still needs KVM access and `CAP_NET_ADMIN`.
+- Allow `CAP_NET_ADMIN` for the binary that runs the manager (for example, `cargo-tangle` or `blueprint-manager`).
+  - This can be done by running `setcap cap_net_admin+eip /path/to/cargo-tangle`
+  - **_or_** simply running the process as root (**not recommended**)
 
-For secure production deployments, see [Sandboxing and Security](/operators/manager/security).
+For secure production deployments, see [Sandbox Provisioning](/operators/manager/sandbox-provisioning) and [Sandboxing and Security](/operators/manager/security).
 
 ## Container Sources
 
