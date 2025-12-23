@@ -4,7 +4,71 @@ This page is the fastest safe path to run untrusted native blueprints inside the
 
 If you are running container-based blueprints only, you can skip this page.
 
-## Quick start (Ubuntu/Debian)
+## Production setup (systemd, recommended)
+
+This is the default production path. systemd grants the capability at runtime, so you do not need to modify the binary.
+
+1) Verify hardware virtualization
+
+```bash
+egrep -c '(vmx|svm)' /proc/cpuinfo
+```
+
+The output should be greater than 0. If it is 0, enable virtualization in BIOS/UEFI.
+
+2) Install dependencies
+
+```bash
+sudo apt-get update
+sudo apt-get install -y cloud-hypervisor qemu-utils
+```
+
+3) Enable KVM access for your user
+
+```bash
+sudo usermod -aG kvm "$USER"
+```
+
+Log out and back in (or run `newgrp kvm`) so group membership applies.
+
+4) Create a systemd service with ambient capabilities
+
+```bash
+sudo tee /etc/systemd/system/blueprint-manager.service >/dev/null <<'EOF'
+[Unit]
+Description=Blueprint Manager (Tangle EVM)
+After=network.target
+
+[Service]
+User=blueprint
+WorkingDirectory=/var/lib/blueprint
+ExecStart=/usr/local/bin/cargo-tangle blueprint run \
+  --protocol tangle-evm \
+  --http-rpc-url ${RPC_URL} \
+  --ws-rpc-url ${WS_RPC_URL} \
+  --keystore-path /var/lib/blueprint/keystore \
+  --settings-file /var/lib/blueprint/settings.env \
+  --spawn-method vm
+Restart=always
+RestartSec=5
+AmbientCapabilities=CAP_NET_ADMIN
+CapabilityBoundingSet=CAP_NET_ADMIN
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+Then reload and start:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now blueprint-manager
+sudo systemctl status blueprint-manager
+```
+
+## Quick start (setcap, simple but less durable)
 
 1) Verify hardware virtualization
 
@@ -54,6 +118,13 @@ cargo tangle blueprint run \
 ```
 
 The manager will download kernel and disk images automatically on first run.
+
+## What is `CAP_NET_ADMIN` and why do we need it?
+
+`CAP_NET_ADMIN` is a Linux capability that lets the process manage network interfaces and firewall rules. The VM sandbox needs it to create TAP interfaces and configure nftables rules for the guest. We grant it either:
+
+- Via systemd `AmbientCapabilities` (recommended for production).
+- Via `setcap` on the executable (quick local setup).
 
 ## Troubleshooting
 
