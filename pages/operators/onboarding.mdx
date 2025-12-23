@@ -13,7 +13,7 @@ This page is the shortest path to becoming an operator on Tangle: register in re
 - A host that can run your target blueprint runtimes (native, containers, or VM sandbox).
 - `foundry` (`cast`) for on-chain calls.
 - The Blueprint SDK CLI (`cargo-tangle`) for heartbeats and operational helpers.
-- Review [Runtime Requirements](/operators/manager/requirements), [Sizing and Capacity](/operators/manager/sizing), and [Sandboxing and Security](/operators/manager/security).
+- Review [Runtime Requirements](/operators/manager/requirements), [Sandbox Provisioning](/operators/manager/sandbox-provisioning), [Sizing and Capacity](/operators/manager/sizing), and [Sandboxing and Security](/operators/manager/security).
 
 ## Deployment Inputs (Fill These In)
 
@@ -120,6 +120,13 @@ cast send "$TANGLE_CONTRACT" "registerOperator(uint64,bytes,string)" \
 ## 4) Run the Blueprint Manager (Required)
 
 To actually serve jobs, run the long-lived Blueprint Manager. It listens for on-chain service requests/activations and spawns the right runtime when services activate. This is the production path; operators should not manually spawn services during onboarding.
+
+**Sandbox choice (production vs quick test)**
+
+- **Production (recommended):** use the systemd setup with `AmbientCapabilities=CAP_NET_ADMIN` so the manager can run the VM sandbox safely.
+- **Quick local test:** use `setcap cap_net_admin+eip` on the binary you run (e.g., `cargo-tangle`).
+
+See [Sandbox Provisioning](/operators/manager/sandbox-provisioning) for the exact commands.
 
 First, create a `settings.env` with your protocol addresses:
 
