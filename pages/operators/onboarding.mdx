@@ -5,7 +5,7 @@ description: "Do this now: register, opt into blueprints, and run the operator r
 
 # Operator Onboarding
 
-This page is the shortest path to becoming an operator on Tangle: register in restaking, register for blueprints, and run the runtime that executes services.
+This page is the shortest path to becoming an operator on Tangle: register in restaking, register for blueprints, and run the Blueprint Manager that executes services.
 
 ## What You Need
 
@@ -13,10 +13,11 @@ This page is the shortest path to becoming an operator on Tangle: register in re
 - A host that can run your target blueprint runtimes (native, containers, or VM sandbox).
 - `foundry` (`cast`) for on-chain calls.
 - The Blueprint SDK CLI (`cargo-tangle`) for heartbeats and operational helpers.
+- Review [Runtime Requirements](/operators/manager/requirements), [Sizing and Capacity](/operators/manager/sizing), and [Sandboxing and Security](/operators/manager/security).
 
 ## Deployment Inputs (Fill These In)
 
-You will need:
+You will need (Tangle EVM v2):
 
 - `RPC_URL` (HTTP) and optionally `WS_RPC_URL` (WebSocket)
 - `TANGLE_CONTRACT` (core protocol contract)
@@ -118,7 +119,7 @@ cast send "$TANGLE_CONTRACT" "registerOperator(uint64,bytes,string)" \
 
 ## 4) Run the Blueprint Manager (Required)
 
-To actually serve jobs, run the long-lived Blueprint Manager. It listens for on-chain service events and spawns the right runtime when services activate.
+To actually serve jobs, run the long-lived Blueprint Manager. It listens for on-chain service requests/activations and spawns the right runtime when services activate. This is the production path; operators should not manually spawn services during onboarding.
 
 First, create a `settings.env` with your protocol addresses:
 
@@ -145,7 +146,7 @@ cargo tangle blueprint run \
 
 ### Optional: Dry-run a single service (local validation only)
 
-If you want to validate a single service locally without submitting any on-chain transactions, use the spawn helper with `--dry-run`. This is useful for smoke tests or benchmarking before you join a service.
+If you want to validate a single service locally without submitting any on-chain transactions, use the spawn helper with `--dry-run`. This bypasses the service-request flow and is meant for smoke tests or benchmarking before you join a service.
 
 ```bash
 export SERVICE_ID="456"
@@ -161,7 +162,7 @@ cargo tangle blueprint service spawn \
   --dry-run
 ```
 
-Dry run skips operator registration, result submission, and heartbeats from the runtime. If your blueprint code submits its own transactions, those are not blocked.
+Dry run skips operator registration, result submission, and heartbeats from the runtime. If your blueprint code submits its own transactions, those are not blocked. Do not use this path for production traffic; use the Blueprint Manager.
 
 For production operations, keep the Blueprint Manager running and configure your preferred execution runtime(s):
 
