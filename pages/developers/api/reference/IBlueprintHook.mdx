@@ -1,0 +1,227 @@
+---
+title: IBlueprintHook
+description: Auto-generated Solidity API reference.
+---
+
+# IBlueprintHook
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IBlueprintHook.sol
+
+### IBlueprintHook
+
+Simplified hook interface for basic blueprint customization
+
+_For full control, implement IBlueprintServiceManager directly.
+     This interface provides a simpler subset for common use cases.
+
+Migration path:
+- Simple blueprints: Use IBlueprintHook / BlueprintHookBase
+- Full-featured blueprints: Use IBlueprintServiceManager / BlueprintServiceManagerBase_
+
+#### Functions
+
+#### onBlueprintCreated
+
+```solidity
+function onBlueprintCreated(uint64 blueprintId, address owner) external
+```
+
+Called when blueprint is created
+
+#### onOperatorRegister
+
+```solidity
+function onOperatorRegister(uint64 blueprintId, address operator, bytes data) external returns (bool accept)
+```
+
+Called when an operator registers
+
+##### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| accept | bool | True to accept registration |
+
+#### onOperatorUnregister
+
+```solidity
+function onOperatorUnregister(uint64 blueprintId, address operator) external
+```
+
+Called when an operator unregisters
+
+#### onServiceRequest
+
+```solidity
+function onServiceRequest(uint64 requestId, uint64 blueprintId, address requester, address[] operators, bytes config) external payable returns (bool accept)
+```
+
+Called when a service is requested
+
+##### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| accept | bool | True to accept request |
+
+#### onServiceApprove
+
+```solidity
+function onServiceApprove(uint64 requestId, address operator, uint8 restakingPercent) external
+```
+
+Called when an operator approves a service request
+
+#### onServiceReject
+
+```solidity
+function onServiceReject(uint64 requestId, address operator) external
+```
+
+Called when an operator rejects a service request
+
+#### onServiceActivated
+
+```solidity
+function onServiceActivated(uint64 serviceId, uint64 requestId, address owner, address[] operators) external
+```
+
+Called when service becomes active
+
+#### onServiceTerminated
+
+```solidity
+function onServiceTerminated(uint64 serviceId, address owner) external
+```
+
+Called when service is terminated
+
+#### canJoin
+
+```solidity
+function canJoin(uint64 serviceId, address operator, uint16 exposureBps) external view returns (bool)
+```
+
+Check if operator can join a dynamic service
+
+#### canLeave
+
+```solidity
+function canLeave(uint64 serviceId, address operator) external view returns (bool)
+```
+
+Check if operator can leave a dynamic service
+
+#### onJobSubmitted
+
+```solidity
+function onJobSubmitted(uint64 serviceId, uint64 callId, uint8 jobIndex, address caller, bytes inputs) external payable returns (bool accept)
+```
+
+Called when a job is submitted
+
+##### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| accept | bool | True to accept job |
+
+#### onJobResult
+
+```solidity
+function onJobResult(uint64 serviceId, uint64 callId, address operator, bytes result) external returns (bool accept)
+```
+
+Called when an operator submits a result
+
+##### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| accept | bool | True to accept result |
+
+#### onJobCompleted
+
+```solidity
+function onJobCompleted(uint64 serviceId, uint64 callId, uint32 resultCount) external
+```
+
+Called when a job is marked complete
+
+#### onSlashProposed
+
+```solidity
+function onSlashProposed(uint64 serviceId, address operator, uint256 amount, bytes32 evidence) external returns (bool approve)
+```
+
+Called before a slash is applied
+
+##### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| approve | bool | True to approve slash |
+
+#### onSlashApplied
+
+```solidity
+function onSlashApplied(uint64 serviceId, address operator, uint256 amount) external
+```
+
+Called after a slash is applied
+
+#### getDeveloperPaymentAddress
+
+```solidity
+function getDeveloperPaymentAddress(uint64 serviceId) external view returns (address payable)
+```
+
+Get the developer payment address
+
+#### isPaymentTokenAllowed
+
+```solidity
+function isPaymentTokenAllowed(address token) external view returns (bool)
+```
+
+Check if a payment token is allowed
+
+#### getRequiredResultCount
+
+```solidity
+function getRequiredResultCount(uint64 serviceId, uint8 jobIndex) external view returns (uint32)
+```
+
+Get the number of results required for job completion
+
+#### requiresAggregation
+
+```solidity
+function requiresAggregation(uint64 serviceId, uint8 jobIndex) external view returns (bool)
+```
+
+Check if a job requires BLS aggregated results
+
+#### getAggregationThreshold
+
+```solidity
+function getAggregationThreshold(uint64 serviceId, uint8 jobIndex) external view returns (uint16 thresholdBps, uint8 thresholdType)
+```
+
+Get the aggregation threshold configuration for a job
+
+##### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| thresholdBps | uint16 | Threshold in basis points (6700 = 67%) |
+| thresholdType | uint8 | 0 = CountBased (% of operators), 1 = StakeWeighted (% of total stake) |
+
+#### onAggregatedResult
+
+```solidity
+function onAggregatedResult(uint64 serviceId, uint64 callId, uint256 signerBitmap, bytes output) external
+```
+
+Called when an aggregated result is submitted
+

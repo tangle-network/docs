@@ -1,0 +1,67 @@
+---
+title: IERC7540Operator
+description: Auto-generated Solidity API reference.
+---
+
+# IERC7540Operator
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IERC7540.sol
+
+### IERC7540Operator
+
+Interface for operator management in ERC7540
+
+#### Functions
+
+#### isOperator
+
+```solidity
+function isOperator(address controller, address operator) external view returns (bool status)
+```
+
+Check if operator is approved for controller
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| controller | address | The controller address |
+| operator | address | The operator address |
+
+##### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| status | bool | True if approved |
+
+#### setOperator
+
+```solidity
+function setOperator(address operator, bool approved) external returns (bool success)
+```
+
+Grant or revoke operator permissions
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | The operator address |
+| approved | bool | True to approve, false to revoke |
+
+##### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| success | bool | True if successful |
+
+#### Events
+
+#### OperatorSet
+
+```solidity
+event OperatorSet(address controller, address operator, bool approved)
+```
+
+Emitted when operator approval changes
+

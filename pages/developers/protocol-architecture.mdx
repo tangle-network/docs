@@ -1,0 +1,41 @@
+---
+title: Protocol Architecture
+---
+
+# Protocol Architecture
+
+For a system-level view (roles, flows, and code maps), start here:
+
+- [System Architecture](/developers/system-architecture/overview)
+- [API Reference](/developers/api/overview)
+
+Tangle is the current protocol (EVM-based; legacy: Tangle Substrate) composed of a small set of core contracts:
+
+## Core Contracts
+
+- `Tangle`: protocol entrypoint for blueprints, operator registration, service lifecycle, jobs, payments, and slashing coordination.
+- `MultiAssetDelegation`: restaking and delegation system (operator self-stake, deposits, delegation, exits, and slashing application).
+- `ServiceFeeDistributor` + `StreamingPaymentManager`: distributes the restaker share of service fees (including streamed payments).
+- `TangleMetrics` + `InflationPool`: optional metrics-driven TNT incentive budgeting (pre-funded; no minting).
+- `RewardVaults`: optional TNT incentives per delegated asset with a deposit cap (funded by `InflationPool`).
+- `OperatorStatusRegistry`: heartbeat-based liveness tracking for services (often driven by the operator’s blueprint manager).
+- `LiquidDelegationVault` + `LiquidDelegationFactory`: liquid restaking via transferable vault shares over delegated positions.
+
+## Migration (TNT)
+
+TNT distribution at protocol launch is handled via:
+
+- `TangleMigration`: Merkle + SP1/ZK-gated claim contract for legacy-chain (SS58) allocations.
+- Deploy-time carveouts to prevent non-claimable balances being stuck (treasury module accounts; foundation allocation).
+
+## How To Integrate
+
+Contract addresses are deployment-dependent. Use the published addresses and RPC for your environment:
+
+- [Endpoints and Integration](/developers/endpoints)
+
+For mechanics:
+
+- [Incentives](/network/incentives-overview)
+- [Metrics and Scoring](/network/metrics-and-scoring)
+- [Slashing](/network/slashing)

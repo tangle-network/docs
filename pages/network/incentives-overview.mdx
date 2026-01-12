@@ -1,33 +1,44 @@
 # Incentives Overview
 
-## Platform Overview
+Tangle’s incentives come from two sources:
 
-Tangle Network is a platform designed for software monetization where developers can deploy software and benefit from its long-term utility. The platform operates as a marketplace where developers create Blueprints that customers can instance, generating ongoing revenue streams through usage fees and rewards.
+1. **Service fees** paid by customers when they create and run blueprint services.
+2. **TNT incentive budgets** funded to the protocol (no automatic minting).
 
-When a Blueprint is instanced, the generated fees are automatically distributed between the Blueprint developer (50%), the Tangle protocol (20%), and the operators and restakers securing the service (30%). This distribution model ensures all participants are properly incentivized while maintaining platform sustainability.
+## Service Fees
 
-## Core Economic Mechanisms
+Customers pay for blueprint services using the chain’s native token or an ERC-20 payment token (including TNT). Fees are split between:
 
-The network's economic model is built on three primary mechanisms: transaction fees, proof of stake rewards, and restaking incentives.
+- **Developer** (blueprint owner, or a payout address returned by the blueprint’s service manager)
+- **Protocol treasury**
+- **Operators** (weighted by that service’s per-operator exposure)
+- **Restakers** (delegators who restaked with the chosen operators)
 
-### Transaction Fees
+The default split is **20% developer / 20% protocol / 40% operators / 20% restakers**, and can be updated by governance.
 
-TNT serves as the base asset for all network transactions, including EVM execution, Blueprint creation, and instance deployment. While transaction fees are required for network operation, the protocol may subsidize certain activities during initial phases to encourage adoption.
+Restaker shares are routed per-operator to the on-chain `ServiceFeeDistributor`, which distributes fees to delegators based on:
 
-### Proof of Stake Security
+- Delegated amount (and optional lock multiplier)
+- Blueprint selection (`All` vs `Fixed`)
+- Optional per-asset security requirements and operator commitments (and optional USD normalization via a price oracle)
 
-The network operates on a nominated proof-of-stake consensus mechanism where validators and nominators work together to secure the network. Validators earn native rewards for block production and consensus tasks, while setting their own commission rates. Nominators can stake TNT to support validators and receive pro-rated rewards, with the current network providing approximately 4-5% APY combined.
+## TNT Incentives (Pre-Funded)
 
-### Restaking Infrastructure
+TNT incentives are distributed from a pre-funded on-chain pool:
 
-Tangle's restaking system creates an efficient marketplace between developers, operators, and restakers. Restakers can earn base rewards by depositing TNT and boost their earnings through longer lock periods. Operators run Blueprint instances and earn fees from service execution, while maintaining high performance standards. Blueprint developers benefit from custom reward distributions and long-term adoption of their services.
+- `InflationPool` holds TNT allocated by governance/treasury and distributes it in epochs.
+- The staking portion funds `RewardVaults`, which pays TNT incentives for delegated assets (with a deposit cap per asset).
+- Other portions become claimable TNT balances for operators, customers, and developers.
+- If `restakersBps > 0`, a restaker TNT budget is distributed by service exposure and routed through `ServiceFeeDistributor`.
 
-### Blueprint Economics
+## Metrics and Scoring
 
-The protocol enforces a transparent fee distribution model between developers, operators, restakers, and the underlying Tangle protocol.
+The protocol can optionally record activity into a metrics contract (`TangleMetrics`) using best-effort hooks (failures do not block core protocol actions). Those metrics drive merit-based distributions in `InflationPool`.
 
-- **50%** goes directly to you as the blueprint developer
-- **30%** is allocated to operators and restakers through the Boosted TNT restaking mechanism
-- **20%** flows to the protocol treasury for ecosystem development
+- See [Metrics and Scoring](/network/metrics-and-scoring) for details.
 
-TNT remains the primary restaking asset required for all Blueprint instances. Developers can incorporate additional approved assets for enhanced security. Through programmable distribution mechanisms, developers can customize fee allocations while maintaining protocol alignment.
+## Why This Layout Works
+
+- **One restaker fee path**: Service fees always flow through `ServiceFeeDistributor`, so payout math is consistent across tokens and services.
+- **Budget clarity**: Incentives only exist if governance funds them; there is no hidden inflation.
+- **Predictable integration**: Developers can reason about exactly where funds go and how to claim them.

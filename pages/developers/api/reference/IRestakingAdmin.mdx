@@ -1,0 +1,59 @@
+---
+title: IRestakingAdmin
+description: Auto-generated Solidity API reference.
+---
+
+# IRestakingAdmin
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IRestaking.sol
+
+### IRestakingAdmin
+
+Admin functions for restaking implementations
+
+_Separated to keep main interface clean_
+
+#### Functions
+
+#### addSlasher
+
+```solidity
+function addSlasher(address slasher) external
+```
+
+Add an authorized slasher
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| slasher | address | Address to authorize |
+
+#### removeSlasher
+
+```solidity
+function removeSlasher(address slasher) external
+```
+
+Remove an authorized slasher
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| slasher | address | Address to remove |
+
+#### setMinOperatorStake
+
+```solidity
+function setMinOperatorStake(uint256 amount) external
+```
+
+Update minimum operator stake
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| amount | uint256 | New minimum |
+

@@ -1,150 +1,57 @@
 # Restaking Incentives for Restakers
 
-## Overview
+Restakers (delegators) earn two types of rewards on Tangle:
 
-Tangle Network incentivizes restakers through TNT rewards for depositing specific assets as well as with service revenue and fee rewards. Deposit rewards are distributed in an ongoing manner and are immediately claimable. Service revenue is distributed in fixed time intervals according to governance.
+1. **Service fee revenue** from blueprint services they help secure (paid in the service’s payment token).
+2. **Optional TNT incentives** for delegating assets (pre-funded by governance).
 
-The protocol determines which assets are incentivized for deposits and their maximum deposit capacities through governance decisions. Non-incentivized assets are still valid for deposits and can be leveraged to instance Tangle Blueprints.
+## How You Participate
 
-### Score vs Points
+- Deposit supported assets into the on-chain `MultiAssetDelegation` restaking contract.
+- Delegate to an operator and choose a blueprint selection mode:
+  - **`All`**: you are exposed to all blueprints the operator participates in.
+  - **`Fixed`**: you choose which blueprint IDs you accept exposure to.
+- Optionally apply a lock multiplier (1–6 months) to boost reward share.
 
-For the purposes of avoiding confusion we use the terms points and score independently. Points refer to any future airdrop and scores refer to onchain values that we leverage for distributing onchain rewards, whether from deposits or services. Points are NOT equal to score values! Hopefully we don't mistake them in the docs.
+## TNT Deposit Incentives (`RewardVaults`)
 
-## Deposit Mechanics
+TNT incentives are paid from `RewardVaults`:
 
-Depositing incentivized assets on Tangle earns your TNT tokens and points in upcoming airdrops. There are a list of assets onchain that are incentivized. For these assets, there exists a **vault** for them specifying the capacity and APY for deposits.
+- One vault per staking asset (native, TNT, etc.).
+- Governance sets a **deposit cap** and whether the vault is active.
+- Rewards are paid in **TNT** from a pre-funded `InflationPool` (no minting).
+- Delegator share is based on principal × lock multiplier and the operator’s commission setting.
 
-### Deposit Capacity
+## Service Fee Revenue (`ServiceFeeDistributor`)
 
-The restaking system implements maximum deposit capacities for each incentivized asset to ensure secure and controlled TVL growth. Key aspects:
+When customers pay for a service, the protocol splits fees and routes the **restaker portion** per operator to `ServiceFeeDistributor`. From there, fees are distributed to delegators who restaked with that operator based on:
 
-- Fixed maximum amount per asset
-- APY distributed proportionally to deposits/capacity ratio
-- Unallocated APY is never minted
-- APY defines reward allocation at full capacity
+- Delegated amount (and optional lock multiplier)
+- Blueprint selection (`All` vs `Fixed`)
+- Optional per-asset commitments and USD weighting (if a price oracle is configured)
+- Optional streaming over a service’s TTL (for streamed payments)
 
-### Protocol Implementation
+## Exposure-Based Protocol Rewards (`InflationPool`)
 
-The `pallet-multi-asset-delegation` system manages:
+If enabled, `InflationPool` can allocate a restaker budget in TNT based on **service exposure**. Exposure is computed at distribution time using `ServiceFeeDistributor` and optional USD pricing.
 
-- Deposit and withdrawal logic
-- Delegation to operators
-- Asset staking mechanisms
-- APY and capacity configurations
-- System upgrades via governance
+- The keeper calls `InflationPool.distributeEpochWithServices(serviceIds)`.
+- TNT is routed into `ServiceFeeDistributor` and claimed there (same flow as service fees).
 
-Users can view available assets and their parameters through the Tangle Restaking dApp.
+## Risks
 
-### Withdrawal Process
+- Slashing reduces the withdrawable value of operator positions using share/exchange-rate accounting.
+- Use `Fixed` blueprint selection if you want to scope exposure to specific blueprints.
 
-- Standard withdrawal delay: ~7 days (W sessions)
-- Deposits continue earning incentives during withdrawal period
-- Assets must be unstaked before withdrawal
+See [Slashing](/network/slashing) and [Restaker Risks](/restake/risks).
 
-## Scoring and Rewards
+## User Stories
 
-When Tangle Blueprints are instanced, a new service is created. Customers instance Tangle Blueprints by selecting the operators and types of restaked assets they desire for security. They pay for the service in advance and throughout operation for task based services.
+**Maya the restaker**
+- She delegates 1,000 wstETH to a trusted operator in `Fixed` mode for two blueprints she understands.
+- She earns USDC fees from services on those blueprints and optional TNT incentives from the staking vault.
+- When the operator stops serving a blueprint, she removes it from her fixed list to reduce exposure.
 
-The payments and fees are distributed according to a scoring mechanism that is normalized against the USD value of the service instance's assets.
-
-TNT is the default restaking asset and must be included as restaked security collateral for all service instances. We treat TNT as a special asset when scoring. TNT earns a score of 1 value per 1 TNT allocated to secure the service, whereas other assets earn a score of 1 value per $1 allocated to secure the service.
-
-### Lock Multipliers
-
-Users can enhance their score through time-locks. This locks their deposited assets for additional months, preventing any withdrawals or unstaking until the lock has ended:
-
-- Longer locks lead to higher score multipliers
-- Locked tokens cannot be withdrawn until expiry
-- Multiplier directly impacts deposit reward share
-
-### Reward Calculation for Deposits
-
-The reward formula $R$ for a user at any point is:
-
-$R = APY \times \frac{S_u}{S_t} \times \frac{D_t}{C}$
-
-Where:
-
-- $APY$ = Asset's annual percentage yield
-- $S_u$ = User's score (including lock multipliers)
-- $S_t$ = Total score across all users
-- $D_t$ = Total deposits for the asset
-- $C$ = Maximum deposit capacity
-
-### Reward Calculation for Service Rewards
-
-The protocol allocates service revenue and fee rewards using a dual-tier scoring mechanism:
-
-For TNT (Native Token):
-
-- Each TNT restaked earns 1 base point
-
-For Other Approved Assets:
-
-- Each $1 USD value restaked earns 1 base point
-
-The reward formula $R$ for a restaker securing a service instance is calculated as:
-
-$R = Rewards \times \frac{S_u}{S_t}$
-
-Where:
-
-- $Rewards$ = Rewards and fees of the service instance
-- $A_u$ = User's restaking score for the exposed assets
-- $A_t$ = Total score across all exposed assets of the service instance
-
-## Example Scenario: Calculating Restaking Rewards
-
-Let's walk through practical examples to understand how both deposit rewards and service revenue rewards are calculated.
-
-### Deposit Rewards Example
-
-Let's say Alice deposits 1000 TNT with a 12-month lock:
-
-Initial Parameters:
-
-- Base APY: 5%
-- Lock multiplier: 2x for 2 months
-- Total deposits: 100,000 TNT
-- Maximum capacity: 1,000,000 TNT
-
-Her rewards calculation:
-
-1. Score calculation:
-
-   - Base score: 1000 (from 1000 TNT)
-   - With 2x multiplier: 2000 score
-   - Total system score: 150,000
-
-2. Annual deposit rewards:
-   ```
-   5% × (2000/150,000) × (100,000/1,000,000) × 1000 TNT = 0.67 TNT
-   ```
-
-### Service Revenue Example
-
-Now let's calculate Alice's service revenue rewards:
-
-Initial Parameters:
-
-- Service instance monthly fees: 1000 USDC
-- Service revenue allocation: 30% to restakers
-- Alice's restaked assets:
-  - 1000 TNT (1000 points)
-  - 2000 USDC (2000 points)
-- Total service restaking points: 10000 (5000 TNT + 5000 USDC worth)
-
-Her service revenue calculation:
-
-1. Monthly revenue share:
-
-   ```
-   1000 USDC × 30% = 300 USDC to restakers
-   ```
-
-2. Alice's share:
-   ```
-   300 USDC × (3000/10000) = 90 USDC per month
-   ```
-
-Alice would earn approximately 90 USDC per month from service revenue, in addition to her deposit rewards of 0.67 TNT annually. Her service revenue share is calculated based on her total restaking score (3000 points from 1000 TNT + 2000 USDC) divided by the total service restaking score of 10000 points. Note that while lock period multipliers affect deposit rewards, they do not impact service revenue calculations. The service revenue is paid out in whatever token the customers use to pay for the service - in this example USDC.
+**Lee the integrator**
+- He builds a dashboard that shows restakers their estimated service-fee rewards.
+- He reads scores and pending rewards from `ServiceFeeDistributor`, and vault info from `RewardVaults`.

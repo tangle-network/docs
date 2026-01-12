@@ -1,0 +1,91 @@
+---
+title: IERC7540Deposit
+description: Auto-generated Solidity API reference.
+---
+
+# IERC7540Deposit
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IERC7540.sol
+
+### IERC7540Deposit
+
+Interface for asynchronous deposit requests
+
+_See https://eips.ethereum.org/EIPS/eip-7540_
+
+#### Functions
+
+#### requestDeposit
+
+```solidity
+function requestDeposit(uint256 assets, address controller, address owner) external returns (uint256 requestId)
+```
+
+Request an asynchronous deposit
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| assets | uint256 | Amount of assets to deposit |
+| controller | address | Address that controls the request |
+| owner | address | Address that owns the assets |
+
+##### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | uint256 | Unique identifier for this request |
+
+#### pendingDepositRequest
+
+```solidity
+function pendingDepositRequest(uint256 requestId, address controller) external view returns (uint256 assets)
+```
+
+Get pending deposit request amount
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | uint256 | The request identifier |
+| controller | address | The controller address |
+
+##### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| assets | uint256 | Amount of assets pending |
+
+#### claimableDepositRequest
+
+```solidity
+function claimableDepositRequest(uint256 requestId, address controller) external view returns (uint256 assets)
+```
+
+Get claimable deposit request amount
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | uint256 | The request identifier |
+| controller | address | The controller address |
+
+##### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| assets | uint256 | Amount of assets claimable |
+
+#### Events
+
+#### DepositRequest
+
+```solidity
+event DepositRequest(address controller, address owner, uint256 requestId, address sender, uint256 assets)
+```
+
+Emitted when a deposit request is created
+

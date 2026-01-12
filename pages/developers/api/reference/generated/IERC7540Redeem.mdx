@@ -1,0 +1,91 @@
+---
+title: IERC7540Redeem
+description: Auto-generated Solidity API reference.
+---
+
+# IERC7540Redeem
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IERC7540.sol
+
+### IERC7540Redeem
+
+Interface for asynchronous redemption requests
+
+_See https://eips.ethereum.org/EIPS/eip-7540_
+
+#### Functions
+
+#### requestRedeem
+
+```solidity
+function requestRedeem(uint256 shares, address controller, address owner) external returns (uint256 requestId)
+```
+
+Request an asynchronous redemption
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| shares | uint256 | Amount of shares to redeem |
+| controller | address | Address that controls the request |
+| owner | address | Address that owns the shares |
+
+##### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | uint256 | Unique identifier for this request |
+
+#### pendingRedeemRequest
+
+```solidity
+function pendingRedeemRequest(uint256 requestId, address controller) external view returns (uint256 shares)
+```
+
+Get pending redeem request amount
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | uint256 | The request identifier |
+| controller | address | The controller address |
+
+##### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| shares | uint256 | Amount of shares pending |
+
+#### claimableRedeemRequest
+
+```solidity
+function claimableRedeemRequest(uint256 requestId, address controller) external view returns (uint256 shares)
+```
+
+Get claimable redeem request amount
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | uint256 | The request identifier |
+| controller | address | The controller address |
+
+##### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| shares | uint256 | Amount of shares claimable |
+
+#### Events
+
+#### RedeemRequest
+
+```solidity
+event RedeemRequest(address controller, address owner, uint256 requestId, address sender, uint256 shares)
+```
+
+Emitted when a redeem request is created
+

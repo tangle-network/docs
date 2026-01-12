@@ -1,0 +1,249 @@
+---
+title: ITangleAdmin
+description: Auto-generated Solidity API reference.
+---
+
+# ITangleAdmin
+
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/ITangle.sol
+
+### ITangleAdmin
+
+Admin functions for Tangle protocol
+
+#### Functions
+
+#### setRestaking
+
+```solidity
+function setRestaking(address restaking) external
+```
+
+Set the restaking module
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| restaking | address | The IRestaking implementation |
+
+#### setTreasury
+
+```solidity
+function setTreasury(address treasury) external
+```
+
+Set the protocol treasury
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| treasury | address | The treasury address |
+
+#### setPaymentSplit
+
+```solidity
+function setPaymentSplit(struct Types.PaymentSplit split) external
+```
+
+Set the payment split configuration
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| split | struct Types.PaymentSplit | The new split configuration |
+
+#### paymentSplit
+
+```solidity
+function paymentSplit() external view returns (uint16 developerBps, uint16 protocolBps, uint16 operatorBps, uint16 restakerBps)
+```
+
+Get the current payment split
+
+#### pause
+
+```solidity
+function pause() external
+```
+
+Pause the protocol
+
+#### unpause
+
+```solidity
+function unpause() external
+```
+
+Unpause the protocol
+
+#### treasury
+
+```solidity
+function treasury() external view returns (address payable)
+```
+
+Get the configured treasury
+
+#### setMetricsRecorder
+
+```solidity
+function setMetricsRecorder(address recorder) external
+```
+
+Set the metrics recorder (optional)
+
+#### metricsRecorder
+
+```solidity
+function metricsRecorder() external view returns (address)
+```
+
+Get the metrics recorder address
+
+#### setOperatorStatusRegistry
+
+```solidity
+function setOperatorStatusRegistry(address registry) external
+```
+
+Set operator status registry
+
+#### operatorStatusRegistry
+
+```solidity
+function operatorStatusRegistry() external view returns (address)
+```
+
+Get operator status registry
+
+#### setServiceFeeDistributor
+
+```solidity
+function setServiceFeeDistributor(address distributor) external
+```
+
+Configure service fee distributor
+
+#### serviceFeeDistributor
+
+```solidity
+function serviceFeeDistributor() external view returns (address)
+```
+
+Get service fee distributor
+
+#### setPriceOracle
+
+```solidity
+function setPriceOracle(address oracle) external
+```
+
+Configure price oracle
+
+#### priceOracle
+
+```solidity
+function priceOracle() external view returns (address)
+```
+
+Get price oracle
+
+#### setMBSMRegistry
+
+```solidity
+function setMBSMRegistry(address registry) external
+```
+
+Configure Master Blueprint Service Manager registry
+
+#### mbsmRegistry
+
+```solidity
+function mbsmRegistry() external view returns (address)
+```
+
+Get Master Blueprint Service Manager registry
+
+#### maxBlueprintsPerOperator
+
+```solidity
+function maxBlueprintsPerOperator() external view returns (uint32)
+```
+
+Get max blueprints per operator
+
+#### setMaxBlueprintsPerOperator
+
+```solidity
+function setMaxBlueprintsPerOperator(uint32 newMax) external
+```
+
+Set max blueprints per operator
+
+#### tntToken
+
+```solidity
+function tntToken() external view returns (address)
+```
+
+Get TNT token address
+
+#### setTntToken
+
+```solidity
+function setTntToken(address token) external
+```
+
+Set TNT token address
+
+#### rewardVaults
+
+```solidity
+function rewardVaults() external view returns (address)
+```
+
+Get reward vaults address
+
+#### setRewardVaults
+
+```solidity
+function setRewardVaults(address vaults) external
+```
+
+Set reward vaults address
+
+#### defaultTntMinExposureBps
+
+```solidity
+function defaultTntMinExposureBps() external view returns (uint16)
+```
+
+Get default TNT min exposure bps
+
+#### setDefaultTntMinExposureBps
+
+```solidity
+function setDefaultTntMinExposureBps(uint16 minExposureBps) external
+```
+
+Set default TNT min exposure bps
+
+#### tntPaymentDiscountBps
+
+```solidity
+function tntPaymentDiscountBps() external view returns (uint16)
+```
+
+Get TNT payment discount bps
+
+#### setTntPaymentDiscountBps
+
+```solidity
+function setTntPaymentDiscountBps(uint16 discountBps) external
+```
+
+Set TNT payment discount bps
+
