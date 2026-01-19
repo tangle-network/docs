@@ -1,0 +1,90 @@
+---
+title: How Rewards Work
+description: Learn how staking incentives work on Tangle and how operators and stakers earn.
+---
+
+# How Rewards Work
+
+Staking incentives on Tangle come from two sources:
+
+1. **Service fee revenue** paid by customers (in the service’s payment token).
+2. **TNT incentives** funded by governance (pre-funded, no minting).
+
+## ELI5
+
+If you delegate to an operator that runs useful services, you earn:
+
+- **A share of the fees** those services pay (in the same token the customer used).
+- **Optional TNT incentives** when the protocol has funded an incentives budget — *“I also earn TNT from RewardVaults plus optional staker inflation.”*
+
+You choose your exposure scope (All vs Fixed), and your share is calculated from your delegated amount and lock multiplier.
+
+## How The Money Moves On-Chain
+
+1. **A service is paid** (one-time or subscription).
+2. `Payments.sol` splits the payment into developer, protocol, operator, and staker shares.
+3. Operator shares accrue as pending rewards in the core protocol.
+4. Staker shares are forwarded **per operator** to `ServiceFeeDistributor` (or to treasury if no distributor is configured).
+5. `ServiceFeeDistributor` allocates those fees to delegators by score:
+   - Score = principal × lock multiplier (per asset, per operator).
+   - All vs Fixed blueprint selection gates which pools you participate in.
+   - Optional USD weighting and security commitments can scale the effective exposure.
+6. **Optional TNT incentives** are distributed from `InflationPool` in epochs:
+   - The staking portion funds `RewardVaults` (TNT incentives by asset deposit and lock).
+   - If `stakersBps > 0`, a staker TNT budget is distributed by **service exposure** and routed through `ServiceFeeDistributor`.
+
+## Why This Design
+
+- **Single fee distributor**: All staker service-fee payouts use `ServiceFeeDistributor`, so the math is consistent across tokens.
+- **Explicit budgets**: TNT incentives only exist if governance funds `InflationPool`. There is no hidden minting.
+- **Exposure fairness without per-user loops**: Exposure is computed at distribution time (USD-weighted where possible), avoiding per-delegator loops in inflation logic.
+
+## How To Get Rewarded (Practical Steps)
+
+**As a staker**
+- Deposit and delegate in `MultiAssetDelegation`.
+- Choose `All` or `Fixed` blueprint selection.
+- Optional: add a lock multiplier for a higher reward score.
+- Claim:
+  - TNT incentives from `RewardVaults`.
+  - Service-fee + staker-inflation rewards from `ServiceFeeDistributor`.
+
+**As an operator**
+- Self-stake `minOperatorStake` to register.
+- Join services and set exposure and commitments responsibly.
+- Claim operator service fees from the core protocol.
+- Claim TNT commission from `RewardVaults` if you opt into commission.
+
+**As a blueprint developer**
+- Publish a blueprint and manage services.
+- Earn the developer split from each service payment.
+
+## Examples
+
+**Example 1: Service fees (USDC)**
+Alice delegates 100 wstETH to Operator O, All mode, no lock.
+Bob delegates 200 wstETH to Operator O, All mode, 3-month lock (1.3x).
+A service pays 10 USDC and the staker share is 2 USDC.
+Alice score = 100, Bob score = 260, total = 360.
+Alice earns ~0.56 USDC, Bob earns ~1.44 USDC.
+
+**Example 2: Inflation staker budget (TNT)**
+An epoch has 1,000 TNT with stakersBps = 20%.
+The keeper calls `distributeEpochWithServices` with active services.
+InflationPool allocates 200 TNT by USD exposure per service/operator and
+routes those TNT to `ServiceFeeDistributor`, where delegators claim as usual.
+
+## Where To Look In Code And Tests
+
+- Payment split and staker routing: `src/v2/core/Payments.sol`
+- Staker fee distribution and claims: `src/v2/rewards/ServiceFeeDistributor.sol`
+- Inflation budgets and staker exposure allocation: `src/v2/rewards/InflationPool.sol`
+- TNT staking incentives: `src/v2/rewards/RewardVaults.sol`
+- Tests:
+  - `test/v2/tangle/Payments.t.sol`
+  - `test/v2/rewards/ServiceFeeDistributor.t.sol`
+  - `test/v2/rewards/ServiceFeeDistributorStreaming.t.sol`
+  - `test/v2/Rewards.t.sol`
+  - `test/v2/InflationPool.t.sol`
+
+See [Claiming Cheatsheet](/staking/incentives/claiming) for one-tx claim options and multicall tips.

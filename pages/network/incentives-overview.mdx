@@ -1,9 +1,22 @@
-# Incentives Overview
+# Incentives
 
 Tangle’s incentives come from two sources:
 
 1. **Service fees** paid by customers when they create and run blueprint services.
 2. **TNT incentive budgets** funded to the protocol (no automatic minting).
+
+<figure>
+  <img
+    src="/images/architecture/incentives-flow.svg"
+    alt="Incentives flow for service fees and TNT budgets"
+  />
+  <figcaption>
+    Service fees split through Payments.sol; TNT budgets flow through InflationPool,
+    RewardVaults, and ServiceFeeDistributor.
+  </figcaption>
+</figure>
+
+Code references: [Payments.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Payments.sol), [ServiceFeeDistributor.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/ServiceFeeDistributor.sol), [InflationPool.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/InflationPool.sol), [RewardVaults.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/RewardVaults.sol), [TangleMetrics.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/TangleMetrics.sol)
 
 ## Service Fees
 
@@ -12,11 +25,11 @@ Customers pay for blueprint services using the chain’s native token or an ERC-
 - **Developer** (blueprint owner, or a payout address returned by the blueprint’s service manager)
 - **Protocol treasury**
 - **Operators** (weighted by that service’s per-operator exposure)
-- **Restakers** (delegators who restaked with the chosen operators)
+- **Stakers** (delegators who staked with the chosen operators)
 
-The default split is **20% developer / 20% protocol / 40% operators / 20% restakers**, and can be updated by governance.
+The default split is **20% developer / 20% protocol / 40% operators / 20% stakers**, and can be updated by governance.
 
-Restaker shares are routed per-operator to the on-chain `ServiceFeeDistributor`, which distributes fees to delegators based on:
+Staker shares are routed per-operator to the on-chain `ServiceFeeDistributor`, which distributes fees to delegators based on:
 
 - Delegated amount (and optional lock multiplier)
 - Blueprint selection (`All` vs `Fixed`)
@@ -29,7 +42,7 @@ TNT incentives are distributed from a pre-funded on-chain pool:
 - `InflationPool` holds TNT allocated by governance/treasury and distributes it in epochs.
 - The staking portion funds `RewardVaults`, which pays TNT incentives for delegated assets (with a deposit cap per asset).
 - Other portions become claimable TNT balances for operators, customers, and developers.
-- If `restakersBps > 0`, a restaker TNT budget is distributed by service exposure and routed through `ServiceFeeDistributor`.
+- If `stakersBps > 0`, a staker TNT budget is distributed by service exposure and routed through `ServiceFeeDistributor`.
 
 ## Metrics and Scoring
 
@@ -39,6 +52,14 @@ The protocol can optionally record activity into a metrics contract (`TangleMetr
 
 ## Why This Layout Works
 
-- **One restaker fee path**: Service fees always flow through `ServiceFeeDistributor`, so payout math is consistent across tokens and services.
+- **One staker fee path**: Service fees always flow through `ServiceFeeDistributor`, so payout math is consistent across tokens and services.
 - **Budget clarity**: Incentives only exist if governance funds them; there is no hidden inflation.
 - **Predictable integration**: Developers can reason about exactly where funds go and how to claim them.
+
+## Source Contracts (GitHub)
+
+- [`Payments.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Payments.sol)
+- [`ServiceFeeDistributor.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/ServiceFeeDistributor.sol)
+- [`InflationPool.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/InflationPool.sol)
+- [`RewardVaults.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/RewardVaults.sol)
+- [`TangleMetrics.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/TangleMetrics.sol)

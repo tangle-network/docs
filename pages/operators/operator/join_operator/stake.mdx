@@ -4,19 +4,26 @@ Operators can increase their self-stake to increase capacity, qualify for higher
 
 ## Bond More
 
-### Increase Operator Stake (Native)
+### Increase Operator Stake
 
-Operators can increase their self-stake by calling `increaseStake()` and sending value.
+Operators can increase their self-stake via the CLI. The amount is in wei for the configured bond asset.
 
 ```bash
-export RPC_URL="https://..."
-export PRIVATE_KEY="0x..."
-export RESTAKING_CONTRACT="0x..." # MultiAssetDelegation contract
+export HTTP_RPC_URL="https://..."
+export WS_RPC_URL="wss://..."
+export KEYSTORE_PATH="./keystore"
+export TANGLE_CONTRACT="0x..."
+export STAKING_CONTRACT="0x..."
+export STATUS_REGISTRY_CONTRACT="0x..."
 
-cast send "$RESTAKING_CONTRACT" "increaseStake()" \
-  --rpc-url "$RPC_URL" \
-  --private-key "$PRIVATE_KEY" \
-  --value "<AMOUNT_WEI>"
+cargo tangle operator increase-stake \
+  --http-rpc-url "$HTTP_RPC_URL" \
+  --ws-rpc-url "$WS_RPC_URL" \
+  --keystore-path "$KEYSTORE_PATH" \
+  --tangle-contract "$TANGLE_CONTRACT" \
+  --staking-contract "$STAKING_CONTRACT" \
+  --status-registry-contract "$STATUS_REGISTRY_CONTRACT" \
+  --amount <AMOUNT_WEI>
 ```
 
 If successful, the transaction emits `OperatorStakeIncreased(operator, amount)`.
@@ -28,9 +35,14 @@ If successful, the transaction emits `OperatorStakeIncreased(operator, amount)`.
 Ensure you have joined as an operator first, see [Join as an Operator](./join).
 
 ```bash
-cast send "$RESTAKING_CONTRACT" "scheduleOperatorUnstake(uint256)" <AMOUNT_WEI> \
-  --rpc-url "$RPC_URL" \
-  --private-key "$PRIVATE_KEY"
+cargo tangle operator schedule-unstake \
+  --http-rpc-url "$HTTP_RPC_URL" \
+  --ws-rpc-url "$WS_RPC_URL" \
+  --keystore-path "$KEYSTORE_PATH" \
+  --tangle-contract "$TANGLE_CONTRACT" \
+  --staking-contract "$STAKING_CONTRACT" \
+  --status-registry-contract "$STATUS_REGISTRY_CONTRACT" \
+  --amount <AMOUNT_WEI>
 ```
 
 If successful, your tokens will be unlocked after the unstake delay period.
@@ -42,9 +54,13 @@ If successful, your tokens will be unlocked after the unstake delay period.
 Ensure you have scheduled an unstake and the delay period has passed.
 
 ```bash
-cast send "$RESTAKING_CONTRACT" "executeOperatorUnstake()" \
-  --rpc-url "$RPC_URL" \
-  --private-key "$PRIVATE_KEY"
+cargo tangle operator execute-unstake \
+  --http-rpc-url "$HTTP_RPC_URL" \
+  --ws-rpc-url "$WS_RPC_URL" \
+  --keystore-path "$KEYSTORE_PATH" \
+  --tangle-contract "$TANGLE_CONTRACT" \
+  --staking-contract "$STAKING_CONTRACT" \
+  --status-registry-contract "$STATUS_REGISTRY_CONTRACT"
 ```
 
 If successful, all unstaked tokens will be unlocked and returned to the operator.

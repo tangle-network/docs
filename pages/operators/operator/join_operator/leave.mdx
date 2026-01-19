@@ -9,13 +9,20 @@ Operators can leave the operator role by scheduling a leave and then completing 
 Ensure you have joined as an operator first, see [Join as an Operator](./join).
 
 ```bash
-export RPC_URL="https://..."
-export PRIVATE_KEY="0x..."
-export RESTAKING_CONTRACT="0x..." # MultiAssetDelegation contract
+export HTTP_RPC_URL="https://..."
+export WS_RPC_URL="wss://..."
+export KEYSTORE_PATH="./keystore"
+export TANGLE_CONTRACT="0x..."
+export STAKING_CONTRACT="0x..."
+export STATUS_REGISTRY_CONTRACT="0x..."
 
-cast send "$RESTAKING_CONTRACT" "startLeaving()" \
-  --rpc-url "$RPC_URL" \
-  --private-key "$PRIVATE_KEY"
+cargo tangle operator start-leaving \
+  --http-rpc-url "$HTTP_RPC_URL" \
+  --ws-rpc-url "$WS_RPC_URL" \
+  --keystore-path "$KEYSTORE_PATH" \
+  --tangle-contract "$TANGLE_CONTRACT" \
+  --staking-contract "$STAKING_CONTRACT" \
+  --status-registry-contract "$STATUS_REGISTRY_CONTRACT"
 ```
 
 If successful, your leave will be scheduled.
@@ -27,9 +34,13 @@ If successful, your leave will be scheduled.
 Ensure you have scheduled a leave and the leave delay period has passed.
 
 ```bash
-cast send "$RESTAKING_CONTRACT" "completeLeaving()" \
-  --rpc-url "$RPC_URL" \
-  --private-key "$PRIVATE_KEY"
+cargo tangle operator complete-leaving \
+  --http-rpc-url "$HTTP_RPC_URL" \
+  --ws-rpc-url "$WS_RPC_URL" \
+  --keystore-path "$KEYSTORE_PATH" \
+  --tangle-contract "$TANGLE_CONTRACT" \
+  --staking-contract "$STAKING_CONTRACT" \
+  --status-registry-contract "$STATUS_REGISTRY_CONTRACT"
 ```
 
 If successful, you will no longer be an operator.

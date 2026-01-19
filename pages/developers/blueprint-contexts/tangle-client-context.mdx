@@ -6,44 +6,47 @@ import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
 # Tangle Client Context
 
-The `TangleClientContext` trait provides a standardized interface for interacting with the Tangle network in your Blueprint through a Subxt `OnlineClient`.
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/contexts
 
-## Overview
 
-The `TangleClientContext` trait provides access to a Subxt client that enables:
+The `TangleEvmClientContext` trait provides a standardized interface for interacting with the Tangle EVM protocol from a Blueprint. It exposes a typed `TangleEvmClient` configured from the blueprint environment.
 
-- Transaction Submission - Send transactions to the Tangle network
-- State Queries - Read storage and state from the chain
-- Event Monitoring - Subscribe to and process chain events
-- RPC Calls - Make direct RPC calls to Tangle nodes
+## Context Summary
+
+The `TangleEvmClientContext` trait provides access to an EVM client that enables:
+
+- Transaction submission to core protocol contracts
+- Service and operator state queries
+- Job submission and result reporting
+- Access to operator identity and keystore-backed signing
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/7d97147417af83ce30f52714c60840c50b9142be/crates/contexts/src/tangle.rs"
-  fromLine={5}
-  toLine={9}
-  title="TangleClientContext Trait Definition"
+  url="https://github.com/tangle-network/blueprint/blob/v2/crates/contexts/src/tangle_evm.rs"
+  fromLine={1}
+  toLine={44}
+  title="TangleEvmClientContext Trait Definition"
 />
 
 ## Using the Context
 
 ### 1. Define Your Context
 
-First, define your context struct that implements the `TangleClientContext` trait:
+First, define your context struct that implements the `TangleEvmClientContext` trait:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/7d97147417af83ce30f52714c60840c50b9142be/crates/macros/context-derive/tests/ui/basic.rs"
+  url="https://github.com/tangle-network/blueprint/blob/v2/crates/macros/context-derive/tests/ui/basic.rs"
   fromLine={13}
   toLine={22}
   title="Tangle Client Context Definition"
 />
 
-### 2. Access Subxt Client Functionality
+### 2. Access Tangle EVM Client Functionality
 
-You can then use this context to access the Subxt client and interact with Tangle:
+You can then use this context to access the client and interact with the Tangle EVM protocol:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/7d97147417af83ce30f52714c60840c50b9142be/crates/macros/context-derive/tests/ui/basic.rs"
-  fromLine={37}
-  toLine={37}
-  title="Accessing Subxt Client Functionality"
+  url="https://github.com/tangle-network/blueprint/blob/v2/crates/macros/context-derive/tests/ui/basic.rs"
+  fromLine={35}
+  toLine={35}
+  title="Accessing Tangle EVM Client Functionality"
 />

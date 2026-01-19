@@ -8,24 +8,24 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
 # Blueprint SDK
 
-The Blueprint SDK is the Rust toolkit for building **blueprints** (off-chain services) and running them as an operator against Tangle’s EVM protocol.
+The [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2) is the Rust toolkit for building **blueprints** (off-chain services) and running them as an operator against Tangle’s EVM protocol.
 
 It includes:
 
-- The **Blueprint Runner** (router + producers + consumers + background services)
-- Typed **contexts** (keystore, EVM provider, Tangle EVM client, EigenLayer)
-- The `cargo-tangle` **CLI** for creating, preregistering, and running blueprints
+- The **[Blueprint Runner](https://github.com/tangle-network/blueprint/tree/v2/crates/runner)** (router + producers + consumers + background services)
+- Typed **[contexts](https://github.com/tangle-network/blueprint/tree/v2/crates/contexts)** (keystore, EVM provider, Tangle EVM client)
+- The [`cargo-tangle` CLI](https://github.com/tangle-network/blueprint/tree/v2/cli) for creating, preregistering, and running blueprints
 
 **Source of truth repos**
 
 - SDK + runner + CLI: https://github.com/tangle-network/blueprint/tree/v2
-- On-chain contracts: https://github.com/tangle-network/tnt-core/tree/feature/modular-protocol
+- On-chain contracts: https://github.com/tangle-network/tnt-core/tree/v2
 
 ## What You Run (Operator Tooling)
 
-- `cargo-tangle`: developer/operator CLI (register, run, service lifecycle, jobs)
-- `blueprint-manager`: long-lived operator runtime that watches chain events and runs services
-- `pricing-engine-server`: optional RFQ server that issues signed quotes
+- [`cargo-tangle`](https://github.com/tangle-network/blueprint/tree/v2/cli): developer/operator CLI (register, run, service lifecycle, jobs)
+- [`blueprint-manager`](https://github.com/tangle-network/blueprint/tree/v2/crates/manager): long-lived operator runtime that watches chain events and runs services
+- [`pricing-engine-server`](https://github.com/tangle-network/blueprint/tree/v2/crates/pricing-engine): optional RFQ server that issues signed quotes
 
 ## Configuration Surface (Tangle EVM)
 
@@ -33,7 +33,7 @@ Most tooling needs the same deployment addresses and endpoints:
 
 - `http_rpc_url` / `ws_rpc_url`
 - `tangle_contract` (core protocol)
-- `restaking_contract` (MultiAssetDelegation)
+- `staking_contract` (MultiAssetDelegation)
 - `status_registry_contract` (heartbeats; optional but recommended)
 - `keystore_path`
 
@@ -52,7 +52,7 @@ The CLI exposes these as shared flags:
   items={[
     {
       title: "Build a Blueprint",
-      href: "/developers/tangle-avs",
+      href: "/developers/blueprints/introduction",
       subItems: [
         {
           title: "Hello Tangle Blueprint",
@@ -81,7 +81,6 @@ The CLI exposes these as shared flags:
         { title: "Keystore", href: "/developers/blueprint-contexts/keystore-context", description: "Local and remote signing" },
         { title: "EVM Provider", href: "/developers/blueprint-contexts/evm-provider-context", description: "Instrumented EVM provider access" },
         { title: "Tangle EVM Client", href: "/developers/blueprint-contexts/tangle-client-context", description: "Interact with Tangle contracts" },
-        { title: "EigenLayer", href: "/developers/blueprint-contexts/eigenlayer-context", description: "EigenLayer integration utilities" },
       ],
     },
     {
@@ -96,7 +95,7 @@ The CLI exposes these as shared flags:
       title: "CLI",
       href: "/developers/cli/quickstart",
       subItems: [
-        { title: "Install", href: "/developers/cli/installation", description: "Install cargo-tangle" },
+        { title: "Install", href: "https://github.com/tangle-network/blueprint/tree/v2/cli", description: "Install cargo-tangle" },
         { title: "Keys", href: "/developers/cli/keys", description: "Create and manage keystores" },
       ],
     },

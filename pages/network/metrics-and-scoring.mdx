@@ -12,7 +12,7 @@ Tangle’s incentive programs can be driven by on-chain activity metrics. Metric
 - **`TangleMetrics`**: an on-chain activity recorder implementing `IMetricsRecorder`.
 - **Metrics hooks**: best-effort calls from core contracts (wrapped in `try/catch`) that emit or aggregate activity data.
 - **`InflationPool`**: a pre-funded TNT budget that can distribute TNT based on recorded metrics.
-- **`ServiceFeeDistributor`**: distributes the restaker share of service fees and exposes USD-weighted exposure views for restaker inflation.
+- **`ServiceFeeDistributor`**: distributes the staker share of service fees and exposes USD-weighted exposure views for staker inflation.
 
 ## What Gets Recorded
 
@@ -24,15 +24,15 @@ Depending on what is configured on-chain, the protocol can record:
 - **Operator liveness**: heartbeats for active services.
 - **Slashing**: executed slash events (and the slashed amount).
 
-## Restaker “Exposure” Scoring
+## Staker “Exposure” Scoring
 
-For restaker rewards funded by `InflationPool`, exposure is **computed at distribution time**:
+For staker rewards funded by `InflationPool`, exposure is **computed at distribution time**:
 
 - `InflationPool.distributeEpochWithServices` queries `ServiceFeeDistributor.getOperatorServiceUsdExposure`.
 - Exposure uses the same security requirements and commitments that gate service-fee payouts.
 - If a price oracle is configured, the exposure is normalized in USD terms; otherwise it falls back to raw amounts.
 
-This avoids storing per-delegator exposure metrics on-chain and keeps restaker inflation aligned with the same exposure model used for fees.
+This avoids storing per-delegator exposure metrics on-chain and keeps staker inflation aligned with the same exposure model used for fees.
 
 ## Heartbeats and QoS
 
@@ -47,3 +47,10 @@ Heartbeats do not automatically slash an operator by themselves; slashing requir
 ## Important Note on Budgets
 
 Merit-based rewards only exist if `InflationPool` is funded with TNT. If it has a zero balance, there is nothing to distribute—even if metrics are recorded.
+
+## Source Contracts (GitHub)
+
+- [`TangleMetrics.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/TangleMetrics.sol)
+- [`InflationPool.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/InflationPool.sol)
+- [`ServiceFeeDistributor.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/ServiceFeeDistributor.sol)
+- [`OperatorStatusRegistry.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/OperatorStatusRegistry.sol)

@@ -1,5 +1,8 @@
 # Debugging Blueprints
 
+CLI source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/cli
+
+
 Blueprints can be deployed to multiple different [sources](/developers/deployment/sources/introduction), with each one
 having its own constraints. The CLI has commands to test your blueprint in these environments, assuming your machine is
 capable of hosting them, see [requirements](/operators/manager/requirements).
@@ -9,7 +12,6 @@ Supported spawn methods:
 - `native` (no-vm)
 - `vm`
 - `container`
-- `tee` (WIP)
 
 Note that in any case, the commands need to be run at the root of the blueprint's directory, as the CLI will read the
 generated `blueprint.json`.
@@ -77,13 +79,6 @@ And its status with:
 ```shell
 $ kubectl describe pod service -n blueprint-manager
 ```
-
-# TEE Debugging
-
-See the [requirements](/operators/manager/requirements#tee-sources-wip-linux-only)
-
-1. Create a Docker image for your blueprint, see [Container Debugging](#container-debugging)
-2. TODO
 
 [blueprint template]: https://github.com/tangle-network/blueprint-template
 [Dockerfile]: https://github.com/tangle-network/blueprint-template/blob/main/Dockerfile

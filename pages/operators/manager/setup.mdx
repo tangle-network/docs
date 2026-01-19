@@ -1,5 +1,8 @@
 # Blueprint Manager Setup
 
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/manager
+
+
 This page covers the operator flow for configuring and running the Blueprint Manager against Tangle's EVM protocol.
 
 ## 1) Create a settings file
@@ -10,7 +13,7 @@ The manager reads protocol addresses (and optional service scope) from `settings
 cat > settings.env <<'EOF'
 BLUEPRINT_ID=123
 TANGLE_CONTRACT=0x...
-RESTAKING_CONTRACT=0x...
+STAKING_CONTRACT=0x...
 STATUS_REGISTRY_CONTRACT=0x...
 # SERVICE_ID=456 # optional; omit to follow all activations
 EOF

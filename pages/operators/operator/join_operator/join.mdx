@@ -1,38 +1,65 @@
 ## Operators
 
-Operators are service providers who restake assets to run blueprint services. Restaking gives customers and developers an enforceable security boundary (exposure + slashing) around off-chain work.
+Operators are service providers who stake assets to run blueprint services. Staking gives customers and developers an enforceable security boundary (exposure + slashing) around off-chain work.
 
 ### Joining as an Operator
 
-This page covers **restaking-layer** operator registration (becoming an active operator in `MultiAssetDelegation`). You must also register for each blueprint you want to operate in the core protocol.
+This page covers operator onboarding for Tangle v2. You need to:
 
-- Full guide: [Operator Onboarding](/operators/onboarding)
+1. Register with the staking contract (self-stake).
+2. Register for each blueprint you intend to operate.
+3. Run the Blueprint Manager to execute jobs.
 
-### Step 1: Prepare an EVM wallet
+- Next: [Blueprint Manager](/operators/manager/introduction)
 
-- Use an EVM wallet (e.g., MetaMask/Rabby) and ensure you’re connected to the correct EVM chain where Tangle is deployed.
-- Ensure you have enough balance to cover the operator self-stake and gas.
+### Step 1: Install the CLI and prepare a keystore
 
-### Step 2: Register as an Operator
+Install `cargo-tangle` and create/import an ECDSA key:
 
-Operator registration is performed by calling the restaking contract’s `registerOperator()` function and sending at least the required **self-stake**.
+- [CLI installation](/developers/cli/installation)
+- [Key management](/developers/cli/keys)
 
-Use Foundry’s `cast`:
+### Step 2: Register as a staking operator
+
+Use the CLI to stake and register in `MultiAssetDelegation` (amount is in wei of the configured bond asset):
 
 ```bash
-# Set these for your deployment
-export RPC_URL="https://..."
-export PRIVATE_KEY="0x..."
-export RESTAKING_CONTRACT="0x..." # MultiAssetDelegation contract
-
-# Read the minimum operator self-stake (native asset)
-cast call "$RESTAKING_CONTRACT" "minOperatorStake()(uint256)" --rpc-url "$RPC_URL"
-
-# Register (send at least the minOperatorStake as value)
-cast send "$RESTAKING_CONTRACT" "registerOperator()" \
-  --rpc-url "$RPC_URL" \
-  --private-key "$PRIVATE_KEY" \
-  --value "<STAKE_AMOUNT_WEI>"
+cargo tangle operator register \
+  --http-rpc-url https://... \
+  --ws-rpc-url wss://... \
+  --keystore-path ./keystore \
+  --tangle-contract 0x... \
+  --staking-contract 0x... \
+  --status-registry-contract 0x... \
+  --amount <STAKE_AMOUNT_WEI>
 ```
 
-If successful, the transaction emits `OperatorRegistered(operator, stake)`.
+The stake amount must meet the minimum configured for the enabled asset. Contract addresses are listed on
+[Network Parameters](/network/network-parameters).
+
+### Step 3: Register for a blueprint
+
+Register your operator in the core protocol for a specific blueprint ID:
+
+```bash
+cargo tangle blueprint register \
+  --http-rpc-url https://... \
+  --ws-rpc-url wss://... \
+  --keystore-path ./keystore \
+  --tangle-contract 0x... \
+  --staking-contract 0x... \
+  --status-registry-contract 0x... \
+  --blueprint-id 123 \
+  --rpc-endpoint "https://operator.example.com" \
+  --registration-inputs ./registration.tlv
+```
+
+- Repeat this step for each blueprint you want to serve.
+- `--rpc-endpoint` is optional and publishes your operator RPC address.
+- `--registration-inputs` is required only if the blueprint expects extra registration payloads.
+
+### Step 4: Run the Blueprint Manager
+
+Start the runtime that watches for service activations and executes jobs:
+
+- [Blueprint Manager setup](/operators/manager/setup)

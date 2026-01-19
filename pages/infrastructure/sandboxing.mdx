@@ -1,0 +1,12 @@
+# Sandboxing and Safety
+
+Every workload runs inside an isolated sandbox. This protects the host, the operator, and the customer while making agent behavior reviewable.
+
+## Safety Principles
+
+- **Isolation by default**: Each session runs inside its own sandbox boundary.
+- **Explicit permissions**: Tools, domains, and data access are granted by policy and allowlists.
+- **Resource limits**: Hard ceilings and queue limits prevent runaway workloads.
+- **Auditability**: Event streams and metadata make execution reviewable.
+
+These guarantees are the baseline for delegating real work to agents.

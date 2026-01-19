@@ -9,7 +9,7 @@ Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/ISe
 
 ### IServiceFeeDistributor
 
-Tracks service-fee payouts to restakers across payment tokens
+Tracks service-fee payouts to stakers across payment tokens
 
 _Receives delegation-change hooks from MultiAssetDelegation and fee-distribution calls from Tangle._
 
@@ -27,7 +27,7 @@ function distributeServiceFee(uint64 serviceId, uint64 blueprintId, address oper
 function distributeInflationReward(uint64 serviceId, uint64 blueprintId, address operator, address paymentToken, uint256 amount) external payable
 ```
 
-Distribute inflation-funded restaker rewards using service exposure weights
+Distribute inflation-funded staker rewards using service exposure weights
 
 _Intended for InflationPool; rewards are paid in the provided token (TNT)._
 

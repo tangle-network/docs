@@ -1,0 +1,21 @@
+# Architecture
+
+The runtime is split into an orchestrator and execution sidecars so workloads stay isolated while coordination stays flexible.
+
+## Core Components
+
+- **Orchestrator**: Accepts run requests, validates policy, selects hosts, and manages sidecar lifecycle.
+- **Session gateway**: Streams events over SSE, buffers for replay, and handles backpressure and connection state.
+- **Execution sidecars**: Run agent sessions inside sandboxes, enforce tool access, and emit message/tool/file events.
+- **Host drivers and agents**: Track host health, capacity, and metrics across local or pooled hosts.
+- **Autoscaling and host pools (optional)**: Promote standby hosts and trigger provisioning through a webhook.
+- **Observability layer**: Exposes metrics and health endpoints and preserves execution metadata.
+
+This architecture keeps workloads portable while maintaining consistent safety guarantees.
+
+## Operational Traits
+
+- **Multi-provider backends**: Select providers behind consistent policy gates.
+- **Capacity-aware placement**: Allocate based on host health and resource limits.
+- **Resilient streams**: Event buffering and replay support intermittent connections.
+- **Policy-first execution**: Every task is validated before it runs.

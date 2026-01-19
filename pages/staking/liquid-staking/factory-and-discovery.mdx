@@ -1,0 +1,27 @@
+# Factory and Discovery
+
+`LiquidDelegationFactory` deploys vaults and provides discovery helpers. It creates **one vault per (operator, asset, blueprint selection)** and prevents duplicates.
+
+## Create a Vault
+
+- `createVault(operator, asset, blueprintIds)`
+- `createAllBlueprintsVault(operator, asset)` for the All selection mode
+
+The factory will revert if the operator is not active or the asset is not enabled in `MultiAssetDelegation`.
+
+## Find Existing Vaults
+
+- `computeVaultKey(operator, asset, blueprintIds)` returns a deterministic key.
+- `getVault(operator, asset, blueprintIds)` returns the vault address for that configuration.
+- `getOperatorVaults(operator)` lists all vaults for an operator.
+- `getAssetVaults(asset)` lists all vaults for an asset.
+- `getAllVaults()` and `vaultCount()` expose a global view.
+
+## Token Names and Symbols
+
+Vaults generate metadata automatically:
+
+- **Name**: `Liquid Delegation {ASSET} Op-0x1234 {BP...}`
+- **Symbol**: `ld{ASSET}-0x1234-{BP...}`
+
+These strings are derived from the operator address, asset symbol, and blueprint selection mode.

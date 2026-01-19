@@ -13,19 +13,19 @@ Admin functions for Tangle protocol
 
 #### Functions
 
-#### setRestaking
+#### setStaking
 
 ```solidity
-function setRestaking(address restaking) external
+function setStaking(address staking) external
 ```
 
-Set the restaking module
+Set the staking module
 
 ##### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| restaking | address | The IRestaking implementation |
+| staking | address | The IStaking implementation |
 
 #### setTreasury
 
@@ -58,7 +58,7 @@ Set the payment split configuration
 #### paymentSplit
 
 ```solidity
-function paymentSplit() external view returns (uint16 developerBps, uint16 protocolBps, uint16 operatorBps, uint16 restakerBps)
+function paymentSplit() external view returns (uint16 developerBps, uint16 protocolBps, uint16 operatorBps, uint16 stakerBps)
 ```
 
 Get the current payment split

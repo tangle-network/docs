@@ -1,5 +1,8 @@
 # Runtime Requirements for the Blueprint Manager
 
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/manager
+
+
 Blueprints can be executed in multiple ways (see [Sources](/developers/deployment/sources/introduction)), with each requiring
 certain dependencies, and possibly hardware.
 
@@ -37,14 +40,6 @@ The requirements for running blueprints with [Container Sources](/developers/dep
 - [Docker]
 - The [Kata Containers] runtime
 
-## TEE Sources (WIP, **Linux Only**)
-
-The requirements for running blueprints with [TEE Sources](/developers/deployment/sources/tee) are:
-
-- [dstack VMM]
-- A compatible TEE environment (requirements vary by provider and hardware)
-- Container image build pipeline for your blueprint
-
 ## WASM Sources (WIP)
 
 The requirements for running blueprints with [WASM Sources](/developers/deployment/sources/wasm) are:
@@ -57,5 +52,4 @@ The requirements for running blueprints with [WASM Sources](/developers/deployme
 [Kubernetes]: https://kubernetes.io/
 [Docker]: https://www.docker.com/get-started/
 [Kata Containers]: https://katacontainers.io/
-[dstack VMM]: https://github.com/Dstack-TEE/dstack/tree/master?tab=readme-ov-file#-getting-started
 [Wasmtime]: https://wasmtime.dev/

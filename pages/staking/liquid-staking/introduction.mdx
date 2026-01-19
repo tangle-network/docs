@@ -1,0 +1,56 @@
+# Liquid Staking (Liquid Delegation Vaults)
+
+Liquid staking on Tangle lets stakers keep a transferable position while their assets secure operator-run services. It is implemented as ERC-7540 liquid delegation vaults that wrap the standard staking flow in `MultiAssetDelegation`.
+
+Each vault is tied to one operator, one asset, and one blueprint selection mode. Deposits are immediate, while redemptions are asynchronous and follow protocol exit delays.
+
+## Who This Is For
+
+- **Stakers** who want liquidity without exiting their staking position.
+- **Integrators** who want a tokenized staking position per operator and asset.
+- **Operators** who want a clean vault surface for delegators.
+
+## What Changes vs Direct Staking
+
+- **Liquid shares**: you hold ERC20 shares instead of a static delegation record.
+- **Fixed configuration**: operator + asset + blueprint selection is fixed per vault.
+- **Async exits**: redemptions use the protocol's unstake delays.
+
+<figure>
+  <img
+    src="/images/architecture/liquid-delegation-flow.svg"
+    alt="Liquid delegation vault flow"
+  />
+  <figcaption>
+    Liquid delegation vaults wrap protocol staking with transferable shares and
+    asynchronous exits.
+  </figcaption>
+</figure>
+
+## Rewards and Accounting
+
+Liquid delegation vaults manage delegation and redemption. Incentives and service-fee accounting are still tracked by the protocol. Because the vault is the delegator on-chain, accruals are attributed to the vault address.
+
+Reward claim surfaces live in the protocol:
+
+- **Service fees** are claimed through [`ServiceFeeDistributor.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/ServiceFeeDistributor.sol).
+- **TNT incentives** are claimed through [`RewardVaults.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/RewardVaults.sol).
+
+The vault does not automatically distribute those rewards to share holders; integrators need to wire a distribution path if they want reward pass-through.
+
+## Core Contracts (GitHub)
+
+- [`LiquidDelegationVault.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/LiquidDelegationVault.sol)
+- [`LiquidDelegationFactory.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/LiquidDelegationFactory.sol)
+- [`MultiAssetDelegation.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/MultiAssetDelegation.sol)
+
+## Related Interfaces (GitHub)
+
+- [`IERC7540.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IERC7540.sol)
+- [`IMultiAssetDelegation.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IMultiAssetDelegation.sol)
+
+## Next Steps
+
+- [How vaults and shares work](./vaults-and-shares.mdx)
+- [Staking flow and redemption](./staking-flow.mdx)
+- [Factory and discovery](./factory-and-discovery.mdx)

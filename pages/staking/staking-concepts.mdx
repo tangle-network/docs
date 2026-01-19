@@ -1,0 +1,37 @@
+# Staking Concepts
+
+This document introduces the core concepts for economic security on Tangle.
+
+## Key Roles
+
+- **Blueprint**: A reusable service template that defines interfaces, execution requirements, and expected outputs.
+- **Service Instance**: A live deployment of a Blueprint that runs on operators.
+- **Operator**: A node that runs service instances and earns fees for execution.
+- **Staker (Delegator)**: A participant who delegates assets to operators to back service execution.
+
+## Staking Flow
+
+1. **Deposit assets** into the staking contract (`MultiAssetDelegation`).
+2. **Delegate to an operator** and choose blueprint exposure:
+   - **`All`**: exposure to all blueprints the operator supports.
+   - **`Fixed`**: exposure to a specific set of blueprints.
+3. **Earn rewards** from service fees and optional TNT budgets.
+
+## Incentives and Fees
+
+- **Service fees** are paid by customers and split across developers, operators, stakers, and the protocol treasury.
+- **Optional TNT incentives** come from `InflationPool` when governance funds them.
+
+See [Incentives](/staking/incentives) for details.
+
+## Liquid Staking
+
+Liquid staking uses liquid delegation vaults to tokenize a delegation position into transferable shares. Each vault is tied to one operator, one asset, and one blueprint selection mode.
+
+See [Liquid Staking](/staking/liquid-staking/introduction) for the vault architecture and redemption flow.
+
+## Slashing and Security
+
+Operators can be slashed if they violate service requirements or fail to meet commitments. Stakers share in that risk based on their delegated exposure.
+
+Review risks before delegating or choosing exposure settings.

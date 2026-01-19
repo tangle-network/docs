@@ -1,0 +1,20 @@
+# Integrations
+
+The workbench is built to work with existing company systems. You can connect internal software, data sources, and operational tools so agents can act in context.
+
+## Typical Integrations
+
+- **Source control** for repositories and code review workflows
+- **Ticketing and task systems** for structured work intake
+- **Data sources** for retrieval and analysis
+- **Internal APIs** for operational automation
+
+Integrations are governed by profiles and policies, so the agent only has access to what it needs.
+
+## Tool Servers And Gateways
+
+Advanced integrations can be exposed as tool servers. Profiles can allowlist local or remote servers, attach headers or environment variables, and set timeouts. This keeps sensitive systems behind explicit gates while still enabling powerful workflows.
+
+## Design Principle
+
+Integrations should be explicit and scoped. If a tool is not required for a workflow, it should not be enabled.

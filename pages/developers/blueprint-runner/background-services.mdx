@@ -6,7 +6,10 @@ import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
 # Background Services
 
-Background services are optional components in the [Blueprint Runner](/developers/blueprint-runner/introduction) architecture that run continuously to support the operation of your Actively Validated Service (AVS). This document explains how background services work, how to configure them, and best practices for implementation.
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/runner
+
+
+Background services are optional components in the [Blueprint Runner](/developers/blueprint-runner/introduction) architecture that run continuously to support the operation of your blueprint. This document explains how background services work, how to configure them, and best practices for implementation.
 
 ## What are Background Services?
 
@@ -40,7 +43,7 @@ Background services are typically configured in the `main.rs` file of your Bluep
 The only requirement for a background service is that it implements the `BackgroundService` trait:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/a9860d2e3a161af63a75d6d800f662d303e92e5b/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
+  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
   fromLine={23}
   toLine={34}
   title="Defining a Background Service"
@@ -49,7 +52,7 @@ The only requirement for a background service is that it implements the `Backgro
 With a background service defined, it is passed into the Blueprint Runner's builder as producers and consumers are:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/7774ea42c4d3ec3ff7e170626de3ddce511d1f2f/examples/incredible-squaring/incredible-squaring-bin/src/main.rs"
+  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring/incredible-squaring-bin/src/main.rs"
   fromLine={36}
   toLine={67}
   title="Adding a Background Service to the Blueprint Runner"

@@ -1,169 +1,48 @@
-# Testing Multi-node Blueprints
+# Testing Multi-node P2P Blueprints
 
-This guide explains how to test blueprints that require multiple nodes for distributed computation, such as threshold cryptography protocols or consensus protocols. We'll walk through setting up a test environment and running multi-node tests using our SDK's testing utilities.
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/networking
 
-## Overview
+When you build multi-operator protocols, the networking test utilities let you spin up multiple libp2p nodes and verify
+handshakes and message flow without running a full chain.
 
-When developing multi-node blueprints, testing requires simulating a network of nodes that can communicate and coordinate with each other. Our SDK provides testing utilities that make it easy to:
-
-- Set up a simulated multi-node network environment
-- Configure individual nodes with custom handlers
-- Submit jobs and verify results across nodes
-- Test distributed protocols and consensus mechanisms
-
-## Test Environment Setup
-
-### Prerequisites
-
-First, include the necessary testing utilities in your project:
+## Example: Multi-node handshake + message
 
 ```rust
-use blueprint_sdk::testing::utils::tangle::TangleTestHarness;
-use blueprint_sdk::testing::utils::harness::TestHarness;
-use blueprint_sdk::testing::tempfile;
-use blueprint_sdk::logging;
-```
+use blueprint_sdk::crypto::k256::K256Ecdsa;
+use blueprint_sdk::networking::service_handle::NetworkServiceHandle;
+use blueprint_sdk::networking::test_utils::{create_whitelisted_nodes, setup_log, wait_for_all_handshakes};
+use blueprint_sdk::networking::types::MessageRouting;
+use std::time::Duration;
 
-### Basic Setup
+#[tokio::test]
+async fn test_p2p_protocol() {
+    setup_log();
 
-1. **Initialize Logging and Error Handling**:
+    // Create 3 nodes that trust the same whitelist.
+    let mut nodes = create_whitelisted_nodes::<K256Ecdsa>(3, "test-net", "sum-test", false);
 
-```rust
-logging::setup_log();
-```
-
-2. **Create Test Harness**:
-
-```rust
-let tmp_dir = tempfile::TempDir::new()?;
-let harness = TangleTestHarness::setup(tmp_dir).await?
-```
-
-## Setting Up Multi-node Services
-
-### Node Configuration
-
-1. **Initialize Test Environment**:
-
-```rust
-// N specifies number of nodes (e.g. N = 3)
-let (mut test_env, service_id, blueprint_id) = harness.setup_services::<N>(false).await?;
-test_env.initialize().await?;
-```
-
-2. **Configure Individual Nodes**:
-
-```rust
-let handles = test_env.node_handles().await;
-for handle in handles {
-// Get node configuration
-let config = handle.gadget_config().await;
-// Initialize node-specific context
-let blueprint_ctx = YourContext::new(config.clone()).await?;
-// Add job handlers
-let job_handler = YourJobHandler::new(&config, blueprint_ctx.clone()).await?;
-handle.add_job(job_handler).await;
-}
-```
-
-3. **Allow Time for Network Setup**:
-
-```rust
-// Wait for network handshakes
-tokio::time::sleep(std::time::Duration::from_secs(10)).await;
-```
-
-4. **Start the Environment**:
-
-```rust
-test_env.start().await?;
-```
-
-## Running Tests
-
-### Submitting Jobs
-
-To test your blueprint's functionality, submit jobs and verify their results:
-
-```rust
-// Submit a job with arguments
-let job = harness
-    .submit_job(
-    service_id,
-    JOB_ID,
-    vec![InputValue::Uint16(2)] // Example job argument
-)
-.await?;
-logging::info!("Submitted job {JOB_ID} with service ID {service_id}");
-```
-
-### Verifying Results
-
-Wait for job completion and verify the results:
-
-```rust
-// Wait for job execution
-let results = harness.wait_for_job_execution(service_id, job).await?;
-assert_eq!(results.service_id, service_id);
-
-// Verify outputs
-if !expected_outputs.is_empty() {
-assert_eq!(
-    results.result.len(),
-    expected_outputs.len(),
-    "Number of outputs doesn't match expected"
-);
-
-// Add more verification logic as needed...
-}
-```
-
-## Best Practices
-
-1. **Error Handling**: Always implement proper error handling and logging to diagnose test failures.
-
-2. **Network Delays**: Include appropriate delays for network initialization and handshakes.
-
-3. **Verification**: Thoroughly verify all job outputs against expected results.
-
-4. **Cleanup**: Use temporary directories that are automatically cleaned up after tests.
-
-5. **Logging**: Implement comprehensive logging to track test progress and debug issues.
-
-## Example: Complete Test Structure
-
-Here's a complete example showing how to structure a multi-node test:
-
-```rust
-#[tokio::test(flavor = "multi_thread")]
-async fn test_blueprint() -> color_eyre::Result<()> {
-    logging::setup_log();
-    let tmp_dir = tempfile::TempDir::new()?;
-    let harness = TangleTestHarness::setup(tmp_dir).await?;
-
-    // Initialize nodes
-    let (mut test_env, service_id, ) = harness.setup_services::<3>(false).await?;
-    test_env.initialize().await?;
-
-    // Configure nodes
-    let handles = test_env.node_handles().await;
-    for handle in handles {
-        // Add handlers
-        // ...
+    let mut handles = Vec::new();
+    for node in nodes.iter_mut() {
+        handles.push(node.start().await.expect("start node"));
     }
 
-    // Wait for network setup
-    tokio::time::sleep(std::time::Duration::from_secs(10)).await;
-    test_env.start().await?;
+    let mut handle_refs: Vec<&mut NetworkServiceHandle<K256Ecdsa>> = handles.iter_mut().collect();
+    wait_for_all_handshakes(handle_refs.as_mut_slice(), Duration::from_secs(10)).await;
 
-    // Run test jobs
-    let job = harness.submit_job(service_id, JOB_ID, vec![/ args /]).await?;
-    let results = harness.wait_for_job_execution(service_id, job).await?;
-
-    // Verify results
-    assert_eq!(results.service_id, service_id);
-
-    // Additional verification...
-    Ok(())
+    let routing = MessageRouting {
+        message_id: 1,
+        round_id: 0,
+        sender: handles[0].local_peer_id,
+        recipient: None,
+    };
+    handles[0]
+        .send(routing, b"hello world".to_vec())
+        .expect("send message");
 }
 ```
+
+## Tips
+
+- Use `create_whitelisted_nodes` to keep key management consistent across your test network.
+- `wait_for_all_handshakes` gives deterministic readiness checks before you start sending messages.
+- If you need to inspect traffic, read from `handle.next_protocol_message()` in each node loop.

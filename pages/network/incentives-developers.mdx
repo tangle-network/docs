@@ -1,19 +1,27 @@
 # Developer Incentives
 
-Blueprint developers earn revenue when customers instance and run their services. Incentives come from:
+Blueprint developers earn revenue when customers instantiate and run their services. Incentives come from:
 
 1. **Service fee revenue share** on every instance of your blueprint.
-2. **Protocol developer rewards** (paid in TNT from a pre-funded pool, if enabled).
+2. **Optional TNT rewards** (pre-funded, if governance enables `InflationPool`).
 
 ## Service Fees
 
-For each service payment, the protocol sends the **developer portion** to the blueprint owner by default. A blueprint’s service manager can optionally return a different payout address (for example, to route revenue into a multisig, splitter, or DAO treasury).
+For each service payment, the protocol sends the **developer portion** to the blueprint owner by default. A blueprint’s service manager can return a different payout address (for example, to route revenue into a multisig, splitter, or DAO treasury).
 
-The default protocol split is **20% developer / 20% protocol / 40% operators / 20% restakers** (governance configurable).
+The default protocol split is **20% developer / 20% protocol / 40% operators / 20% stakers** (governance configurable).
 
-## Protocol Developer Rewards (TNT)
+## Optional TNT Rewards
 
 If the protocol is running `InflationPool` incentives, developers can earn additional TNT based on on-chain activity metrics (e.g., blueprints created, services created, jobs executed, and fees generated). These rewards are claimable from `InflationPool`.
+
+## Where This Lives in Code
+
+- `InflationPool`: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/InflationPool.sol
+- `TangleMetrics`: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/TangleMetrics.sol
+- `Payments` (fee split + payouts): https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Payments.sol
+
+For a readable breakdown and links to contracts, see [Rewards Architecture](/developers/system-architecture/rewards).
 
 ## Design Tips
 
@@ -21,4 +29,4 @@ If the protocol is running `InflationPool` incentives, developers can earn addit
 - Use security requirements and operator commitments to express what “secure enough” means for your service.
 - Provide observability where possible (heartbeats and optional QoS metrics) to help operators and customers assess performance.
 
-See [Metrics and Scoring](/network/metrics-and-scoring) and [Slashing](/network/slashing).
+See [Metrics and Scoring](/network/metrics-and-scoring).

@@ -1,0 +1,61 @@
+# Staking Flow
+
+Liquid staking uses immediate deposits and asynchronous redemptions.
+
+## Deposit and Mint
+
+1. Approve the vault to spend the asset.
+2. Call `deposit(assets, receiver)` or `mint(shares, receiver)`.
+3. The vault deposits into `MultiAssetDelegation` and delegates to the configured operator and blueprint selection.
+4. ERC20 vault shares are minted to the receiver.
+
+Notes:
+
+- Vaults currently use the ERC20 deposit path. Native-asset unwrapping is not enabled yet.
+- The vault does not expose lock multipliers; deposits are unlocked by default.
+
+## Redeem (Asynchronous)
+
+1. Call `requestRedeem(shares, controller, owner)`. Shares are burned, an unstake is scheduled, and a request ID is returned.
+2. Track status with `pendingRedeemRequest` and `claimableRedeemRequest`.
+3. After the delay window, call `redeem(shares, receiver, controller)` to receive the underlying assets.
+
+The delay is the maximum of `delegationBondLessDelay` and `leaveDelegatorsDelay` from `MultiAssetDelegation`.
+
+## Delay Reference
+
+Delays are expressed in **rounds**. To convert to time, multiply by `roundDuration`.
+
+| Delay | Source | What It Controls |
+| ----- | ------ | ---------------- |
+| `delegationBondLessDelay` | `MultiAssetDelegation` | Minimum rounds before a redeem request is claimable. |
+| `leaveDelegatorsDelay` | `MultiAssetDelegation` | Additional delay before exits finalize (vault uses the max of both). |
+| `roundDuration` | `MultiAssetDelegation` | Length of a round; used to translate delays into wall-clock time. |
+
+See [Protocol Parameters](/network/network-parameters) for current defaults.
+
+## Controller Permissions
+
+Only the owner or an approved operator can request or redeem on a controller. Use `setOperator` to allow another address to act on your behalf.
+
+## Synchronous Withdrawals Are Disabled
+
+`withdraw` and `requestDeposit` revert with `AsyncRequired`. Always use the async flow.
+
+## Lifecycle Example
+
+1. A staker deposits 1,000 USDC into a vault for `Operator A` (All mode). The vault mints 1,000 shares.
+2. The vault delegates to `Operator A` through `MultiAssetDelegation` with All blueprint exposure.
+3. `Operator A` runs services. If fee and incentive accounting is enabled, it is attributed to the vault address.
+4. A slash against `Operator A` reduces the vault’s backing assets. Each share now redeems for less than 1 USDC.
+5. The staker requests redemption for 1,000 shares and waits out the delay window.
+6. After the delay, the staker redeems and receives the reduced underlying amount.
+
+## Reward Claim Paths (Protocol-Level)
+
+Reward claims are not part of the vault interface. They live in protocol contracts and are tied to the **vault address** as the delegator:
+
+- **Service fees**: `ServiceFeeDistributor.claimAll(token)` or `claimFor(token, operator, asset)`
+- **TNT incentives**: `RewardVaults.claimDelegatorRewards(asset, operator)`
+
+If you want rewards to flow to share holders, you need an explicit distribution mechanism on top of the vault.

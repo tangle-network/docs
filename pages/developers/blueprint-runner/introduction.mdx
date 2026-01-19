@@ -6,7 +6,10 @@ import CardGrid from "../../../components/CardGrid.tsx"
 
 # Blueprint Runners
 
-Blueprint Runners are the core orchestration components that execute Tangle Blueprints. They manage the lifecycle of jobs, coordinate between different components, and ensure the reliable execution of your Actively Validated Service (AVS).
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/runner
+
+
+Blueprint Runners are the core orchestration components that execute Tangle Blueprints. They manage the lifecycle of jobs, coordinate between different components, and ensure reliable execution of your blueprint service.
 
 ## Getting Started
 
@@ -79,7 +82,7 @@ The architecture of a Blueprint Runner consists of the following components:
 
 ## Blueprint Runner Lifecycle
 
-The Blueprint Runner follows a well-defined lifecycle to ensure reliable execution of your AVS:
+The Blueprint Runner follows a well-defined lifecycle to ensure reliable execution of your blueprint:
 
 1. **Initialization**: The Blueprint Runner loads configuration, sets up components, and establishes connections.
 2. **Event Processing**: [Producers](/developers/blueprint-runner/producers) listen for events and convert them into job inputs.

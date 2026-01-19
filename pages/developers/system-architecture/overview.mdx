@@ -7,16 +7,16 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
 # System Architecture
 
-Tangle is an EVM protocol for instantiating and operating **services (“blueprints”)** secured by restaked capital. The system is intentionally split into:
+Tangle is an EVM protocol for instantiating and operating **services (“blueprints”)** secured by staked capital. The system is intentionally split into:
 
-- **On-chain contracts** (service lifecycle, payments, restaking, incentives, slashing)
+- **On-chain contracts** (service lifecycle, payments, staking, incentives, slashing)
 - **Off-chain runtime** (operators running blueprint managers/runners that react to events and submit results)
 
 ## Roles and How They Engage
 
 - **Blueprint developers** publish blueprint definitions and optionally run a service manager contract.
 - **Operators** register for blueprints, run the off-chain runtime, and submit results + heartbeats.
-- **Restakers / delegators** delegate assets to operators and (optionally) constrain delegation to specific blueprints.
+- **Stakers / delegators** delegate assets to operators and (optionally) constrain delegation to specific blueprints.
 - **Customers** create services (by request/approve or by signed quotes) and submit jobs.
 
 ## End-to-End Flow (High Level)
@@ -27,7 +27,7 @@ Tangle is an EVM protocol for instantiating and operating **services (“bluepri
    - **Request/approve** (customer specifies operators + security requirements), or
    - **RFQ/quotes** (operators sign quotes and the customer creates service from those quotes).
 4. Customers submit **jobs**; operators submit **results**.
-5. Protocol distributes **fees** (developer/protocol/operator/restakers) and tracks **metrics**.
+5. Protocol distributes **fees** (developer/protocol/operator/stakers) and tracks **metrics**.
 6. Operators submit **heartbeats**; authorized parties can propose **slashes** with a dispute window.
 
 ## Code Map
@@ -36,16 +36,16 @@ Tangle is an EVM protocol for instantiating and operating **services (“bluepri
 
 | Component                | Responsibility                                                       | Code                                                                                                |
 | ------------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `Tangle`                 | Facet router (dispatches calls by selector)                          | https://github.com/tangle-network/tnt-core/blob/feature/modular-protocol/src/v2/Tangle.sol                                |
-| `Tangle*Facet` modules   | Public protocol surface (blueprints/services/jobs/payments/quotes/…) | https://github.com/tangle-network/tnt-core/tree/feature/modular-protocol/src/v2/facets/tangle                             |
-| `core/*` modules         | Shared implementations used by facets                                | https://github.com/tangle-network/tnt-core/tree/feature/modular-protocol/src/v2/core                                      |
-| `MultiAssetDelegation`   | Restaking + delegation + exits + slashing application                | https://github.com/tangle-network/tnt-core/blob/feature/modular-protocol/src/v2/restaking/MultiAssetDelegation.sol        |
-| `ServiceFeeDistributor`  | Restaker fee distribution (USD-weighted, per-asset commitments)      | https://github.com/tangle-network/tnt-core/blob/feature/modular-protocol/src/v2/rewards/ServiceFeeDistributor.sol         |
-| `OperatorStatusRegistry` | Heartbeats, QoS signals, and optional metric forwarding              | https://github.com/tangle-network/tnt-core/blob/feature/modular-protocol/src/v2/restaking/OperatorStatusRegistry.sol      |
-| `TangleMetrics`          | Lightweight activity recorder used by incentives                     | https://github.com/tangle-network/tnt-core/blob/feature/modular-protocol/src/v2/rewards/TangleMetrics.sol                 |
-| `TangleMigration`        | TNT legacy-chain migration claim (Merkle + SP1/ZK)                   | https://github.com/tangle-network/tnt-core/blob/feature/modular-protocol/packages/migration-claim/src/TangleMigration.sol |
+| `Tangle`                 | Facet router (dispatches calls by selector)                          | https://github.com/tangle-network/tnt-core/blob/v2/src/v2/Tangle.sol                                |
+| `Tangle*Facet` modules   | Public protocol surface (blueprints/services/jobs/payments/quotes/…) | https://github.com/tangle-network/tnt-core/tree/v2/src/v2/facets/tangle                             |
+| `core/*` modules         | Shared implementations used by facets                                | https://github.com/tangle-network/tnt-core/tree/v2/src/v2/core                                      |
+| `MultiAssetDelegation`   | Staking + delegation + exits + slashing application                 | [MultiAssetDelegation.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/MultiAssetDelegation.sol)      |
+| `ServiceFeeDistributor`  | Staker fee distribution (USD-weighted, per-asset commitments)      | https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/ServiceFeeDistributor.sol         |
+| `OperatorStatusRegistry` | Heartbeats, QoS signals, and optional metric forwarding              | [OperatorStatusRegistry.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/OperatorStatusRegistry.sol)    |
+| `TangleMetrics`          | Lightweight activity recorder used by incentives                     | https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/TangleMetrics.sol                 |
+| `TangleMigration`        | TNT legacy-chain migration claim (Merkle + SP1/ZK)                   | https://github.com/tangle-network/tnt-core/blob/v2/packages/migration-claim/src/TangleMigration.sol |
 
-### Off-Chain (Blueprint SDK)
+### Off-Chain ([Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2))
 
 | Component                    | Responsibility                                                      | Code                                                                                  |
 | ---------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
@@ -58,7 +58,7 @@ Tangle is an EVM protocol for instantiating and operating **services (“bluepri
 The protocol is exposed as a set of **facets** registered on the `Tangle` router. The router maps function selectors to facet implementations and delegates calls.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/feature/modular-protocol/src/v2/Tangle.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/Tangle.sol"
   fromLine={1}
   toLine={95}
   title="Tangle.sol: facet router + selector registration"

@@ -210,7 +210,7 @@ _Validate service configuration, operator selection, payment amount_
 #### onApprove
 
 ```solidity
-function onApprove(address operator, uint64 requestId, uint8 restakingPercent) external payable
+function onApprove(address operator, uint64 requestId, uint8 stakingPercent) external payable
 ```
 
 Called when an operator approves a service request
@@ -221,7 +221,7 @@ Called when an operator approves a service request
 | ---- | ---- | ----------- |
 | operator | address | The approving operator |
 | requestId | uint64 | The request ID |
-| restakingPercent | uint8 | Percentage of stake committed to this service (0-100) |
+| stakingPercent | uint8 | Percentage of stake committed to this service (0-100) |
 
 #### onReject
 
@@ -651,6 +651,5 @@ _Called during operator registration to validate stake requirements_
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| useDefault | bool | True to use protocol default from restaking module |
+| useDefault | bool | True to use protocol default from staking module |
 | minStake | uint256 | Custom minimum stake amount (only used if useDefault=false) |
-

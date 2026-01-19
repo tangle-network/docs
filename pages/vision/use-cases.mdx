@@ -1,0 +1,39 @@
+# Use Cases
+
+Tangle supports AI-native products and infrastructure where work needs isolation, auditability, and reliable payments. These examples show how the workbench, sandbox runtime, and protocol fit together.
+
+## Agentic Software Engineering
+
+Run background agents that build features, refactor code, write tests, and open pull requests. Work stays isolated and reviewable.
+Good for: product teams using the workbench with strict review gates.
+Layers: workbench + runtime.
+
+## Evaluation and Governance Pipelines
+
+Execute large evaluation suites across prompts, models, and tools. Each run produces structured metrics so teams can track regressions and enforce policies.
+Good for: AI builders who need repeatable evaluations and policy enforcement.
+Layers: workbench + runtime.
+
+## Regulated and Sensitive Workflows
+
+Deploy AI workflows on protected data with strict isolation, resource limits, and audit logs. Outputs are verifiable and reviewable.
+Good for: regulated teams that require strong isolation and auditability.
+Layers: runtime + protocol (for paid operators).
+
+## Data and Knowledge Operations
+
+Use Blueprints to run extraction, transformation, labeling, and retrieval jobs. Operators provide compute while the protocol coordinates payments and accountability.
+Good for: teams turning knowledge work into reliable, reusable services.
+Layers: [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2) + protocol.
+
+## AI Ops and Reliability
+
+Operate autonomous monitoring, cost optimization, and incident response workflows. Operators are paid for uptime and performance, while services can enforce reliability targets.
+Good for: operators and infrastructure engineers running long-lived services.
+Layers: runtime + protocol.
+
+## Marketplace-Ready AI Services
+
+Package an agent workflow or infrastructure service as a Blueprint, publish it once, and let others instantiate it on demand. Payments flow to operators and developers based on usage.
+Good for: builders who want distribution without running their own infrastructure.
+Layers: [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2) + protocol.

@@ -6,6 +6,9 @@ import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
 # Producers
 
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/runner
+
+
 Producers are a key component of the [Blueprint Runner](/developers/blueprint-runner/introduction) architecture that capture events and prepare them for processing. This document explains how producers work, how to configure them, and how to implement them.
 
 ## What are Producers?
@@ -23,12 +26,18 @@ Producers are typically configured in the `main.rs` file of your Blueprint binar
 
 ### Basic Producer Setup
 
-First, you define the producer you want to use. For example, a `TangleProducer` that listens for finalized blocks on Tangle. After which, you pass the producer to the Blueprint Runner's builder.
+First, you define the producer you want to use. For example, a `TangleEvmProducer` that listens for `JobSubmitted` events on Tangle EVM. After which, you pass the producer to the Blueprint Runner's builder.
 
 ```rust
 let env = BlueprintEnvironment::load()?;
-let tangle_client = env.tangle_client().await?;
-let tangle_producer = TangleProducer::finalized_blocks(tangle_client.rpc_client.clone()).await?;
+let tangle_client = env.tangle_evm_client().await?;
+let service_id = env
+    .protocol_settings
+    .tangle_evm()?
+    .service_id
+    .ok_or_else(|| blueprint_sdk::Error::Other("No service ID configured".to_string()))?;
+let tangle_producer = TangleEvmProducer::new(tangle_client.clone(), service_id);
+let tangle_config = TangleEvmConfig::default();
 
 BlueprintRunner::builder(tangle_config, env)
     .router(router) // Assuming your router is already defined
@@ -47,19 +56,19 @@ These producers listen for events from a blockchain, such as smart contract even
 
 There are currently two built-in blockchain producers:
 
-#### Tangle Producer
+#### Tangle EVM Producer
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/7774ea42c4d3ec3ff7e170626de3ddce511d1f2f/crates/tangle-extra/src/producer/mod.rs"
-  fromLine={43}
-  toLine={84}
-  title="Tangle Producer Definition"
+  url="https://github.com/tangle-network/blueprint/blob/v2/crates/tangle-evm-extra/src/producer.rs"
+  fromLine={24}
+  toLine={86}
+  title="Tangle EVM Producer Definition"
 />
 
 #### EVM Polling Producer
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/7774ea42c4d3ec3ff7e170626de3ddce511d1f2f/crates/evm-extra/src/producer/polling.rs"
+  url="https://github.com/tangle-network/blueprint/blob/v2/crates/evm-extra/src/producer/polling.rs"
   fromLine={53}
   toLine={136}
   title="EVM Polling Producer Definition"
@@ -68,7 +77,7 @@ There are currently two built-in blockchain producers:
 ### Cron Jobs
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/7774ea42c4d3ec3ff7e170626de3ddce511d1f2f/crates/producers-extra/src/cron.rs"
+  url="https://github.com/tangle-network/blueprint/blob/v2/crates/producers-extra/src/cron.rs"
   fromLine={10}
   toLine={93}
   title="Cron Job Producer Definition"

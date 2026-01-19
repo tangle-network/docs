@@ -1,0 +1,47 @@
+# Architecture and Design Pillars
+
+Tangle ties together three layers most platforms separate: the workbench where work is created, the sandbox runtime where it executes, and the protocol that pays the operators who run it.
+
+<figure>
+  <img
+    src="/images/architecture/autonomous-work-loop.svg"
+    alt="Autonomous work loop"
+  />
+  <figcaption>
+    Autonomous work loop: workbench -> sandbox runtime -> protocol (payments +
+    evaluation).
+  </figcaption>
+</figure>
+
+**Flow:** design -> execute -> evaluate -> pay. Each run generates evaluation data that feeds the next run.
+
+## What Runs Where
+
+| Layer | Runs here | Examples |
+| --- | --- | --- |
+| Workbench | Human and agent collaboration | Workflows, profiles, simulations, reviews |
+| Sandbox runtime | Executed tasks and tools | Agent sessions, tool calls, file edits |
+| Protocol | Coordination and settlement | Service registry, operator payments, staking, incentives |
+
+## System Architecture
+
+**1) Execution Layer**  
+Sandboxed runtimes with isolation, resource limits, and audit logs. This is where tasks actually run.
+
+**2) Protocol Layer**  
+The coordination plane. It handles operator discovery, payment routing, and incentive enforcement.
+
+**3) Experience Layer**  
+The agentic workbench and [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2). This is where teams design workflows, run simulations, and ship services.
+
+## Trust and Delegation
+
+Autonomous work only scales when delegation is safe. Tangle enforces policy gates before execution, emits logs and execution metadata for every run, and keeps results reviewable so teams can decide what reaches production.
+
+## Design Pillars
+
+- **Isolation first**: Every workload runs inside a sandbox with explicit permissions.
+- **Verifiable outcomes**: Logs, metadata, and evaluations make results auditable.
+- **Composable services**: Blueprints define reusable services that can be instantiated on demand.
+- **Economic alignment**: Operators and developers earn based on usage and reliability.
+- **Developer leverage**: Workflows are testable, repeatable, and easy to ship.

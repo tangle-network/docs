@@ -1,17 +1,17 @@
 ---
-title: IRestaking
+title: IStaking
 description: Auto-generated Solidity API reference.
 ---
 
-# IRestaking
+# IStaking
 
-Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IRestaking.sol
+Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IStaking.sol
 
-### IRestaking
+### IStaking
 
-Abstract interface for restaking/shared security protocols
+Abstract interface for staking/shared security protocols
 
-_Implement this to integrate with native staking, EigenLayer, Symbiotic, etc.
+_Implement this to integrate with native staking, Symbiotic, or other staking systems.
 
 Design principles:
 - Minimal interface - only what Tangle core needs
@@ -304,4 +304,3 @@ event OperatorSlashed(address operator, uint64 serviceId, uint256 amount, bytes3
 ```
 
 Emitted when an operator is slashed
-

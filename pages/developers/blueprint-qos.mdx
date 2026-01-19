@@ -4,7 +4,10 @@ title: Quality of Service (QoS) Integration
 
 # Quality of Service (QoS) Integration Guide
 
-This guide explains how to integrate and use the Blueprint SDK's Quality of Service (QoS) system to add comprehensive observability, monitoring, and dashboard capabilities to any Blueprint. QoS provides unified metrics collection, log aggregation, heartbeat monitoring, and visualization through a cohesive interface.
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/qos
+
+
+This guide explains how to integrate and use the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2)'s Quality of Service (QoS) system to add comprehensive observability, monitoring, and dashboard capabilities to any Blueprint. QoS provides unified metrics collection, log aggregation, heartbeat monitoring, and visualization through a cohesive interface.
 
 ## Prerequisites
 
@@ -12,7 +15,7 @@ This guide explains how to integrate and use the Blueprint SDK's Quality of Serv
 - Familiarity with Tangle Network architecture
 - Basic knowledge of observability concepts (metrics, logging, monitoring)
 
-## QoS Overview
+## QoS Summary
 
 The Blueprint QoS system provides a complete observability stack:
 
@@ -22,7 +25,7 @@ The Blueprint QoS system provides a complete observability stack:
 - **Dashboards**: Creates Grafana visualizations automatically
 - **Server Management**: Optionally runs containerized instances of Prometheus, Loki, and Grafana
 
-The QoS system is designed to be added to any Blueprint type (Tangle, Eigenlayer, P2P, or Cron) as a background service.
+The QoS system is designed to be added to any Blueprint type (Tangle EVM, P2P, or Cron) as a background service.
 
 ## Integrating QoS into a Blueprint
 
@@ -43,9 +46,9 @@ async fn main() -> Result<(), blueprint_sdk::Error> {
     let heartbeat_consumer = Arc::new(MyHeartbeatConsumer::new());
 
     // Standard Blueprint runner setup with QoS
-    BlueprintRunner::builder(TangleConfig::default(), env)
+    BlueprintRunner::builder(TangleEvmConfig::default(), env)
         .router(Router::new()
-            .route(JOB_ID, handler.layer(TangleLayer))
+            .route(JOB_ID, handler.layer(TangleEvmLayer))
             .with_context(context))
         .producer(producer)
         .consumer(consumer)

@@ -1,68 +1,37 @@
 import Image from "next/image";
-import { FaWallet } from "react-icons/fa";
 import { GiPlatform, GiToken } from "react-icons/gi";
 import { GrNodes } from "react-icons/gr";
-import { MdApps, MdAppShortcut } from "react-icons/md";
-import { RiToolsLine } from "react-icons/ri";
 import { SiBlueprint } from "react-icons/si";
 import CallToActionCard from "./CallToActionCard";
 
 const getStartedCards = [
   {
-    icon: <SiBlueprint />,
-    title: "Get started building Blueprints",
+    icon: <GiPlatform />,
+    title: "Start in the agentic workbench",
     description:
-      "Tangle Network is a decentralized cloud infrastructure that allows users to deploy and monetize Blueprints across any blockchain ecosystem.",
-    link: "../developers/blueprints/introduction",
-  },
-  {
-    icon: <GiToken />,
-    title: "Restake TNT or other assets",
-    description:
-      "Restaking secures the actively validated services on Tangle, and earns rewards.",
-    link: "../restake/introduction",
+      "Create autonomous work with teammates and agents in a shared workspace.",
+    link: "/vibe/introduction",
   },
   {
     icon: <GrNodes />,
-    title: "Run a Node, Validator, or Service Operator",
+    title: "Run work in secure sandboxes",
     description:
-      "Noderunners can earn staking rewards, secure the network, and operators earn income from services.",
-    link: "../operators/introduction",
+      "Work executes in isolated runtimes with policies and limits.",
+    link: "/infrastructure/introduction",
   },
   {
-    icon: <GiPlatform />,
-    title: "Learn more about the network and platform",
+    icon: <GiToken />,
+    title: "Operate the runtime",
     description:
-      "Discover Tangle network's unique decentralized cloud infrastructure.",
-    link: "../network/overview",
-  },
-];
-
-const resourcesCards = [
-  {
-    icon: <FaWallet />,
-    title: "TNT, Wallets and More",
-    description: "Your source for Wallets, apps, staking and more.",
-    link: "/resources/resources",
+      "Host secure sandboxes and get paid through the protocol.",
+    link: "/operators/introduction",
   },
   {
-    icon: <RiToolsLine />,
-    title: "Developer Tools",
-    description: "RPCs, faucets, and block explorers.",
-    link: "/developers/endpoints",
-  },
-  {
-    icon: <MdAppShortcut />,
-    title: "Tangle DApp",
-    description: "Nominate your TNT at Tangle DApp",
-    link: "http://app.tangle.tools/",
-  },
-  {
-    icon: <MdApps />,
-    title: "Polkadot Apps",
+    icon: <SiBlueprint />,
+    title: "Build and publish Blueprints",
     description:
-      "For advanced interactions, Polkadot Apps supports Tangle Network.",
-    link: "https://polkadot.js.org/apps/?rpc=wss://rpc.tangle.tools#/explorer",
+      "Package services and workflows to run on the protocol.",
+    link: "/developers/blueprints/introduction",
   },
 ];
 
@@ -77,15 +46,17 @@ const LandingPage = () => {
               TANGLE DOCUMENTATION
             </p>
             <h1 className="text-3xl font-normal text-gray-900 dark:text-white md:text-3xl lg:text-5xl">
-              Your Guide to Tangle&apos;s{" "}
+              Tangle is the{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-blue-700">
-                Decentralized Cloud Infrastructure
-              </span>
+                shared operating layer
+              </span>{" "}
+              for autonomous work
             </h1>
             <p className="text-lg font-bold text-gray-700 md:font-normal lg:text-lg dark:text-gray-400">
-              Create and monetize Blueprints that deploy securely across any
-              blockchain ecosystem. Instance services on-demand using crypto
-              rails.
+              Teams and agents collaborate in shared workbenches or separate
+              ones, work runs in secure sandboxes, and the protocol pays the
+              operators who host the runtime. Workflows improve through agent
+              and task evaluations collected from each run.
             </p>
           </div>
 
@@ -104,6 +75,65 @@ const LandingPage = () => {
         {/* Horizontal Line */}
         <div className="relative mb-12 border-b border-gray-300 opacity-0 sm:opacity-100"></div>
 
+        {/* System Overview */}
+        <div className="container mb-12">
+          <h2 className="inline-flex mb-6 text-xl font-semibold text-gray-500 underline underline-offset-8 dark:text-white">
+            System Overview
+          </h2>
+          <p className="mb-6 text-base text-gray-700 dark:text-gray-400">
+            Teams and agents collaborate in shared workbenches or separate
+            ones, work runs in secure sandboxes, and the protocol pays the
+            operators who host the runtime.
+          </p>
+          <figure className="w-full">
+            <div className="relative w-full min-h-[280px]">
+              <Image
+                src="/images/architecture/autonomous-work-loop.svg"
+                alt="Autonomous work loop"
+                fill
+                sizes="(max-width: 1024px) 100vw, 80vw"
+              />
+            </div>
+            <figcaption className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+              Autonomous work loop: workbench -&gt; sandbox runtime -&gt;
+              protocol (payments + evaluation).
+            </figcaption>
+          </figure>
+        </div>
+
+        {/* What Runs Where */}
+        <div className="container mb-12">
+          <h2 className="inline-flex mb-6 text-xl font-semibold text-gray-500 underline underline-offset-8 dark:text-white">
+            What Runs Where
+          </h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+              <h3 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">
+                Workbench
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Workflows, profiles, simulations, and reviews.
+              </p>
+            </div>
+            <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+              <h3 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">
+                Sandbox Runtime
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Agent sessions, tool calls, and file edits.
+              </p>
+            </div>
+            <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+              <h3 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">
+                Protocol
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Service registry, operator payments, staking, and incentives.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Call-to-Action Cards Row */}
         <div className="container">
           <h2 className="inline-flex mb-10 text-xl font-semibold text-gray-500 underline underline-offset-8 dark:text-white">
@@ -112,26 +142,6 @@ const LandingPage = () => {
           <div className="relative flex flex-grow p-5 md:p-0">
             <div className="flex flex-col items-center flex-grow gap-5 mb-8 sm:flex-row">
               {getStartedCards.map((card, index) => (
-                <CallToActionCard
-                  key={index}
-                  icon={card.icon}
-                  title={card.title}
-                  description={card.description}
-                  link={card.link}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Resources Cards Row */}
-        <div className="container">
-          <h2 className="inline-flex mb-10 text-xl font-semibold text-gray-500 underline underline-offset-8 dark:text-white">
-            Resources
-          </h2>
-          <div className="relative flex flex-grow p-5 md:p-0">
-            <div className="flex flex-col items-center flex-grow gap-5 mb-8 sm:flex-row">
-              {resourcesCards.map((card, index) => (
                 <CallToActionCard
                   key={index}
                   icon={card.icon}
