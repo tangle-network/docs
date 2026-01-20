@@ -52,7 +52,7 @@ blueprint ID. The SDK ships a sample at
 OPERATOR_HTTP_RPC=https://rpc.tangle.tools \
 OPERATOR_WS_RPC=wss://rpc.tangle.tools \
 OPERATOR_TANGLE_CONTRACT=0x... \
-OPERATOR_STAKING_CONTRACT=0x... \
+OPERATOR_RESTAKING_CONTRACT=0x... \
 OPERATOR_STATUS_REGISTRY_CONTRACT=0x... \
 cargo run -p blueprint-pricing-engine --bin pricing-engine-server
 ```
@@ -63,7 +63,7 @@ Important environment variables:
 - `PRICING_CONFIG_PATH` (pricing TOML)
 - `OPERATOR_HTTP_RPC` / `OPERATOR_WS_RPC`
 - `OPERATOR_TANGLE_CONTRACT`
-- `OPERATOR_STAKING_CONTRACT`
+- `OPERATOR_RESTAKING_CONTRACT`
 - `OPERATOR_STATUS_REGISTRY_CONTRACT`
 
 ## Security Notes

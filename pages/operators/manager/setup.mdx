@@ -13,11 +13,13 @@ The manager reads protocol addresses (and optional service scope) from `settings
 cat > settings.env <<'EOF'
 BLUEPRINT_ID=123
 TANGLE_CONTRACT=0x...
-STAKING_CONTRACT=0x...
+RESTAKING_CONTRACT=0x...
 STATUS_REGISTRY_CONTRACT=0x...
 # SERVICE_ID=456 # optional; omit to follow all activations
 EOF
 ```
+
+The settings key is `RESTAKING_CONTRACT` for compatibility; it points to the staking contract.
 
 ## 2) Start the manager
 

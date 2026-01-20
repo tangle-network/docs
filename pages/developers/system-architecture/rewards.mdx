@@ -14,11 +14,13 @@ Tangle separates **service fees** (paid by customers) from **incentives** (TNT b
     src="/images/architecture/incentives-flow.svg"
     alt="Incentives flow for service fees and TNT budgets"
   />
-  <figcaption>
-    Service fees split through Payments.sol; TNT budgets flow through InflationPool,
-    RewardVaults, and ServiceFeeDistributor.
-  </figcaption>
+<figcaption>
+  Service fees split through Payments.sol; TNT budgets flow through InflationPool,
+  RewardVaults, and ServiceFeeDistributor.
+</figcaption>
 </figure>
+
+Claim paths: staker fees + staker inflation via `ServiceFeeDistributor`, TNT staking incentives via `RewardVaults`, and operator/customer/developer TNT via `InflationPool`.
 
 Code references: [Payments.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Payments.sol), [ServiceFeeDistributor.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/ServiceFeeDistributor.sol), [InflationPool.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/InflationPool.sol), [RewardVaults.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/RewardVaults.sol), [TangleMetrics.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/TangleMetrics.sol)
 

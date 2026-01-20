@@ -9,6 +9,8 @@ CLI source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/cli
 
 This page covers the `cargo-tangle` CLI surface for creating and operating blueprints on Tangle’s EVM protocol.
 
+Note: the CLI still uses the legacy flag name `--restaking-contract`. It refers to the staking contract (`MultiAssetDelegation`).
+
 For the full command surface, use:
 
 ```bash
@@ -31,7 +33,7 @@ cargo tangle blueprint preregister \
   --http-rpc-url https://... \
   --ws-rpc-url wss://... \
   --tangle-contract 0x... \
-  --staking-contract 0x... \
+  --restaking-contract 0x... \
   --status-registry-contract 0x... \
   --settings-file ./settings.env
 ```
@@ -46,7 +48,7 @@ cargo tangle blueprint register \
   --ws-rpc-url wss://... \
   --keystore-path ./keystore \
   --tangle-contract 0x... \
-  --staking-contract 0x... \
+  --restaking-contract 0x... \
   --status-registry-contract 0x... \
   --blueprint-id <id> \
   --rpc-endpoint "https://operator.example.com"
@@ -78,7 +80,7 @@ cargo tangle blueprint service requests \
 cargo tangle blueprint service approve \
   --http-rpc-url "$RPC_URL" \
   --tangle-contract "$TANGLE_CONTRACT" \
-  --staking-contract "$STAKING_CONTRACT" \
+  --restaking-contract "$RESTAKING_CONTRACT" \
   --status-registry-contract "$STATUS_REGISTRY_CONTRACT" \
   --request-id 42
 ```
@@ -103,7 +105,7 @@ cargo tangle blueprint service spawn \
   --http-rpc-url https://... \
   --ws-rpc-url wss://... \
   --tangle-contract 0x... \
-  --staking-contract 0x... \
+  --restaking-contract 0x... \
   --status-registry-contract 0x... \
   --blueprint-id <id> \
   --service-id <id> \

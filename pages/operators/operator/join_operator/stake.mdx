@@ -13,7 +13,7 @@ export HTTP_RPC_URL="https://..."
 export WS_RPC_URL="wss://..."
 export KEYSTORE_PATH="./keystore"
 export TANGLE_CONTRACT="0x..."
-export STAKING_CONTRACT="0x..."
+export RESTAKING_CONTRACT="0x..."
 export STATUS_REGISTRY_CONTRACT="0x..."
 
 cargo tangle operator increase-stake \
@@ -21,10 +21,12 @@ cargo tangle operator increase-stake \
   --ws-rpc-url "$WS_RPC_URL" \
   --keystore-path "$KEYSTORE_PATH" \
   --tangle-contract "$TANGLE_CONTRACT" \
-  --staking-contract "$STAKING_CONTRACT" \
+  --restaking-contract "$RESTAKING_CONTRACT" \
   --status-registry-contract "$STATUS_REGISTRY_CONTRACT" \
   --amount <AMOUNT_WEI>
 ```
+
+The CLI flag name is `--restaking-contract` for compatibility; it refers to the staking contract.
 
 If successful, the transaction emits `OperatorStakeIncreased(operator, amount)`.
 
@@ -40,7 +42,7 @@ cargo tangle operator schedule-unstake \
   --ws-rpc-url "$WS_RPC_URL" \
   --keystore-path "$KEYSTORE_PATH" \
   --tangle-contract "$TANGLE_CONTRACT" \
-  --staking-contract "$STAKING_CONTRACT" \
+  --restaking-contract "$RESTAKING_CONTRACT" \
   --status-registry-contract "$STATUS_REGISTRY_CONTRACT" \
   --amount <AMOUNT_WEI>
 ```
@@ -59,7 +61,7 @@ cargo tangle operator execute-unstake \
   --ws-rpc-url "$WS_RPC_URL" \
   --keystore-path "$KEYSTORE_PATH" \
   --tangle-contract "$TANGLE_CONTRACT" \
-  --staking-contract "$STAKING_CONTRACT" \
+  --restaking-contract "$RESTAKING_CONTRACT" \
   --status-registry-contract "$STATUS_REGISTRY_CONTRACT"
 ```
 

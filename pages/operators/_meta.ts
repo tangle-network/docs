@@ -11,6 +11,7 @@ const meta: Meta = {
     title: "Blueprint Operators",
   },
   manager: "Blueprint Manager",
+  runbook: "Operator Runbook",
   operator: "Running an Operator",
   pricing: "Pricing",
   benchmarking: "Blueprint Benchmarking",

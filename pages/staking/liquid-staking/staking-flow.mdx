@@ -59,3 +59,15 @@ Reward claims are not part of the vault interface. They live in protocol contrac
 - **TNT incentives**: `RewardVaults.claimDelegatorRewards(asset, operator)`
 
 If you want rewards to flow to share holders, you need an explicit distribution mechanism on top of the vault.
+
+Example (vault address claims rewards):
+
+```solidity
+// Service fees (per payment token)
+ServiceFeeDistributor.claimAll(paymentToken);
+
+// TNT incentives (per staking asset + operator)
+RewardVaults.claimDelegatorRewards(stakingAsset, operator);
+```
+
+After the vault claims, an external distributor can split proceeds across share holders using a snapshot or claim-time pro-rata approach.
