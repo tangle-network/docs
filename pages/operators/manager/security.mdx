@@ -40,6 +40,17 @@ If you deploy container-based blueprints, use a hardened runtime such as Kata Co
 - Restrict filesystem permissions to the operator user.
 - Avoid running the manager as root unless required for sandboxing.
 
+## Keystore management
+
+Create a dedicated ECDSA key for the operator and keep the keystore path consistent across services:
+
+```bash
+cargo tangle key --algo ecdsa --keystore ./keystore --name operator
+export BLUEPRINT_KEYSTORE_URI="$(pwd)/keystore"
+```
+
+The manager uses `--keystore-path`, and QoS uses `BLUEPRINT_KEYSTORE_URI` for heartbeat signing. Keep the keystore path stable and isolated per environment.
+
 ## Dry-run safety
 
 For validation or benchmarking, `cargo tangle blueprint service spawn --dry-run` runs a service runtime without submitting default on-chain transactions (registration, results, heartbeats). Custom job logic can still submit transactions if it does so explicitly. This is not a production substitute for the manager.

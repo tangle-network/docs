@@ -25,6 +25,7 @@ Status legend: [ ] Not started, [~] In progress, [x] Done
 - [x] Audit runtime orchestration codebase and summarize key capabilities.
 - [x] Align runtime docs with orchestration + sidecar responsibilities.
 - [x] Surface autoscaling/observability capabilities in operator docs.
+- [x] Align QoS observability + keystore guidance with blueprint-sdk behavior.
 
 ## Visuals
 - [x] Use autonomous-work-loop diagram as primary system visual.

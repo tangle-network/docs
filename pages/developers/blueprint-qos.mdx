@@ -6,340 +6,245 @@ title: Quality of Service (QoS) Integration
 
 SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/qos
 
-
-This guide explains how to integrate and use the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2)'s Quality of Service (QoS) system to add comprehensive observability, monitoring, and dashboard capabilities to any Blueprint. QoS provides unified metrics collection, log aggregation, heartbeat monitoring, and visualization through a cohesive interface.
-
-## Prerequisites
-
-- Understanding of Blueprint concepts and execution model
-- Familiarity with Tangle Network architecture
-- Basic knowledge of observability concepts (metrics, logging, monitoring)
+This guide explains how to integrate the Blueprint SDK Quality of Service (QoS) system for observability, monitoring, and dashboards. QoS combines heartbeats, metrics, logs, and Grafana dashboards into a single service that you can run alongside any Blueprint.
 
 ## QoS Summary
 
 The Blueprint QoS system provides a complete observability stack:
 
-- **Heartbeat Service**: Sends periodic heartbeats to Tangle to prevent slashing
-- **Metrics Collection**: Captures system and application metrics
-- **Logging**: Aggregates logs via Loki for centralized querying
-- **Dashboards**: Creates Grafana visualizations automatically
-- **Server Management**: Optionally runs containerized instances of Prometheus, Loki, and Grafana
+- **Heartbeat Service**: submits periodic liveness signals to the status registry
+- **Metrics Collection**: exports system and job metrics via a Prometheus-compatible endpoint
+- **Logging**: streams logs to Loki (optional)
+- **Dashboards**: builds Grafana dashboards (optional)
+- **Server Management**: can run Grafana/Loki/Prometheus containers for you
 
-The QoS system is designed to be added to any Blueprint type (Tangle EVM, P2P, or Cron) as a background service.
+## What QoS Exposes
 
-## Integrating QoS into a Blueprint
+QoS always exposes a Prometheus-compatible metrics endpoint when metrics are enabled. Grafana and Loki are optional and can be managed by QoS or connected externally.
 
-The integration process involves setting up the QoS configuration and implementing the HeartbeatConsumer trait. Here's a step-by-step guide.
+| Component | Default Endpoint | Notes |
+| --- | --- | --- |
+| Prometheus metrics | `http://<host>:9090/metrics` | Includes `/health` plus Prometheus v1 API routes like `/api/v1/query`. |
+| Grafana UI | `http://<host>:3000` | Only when configured or managed by QoS. |
+| Loki push API | `http://<host>:3100/loki/api/v1/push` | Only when configured or managed by QoS. |
 
-### Main Blueprint Setup
+## Integrating QoS with BlueprintRunner
+
+If you use `BlueprintRunner`, it wires the HTTP RPC endpoint, keystore URI, and status registry address into QoS for you:
 
 ```rust
-#[tokio::main]
-async fn main() -> Result<(), blueprint_sdk::Error> {
-    let env = BlueprintEnvironment::load()?;
+let qos_config = blueprint_qos::default_qos_config();
+let heartbeat_consumer = Arc::new(MyHeartbeatConsumer::new());
 
-    // Create your Blueprint's primary context
-    let context = MyContext::new(env.clone()).await?;
-
-    // Configure QoS system
-    let qos_config = blueprint_qos::default_qos_config();
-    let heartbeat_consumer = Arc::new(MyHeartbeatConsumer::new());
-
-    // Standard Blueprint runner setup with QoS
-    BlueprintRunner::builder(TangleEvmConfig::default(), env)
-        .router(Router::new()
-            .route(JOB_ID, handler.layer(TangleEvmLayer))
-            .with_context(context))
-        .producer(producer)
-        .consumer(consumer)
-        .qos_service(qos_config, Some(heartbeat_consumer))
-        .run()
-        .await
-}
+BlueprintRunner::builder(TangleEvmConfig::default(), env)
+    .router(router)
+    .qos_service(qos_config, Some(heartbeat_consumer))
+    .run()
+    .await?;
 ```
 
-### Implementing HeartbeatConsumer
+Note: `BlueprintRunner::qos_service` enables `manage_servers(true)` internally. If you want to avoid managed containers, pass a config with `grafana_server: None` and `loki_server: None`.
 
-To enable the heartbeat service, you must implement the `HeartbeatConsumer` trait, which is responsible for sending heartbeat signals to the Tangle Network:
+## HeartbeatConsumer and Keystore Requirements
+
+Heartbeats require a keystore with an ECDSA key. Use `BLUEPRINT_KEYSTORE_URI` or `--keystore-path` so QoS can sign heartbeats.
+
+```bash
+cargo tangle key --algo ecdsa --keystore ./keystore --name operator
+export BLUEPRINT_KEYSTORE_URI="$(pwd)/keystore"
+```
+
+Implement the heartbeat consumer using the current trait signature:
 
 ```rust
+use blueprint_qos::heartbeat::{HeartbeatConsumer, HeartbeatStatus};
+use blueprint_qos::error::Result as QoSResult;
+use std::future::Future;
+use std::pin::Pin;
+
 #[derive(Clone)]
-struct MyHeartbeatConsumer {
-    // Add any required fields for heartbeat submission
-}
+struct MyHeartbeatConsumer;
 
 impl HeartbeatConsumer for MyHeartbeatConsumer {
-    fn consume_heartbeat(
+    fn send_heartbeat(
         &self,
-        service_id: u64,
-        blueprint_id: u64,
-        metrics_data: String,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        // Implement custom heartbeat logic here, specific to blueprint
-        Ok(())
+        _status: &HeartbeatStatus,
+    ) -> Pin<Box<dyn Future<Output = QoSResult<()>> + Send>> {
+        Box::pin(async move { Ok(()) })
     }
 }
 ```
 
-## QoS Configuration Options
+## Configuration Options
 
-### Using Default Configuration
-
-The simplest way to get started is with the default configuration:
+### Default Configuration
 
 ```rust
 let qos_config = blueprint_qos::default_qos_config();
 ```
 
-This initializes a configuration with:
+This enables metrics, Loki logging, and Grafana integration. Whether containers start depends on `manage_servers` (BlueprintRunner forces it on; see note above).
 
-- Heartbeat service (disabled until configured)
-- Metrics collection
-- Loki logging
-- Grafana integration
-- Automatic server management set to `false`
+### Bring Your Own Observability Stack
 
-### Custom Configuration
-
-Customize the configuration for your specific needs:
+Point QoS at your existing Grafana/Loki/Prometheus stack by overriding the configs and keeping `manage_servers` off:
 
 ```rust
 let qos_config = QoSConfig {
-    heartbeat: Some(HeartbeatConfig {
-        service_id: Some(42),
-        blueprint_id: Some(7),
-        interval_seconds: 60,
-        jitter_seconds: 5,
+    metrics: Some(MetricsConfig {
+        prometheus_server: Some(PrometheusServerConfig {
+            host: "0.0.0.0".into(),
+            port: 9090,
+            use_docker: false,
+            ..Default::default()
+        }),
+        ..Default::default()
     }),
-    metrics: Some(MetricsConfig::default()),
-    loki: Some(LokiConfig::default()),
     grafana: Some(GrafanaConfig {
-        endpoint: "http://localhost:3000".into(),
-        admin_user: Some("admin".into()),
-        admin_password: Some("admin".into()),
-        folder: None,
+        url: "http://grafana.internal:3000".into(),
+        api_key: Some(std::env::var("GRAFANA_API_KEY")?),
+        prometheus_datasource_url: Some("http://prometheus.internal:9090".into()),
+        ..Default::default()
     }),
-    grafana_server: Some(GrafanaServerConfig::default()),
-    loki_server: Some(LokiServerConfig::default()),
-    prometheus_server: Some(PrometheusServerConfig::default()),
-    docker_network: Some("blueprint-network".into()),
-    manage_servers: true,
-    service_id: Some(42),
-    blueprint_id: Some(7),
-    docker_bind_ip: Some("0.0.0.0".into()),
+    loki: Some(LokiConfig {
+        url: "http://loki.internal:3100/loki/api/v1/push".into(),
+        ..Default::default()
+    }),
+    manage_servers: false,
+    ..blueprint_qos::default_qos_config()
 };
 ```
 
-### Using the Builder Pattern
+### Managed Observability Stack
 
-The builder pattern provides a fluent API for configuration:
+QoS can spin up Grafana, Loki, and Prometheus containers for you. Make sure Docker is available.
+
+```rust
+let qos_config = QoSConfig {
+    manage_servers: true,
+    grafana_server: Some(GrafanaServerConfig {
+        admin_user: "admin".into(),
+        admin_password: "change-me".into(),
+        allow_anonymous: false,
+        data_dir: "/var/lib/grafana".into(),
+        ..Default::default()
+    }),
+    loki_server: Some(LokiServerConfig {
+        data_dir: "/var/lib/loki".into(),
+        config_path: Some("./loki-config.yaml".into()),
+        ..Default::default()
+    }),
+    prometheus_server: Some(PrometheusServerConfig {
+        host: "0.0.0.0".into(),
+        port: 9090,
+        use_docker: true,
+        config_path: Some("./prometheus.yml".into()),
+        data_path: Some("./prometheus-data".into()),
+        ..Default::default()
+    }),
+    docker_network: Some("blueprint-observability".into()),
+    docker_bind_ip: Some("0.0.0.0".into()),
+    ..blueprint_qos::default_qos_config()
+};
+```
+
+### Builder Pattern
+
+Use the builder when you want explicit wiring for heartbeats or custom datasources:
 
 ```rust
 let qos_service = QoSServiceBuilder::new()
     .with_heartbeat_config(HeartbeatConfig {
-        service_id: Some(service_id),
-        blueprint_id: Some(blueprint_id),
-        interval_seconds: 60,
-        jitter_seconds: 5,
+        service_id,
+        blueprint_id,
+        interval_secs: 60,
+        jitter_percent: 10,
+        max_missed_heartbeats: 3,
+        status_registry_address,
     })
     .with_heartbeat_consumer(Arc::new(consumer))
+    .with_http_rpc_endpoint(env.http_rpc_endpoint.to_string())
+    .with_keystore_uri(env.keystore_uri.clone())
+    .with_status_registry_address(status_registry_address)
     .with_metrics_config(MetricsConfig::default())
-    .with_loki_config(LokiConfig::default())
     .with_grafana_config(GrafanaConfig::default())
-    .with_prometheus_server_config(PrometheusServerConfig {
-        host: "0.0.0.0".into(),
-        port: 9090,
-        ..Default::default()
-    })
+    .with_loki_config(LokiConfig::default())
+    .with_prometheus_server_config(PrometheusServerConfig::default())
     .manage_servers(true)
-    .with_ws_rpc_endpoint(ws_endpoint)
-    .with_keystore_uri(keystore_uri)
-    .build()?;
+    .build()
+    .await?;
 ```
 
-## Recording Blueprint Metrics and Events
+## Recording Metrics and Events
 
-### Job Performance Tracking
-
-Tracking job execution and performance in your job handlers is essential for monitoring and optimization:
+Track job execution and errors in your handlers:
 
 ```rust
-pub async fn process_job(
-    Context(ctx): Context<MyContext>,
-    TangleArg(data): TangleArg<String>,
-) -> Result<TangleResult<u64>> {
-    let start_time = std::time::Instant::now();
-
-    // Process the job
-    let result = perform_processing(&data)?;
-
-    // Record job execution metrics
-    if let Some(qos) = &ctx.qos_service {
-        qos.record_job_execution(
-            JOB_ID,
-            start_time.elapsed().as_secs_f64(),
-            ctx.service_id,
-            ctx.blueprint_id
-        );
-    }
-
-    Ok(TangleResult::Success(result))
+if let Some(qos) = &ctx.qos_service {
+    qos.record_job_execution(
+        JOB_ID,
+        start_time.elapsed().as_secs_f64(),
+        ctx.service_id,
+        ctx.blueprint_id,
+    );
 }
 ```
 
-### Error Tracking
-
-Tracking job errors is crucial for monitoring and alerts:
-
 ```rust
-match perform_complex_operation() {
-    Ok(value) => Ok(TangleResult::Success(value)),
-    Err(e) => {
-        if let Some(qos) = &ctx.qos_service {
-            qos.record_job_error(JOB_ID, "complex_operation_failure");
-        }
-        Err(e.into())
-    }
+if let Some(qos) = &ctx.qos_service {
+    qos.record_job_error(JOB_ID, "complex_operation_failure");
 }
 ```
 
-## Automatic Dashboard Creation
-
-QoS can automatically create Grafana dashboards that display your Blueprint's metrics:
+## Creating Grafana Dashboards
 
 ```rust
-// Create a custom dashboard for your Blueprint
-if let Some(mut qos) = qos_service {
-    if let Err(e) = qos.create_dashboard("My Blueprint") {
-        error!("Failed to create dashboard: {}", e);
-    } else {
-        info!("Created Grafana dashboard for My Blueprint");
+let mut qos_service = qos_service;
+qos_service.create_dashboard("My Blueprint").await?;
+```
+
+The default dashboard template lives at `crates/qos/config/grafana_dashboard.json` in the SDK.
+
+## Accessing Metrics in Code
+
+You can query the metrics provider directly (for custom metrics or status checks):
+
+```rust
+use blueprint_qos::metrics::types::MetricsProvider;
+
+if let Some(qos) = &ctx.qos_service {
+    if let Some(provider) = qos.provider() {
+        let system_metrics = provider.get_system_metrics().await;
+        let _cpu = system_metrics.cpu_usage;
+        provider
+            .add_custom_metric("custom.label".into(), "value".into())
+            .await;
     }
 }
 ```
-
-The dashboard includes:
-
-- System resource usage (CPU, memory, disk, network)
-- Job execution metrics (frequency, duration, error rates)
-- Log visualization panels (when Loki is configured)
-- Service status and uptime information
-
-## Accessing QoS in Context
-
-Typically, you'll want to store the QoS service in your Blueprint context:
-
-```rust
-#[derive(Clone)]
-pub struct MyContext {
-    #[config]
-    pub env: BlueprintEnvironment,
-    pub data_dir: PathBuf,
-    pub qos_service: Option<Arc<QoSService<MyHeartbeatConsumer>>>,
-    pub service_id: u64,
-    pub blueprint_id: u64,
-}
-
-impl MyContext {
-    pub async fn new(env: BlueprintEnvironment) -> Result<Self, Error> {
-        // Initialize QoS service
-        let qos_service = initialize_qos(&env)?;
-
-        Ok(Self {
-            data_dir: env.data_dir.clone().unwrap_or_else(default_data_dir),
-            qos_service: Some(Arc::new(qos_service)),
-            service_id: 42,
-            blueprint_id: 7,
-            env,
-        })
-    }
-}
-```
-
-You can then access the QoS service in your job handlers:
-
-```rust
-pub async fn my_job(
-    Context(ctx): Context<MyContext>,
-    TangleArg(data): TangleArg<String>,
-) -> Result<TangleResult<()>> {
-    // Access QoS metrics provider
-    if let Some(qos) = &ctx.qos_service {
-        if let Some(provider) = qos.provider() {
-            let cpu_usage = provider.get_cpu_usage()?;
-            info!("Current CPU usage: {}%", cpu_usage);
-        }
-    }
-
-    // Job implementation
-    Ok(TangleResult::Success(()))
-}
-```
-
-## Server Management
-
-QoS can automatically manage Grafana, Prometheus, and Loki servers:
-
-```rust
-// Configure server management
-let qos_config = QoSConfig {
-    grafana_server: Some(GrafanaServerConfig {
-        port: 3000,
-        container_name: "blueprint-grafana".into(),
-        image: "grafana/grafana:latest".into(),
-        ..Default::default()
-    }),
-    loki_server: Some(LokiServerConfig {
-        port: 3100,
-        container_name: "blueprint-loki".into(),
-        image: "grafana/loki:latest".into(),
-        ..Default::default()
-    }),
-    prometheus_server: Some(PrometheusServerConfig {
-        port: 9090,
-        container_name: "blueprint-prometheus".into(),
-        image: "prom/prometheus:latest".into(),
-        host: "0.0.0.0".into(),
-        ..Default::default()
-    }),
-    docker_network: Some("blueprint-network".into()),
-    manage_servers: true,
-    ..Default::default()
-};
-```
-
-For proper operation with Docker containers, ensure:
-
-1. Your application binds metrics endpoints to `0.0.0.0` (not `127.0.0.1`)
-2. Prometheus configuration uses `host.docker.internal` to access host metrics
-3. Docker is installed and the user has the necessary permissions
-4. A common Docker network is used for all containers
 
 ## Best Practices
 
 ✅ DO:
 
-- Initialize QoS early in your Blueprint's startup sequence
-- Add QoS as a background service using `BlueprintRunner::background_service()`
-- Record job execution metrics for all important jobs
-- Use `#[derive(Clone)]` for your `HeartbeatConsumer` implementation
-- Access QoS APIs through your Blueprint's context
+- Initialize QoS early in your Blueprint startup sequence.
+- Use `BlueprintRunner::qos_service(...)` to auto-wire RPC + keystore + status registry.
+- Keep Prometheus reachable (bind to `0.0.0.0` if scraped externally).
+- Replace default Grafana credentials when using managed servers.
 
 ❌ DON'T:
 
-- Don't create separate QoS instances for different components
-- Avoid using hardcoded admin credentials in production code
-- Don't pass the QoS service directly between jobs; use the context pattern
-- Don't forget to bind Prometheus metrics server to `0.0.0.0` for Docker accessibility
-- Don't ignore QoS shutdown or creation errors; they may indicate more serious issues
+- Don't enable heartbeats without setting `BLUEPRINT_KEYSTORE_URI`.
+- Don't expose managed Grafana publicly without auth.
+- Don't ignore QoS startup errors; they usually indicate misconfigured ports or credentials.
 
 ## QoS Components Reference
 
-| Component         | Primary Struct     | Config                 | Purpose                                           |
-| ----------------- | ------------------ | ---------------------- | ------------------------------------------------- |
-| Unified Service   | `QoSService`       | `QoSConfig`            | Main entry point for QoS integration              |
-| Heartbeat         | `HeartbeatService` | `HeartbeatConfig`      | Sends periodic liveness signals to chain          |
-| Metrics           | `MetricsService`   | `MetricsConfig`        | Collects system and application metrics           |
-| Logging           | N/A                | `LokiConfig`           | Configures log aggregation to Loki                |
-| Dashboards        | `GrafanaClient`    | `GrafanaConfig`        | Creates and manages Grafana dashboards            |
-| Server Management | `ServerManager`    | Various server configs | Manages Docker containers for observability stack |
+| Component | Primary Struct | Config | Purpose |
+| --- | --- | --- | --- |
+| Unified Service | `QoSService` | `QoSConfig` | Main entry point for QoS integration |
+| Heartbeat | `HeartbeatService` | `HeartbeatConfig` | Liveness signals to the status registry |
+| Metrics | `MetricsService` | `MetricsConfig` | System + job metrics and Prometheus export |
+| Logging | N/A | `LokiConfig` | Log aggregation via Loki |
+| Dashboards | `GrafanaClient` | `GrafanaConfig` | Dashboards and datasources |
+| Server Management | `ServerManager` | Server configs | Manages Docker containers for the stack |
