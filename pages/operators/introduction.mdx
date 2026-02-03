@@ -20,21 +20,23 @@ Operators run Blueprint services and earn fees for reliable execution. This sect
 
 Operators select how to isolate workloads:
 
-| Method | Security | Performance | Use Case |
-|--------|----------|-------------|----------|
-| Native (no sandbox) | Low | Highest | Trusted blueprints only |
-| Cloud-hypervisor VM | High | Good | Production default |
-| Kata Containers | High | Good | Kubernetes deployments |
+| Method              | Security | Performance | Use Case                |
+| ------------------- | -------- | ----------- | ----------------------- |
+| Native (no sandbox) | Low      | Highest     | Trusted blueprints only |
+| Cloud-hypervisor VM | High     | Good        | Production default      |
+| Kata Containers     | High     | Good        | Kubernetes deployments  |
 
 See [Requirements](/operators/manager/requirements) for setup details.
 
 ## Earning and Risks
 
 Operators earn from:
+
 - **Service fees**: Paid by customers, split with developers and stakers.
 - **Optional TNT incentives**: When governance funds incentive pools.
 
 Operators risk slashing for:
+
 - Missing heartbeats beyond the grace period.
 - Submitting invalid or late results.
 - Violating isolation guarantees.
