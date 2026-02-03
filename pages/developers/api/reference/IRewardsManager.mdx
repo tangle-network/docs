@@ -5,7 +5,7 @@ description: Auto-generated Solidity API reference.
 
 # IRewardsManager
 
-Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IRewardsManager.sol
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/IRewardsManager.sol
 
 ### IRewardsManager
 
@@ -23,13 +23,13 @@ Records a delegation for reward tracking
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| delegator | address | The account making the delegation |
-| operator | address | The operator being delegated to |
-| asset | address | The asset being delegated (address(0) for native) |
-| amount | uint256 | The amount being delegated |
-| lockMultiplierBps | uint16 | Lock multiplier in basis points (10000 = 1x, 0 = no lock) |
+| Name              | Type    | Description                                               |
+| ----------------- | ------- | --------------------------------------------------------- |
+| delegator         | address | The account making the delegation                         |
+| operator          | address | The operator being delegated to                           |
+| asset             | address | The asset being delegated (address(0) for native)         |
+| amount            | uint256 | The amount being delegated                                |
+| lockMultiplierBps | uint16  | Lock multiplier in basis points (10000 = 1x, 0 = no lock) |
 
 #### recordUndelegate
 
@@ -41,12 +41,12 @@ Records an undelegation
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name      | Type    | Description                         |
+| --------- | ------- | ----------------------------------- |
 | delegator | address | The account making the undelegation |
-| operator | address | The operator being undelegated from |
-| asset | address | The asset being undelegated |
-| amount | uint256 | The amount being undelegated |
+| operator  | address | The operator being undelegated from |
+| asset     | address | The asset being undelegated         |
+| amount    | uint256 | The amount being undelegated        |
 
 #### recordServiceReward
 
@@ -58,11 +58,11 @@ Records a service reward for an operator
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name     | Type    | Description                       |
+| -------- | ------- | --------------------------------- |
 | operator | address | The operator receiving the reward |
-| asset | address | The reward asset |
-| amount | uint256 | The reward amount |
+| asset    | address | The reward asset                  |
+| amount   | uint256 | The reward amount                 |
 
 #### getAssetDepositCapRemaining
 
@@ -74,13 +74,12 @@ Get remaining deposit capacity for an asset vault
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name  | Type    | Description        |
+| ----- | ------- | ------------------ |
 | asset | address | The asset to query |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name      | Type    | Description                    |
+| --------- | ------- | ------------------------------ |
 | remaining | uint256 | The remaining deposit capacity |
-

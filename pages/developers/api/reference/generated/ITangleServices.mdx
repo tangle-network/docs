@@ -5,7 +5,7 @@ description: Auto-generated Solidity API reference.
 
 # ITangleServices
 
-Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/ITangleServices.sol
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/ITangleServices.sol
 
 ### ITangleServices
 
@@ -77,13 +77,13 @@ _No approval flow needed - operators have pre-committed via signatures_
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| blueprintId | uint64 | The blueprint to use |
-| quotes | struct Types.SignedQuote[] | Array of signed quotes from operators |
-| config | bytes | Service configuration |
-| permittedCallers | address[] | Addresses allowed to call jobs |
-| ttl | uint64 | Service time-to-live (must match quotes) |
+| Name             | Type                       | Description                              |
+| ---------------- | -------------------------- | ---------------------------------------- |
+| blueprintId      | uint64                     | The blueprint to use                     |
+| quotes           | struct Types.SignedQuote[] | Array of signed quotes from operators    |
+| config           | bytes                      | Service configuration                    |
+| permittedCallers | address[]                  | Addresses allowed to call jobs           |
+| ttl              | uint64                     | Service time-to-live (must match quotes) |
 
 #### extendServiceFromQuotes
 
@@ -183,10 +183,10 @@ Force remove an operator from a service (blueprint manager only)
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| serviceId | uint64 | The service ID |
-| operator | address | The operator to remove |
+| Name      | Type    | Description            |
+| --------- | ------- | ---------------------- |
+| serviceId | uint64  | The service ID         |
+| operator  | address | The operator to remove |
 
 #### billSubscription
 
@@ -411,4 +411,3 @@ event OperatorLeftService(uint64 serviceId, address operator)
 ```solidity
 event SubscriptionBilled(uint64 serviceId, uint256 amount, uint64 period)
 ```
-

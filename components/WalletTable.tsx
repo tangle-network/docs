@@ -55,8 +55,8 @@ const WalletTable = () => {
       </table>
       <h3 className="text-2xl mb-4">Network Details for Adding to Wallets</h3>
       <span>
-        Add the Tangle Network using the Chain ID and RPC server address on
-        this page. Follow the standard flow in your wallet to add a new network.
+        Add the Tangle Network using the Chain ID and RPC server address on this
+        page. Follow the standard flow in your wallet to add a new network.
       </span>
     </div>
   );

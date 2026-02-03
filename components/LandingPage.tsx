@@ -15,22 +15,19 @@ const getStartedCards = [
   {
     icon: <GrNodes />,
     title: "Run work in secure sandboxes",
-    description:
-      "Work executes in isolated runtimes with policies and limits.",
+    description: "Work executes in isolated runtimes with policies and limits.",
     link: "/infrastructure/introduction",
   },
   {
     icon: <GiToken />,
     title: "Operate the runtime",
-    description:
-      "Host secure sandboxes and get paid through the protocol.",
+    description: "Host secure sandboxes and get paid through the protocol.",
     link: "/operators/introduction",
   },
   {
     icon: <SiBlueprint />,
     title: "Build and publish Blueprints",
-    description:
-      "Package services and workflows to run on the protocol.",
+    description: "Package services and workflows to run on the protocol.",
     link: "/developers/blueprints/introduction",
   },
 ];
@@ -81,9 +78,9 @@ const LandingPage = () => {
             System Overview
           </h2>
           <p className="mb-6 text-base text-gray-700 dark:text-gray-400">
-            Teams and agents collaborate in shared workbenches or separate
-            ones, work runs in secure sandboxes, and the protocol pays the
-            operators who host the runtime.
+            Teams and agents collaborate in shared workbenches or separate ones,
+            work runs in secure sandboxes, and the protocol pays the operators
+            who host the runtime.
           </p>
           <figure className="w-full">
             <div className="relative w-full min-h-[280px]">

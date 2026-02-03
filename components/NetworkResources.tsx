@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { BlockCopyButton } from "./ui/block-copy-button";
-import {
-  FlaskConical,
-  WalletMinimal,
-  Waypoints,
-} from "lucide-react";
+import { FlaskConical, WalletMinimal, Waypoints } from "lucide-react";
 import WalletTable from "./WalletTable";
 
 type NetworkDetail = {
@@ -279,11 +275,11 @@ const NetworkTabs = () => {
       </ul>
 
       <div className="w-full table-auto">
-        {activeTab === "wallets"
-          ? <WalletTable />
-          : activeTab === "mainnet" || activeTab === "testnet"
-            ? renderTable(NETWORK_DATA[activeTab])
-            : null}
+        {activeTab === "wallets" ? (
+          <WalletTable />
+        ) : activeTab === "mainnet" || activeTab === "testnet" ? (
+          renderTable(NETWORK_DATA[activeTab])
+        ) : null}
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ description: Auto-generated Solidity API reference.
 
 # ITangleSlashing
 
-Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/ITangleSlashing.sol
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/ITangleSlashing.sol
 
 ### ITangleSlashing
 
@@ -23,17 +23,17 @@ Propose a slash against an operator
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| serviceId | uint64 | The service where violation occurred |
-| operator | address | The operator to slash |
-| amount | uint256 | Amount to slash |
-| evidence | bytes32 | Evidence hash |
+| Name      | Type    | Description                          |
+| --------- | ------- | ------------------------------------ |
+| serviceId | uint64  | The service where violation occurred |
+| operator  | address | The operator to slash                |
+| amount    | uint256 | Amount to slash                      |
+| evidence  | bytes32 | Evidence hash                        |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name    | Type   | Description                          |
+| ------- | ------ | ------------------------------------ |
 | slashId | uint64 | The ID of the created slash proposal |
 
 #### disputeSlash
@@ -105,4 +105,3 @@ event SlashProposed(uint64 serviceId, address operator, uint256 amount, bytes32 
 ```solidity
 event SlashExecuted(uint64 serviceId, address operator, uint256 amount)
 ```
-

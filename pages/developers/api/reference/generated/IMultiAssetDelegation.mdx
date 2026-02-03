@@ -5,7 +5,7 @@ description: Auto-generated Solidity API reference.
 
 # IMultiAssetDelegation
 
-Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IMultiAssetDelegation.sol
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/IMultiAssetDelegation.sol
 
 ### IMultiAssetDelegation
 
@@ -154,22 +154,22 @@ function executeDelegatorUnstakeAndWithdraw(address operator, address token, uin
 Execute a specific matured unstake request and withdraw the resulting assets to `receiver`.
 
 _Convenience helper for integrations (e.g. ERC7540 liquid delegation vaults) to avoid a separate
-     scheduleWithdraw/executeWithdraw flow after bond-less delay has already elapsed._
+scheduleWithdraw/executeWithdraw flow after bond-less delay has already elapsed._
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| operator | address | Operator to unstake from |
-| token | address | Token address (address(0) for native) |
-| shares | uint256 | Shares to unstake (as stored in the underlying bond-less request) |
-| requestedRound | uint64 | Round in which the unstake was scheduled |
-| receiver | address | Recipient of the withdrawn assets |
+| Name           | Type    | Description                                                       |
+| -------------- | ------- | ----------------------------------------------------------------- |
+| operator       | address | Operator to unstake from                                          |
+| token          | address | Token address (address(0) for native)                             |
+| shares         | uint256 | Shares to unstake (as stored in the underlying bond-less request) |
+| requestedRound | uint64  | Round in which the unstake was scheduled                          |
+| receiver       | address | Recipient of the withdrawn assets                                 |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name   | Type    | Description                                                           |
+| ------ | ------- | --------------------------------------------------------------------- |
 | amount | uint256 | Actual amount returned (after exchange-rate + lazy-slash adjustments) |
 
 #### addBlueprintToDelegation
@@ -737,4 +737,3 @@ event AdapterRemoved(address token)
 ```solidity
 event RequireAdaptersUpdated(bool required)
 ```
-

@@ -5,7 +5,7 @@ description: Auto-generated Solidity API reference.
 
 # IERC7540Redeem
 
-Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IERC7540.sol
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/IERC7540.sol
 
 ### IERC7540Redeem
 
@@ -25,16 +25,16 @@ Request an asynchronous redemption
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| shares | uint256 | Amount of shares to redeem |
+| Name       | Type    | Description                       |
+| ---------- | ------- | --------------------------------- |
+| shares     | uint256 | Amount of shares to redeem        |
 | controller | address | Address that controls the request |
-| owner | address | Address that owns the shares |
+| owner      | address | Address that owns the shares      |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name      | Type    | Description                        |
+| --------- | ------- | ---------------------------------- |
 | requestId | uint256 | Unique identifier for this request |
 
 #### pendingRedeemRequest
@@ -47,15 +47,15 @@ Get pending redeem request amount
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | uint256 | The request identifier |
+| Name       | Type    | Description            |
+| ---------- | ------- | ---------------------- |
+| requestId  | uint256 | The request identifier |
 | controller | address | The controller address |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name   | Type    | Description              |
+| ------ | ------- | ------------------------ |
 | shares | uint256 | Amount of shares pending |
 
 #### claimableRedeemRequest
@@ -68,15 +68,15 @@ Get claimable redeem request amount
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | uint256 | The request identifier |
+| Name       | Type    | Description            |
+| ---------- | ------- | ---------------------- |
+| requestId  | uint256 | The request identifier |
 | controller | address | The controller address |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name   | Type    | Description                |
+| ------ | ------- | -------------------------- |
 | shares | uint256 | Amount of shares claimable |
 
 #### Events
@@ -88,4 +88,3 @@ event RedeemRequest(address controller, address owner, uint256 requestId, addres
 ```
 
 Emitted when a redeem request is created
-

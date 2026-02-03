@@ -19,14 +19,14 @@ distribution contracts and migration snapshot files; the table below is a readab
 
 ## Allocation Summary
 
-| Category | Purpose | Amount (TNT) | Share | Vesting |
-| -------- | ------- | ------------ | ----- | ------- |
-| Substrate migration claims | SS58 snapshot claims via Merkle tree | 51,244,581.8122 | 46.90% | 2% unlocked + 12m cliff + 24m linear |
-| EVM allocations | Direct EVM recipient list | 1,125,776.5192 | 1.03% | 2% unlocked + 12m cliff + 24m linear |
-| Treasury carveout | Non-claimable module balances | 36,844,468.7611 | 33.72% | Liquid at deployment |
-| Foundation carveout | Foundation allocation | 15,040,809.8267 | 13.77% | Liquid at deployment |
-| Liquidity ops carveout | Liquidity operations budget | 5,000,000 | 4.58% | Liquid at deployment |
-| **Total (MAX_SUPPLY)** | Hard cap from `TangleToken` | 109,255,636.9192 | 100% | — |
+| Category                   | Purpose                              | Amount (TNT)     | Share  | Vesting                              |
+| -------------------------- | ------------------------------------ | ---------------- | ------ | ------------------------------------ |
+| Substrate migration claims | SS58 snapshot claims via Merkle tree | 51,244,581.8122  | 46.90% | 2% unlocked + 12m cliff + 24m linear |
+| EVM allocations            | Direct EVM recipient list            | 1,125,776.5192   | 1.03%  | 2% unlocked + 12m cliff + 24m linear |
+| Treasury carveout          | Non-claimable module balances        | 36,844,468.7611  | 33.72% | Liquid at deployment                 |
+| Foundation carveout        | Foundation allocation                | 15,040,809.8267  | 13.77% | Liquid at deployment                 |
+| Liquidity ops carveout     | Liquidity operations budget          | 5,000,000        | 4.58%  | Liquid at deployment                 |
+| **Total (MAX_SUPPLY)**     | Hard cap from `TangleToken`          | 109,255,636.9192 | 100%   | —                                    |
 
 ## Vesting and Lockups
 
@@ -40,7 +40,7 @@ For legacy allocations and migration details, see [TNT Migration and Claims](/ne
 
 ## Source of Truth (GitHub)
 
-- Token cap: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/governance/TangleToken.sol
+- Token cap: https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleToken.sol
 - Substrate Merkle snapshot: https://github.com/tangle-network/tnt-core/blob/v2/packages/migration-claim/merkle-tree.json
 - EVM recipient list: https://github.com/tangle-network/tnt-core/blob/v2/packages/migration-claim/evm-claims.json
 - Treasury carveout: https://github.com/tangle-network/tnt-core/blob/v2/packages/migration-claim/treasury-carveout.json
@@ -51,8 +51,8 @@ For legacy allocations and migration details, see [TNT Migration and Claims](/ne
 
 | Environment | Distribution Contract | Explorer |
 | ----------- | --------------------- | -------- |
-| Mainnet | `TBD` | `TBD` |
-| Testnet | `TBD` | `TBD` |
-| Local | `TBD` | `TBD` |
+| Mainnet     | `TBD`                 | `TBD`    |
+| Testnet     | `TBD`                 | `TBD`    |
+| Local       | `TBD`                 | `TBD`    |
 
 The summary will be kept in sync with these contracts.

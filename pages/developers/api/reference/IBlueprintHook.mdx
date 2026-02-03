@@ -5,18 +5,19 @@ description: Auto-generated Solidity API reference.
 
 # IBlueprintHook
 
-Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IBlueprintHook.sol
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/IBlueprintHook.sol
 
 ### IBlueprintHook
 
 Simplified hook interface for basic blueprint customization
 
-_For full control, implement IBlueprintServiceManager directly.
-     This interface provides a simpler subset for common use cases.
+\_For full control, implement IBlueprintServiceManager directly.
+This interface provides a simpler subset for common use cases.
 
 Migration path:
+
 - Simple blueprints: Use IBlueprintHook / BlueprintHookBase
-- Full-featured blueprints: Use IBlueprintServiceManager / BlueprintServiceManagerBase_
+- Full-featured blueprints: Use IBlueprintServiceManager / BlueprintServiceManagerBase\_
 
 #### Functions
 
@@ -38,8 +39,8 @@ Called when an operator registers
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name   | Type | Description                 |
+| ------ | ---- | --------------------------- |
 | accept | bool | True to accept registration |
 
 #### onOperatorUnregister
@@ -60,8 +61,8 @@ Called when a service is requested
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name   | Type | Description            |
+| ------ | ---- | ---------------------- |
 | accept | bool | True to accept request |
 
 #### onServiceApprove
@@ -122,8 +123,8 @@ Called when a job is submitted
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name   | Type | Description        |
+| ------ | ---- | ------------------ |
 | accept | bool | True to accept job |
 
 #### onJobResult
@@ -136,8 +137,8 @@ Called when an operator submits a result
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name   | Type | Description           |
+| ------ | ---- | --------------------- |
 | accept | bool | True to accept result |
 
 #### onJobCompleted
@@ -158,8 +159,8 @@ Called before a slash is applied
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name    | Type | Description           |
+| ------- | ---- | --------------------- |
 | approve | bool | True to approve slash |
 
 #### onSlashApplied
@@ -212,10 +213,10 @@ Get the aggregation threshold configuration for a job
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| thresholdBps | uint16 | Threshold in basis points (6700 = 67%) |
-| thresholdType | uint8 | 0 = CountBased (% of operators), 1 = StakeWeighted (% of total stake) |
+| Name          | Type   | Description                                                           |
+| ------------- | ------ | --------------------------------------------------------------------- |
+| thresholdBps  | uint16 | Threshold in basis points (6700 = 67%)                                |
+| thresholdType | uint8  | 0 = CountBased (% of operators), 1 = StakeWeighted (% of total stake) |
 
 #### onAggregatedResult
 
@@ -224,4 +225,3 @@ function onAggregatedResult(uint64 serviceId, uint64 callId, uint256 signerBitma
 ```
 
 Called when an aggregated result is submitted
-

@@ -5,14 +5,14 @@ description: Auto-generated Solidity API reference.
 
 # IStreamingPaymentAdapter
 
-Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IStreamingPaymentAdapter.sol
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/IStreamingPaymentAdapter.sol
 
 ### IStreamingPaymentAdapter
 
 Common interface for streaming payment adapters (Superfluid, Sablier, etc.)
 
 _Adapters implement this interface to provide streaming payment capabilities
-     to Tangle services without tight coupling to specific protocols._
+to Tangle services without tight coupling to specific protocols._
 
 #### Functions
 
@@ -26,18 +26,18 @@ Create a streaming payment for a service
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| serviceId | uint64 | The Tangle service ID |
-| token | address | The ERC-20 token to stream (address(0) for native) |
-| totalAmount | uint256 | Total amount to stream |
-| durationSeconds | uint64 | Stream duration in seconds |
-| cliffSeconds | uint64 | Optional cliff period (0 for no cliff) |
+| Name            | Type    | Description                                        |
+| --------------- | ------- | -------------------------------------------------- |
+| serviceId       | uint64  | The Tangle service ID                              |
+| token           | address | The ERC-20 token to stream (address(0) for native) |
+| totalAmount     | uint256 | Total amount to stream                             |
+| durationSeconds | uint64  | Stream duration in seconds                         |
+| cliffSeconds    | uint64  | Optional cliff period (0 for no cliff)             |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name     | Type    | Description           |
+| -------- | ------- | --------------------- |
 | streamId | uint256 | The created stream ID |
 
 #### updateStreamRate
@@ -50,10 +50,10 @@ Update the rate of an existing stream
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| streamId | uint256 | The stream ID to update |
-| newRatePerSecond | uint256 | New streaming rate |
+| Name             | Type    | Description             |
+| ---------------- | ------- | ----------------------- |
+| streamId         | uint256 | The stream ID to update |
+| newRatePerSecond | uint256 | New streaming rate      |
 
 #### cancelStream
 
@@ -65,14 +65,14 @@ Cancel a stream and refund remaining balance
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name     | Type    | Description             |
+| -------- | ------- | ----------------------- |
 | streamId | uint256 | The stream ID to cancel |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name           | Type    | Description                  |
+| -------------- | ------- | ---------------------------- |
 | refundedAmount | uint256 | Amount refunded to the payer |
 
 #### withdrawFromStream
@@ -85,14 +85,14 @@ Withdraw available funds from a stream
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name     | Type    | Description   |
+| -------- | ------- | ------------- |
 | streamId | uint256 | The stream ID |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name            | Type    | Description      |
+| --------------- | ------- | ---------------- |
 | withdrawnAmount | uint256 | Amount withdrawn |
 
 #### settleAndDistribute
@@ -107,8 +107,8 @@ _This triggers distribution through Tangle's payment system_
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name     | Type    | Description             |
+| -------- | ------- | ----------------------- |
 | streamId | uint256 | The stream ID to settle |
 
 #### getWithdrawableAmount
@@ -121,14 +121,14 @@ Get the current withdrawable amount for a stream
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name     | Type    | Description   |
+| -------- | ------- | ------------- |
 | streamId | uint256 | The stream ID |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name   | Type    | Description                  |
+| ------ | ------- | ---------------------------- |
 | amount | uint256 | Amount available to withdraw |
 
 #### getStreamRate
@@ -141,14 +141,14 @@ Get the current streaming rate
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name     | Type    | Description   |
+| -------- | ------- | ------------- |
 | streamId | uint256 | The stream ID |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name          | Type    | Description                      |
+| ------------- | ------- | -------------------------------- |
 | ratePerSecond | uint256 | Tokens per second being streamed |
 
 #### getStreamInfo
@@ -161,23 +161,23 @@ Get full stream information
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name     | Type    | Description   |
+| -------- | ------- | ------------- |
 | streamId | uint256 | The stream ID |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| serviceId | uint64 | Associated Tangle service |
-| payer | address | Address funding the stream |
-| token | address | Token being streamed |
-| totalAmount | uint256 | Total stream amount |
-| withdrawnAmount | uint256 | Amount already withdrawn |
-| startTime | uint256 | Stream start timestamp |
-| endTime | uint256 | Stream end timestamp |
-| cliffTime | uint256 | Cliff timestamp (0 if no cliff) |
-| active | bool | Whether stream is active |
+| Name            | Type    | Description                     |
+| --------------- | ------- | ------------------------------- |
+| serviceId       | uint64  | Associated Tangle service       |
+| payer           | address | Address funding the stream      |
+| token           | address | Token being streamed            |
+| totalAmount     | uint256 | Total stream amount             |
+| withdrawnAmount | uint256 | Amount already withdrawn        |
+| startTime       | uint256 | Stream start timestamp          |
+| endTime         | uint256 | Stream end timestamp            |
+| cliffTime       | uint256 | Cliff timestamp (0 if no cliff) |
+| active          | bool    | Whether stream is active        |
 
 #### getStreamServiceId
 
@@ -189,14 +189,14 @@ Get the service ID associated with a stream
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name     | Type    | Description   |
+| -------- | ------- | ------------- |
 | streamId | uint256 | The stream ID |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name      | Type   | Description           |
+| --------- | ------ | --------------------- |
 | serviceId | uint64 | The Tangle service ID |
 
 #### getServiceStreams
@@ -209,14 +209,14 @@ Get all active streams for a service
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name      | Type   | Description           |
+| --------- | ------ | --------------------- |
 | serviceId | uint64 | The Tangle service ID |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name      | Type      | Description                |
+| --------- | --------- | -------------------------- |
 | streamIds | uint256[] | Array of active stream IDs |
 
 #### getAccruedAmount
@@ -229,14 +229,14 @@ Calculate real-time accrued amount (not yet settled)
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name     | Type    | Description   |
+| -------- | ------- | ------------- |
 | streamId | uint256 | The stream ID |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name          | Type    | Description                          |
+| ------------- | ------- | ------------------------------------ |
 | accruedAmount | uint256 | Amount accrued since last settlement |
 
 #### protocolName
@@ -249,8 +249,8 @@ Get the name of the underlying protocol
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name | Type   | Description                                   |
+| ---- | ------ | --------------------------------------------- |
 | name | string | Protocol name (e.g., "Superfluid", "Sablier") |
 
 #### isTokenSupported
@@ -263,14 +263,14 @@ Check if a token is supported for streaming
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name  | Type    | Description       |
+| ----- | ------- | ----------------- |
 | token | address | The token address |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name      | Type | Description                   |
+| --------- | ---- | ----------------------------- |
 | supported | bool | True if token can be streamed |
 
 #### Events
@@ -314,4 +314,3 @@ event StreamSettled(uint64 serviceId, uint256 streamId, uint256 amount)
 ```
 
 Emitted when a stream is settled and distributed
-

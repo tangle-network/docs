@@ -5,7 +5,7 @@ description: Auto-generated Solidity API reference.
 
 # IPaymentAdapterRegistry
 
-Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IStreamingPaymentAdapter.sol
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/IStreamingPaymentAdapter.sol
 
 ### IPaymentAdapterRegistry
 
@@ -23,9 +23,9 @@ Register a new payment adapter
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| name | string | Adapter name |
+| Name    | Type    | Description     |
+| ------- | ------- | --------------- |
+| name    | string  | Adapter name    |
 | adapter | address | Adapter address |
 
 #### removeAdapter
@@ -38,8 +38,8 @@ Remove a payment adapter
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name | Type   | Description            |
+| ---- | ------ | ---------------------- |
 | name | string | Adapter name to remove |
 
 #### getAdapter
@@ -52,14 +52,14 @@ Get an adapter by name
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name | Type   | Description  |
+| ---- | ------ | ------------ |
 | name | string | Adapter name |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name    | Type    | Description     |
+| ------- | ------- | --------------- |
 | adapter | address | Adapter address |
 
 #### getDefaultAdapter
@@ -72,8 +72,8 @@ Get the default adapter
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name    | Type    | Description             |
+| ------- | ------- | ----------------------- |
 | adapter | address | Default adapter address |
 
 #### setDefaultAdapter
@@ -86,8 +86,8 @@ Set the default adapter
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name | Type   | Description                       |
+| ---- | ------ | --------------------------------- |
 | name | string | Name of adapter to set as default |
 
 #### isRegistered
@@ -100,14 +100,14 @@ Check if an adapter is registered
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name | Type   | Description  |
+| ---- | ------ | ------------ |
 | name | string | Adapter name |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name       | Type | Description            |
+| ---------- | ---- | ---------------------- |
 | registered | bool | True if adapter exists |
 
 #### getRegisteredAdapters
@@ -120,7 +120,6 @@ Get all registered adapter names
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name  | Type     | Description            |
+| ----- | -------- | ---------------------- |
 | names | string[] | Array of adapter names |
-

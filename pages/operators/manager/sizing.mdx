@@ -2,16 +2,15 @@
 
 SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/manager
 
-
 Blueprints vary widely in resource needs. Use the guidance below as a starting point and adjust based on the specific blueprint workloads you operate.
 
 ## Suggested tiers
 
-| Tier | Use case | vCPU | RAM | Storage | Notes |
-| --- | --- | --- | --- | --- | --- |
-| Dev / Test | Local validation, dry runs | 2-4 | 8-16 GB | 50+ GB SSD | Single service, minimal load |
-| Standard | Single blueprint, steady traffic | 8 | 32 GB | 200+ GB SSD | Good baseline for production |
-| High Throughput | Multiple services or heavy workloads | 16+ | 64-128 GB | 500+ GB NVMe | Reserve headroom for spikes |
+| Tier            | Use case                             | vCPU | RAM       | Storage      | Notes                        |
+| --------------- | ------------------------------------ | ---- | --------- | ------------ | ---------------------------- |
+| Dev / Test      | Local validation, dry runs           | 2-4  | 8-16 GB   | 50+ GB SSD   | Single service, minimal load |
+| Standard        | Single blueprint, steady traffic     | 8    | 32 GB     | 200+ GB SSD  | Good baseline for production |
+| High Throughput | Multiple services or heavy workloads | 16+  | 64-128 GB | 500+ GB NVMe | Reserve headroom for spikes  |
 
 ## Storage planning
 

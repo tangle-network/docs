@@ -5,7 +5,7 @@ description: Auto-generated Solidity API reference.
 
 # ITangleAdmin
 
-Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/ITangle.sol
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/ITangle.sol
 
 ### ITangleAdmin
 
@@ -23,8 +23,8 @@ Set the staking module
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name    | Type    | Description                 |
+| ------- | ------- | --------------------------- |
 | staking | address | The IStaking implementation |
 
 #### setTreasury
@@ -37,8 +37,8 @@ Set the protocol treasury
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name     | Type    | Description          |
+| -------- | ------- | -------------------- |
 | treasury | address | The treasury address |
 
 #### setPaymentSplit
@@ -51,8 +51,8 @@ Set the payment split configuration
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name  | Type                      | Description                 |
+| ----- | ------------------------- | --------------------------- |
 | split | struct Types.PaymentSplit | The new split configuration |
 
 #### paymentSplit
@@ -246,4 +246,3 @@ function setTntPaymentDiscountBps(uint16 discountBps) external
 ```
 
 Set TNT payment discount bps
-

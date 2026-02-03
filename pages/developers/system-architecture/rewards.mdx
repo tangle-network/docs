@@ -22,7 +22,7 @@ Tangle separates **service fees** (paid by customers) from **incentives** (TNT b
 
 Claim paths: staker fees + staker inflation via `ServiceFeeDistributor`, TNT staking incentives via `RewardVaults`, and operator/customer/developer TNT via `InflationPool`.
 
-Code references: [Payments.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Payments.sol), [ServiceFeeDistributor.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/ServiceFeeDistributor.sol), [InflationPool.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/InflationPool.sol), [RewardVaults.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/RewardVaults.sol), [TangleMetrics.sol](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/TangleMetrics.sol)
+Code references: [Payments.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Payments.sol), [ServiceFeeDistributor.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol), [InflationPool.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/InflationPool.sol), [RewardVaults.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/RewardVaults.sol), [TangleMetrics.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/TangleMetrics.sol)
 
 ## Service Fee Split (Developer / Protocol / Operator / Stakers)
 
@@ -34,7 +34,7 @@ When a service pays a fee, `Payments.sol` calculates and routes the split:
 - Staker share (via `ServiceFeeDistributor`, when configured)
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Payments.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/core/Payments.sol"
   fromLine={259}
   toLine={403}
   title="Payments: fee distribution + staker routing via ServiceFeeDistributor"
@@ -87,7 +87,7 @@ Service pays 10 ETH with a 20/20/40/20 split:
   - `test/v2/InflationPool.t.sol`
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/ServiceFeeDistributor.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol"
   fromLine={19}
   toLine={241}
   title="ServiceFeeDistributor: state + delegation-change hook"

@@ -10,11 +10,11 @@ QoS is the observability layer for running Blueprints. As an operator, you decid
 
 QoS uses Prometheus-compatible metrics by default, with optional Grafana and Loki.
 
-| Component | Default Endpoint | Notes |
-| --- | --- | --- |
-| Prometheus metrics | `http://<host>:9090/metrics` | Includes `/health` plus Prometheus v1 API routes like `/api/v1/query`. |
-| Grafana UI | `http://<host>:3000` | Only when configured or managed by QoS. |
-| Loki push API | `http://<host>:3100/loki/api/v1/push` | Only when configured or managed by QoS. |
+| Component          | Default Endpoint                      | Notes                                                                  |
+| ------------------ | ------------------------------------- | ---------------------------------------------------------------------- |
+| Prometheus metrics | `http://<host>:9090/metrics`          | Includes `/health` plus Prometheus v1 API routes like `/api/v1/query`. |
+| Grafana UI         | `http://<host>:3000`                  | Only when configured or managed by QoS.                                |
+| Loki push API      | `http://<host>:3100/loki/api/v1/push` | Only when configured or managed by QoS.                                |
 
 ## Managed Stack vs External Stack
 

@@ -5,7 +5,7 @@ description: Auto-generated Solidity API reference.
 
 # ISuperfluidAdapter
 
-Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IStreamingPaymentAdapter.sol
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/IStreamingPaymentAdapter.sol
 
 ### ISuperfluidAdapter
 
@@ -23,15 +23,15 @@ Get the net flow rate for an account (incoming - outgoing)
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name    | Type    | Description         |
+| ------- | ------- | ------------------- |
 | account | address | The account address |
-| token | address | The super token |
+| token   | address | The super token     |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name        | Type  | Description                     |
+| ----------- | ----- | ------------------------------- |
 | netFlowRate | int96 | Net flow rate (can be negative) |
 
 #### getRealtimeBalance
@@ -44,17 +44,17 @@ Get the real-time balance of an account
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name    | Type    | Description         |
+| ------- | ------- | ------------------- |
 | account | address | The account address |
-| token | address | The super token |
+| token   | address | The super token     |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| availableBalance | int256 | Current available balance |
-| deposit | uint256 | Required deposit/buffer |
+| Name             | Type    | Description               |
+| ---------------- | ------- | ------------------------- |
+| availableBalance | int256  | Current available balance |
+| deposit          | uint256 | Required deposit/buffer   |
 
 #### isSolvent
 
@@ -66,15 +66,15 @@ Check if an account is solvent (positive balance)
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name    | Type    | Description         |
+| ------- | ------- | ------------------- |
 | account | address | The account address |
-| token | address | The super token |
+| token   | address | The super token     |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name    | Type | Description                          |
+| ------- | ---- | ------------------------------------ |
 | solvent | bool | True if account has positive balance |
 
 #### getRequiredBuffer
@@ -87,15 +87,15 @@ Get the required buffer/deposit for a flow rate
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| token | address | The super token |
-| flowRate | int96 | Flow rate in wei/second |
+| Name     | Type    | Description             |
+| -------- | ------- | ----------------------- |
+| token    | address | The super token         |
+| flowRate | int96   | Flow rate in wei/second |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name         | Type    | Description             |
+| ------------ | ------- | ----------------------- |
 | bufferAmount | uint256 | Required buffer deposit |
 
 #### wrapTokens
@@ -108,10 +108,10 @@ Wrap underlying tokens to super tokens
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| token | address | The underlying token |
-| amount | uint256 | Amount to wrap |
+| Name   | Type    | Description          |
+| ------ | ------- | -------------------- |
+| token  | address | The underlying token |
+| amount | uint256 | Amount to wrap       |
 
 #### unwrapTokens
 
@@ -123,8 +123,7 @@ Unwrap super tokens to underlying
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| token | address | The super token |
+| Name   | Type    | Description      |
+| ------ | ------- | ---------------- |
+| token  | address | The super token  |
 | amount | uint256 | Amount to unwrap |
-

@@ -26,11 +26,11 @@ The delay is the maximum of `delegationBondLessDelay` and `leaveDelegatorsDelay`
 
 Delays are expressed in **rounds**. To convert to time, multiply by `roundDuration`.
 
-| Delay | Source | What It Controls |
-| ----- | ------ | ---------------- |
-| `delegationBondLessDelay` | `MultiAssetDelegation` | Minimum rounds before a redeem request is claimable. |
-| `leaveDelegatorsDelay` | `MultiAssetDelegation` | Additional delay before exits finalize (vault uses the max of both). |
-| `roundDuration` | `MultiAssetDelegation` | Length of a round; used to translate delays into wall-clock time. |
+| Delay                     | Source                 | What It Controls                                                     |
+| ------------------------- | ---------------------- | -------------------------------------------------------------------- |
+| `delegationBondLessDelay` | `MultiAssetDelegation` | Minimum rounds before a redeem request is claimable.                 |
+| `leaveDelegatorsDelay`    | `MultiAssetDelegation` | Additional delay before exits finalize (vault uses the max of both). |
+| `roundDuration`           | `MultiAssetDelegation` | Length of a round; used to translate delays into wall-clock time.    |
 
 See [Protocol Parameters](/network/network-parameters) for current defaults.
 
