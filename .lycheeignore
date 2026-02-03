@@ -2,3 +2,6 @@ http://localhost*
 https://localhost*
 # Testnet explorer returns 401 but links are valid
 https://testnet-explorer.tangle.tools/*
+# Internal MDX routes without .mdx extension (valid Nextra routes, not filesystem paths)
+file://**/pages/network/claim-airdrop
+file://**/pages/operators/operator/join_operator/join
