@@ -1,2 +1,4 @@
 http://localhost*
 https://localhost*
+# Nextra internal relative links (resolved at build time, work without file extensions)
+file://.*/pages/.*/[^.]+$

@@ -17,7 +17,7 @@ Tangle supports observability at two layers:
 The core protocol can be configured with a metrics recorder (typically `TangleMetrics`). If the recorder is unset (`address(0)`), metrics are disabled.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Base.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol"
   fromLine={120}
   toLine={169}
   title="Base: setMetricsRecorder + related configuration"
@@ -28,7 +28,7 @@ The core protocol can be configured with a metrics recorder (typically `TangleMe
 Metrics hooks are designed to be **non-blocking**: core actions should not revert if metrics recording is unavailable or faulty.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Base.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol"
   fromLine={372}
   toLine={428}
   title="Base: best-effort metrics hooks (try/catch)"
@@ -39,7 +39,7 @@ Metrics hooks are designed to be **non-blocking**: core actions should not rever
 `TangleMetrics` is a lightweight recorder that emits events and stores minimal aggregates for incentive distribution.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/TangleMetrics.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/rewards/TangleMetrics.sol"
   fromLine={1}
   toLine={120}
   title="TangleMetrics: events + minimal aggregate state"

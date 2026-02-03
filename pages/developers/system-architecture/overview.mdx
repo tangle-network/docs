@@ -36,29 +36,29 @@ Tangle is the current protocol (EVM-based; legacy: Tangle Substrate) for instant
 
 | Component                | Responsibility                                                       | Code                                                                                                |
 | ------------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `Tangle`                 | Facet router (dispatches calls by selector)                          | https://github.com/tangle-network/tnt-core/blob/v2/src/v2/Tangle.sol                                |
-| `Tangle*Facet` modules   | Public protocol surface (blueprints/services/jobs/payments/quotes/…) | https://github.com/tangle-network/tnt-core/tree/v2/src/v2/facets/tangle                             |
-| `core/*` modules         | Shared implementations used by facets                                | https://github.com/tangle-network/tnt-core/tree/v2/src/v2/core                                      |
-| `MultiAssetDelegation`   | Restaking + delegation + exits + slashing application                | https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/MultiAssetDelegation.sol        |
-| `ServiceFeeDistributor`  | Restaker fee distribution (USD-weighted, per-asset commitments)      | https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/ServiceFeeDistributor.sol         |
-| `OperatorStatusRegistry` | Heartbeats, QoS signals, and optional metric forwarding              | https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/OperatorStatusRegistry.sol      |
-| `TangleMetrics`          | Lightweight activity recorder used by incentives                     | https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/TangleMetrics.sol                 |
+| `Tangle`                 | Facet router (dispatches calls by selector)                          | https://github.com/tangle-network/tnt-core/blob/main/src/Tangle.sol                                 |
+| `Tangle*Facet` modules   | Public protocol surface (blueprints/services/jobs/payments/quotes/…) | https://github.com/tangle-network/tnt-core/tree/main/src/facets/tangle                              |
+| `core/*` modules         | Shared implementations used by facets                                | https://github.com/tangle-network/tnt-core/tree/main/src/core                                       |
+| `MultiAssetDelegation`   | Restaking + delegation + exits + slashing application                | https://github.com/tangle-network/tnt-core/blob/main/src/staking/MultiAssetDelegation.sol           |
+| `ServiceFeeDistributor`  | Restaker fee distribution (USD-weighted, per-asset commitments)      | https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol          |
+| `OperatorStatusRegistry` | Heartbeats, QoS signals, and optional metric forwarding              | https://github.com/tangle-network/tnt-core/blob/main/src/staking/OperatorStatusRegistry.sol         |
+| `TangleMetrics`          | Lightweight activity recorder used by incentives                     | https://github.com/tangle-network/tnt-core/blob/main/src/rewards/TangleMetrics.sol                  |
 | `TangleMigration`        | TNT legacy-chain migration claim (Merkle + SP1/ZK)                   | https://github.com/tangle-network/tnt-core/blob/v2/packages/migration-claim/src/TangleMigration.sol |
 
 ### Off-Chain (Blueprint SDK)
 
-| Component                    | Responsibility                                                      | Code                                                                                  |
-| ---------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Manager                      | Loads services from chain, selects runtime sources, runs blueprints | https://github.com/tangle-network/blueprint/tree/v2/crates/manager                    |
-| Tangle contexts              | Provides typed clients + operator identity + env                    | https://github.com/tangle-network/blueprint/blob/v2/crates/contexts/src/tangle_evm.rs |
-| Tangle producer/consumer     | Event ingestion + result submission helpers                         | https://github.com/tangle-network/blueprint/tree/v2/crates/tangle-evm-extra/src       |
+| Component                | Responsibility                                                      | Code                                                                                  |
+| ------------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Manager                  | Loads services from chain, selects runtime sources, runs blueprints | https://github.com/tangle-network/blueprint/tree/v2/crates/manager                    |
+| Tangle contexts          | Provides typed clients + operator identity + env                    | https://github.com/tangle-network/blueprint/blob/v2/crates/contexts/src/tangle_evm.rs |
+| Tangle producer/consumer | Event ingestion + result submission helpers                         | https://github.com/tangle-network/blueprint/tree/v2/crates/tangle-evm-extra/src       |
 
 ## The Entrypoint Contract (Composition)
 
 The protocol is exposed as a set of **facets** registered on the `Tangle` router. The router maps function selectors to facet implementations and delegates calls.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/Tangle.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/Tangle.sol"
   fromLine={1}
   toLine={95}
   title="Tangle.sol: facet router + selector registration"

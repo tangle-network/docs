@@ -10,7 +10,7 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 Tangle supports three pricing models at the blueprint level. The model determines **when** the customer pays; the protocol’s payment split determines **who** receives fees.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/libraries/Types.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/libraries/Types.sol"
   fromLine={11}
   toLine={45}
   title="Types: PricingModel + BlueprintConfig fields"
@@ -26,7 +26,7 @@ For `PayOnce` services, the customer pays once when the service is created. The 
 - Restaker share (routed to `ServiceFeeDistributor` when configured)
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Payments.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/core/Payments.sol"
   fromLine={268}
   toLine={403}
   title="Payments: split routing + operator pending rewards + restaker routing"
@@ -37,7 +37,7 @@ For `PayOnce` services, the customer pays once when the service is created. The 
 For `Subscription` services, the customer funds an on-chain escrow and the service is billed in intervals. Anyone can trigger billing; the recipients are naturally incentivized to keep billing moving.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Payments.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/core/Payments.sol"
   fromLine={32}
   toLine={191}
   title="Payments: fundService + billSubscription + billSubscriptionBatch"
@@ -53,7 +53,7 @@ Operational notes:
 For `EventDriven` services, the protocol collects a fixed per-job fee during job submission.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Jobs.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/core/Jobs.sol"
   fromLine={248}
   toLine={296}
   title="Jobs: EventDriven job payment collection (eventRate)"

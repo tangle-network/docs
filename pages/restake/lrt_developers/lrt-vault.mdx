@@ -23,7 +23,7 @@ The factory uses a deterministic key derived from:
 This lets integrators look up “the vault for operator X and blueprint set Y” without scanning events.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/LiquidDelegationFactory.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/staking/LiquidDelegationFactory.sol"
   fromLine={70}
   toLine={149}
   title="LiquidDelegationFactory: createVault + computeVaultKey + getVault"
@@ -36,7 +36,7 @@ The reference vault implements ERC-4626-like conversions but uses the restaking 
 Implication: if a vault holds idle balances (or harvests rewards into its own balance), integrators must verify whether those balances are included in `totalAssets()` for share pricing.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/LiquidDelegationVault.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/staking/LiquidDelegationVault.sol"
   fromLine={125}
   toLine={206}
   title="LiquidDelegationVault: totalAssets() + deposit() delegation path"
@@ -50,7 +50,7 @@ Withdrawals are asynchronous:
 - After the exit delay (round-based), `redeem(...)` executes the unstake and transfers assets to the receiver.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/LiquidDelegationVault.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/staking/LiquidDelegationVault.sol"
   fromLine={231}
   toLine={374}
   title="LiquidDelegationVault: requestRedeem + claimable checks + redeem"

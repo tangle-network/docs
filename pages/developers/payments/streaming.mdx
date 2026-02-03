@@ -19,7 +19,7 @@ When the protocol routes the restaker share to `ServiceFeeDistributor`, the dist
 If both are true, it creates a stream from `max(now, createdAt)` to `createdAt + ttl`. Otherwise, it distributes immediately.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/ServiceFeeDistributor.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol"
   fromLine={364}
   toLine={440}
   title="ServiceFeeDistributor: stream creation vs immediate distribution"
@@ -30,7 +30,7 @@ If both are true, it creates a stream from `max(now, createdAt)` to `createdAt +
 Streams are tracked per `(serviceId, operator)` and drip linearly over time. Drip operations transfer a chunk of funds back to the distributor so it can distribute using the current delegation scores.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/StreamingPaymentManager.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/rewards/StreamingPaymentManager.sol"
   fromLine={136}
   toLine={235}
   title="StreamingPaymentManager: createStream + linear drip accounting"
@@ -46,7 +46,7 @@ Operational notes:
 If a service is terminated early, remaining (undripped) streamed balances are refunded to a recipient designated by the protocol.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/StreamingPaymentManager.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/rewards/StreamingPaymentManager.sol"
   fromLine={320}
   toLine={337}
   title="StreamingPaymentManager: terminate → drip → refund remaining"

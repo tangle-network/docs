@@ -19,7 +19,7 @@ A blueprint is a structured definition that includes:
 - Optional **service manager** contract hooks
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Blueprints.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/core/Blueprints.sol"
   fromLine={10}
   toLine={74}
   title="Blueprint creation: definition storage + manager hooks"
@@ -35,7 +35,7 @@ Services can be created via two primary paths:
 The RFQ path is optimized for “instant activation” and avoids a multi-transaction approval dance.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Quotes.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/core/Quotes.sol"
   fromLine={19}
   toLine={120}
   title="RFQ flow: create service from signed operator quotes"
@@ -49,7 +49,7 @@ Once active, a service acts like a restricted execution surface:
 - **Operators** submit results (and optionally aggregated results when required).
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/core/Jobs.sol"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/core/Jobs.sol"
   fromLine={37}
   toLine={70}
   title="Jobs: submitJob + submitResult entrypoints"

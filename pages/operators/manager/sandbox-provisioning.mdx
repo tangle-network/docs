@@ -8,7 +8,7 @@ If you are running container-based blueprints only, you can skip this page.
 
 This is the default production path. systemd grants the capability at runtime, so you do not need to modify the binary.
 
-1) Verify hardware virtualization
+1. Verify hardware virtualization
 
 ```bash
 egrep -c '(vmx|svm)' /proc/cpuinfo
@@ -16,14 +16,14 @@ egrep -c '(vmx|svm)' /proc/cpuinfo
 
 The output should be greater than 0. If it is 0, enable virtualization in BIOS/UEFI.
 
-2) Install dependencies
+2. Install dependencies
 
 ```bash
 sudo apt-get update
 sudo apt-get install -y cloud-hypervisor qemu-utils
 ```
 
-3) Enable KVM access for your user
+3. Enable KVM access for your user
 
 ```bash
 sudo usermod -aG kvm "$USER"
@@ -31,7 +31,7 @@ sudo usermod -aG kvm "$USER"
 
 Log out and back in (or run `newgrp kvm`) so group membership applies.
 
-4) Create a systemd service with ambient capabilities
+4. Create a systemd service with ambient capabilities
 
 ```bash
 sudo tee /etc/systemd/system/blueprint-manager.service >/dev/null <<'EOF'
@@ -70,7 +70,7 @@ sudo systemctl status blueprint-manager
 
 ## Quick start (setcap, simple but less durable)
 
-1) Verify hardware virtualization
+1. Verify hardware virtualization
 
 ```bash
 egrep -c '(vmx|svm)' /proc/cpuinfo
@@ -78,14 +78,14 @@ egrep -c '(vmx|svm)' /proc/cpuinfo
 
 The output should be greater than 0. If it is 0, enable virtualization in BIOS/UEFI.
 
-2) Install dependencies
+2. Install dependencies
 
 ```bash
 sudo apt-get update
 sudo apt-get install -y cloud-hypervisor qemu-utils libcap2-bin
 ```
 
-3) Enable KVM access for your user
+3. Enable KVM access for your user
 
 ```bash
 sudo usermod -aG kvm "$USER"
@@ -93,7 +93,7 @@ sudo usermod -aG kvm "$USER"
 
 Log out and back in (or run `newgrp kvm`) so group membership applies.
 
-4) Grant `CAP_NET_ADMIN` to the runtime binary
+4. Grant `CAP_NET_ADMIN` to the runtime binary
 
 If you run the manager via `cargo tangle`, grant the capability to `cargo-tangle`:
 
@@ -105,7 +105,7 @@ getcap "$BIN"
 
 If you run `blueprint-manager` directly, set the capability on that binary instead.
 
-5) Run the manager with the VM sandbox
+5. Run the manager with the VM sandbox
 
 ```bash
 cargo tangle blueprint run \
