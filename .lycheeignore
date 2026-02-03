@@ -1,2 +1,4 @@
 http://localhost*
 https://localhost*
+# Testnet explorer returns 401 but links are valid
+https://testnet-explorer.tangle.tools/*

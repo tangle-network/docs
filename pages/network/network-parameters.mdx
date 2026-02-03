@@ -4,36 +4,36 @@ This page summarizes protocol-level defaults for the Tangle v2 (EVM) deployment.
 
 ## TNT Core Values
 
-| Parameter | Value |
-| --------- | ----- |
-| Name | Tangle Network Token |
-| Symbol | TNT |
-| Decimals | 18 |
+| Parameter             | Value                             |
+| --------------------- | --------------------------------- |
+| Name                  | Tangle Network Token              |
+| Symbol                | TNT                               |
+| Decimals              | 18                                |
 | Max supply (hard cap) | 109,255,636.91921292788561091 TNT |
 
-Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/governance/TangleToken.sol
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleToken.sol
 
 ## TNT Contract Addresses
 
-| Environment | Token Contract | Explorer |
-| ----------- | -------------- | -------- |
-| Mainnet | `TBD` | `TBD` |
-| Testnet | `0xa9ffe787eea7f385dac8481cd8bdc3d9194aeb5a` | https://testnet-explorer.tangle.tools/address/0xa9ffe787eea7f385dac8481cd8bdc3d9194aeb5a |
-| Local | `TBD` | `TBD` |
+| Environment | Token Contract                               | Explorer                                                                                 |
+| ----------- | -------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Mainnet     | `TBD`                                        | `TBD`                                                                                    |
+| Testnet     | `0xa9ffe787eea7f385dac8481cd8bdc3d9194aeb5a` | https://testnet-explorer.tangle.tools/address/0xa9ffe787eea7f385dac8481cd8bdc3d9194aeb5a |
+| Local       | `TBD`                                        | `TBD`                                                                                    |
 
 Testnet source: https://github.com/tangle-network/tnt-core/blob/v2/deployments/base-sepolia/latest.json
 
 ## Core Contract Addresses
 
-| Contract | Mainnet | Testnet | Local |
-| -------- | ------- | ------- | ----- |
-| `Tangle` | `TBD` | `0x1be58d12620ecc8ba9d780feec2596510d75a933` | `TBD` |
-| `MultiAssetDelegation` | `TBD` | `0x787dd1de4099ff8c68bfac11b82e4aed52c7f1e1` | `TBD` |
-| `OperatorStatusRegistry` | `TBD` | `0x20258c5e4cba66d4819a06045ff00d15775e64fb` | `TBD` |
-| `TangleMetrics` | `TBD` | `0x2057f94d04e4d667c4d5e60d23d2963358c00970` | `TBD` |
-| `RewardVaults` | `TBD` | `0x2963a51fec3e2cf51b19b848942d91296448a353` | `TBD` |
-| `InflationPool` | `TBD` | `0xe620f87540724a0cebdee9796dd8580e02dd4911` | `TBD` |
-| `Credits` | `TBD` | `0x758226e04478541fcdac605e1f235e2956259a10` | `TBD` |
+| Contract                 | Mainnet | Testnet                                      | Local |
+| ------------------------ | ------- | -------------------------------------------- | ----- |
+| `Tangle`                 | `TBD`   | `0x1be58d12620ecc8ba9d780feec2596510d75a933` | `TBD` |
+| `MultiAssetDelegation`   | `TBD`   | `0x787dd1de4099ff8c68bfac11b82e4aed52c7f1e1` | `TBD` |
+| `OperatorStatusRegistry` | `TBD`   | `0x20258c5e4cba66d4819a06045ff00d15775e64fb` | `TBD` |
+| `TangleMetrics`          | `TBD`   | `0x2057f94d04e4d667c4d5e60d23d2963358c00970` | `TBD` |
+| `RewardVaults`           | `TBD`   | `0x2963a51fec3e2cf51b19b848942d91296448a353` | `TBD` |
+| `InflationPool`          | `TBD`   | `0xe620f87540724a0cebdee9796dd8580e02dd4911` | `TBD` |
+| `Credits`                | `TBD`   | `0x758226e04478541fcdac605e1f235e2956259a10` | `TBD` |
 
 ## Protocol Defaults (v2)
 
@@ -41,33 +41,34 @@ Defaults are defined in `TangleStorage` and `ProtocolConfig` and can be overridd
 
 ### Fee and Security Defaults
 
-| Parameter | Value |
-| --------- | ----- |
+| Parameter                   | Value                                                      |
+| --------------------------- | ---------------------------------------------------------- |
 | Service fee split (default) | 20% developer / 20% protocol / 40% operators / 20% stakers |
-| Default TNT min exposure | 10% (1000 bps) |
-| TNT payment discount | 0 bps |
-| Aggregation threshold | 67% (6700 bps) |
+| Default TNT min exposure    | 10% (1000 bps)                                             |
+| TNT payment discount        | 0 bps                                                      |
+| Aggregation threshold       | 67% (6700 bps)                                             |
 
 ### Timing Defaults
 
-| Parameter | Value |
-| --------- | ----- |
-| Round duration | 6 hours |
-| Rounds per epoch | 28 (7 days) |
-| Delegator unstake delay | 28 rounds (7 days) |
-| Operator exit delay | 56 rounds (14 days) |
-| Dispute window | 14 rounds (3.5 days) |
-| Reward grace period | 4 rounds (24 hours) |
-| Min service commitment | 1 day |
-| Exit queue duration | 7 days |
-| Min service TTL | 1 hour |
-| Max service TTL | 365 days |
-| Request expiry grace | 1 hour |
-| Max quote age | 1 hour |
+| Parameter               | Value                |
+| ----------------------- | -------------------- |
+| Round duration          | 6 hours              |
+| Rounds per epoch        | 28 (7 days)          |
+| Delegator unstake delay | 28 rounds (7 days)   |
+| Operator exit delay     | 56 rounds (14 days)  |
+| Dispute window          | 14 rounds (3.5 days) |
+| Reward grace period     | 4 rounds (24 hours)  |
+| Min service commitment  | 1 day                |
+| Exit queue duration     | 7 days               |
+| Min service TTL         | 1 hour               |
+| Max service TTL         | 365 days             |
+| Request expiry grace    | 1 hour               |
+| Max quote age           | 1 hour               |
 
 Sources:
-- https://github.com/tangle-network/tnt-core/blob/v2/src/v2/TangleStorage.sol
-- https://github.com/tangle-network/tnt-core/blob/v2/src/v2/config/ProtocolConfig.sol
+
+- https://github.com/tangle-network/tnt-core/blob/main/src/TangleStorage.sol
+- https://github.com/tangle-network/tnt-core/blob/main/src/config/ProtocolConfig.sol
 
 ## Host Chain Parameters
 

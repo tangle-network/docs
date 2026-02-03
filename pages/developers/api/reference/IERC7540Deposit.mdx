@@ -5,7 +5,7 @@ description: Auto-generated Solidity API reference.
 
 # IERC7540Deposit
 
-Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IERC7540.sol
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/IERC7540.sol
 
 ### IERC7540Deposit
 
@@ -25,16 +25,16 @@ Request an asynchronous deposit
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| assets | uint256 | Amount of assets to deposit |
+| Name       | Type    | Description                       |
+| ---------- | ------- | --------------------------------- |
+| assets     | uint256 | Amount of assets to deposit       |
 | controller | address | Address that controls the request |
-| owner | address | Address that owns the assets |
+| owner      | address | Address that owns the assets      |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name      | Type    | Description                        |
+| --------- | ------- | ---------------------------------- |
 | requestId | uint256 | Unique identifier for this request |
 
 #### pendingDepositRequest
@@ -47,15 +47,15 @@ Get pending deposit request amount
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | uint256 | The request identifier |
+| Name       | Type    | Description            |
+| ---------- | ------- | ---------------------- |
+| requestId  | uint256 | The request identifier |
 | controller | address | The controller address |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name   | Type    | Description              |
+| ------ | ------- | ------------------------ |
 | assets | uint256 | Amount of assets pending |
 
 #### claimableDepositRequest
@@ -68,15 +68,15 @@ Get claimable deposit request amount
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| requestId | uint256 | The request identifier |
+| Name       | Type    | Description            |
+| ---------- | ------- | ---------------------- |
+| requestId  | uint256 | The request identifier |
 | controller | address | The controller address |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name   | Type    | Description                |
+| ------ | ------- | -------------------------- |
 | assets | uint256 | Amount of assets claimable |
 
 #### Events
@@ -88,4 +88,3 @@ event DepositRequest(address controller, address owner, uint256 requestId, addre
 ```
 
 Emitted when a deposit request is created
-

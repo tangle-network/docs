@@ -5,7 +5,7 @@ description: Auto-generated Solidity API reference.
 
 # IMBSMRegistry
 
-Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IMBSMRegistry.sol
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/IMBSMRegistry.sol
 
 ### IMBSMRegistry
 
@@ -23,14 +23,14 @@ Get the MBSM address currently pinned for a blueprint
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name        | Type   | Description              |
+| ----------- | ------ | ------------------------ |
 | blueprintId | uint64 | The blueprint identifier |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name        | Type    | Description                               |
+| ----------- | ------- | ----------------------------------------- |
 | mbsmAddress | address | The pinned MBSM (or latest if not pinned) |
 
 #### getPinnedRevision
@@ -51,8 +51,8 @@ Get the latest registered MBSM address
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name        | Type    | Description     |
+| ----------- | ------- | --------------- |
 | mbsmAddress | address | The latest MBSM |
 
 #### getMBSMByRevision
@@ -65,14 +65,14 @@ Get an MBSM by explicit revision
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name     | Type   | Description                       |
+| -------- | ------ | --------------------------------- |
 | revision | uint32 | The registry revision (1-indexed) |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name        | Type    | Description                             |
+| ----------- | ------- | --------------------------------------- |
 | mbsmAddress | address | The registered address for the revision |
 
 #### getLatestRevision
@@ -98,4 +98,3 @@ function unpinBlueprint(uint64 blueprintId) external
 ```
 
 Unpin a blueprint (reverting to latest)
-

@@ -5,10 +5,12 @@ Operators earn revenue from service usage and optional TNT budgets. This page ou
 ## Revenue Sources
 
 1. **Service fees (default split)**
+
    - Fees paid by customers are split across developers, the protocol, operators, and stakers.
    - The default split is **20% developer / 20% protocol / 40% operators / 20% stakers** (governance configurable).
 
 2. **Optional TNT incentives (pre-funded)**
+
    - If governance funds `InflationPool`, operators can earn TNT based on activity metrics.
 
 3. **Optional operator commission (delegation incentives)**
@@ -24,9 +26,9 @@ See [Incentives](/network/incentives-overview) for the full fee flow.
 
 ## Where This Lives in Code
 
-- `ServiceFeeDistributor`: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/ServiceFeeDistributor.sol
-- `InflationPool`: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/InflationPool.sol
-- `RewardVaults`: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/RewardVaults.sol
+- `ServiceFeeDistributor`: https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol
+- `InflationPool`: https://github.com/tangle-network/tnt-core/blob/main/src/rewards/InflationPool.sol
+- `RewardVaults`: https://github.com/tangle-network/tnt-core/blob/main/src/rewards/RewardVaults.sol
 
 For a readable breakdown and links to contracts, see [Rewards Architecture](/developers/system-architecture/rewards).
 

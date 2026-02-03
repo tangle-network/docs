@@ -5,7 +5,7 @@ description: Auto-generated Solidity API reference.
 
 # ITangleGovernance
 
-Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/ITangleGovernance.sol
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/ITangleGovernance.sol
 
 ### ITangleGovernance
 
@@ -42,17 +42,17 @@ Create a new proposal
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| targets | address[] | Contract addresses to call |
-| values | uint256[] | ETH values to send |
-| calldatas | bytes[] | Encoded function calls |
-| description | string | Human-readable description |
+| Name        | Type      | Description                |
+| ----------- | --------- | -------------------------- |
+| targets     | address[] | Contract addresses to call |
+| values      | uint256[] | ETH values to send         |
+| calldatas   | bytes[]   | Encoded function calls     |
+| description | string    | Human-readable description |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name       | Type    | Description                    |
+| ---------- | ------- | ------------------------------ |
 | proposalId | uint256 | The unique proposal identifier |
 
 #### queue
@@ -65,17 +65,17 @@ Queue a successful proposal for execution
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| targets | address[] | Contract addresses to call |
-| values | uint256[] | ETH values to send |
-| calldatas | bytes[] | Encoded function calls |
-| descriptionHash | bytes32 | Hash of the proposal description |
+| Name            | Type      | Description                      |
+| --------------- | --------- | -------------------------------- |
+| targets         | address[] | Contract addresses to call       |
+| values          | uint256[] | ETH values to send               |
+| calldatas       | bytes[]   | Encoded function calls           |
+| descriptionHash | bytes32   | Hash of the proposal description |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name       | Type    | Description             |
+| ---------- | ------- | ----------------------- |
 | proposalId | uint256 | The proposal identifier |
 
 #### execute
@@ -88,17 +88,17 @@ Execute a queued proposal
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| targets | address[] | Contract addresses to call |
-| values | uint256[] | ETH values to send |
-| calldatas | bytes[] | Encoded function calls |
-| descriptionHash | bytes32 | Hash of the proposal description |
+| Name            | Type      | Description                      |
+| --------------- | --------- | -------------------------------- |
+| targets         | address[] | Contract addresses to call       |
+| values          | uint256[] | ETH values to send               |
+| calldatas       | bytes[]   | Encoded function calls           |
+| descriptionHash | bytes32   | Hash of the proposal description |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name       | Type    | Description             |
+| ---------- | ------- | ----------------------- |
 | proposalId | uint256 | The proposal identifier |
 
 #### cancel
@@ -111,17 +111,17 @@ Cancel a proposal
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| targets | address[] | Contract addresses to call |
-| values | uint256[] | ETH values to send |
-| calldatas | bytes[] | Encoded function calls |
-| descriptionHash | bytes32 | Hash of the proposal description |
+| Name            | Type      | Description                      |
+| --------------- | --------- | -------------------------------- |
+| targets         | address[] | Contract addresses to call       |
+| values          | uint256[] | ETH values to send               |
+| calldatas       | bytes[]   | Encoded function calls           |
+| descriptionHash | bytes32   | Hash of the proposal description |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name       | Type    | Description             |
+| ---------- | ------- | ----------------------- |
 | proposalId | uint256 | The proposal identifier |
 
 #### castVote
@@ -134,15 +134,15 @@ Cast a vote on a proposal
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| proposalId | uint256 | The proposal to vote on |
-| support | uint8 | 0=Against, 1=For, 2=Abstain |
+| Name       | Type    | Description                 |
+| ---------- | ------- | --------------------------- |
+| proposalId | uint256 | The proposal to vote on     |
+| support    | uint8   | 0=Against, 1=For, 2=Abstain |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name   | Type    | Description            |
+| ------ | ------- | ---------------------- |
 | weight | uint256 | The voting weight used |
 
 #### castVoteWithReason
@@ -155,16 +155,16 @@ Cast a vote with reason
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| proposalId | uint256 | The proposal to vote on |
-| support | uint8 | 0=Against, 1=For, 2=Abstain |
-| reason | string | Explanation for the vote |
+| Name       | Type    | Description                 |
+| ---------- | ------- | --------------------------- |
+| proposalId | uint256 | The proposal to vote on     |
+| support    | uint8   | 0=Against, 1=For, 2=Abstain |
+| reason     | string  | Explanation for the vote    |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name   | Type    | Description            |
+| ------ | ------- | ---------------------- |
 | weight | uint256 | The voting weight used |
 
 #### castVoteBySig
@@ -177,17 +177,17 @@ Cast a vote using EIP-712 signature
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| proposalId | uint256 | The proposal to vote on |
-| support | uint8 | 0=Against, 1=For, 2=Abstain |
-| voter | address | The voter address |
-| signature | bytes | The EIP-712 signature |
+| Name       | Type    | Description                 |
+| ---------- | ------- | --------------------------- |
+| proposalId | uint256 | The proposal to vote on     |
+| support    | uint8   | 0=Against, 1=For, 2=Abstain |
+| voter      | address | The voter address           |
+| signature  | bytes   | The EIP-712 signature       |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name   | Type    | Description            |
+| ------ | ------- | ---------------------- |
 | weight | uint256 | The voting weight used |
 
 #### state
@@ -269,4 +269,3 @@ function proposalThreshold() external view returns (uint256)
 ```
 
 Get the proposal threshold (tokens needed to propose)
-

@@ -33,8 +33,8 @@ Liquid delegation vaults manage delegation and redemption. Incentives and servic
 
 Reward claim surfaces live in the protocol:
 
-- **Service fees** are claimed through [`ServiceFeeDistributor.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/ServiceFeeDistributor.sol).
-- **TNT incentives** are claimed through [`RewardVaults.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/RewardVaults.sol).
+- **Service fees** are claimed through [`ServiceFeeDistributor.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol).
+- **TNT incentives** are claimed through [`RewardVaults.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/RewardVaults.sol).
 
 The vault does not automatically distribute those rewards to share holders; integrators need to wire a distribution path if they want reward pass-through.
 
@@ -42,14 +42,14 @@ See [Claiming Cheatsheet](/staking/incentives/claiming) for function-level claim
 
 ## Core Contracts (GitHub)
 
-- [`LiquidDelegationVault.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/LiquidDelegationVault.sol)
-- [`LiquidDelegationFactory.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/LiquidDelegationFactory.sol)
-- [`MultiAssetDelegation.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/restaking/MultiAssetDelegation.sol)
+- [`LiquidDelegationVault.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/staking/LiquidDelegationVault.sol)
+- [`LiquidDelegationFactory.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/staking/LiquidDelegationFactory.sol)
+- [`MultiAssetDelegation.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/staking/MultiAssetDelegation.sol)
 
 ## Related Interfaces (GitHub)
 
-- [`IERC7540.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IERC7540.sol)
-- [`IMultiAssetDelegation.sol`](https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IMultiAssetDelegation.sol)
+- [`IERC7540.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/IERC7540.sol)
+- [`IMultiAssetDelegation.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/IMultiAssetDelegation.sol)
 
 ## Next Steps
 

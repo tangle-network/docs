@@ -6,7 +6,6 @@ title: Tangle CLI Key Commands
 
 CLI source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/cli
 
-
 This guide covers the key management commands available in the Tangle CLI tool. These commands allow you to generate, import, export, and list cryptographic keys used by Tangle protocols.
 
 ## Key Commands
@@ -67,8 +66,8 @@ cargo tangle key import --keystore-path <PATH> [OPTIONS]
 - `-k, --keystore-path <PATH>` (**required**): The path to the keystore
 - `-t, --key-type <KEY_TYPE>` (optional): The type of key to import (sr25519, ed25519, ecdsa, bls381, bls377, bn254)
 - `-x, --secret <SECRET>` (optional): The secret key to import (hex format without 0x prefix). Only required if key type is also specified
-When importing a key, you must specify the key type and secret key. If you don't specify a key type and secret, the CLI will prompt you interactively. Specifying the secret but not
-the key type will also prompt you to select a key type.
+  When importing a key, you must specify the key type and secret key. If you don't specify a key type and secret, the CLI will prompt you interactively. Specifying the secret but not
+  the key type will also prompt you to select a key type.
 
 ### Examples
 

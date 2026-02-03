@@ -22,11 +22,11 @@ The Blueprint QoS system provides a complete observability stack:
 
 QoS always exposes a Prometheus-compatible metrics endpoint when metrics are enabled. Grafana and Loki are optional and can be managed by QoS or connected externally.
 
-| Component | Default Endpoint | Notes |
-| --- | --- | --- |
-| Prometheus metrics | `http://<host>:9090/metrics` | Includes `/health` plus Prometheus v1 API routes like `/api/v1/query`. |
-| Grafana UI | `http://<host>:3000` | Only when configured or managed by QoS. |
-| Loki push API | `http://<host>:3100/loki/api/v1/push` | Only when configured or managed by QoS. |
+| Component          | Default Endpoint                      | Notes                                                                  |
+| ------------------ | ------------------------------------- | ---------------------------------------------------------------------- |
+| Prometheus metrics | `http://<host>:9090/metrics`          | Includes `/health` plus Prometheus v1 API routes like `/api/v1/query`. |
+| Grafana UI         | `http://<host>:3000`                  | Only when configured or managed by QoS.                                |
+| Loki push API      | `http://<host>:3100/loki/api/v1/push` | Only when configured or managed by QoS.                                |
 
 ## Integrating QoS with BlueprintRunner
 
@@ -240,11 +240,11 @@ if let Some(qos) = &ctx.qos_service {
 
 ## QoS Components Reference
 
-| Component | Primary Struct | Config | Purpose |
-| --- | --- | --- | --- |
-| Unified Service | `QoSService` | `QoSConfig` | Main entry point for QoS integration |
-| Heartbeat | `HeartbeatService` | `HeartbeatConfig` | Liveness signals to the status registry |
-| Metrics | `MetricsService` | `MetricsConfig` | System + job metrics and Prometheus export |
-| Logging | N/A | `LokiConfig` | Log aggregation via Loki |
-| Dashboards | `GrafanaClient` | `GrafanaConfig` | Dashboards and datasources |
-| Server Management | `ServerManager` | Server configs | Manages Docker containers for the stack |
+| Component         | Primary Struct     | Config            | Purpose                                    |
+| ----------------- | ------------------ | ----------------- | ------------------------------------------ |
+| Unified Service   | `QoSService`       | `QoSConfig`       | Main entry point for QoS integration       |
+| Heartbeat         | `HeartbeatService` | `HeartbeatConfig` | Liveness signals to the status registry    |
+| Metrics           | `MetricsService`   | `MetricsConfig`   | System + job metrics and Prometheus export |
+| Logging           | N/A                | `LokiConfig`      | Log aggregation via Loki                   |
+| Dashboards        | `GrafanaClient`    | `GrafanaConfig`   | Dashboards and datasources                 |
+| Server Management | `ServerManager`    | Server configs    | Manages Docker containers for the stack    |

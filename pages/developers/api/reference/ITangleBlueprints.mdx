@@ -5,7 +5,7 @@ description: Auto-generated Solidity API reference.
 
 # ITangleBlueprints
 
-Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/ITangleBlueprints.sol
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/ITangleBlueprints.sol
 
 ### ITangleBlueprints
 
@@ -23,14 +23,14 @@ Create a blueprint from an encoded definition that includes schemas and job meta
 
 ##### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name       | Type                             | Description                                 |
+| ---------- | -------------------------------- | ------------------------------------------- |
 | definition | struct Types.BlueprintDefinition | Fully populated blueprint definition struct |
 
 ##### Return Values
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name        | Type   | Description          |
+| ----------- | ------ | -------------------- |
 | blueprintId | uint64 | The new blueprint ID |
 
 #### updateBlueprint
@@ -154,4 +154,3 @@ event BlueprintTransferred(uint64 blueprintId, address from, address to)
 ```solidity
 event BlueprintDeactivated(uint64 blueprintId)
 ```
-
