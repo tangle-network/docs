@@ -1,0 +1,47 @@
+# Sandboxing and Safety
+
+Every workload runs inside an isolated sandbox. This protects the host, the operator, and the customer while making agent behavior reviewable.
+
+## Isolation Technologies
+
+Operators choose isolation based on security requirements and workload type:
+
+**Docker containers** provide process, filesystem, and network separation. Containers are lightweight, well-understood, and suitable for most workloads where standard isolation suffices.
+
+**gVisor** adds an additional isolation layer by intercepting system calls through a user-space kernel. This limits attack surface and is suitable for higher-security workloads where container escapes are a concern.
+
+**Firecracker micro-VMs** provide hardware-level isolation with millisecond boot times. Suitable for workloads requiring the strongest guarantees, where even kernel-level exploits should not compromise the host.
+
+Operators declare supported isolation technologies. Customers specify requirements when requesting services.
+
+## Isolation Guarantees
+
+Regardless of technology, these guarantees must hold:
+
+- **Process isolation**: No access to host resources or other sessions.
+- **Filesystem isolation**: Private storage with quotas.
+- **Network isolation**: Restricted external access per policy.
+- **Resource limits**: Bounded CPU, memory, and I/O consumption.
+
+Operators who fail to maintain isolation guarantees are subject to slashing.
+
+## Policy Enforcement
+
+Each sandbox enforces:
+
+- **Tool allowlists**: Which tools the agent can invoke.
+- **Domain allowlists**: Which external endpoints are reachable.
+- **Data access policies**: What files and secrets are available.
+- **Budget limits**: Token and compute ceilings per session.
+
+Policies are defined in workbench profiles and enforced at the runtime level.
+
+## Auditability
+
+Every session produces:
+
+- **Event streams**: Real-time logs of agent actions.
+- **Execution metadata**: Timing, resource usage, and exit status.
+- **File snapshots**: State of the workspace at key points.
+
+This makes execution reviewable and supports dispute resolution when issues arise.

@@ -1,63 +1,49 @@
-import { Callout } from 'nextra/components'
+import { Callout } from "nextra/components";
 
-# Claiming Your TNT Airdrop
+# TNT Migration and Claims
 
-This is step-by-step guide on how to claim your airdrop tokens through our claims interface.
+TNT migration moves balances from the legacy Substrate system and direct EVM allocations into the canonical TNT token on EVM. Claims are verified using a Merkle tree and an SP1 zero-knowledge proof, then distributed with a vesting schedule.
 
 <Callout emoji="⚠️">
-  Genesis participants will have 1 year to claim their distribution, **the deadline is April 10 2025.** otherwise the amount is sent to the Tangle Network on-chain treasury.
+  The claim window and unlock parameters are defined by the on-chain migration contract. The claims portal shows the current deadline and vesting configuration.
 </Callout>
 
-## Prerequisites
+Contract sources (GitHub):
 
-Before you begin, please ensure you have the following:
+- https://github.com/tangle-network/tnt-core/blob/v2/packages/migration-claim/src/TangleMigration.sol
+- https://github.com/tangle-network/tnt-core/blob/v2/packages/migration-claim/src/lockups/TNTLinearVesting.sol
 
-- **A compatible wallet**: Ensure your digital wallet is compatible with our platform. Most users will claim with a Substrate compatible wallet like Polkadot.js Extension. Some will use their favorite EVM wallet. [See the full Wallet compatibile page on our Docs.](/wallets)
+## Who Can Claim
 
-We support major EVM wallets such as :
+- **Substrate holders**: Submit a claim using your SR25519 public key and choose an EVM recipient.
+- **EVM recipients**: If you are included in the EVM list, you can claim directly to your wallet.
 
-- MetaMask
-- Rainbow Wallet
-- Walletconnect
+## Vesting Schedule (Default)
 
-For Substrate wallets we support:
+- **2% unlocked** immediately at claim time.
+- **98% vested** through a linear vesting contract.
+- **12-month cliff + 24-month linear vesting** (36 months total).
 
-- Polkadot.js Browser Extension
-- Talisman Wallet
-- SubWallet
+Vesting parameters can be updated before the first claim if governance changes them. Always confirm the live settings in the claims portal.
 
-- **Network Connection**: Ensure you're connected to the correct blockchain network, Tangle Network.
+## Step 1: Access the Claims UI
 
-## Step 1: Access the Airdrop UI
+1. Navigate to the claims portal: [https://app.tangle.tools/claim](https://app.tangle.tools/claim)
+2. Connect your wallet (Substrate or EVM, depending on your allocation).
 
-1. Navigate to our official claims portal: [https://app.tangle.tools/claim](https://app.tangle.tools/claim)
-2. Click on the appropriate "Connect Wallet" button in the interface.
+## Step 2: Verify Eligibility
 
-## Step 2: Connect Your Wallet
+1. The portal checks eligibility and displays your claimable balance.
+2. Choose an EVM recipient address if prompted.
 
-1. A pop-up window will appear, asking you to either sign a message for Polkadot.js Extension, or if using EVM, to select your wallet provider (We support major EVM wallets such as MetaMask, Rainbow Wallet, and Walletconnect.) Choose the one that corresponds to your wallet,
-2. To connect your wallet to our platform, you may need to add a custom network to your wallet:
+## Step 3: Submit the Claim
 
-## Step 3: Verify Airdrop Eligibility
+1. Click **Claim** to submit your request.
+2. Claims can be submitted gaslessly via a relayer (the portal will handle this automatically when available).
+3. Once confirmed, the unlocked amount transfers to your wallet and the vesting contract is created for the remainder.
 
-1. Once your wallet is connected, the system will automatically check for your eligibility to claim the airdrop.
-2. If eligible, you will see a message indicating that you have unclaimed TNT, and the amount you can claim..
+## Additional Notes
 
-## Step 4: Claim Your Airdrop
-
-1. **Airdrop Recipient Field** With our interface, you can claim from one address but send the tokens to a different Substrate or Tangle EVM address. Enter in your preferred address or leave the Airdrop Recipient field with your claiming account address already present.
-1. Click on the "Claim Now" button.
-1. A transaction will be initiated. You may need to confirm the transaction in your wallet.
-1. Depending on the network traffic, it may take a few minutes for the transaction to be processed.
-1. Once confirmed, your tokens will be deposited into your connected wallet.
-
-## Step 5: Confirmation
-
-1. You will receive a confirmation message on the UI, confirming the successful claim of your airdrop.
-2. You can verify the token receipt by checking your wallet balance or clicking through the displayed link to view the transaction on a block explorer.
-
-## Additional Tips
-
-- **Gas Fees?**: For the genesis claiming process, there is no gas fee charged to claimed tokens.
-- **Security**: Never share your private keys or wallet password with anyone.
-- **Support**: If you encounter any issues or have questions, please contact our support team through the official channels listed on our website.
+- **Gasless claims**: A claim relayer can pay gas on your behalf. The portal will guide you through this path.
+- **Security**: Never share private keys or seed phrases.
+- **Support**: Use official channels listed on the site if you need help.

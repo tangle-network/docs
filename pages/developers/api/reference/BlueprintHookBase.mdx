@@ -1,0 +1,142 @@
+---
+title: BlueprintHookBase
+description: Auto-generated Solidity API reference.
+---
+
+# BlueprintHookBase
+
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/IBlueprintHook.sol
+
+### BlueprintHookBase
+
+Base implementation with sensible defaults
+
+_For full features, extend BlueprintServiceManagerBase instead_
+
+#### Functions
+
+#### onBlueprintCreated
+
+```solidity
+function onBlueprintCreated(uint64, address) external virtual
+```
+
+#### onOperatorRegister
+
+```solidity
+function onOperatorRegister(uint64, address, bytes) external virtual returns (bool)
+```
+
+#### onOperatorUnregister
+
+```solidity
+function onOperatorUnregister(uint64, address) external virtual
+```
+
+#### onServiceRequest
+
+```solidity
+function onServiceRequest(uint64, uint64, address, address[], bytes) external payable virtual returns (bool)
+```
+
+#### onServiceApprove
+
+```solidity
+function onServiceApprove(uint64, address, uint8) external virtual
+```
+
+#### onServiceReject
+
+```solidity
+function onServiceReject(uint64, address) external virtual
+```
+
+#### onServiceActivated
+
+```solidity
+function onServiceActivated(uint64, uint64, address, address[]) external virtual
+```
+
+#### onServiceTerminated
+
+```solidity
+function onServiceTerminated(uint64, address) external virtual
+```
+
+#### canJoin
+
+```solidity
+function canJoin(uint64, address, uint16) external view virtual returns (bool)
+```
+
+#### canLeave
+
+```solidity
+function canLeave(uint64, address) external view virtual returns (bool)
+```
+
+#### onJobSubmitted
+
+```solidity
+function onJobSubmitted(uint64, uint64, uint8, address, bytes) external payable virtual returns (bool)
+```
+
+#### onJobResult
+
+```solidity
+function onJobResult(uint64, uint64, address, bytes) external virtual returns (bool)
+```
+
+#### onJobCompleted
+
+```solidity
+function onJobCompleted(uint64, uint64, uint32) external virtual
+```
+
+#### onSlashProposed
+
+```solidity
+function onSlashProposed(uint64, address, uint256, bytes32) external virtual returns (bool)
+```
+
+#### onSlashApplied
+
+```solidity
+function onSlashApplied(uint64, address, uint256) external virtual
+```
+
+#### getDeveloperPaymentAddress
+
+```solidity
+function getDeveloperPaymentAddress(uint64) external view virtual returns (address payable)
+```
+
+#### isPaymentTokenAllowed
+
+```solidity
+function isPaymentTokenAllowed(address) external view virtual returns (bool)
+```
+
+#### getRequiredResultCount
+
+```solidity
+function getRequiredResultCount(uint64, uint8) external view virtual returns (uint32)
+```
+
+#### requiresAggregation
+
+```solidity
+function requiresAggregation(uint64, uint8) external view virtual returns (bool)
+```
+
+#### getAggregationThreshold
+
+```solidity
+function getAggregationThreshold(uint64, uint8) external view virtual returns (uint16, uint8)
+```
+
+#### onAggregatedResult
+
+```solidity
+function onAggregatedResult(uint64, uint64, uint256, bytes) external virtual
+```

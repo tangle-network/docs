@@ -1,41 +1,67 @@
 ## Operators
 
-Operators are noderunners that have tokens at stake and choose to restake them to enable participation in roles, which conduct the jobs produced by a blueprint instance. In esssence, Operators are service providers whose effectiveness and security is guarenteed by their restaked assets.
+Operators are service providers who stake assets to run blueprint services. Staking gives customers and developers an enforceable security boundary (exposure + slashing) around off-chain work.
 
 ### Joining as an Operator
 
-To participate in restaking, a user can join as an operator by providing a bond amount through the ``join_operators function. This registers the user as an operator and locks their bond, which is necessary for participating in the network and receiving rewards.
+This page covers operator onboarding for Tangle v2. You need to:
 
-### Step 1: Access the PolkadotJS Interface
+1. Register with the staking contract (self-stake).
+2. Register for each blueprint you intend to operate.
+3. Run the Blueprint Manager to execute jobs.
 
-- Open [PolkadotJS Apps](https://polkadot.js.org/apps/).
-- Connect to the Tangle Network by selecting the appropriate network from the dropdown list.
+- Next: [Blueprint Manager](/operators/manager/introduction)
 
-For convenience, here are the PolkadotJS direct links for Tangle Testnet and Mainnet:
+### Step 1: Install the CLI and prepare a keystore
 
-- Tangle Testnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Ftestnet-rpc.tangle.tools#/explorer
-- Tangle Mainnet: https://polkadot.js.org/apps/?rpc=wss%3A%2F%2Frpc.tangle.tools#/explorer
+Install `cargo-tangle` and create/import an ECDSA key:
 
-### Step 2: Join as an Operator
+- [CLI installation](/developers/cli/installation)
+- [Key management](/developers/cli/keys)
 
-- Navigate to the **Developer** → **Extrinsics** tab on PolkadotJS.
+### Step 2: Register as a staking operator
 
-![PolkadotJS Extrinsics](./images/extrinsic.png)
+Use the CLI to stake and register in `MultiAssetDelegation` (amount is in wei of the configured bond asset):
 
-- Under the **MultiAssetDelegation** section, select **Join Operators** and enter the bond amount.
+```bash
+cargo tangle operator register \
+  --http-rpc-url https://... \
+  --ws-rpc-url wss://... \
+  --keystore-path ./keystore \
+  --tangle-contract 0x... \
+  --restaking-contract 0x... \
+  --status-registry-contract 0x... \
+  --amount <STAKE_AMOUNT_WEI>
+```
 
-![PolkadotJS Join Operators](./images/join.png)
+The CLI flag name is `--restaking-contract` for compatibility; it refers to the staking contract.
 
-Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee and bond.
+The stake amount must meet the minimum configured for the enabled asset. Contract addresses are listed on
+[Network Parameters](/network/network-parameters).
 
-![PolkadotJS Transaction](./images/sign.png)
+### Step 3: Register for a blueprint
 
-If successful, you should see the following confirmation toast notification:
+Register your operator in the core protocol for a specific blueprint ID:
 
-![PolkadotJS Operator Joined](./images/success.png)
+```bash
+cargo tangle blueprint register \
+  --http-rpc-url https://... \
+  --ws-rpc-url wss://... \
+  --keystore-path ./keystore \
+  --tangle-contract 0x... \
+  --restaking-contract 0x... \
+  --status-registry-contract 0x... \
+  --blueprint-id 123 \
+  --rpc-endpoint "https://operator.example.com" \
+  --registration-inputs ./registration.tlv
+```
 
-Lets break down the events, navigate to the **Network** tab, you should see the following events:
+- Repeat this step for each blueprint you want to serve.
+- `--rpc-endpoint` is optional and publishes your operator RPC address.
+- `--registration-inputs` is required only if the blueprint expects extra registration payloads.
 
-![PolkadotJS Events](./images/events.png)
+### Step 4: Run the Blueprint Manager
 
-- multi_asset_delegation.OperatorJoined : tells you that the operator has joined successfully.
+Start the runtime that watches for service activations and executes jobs:
+
+- [Blueprint Manager setup](/operators/manager/setup)

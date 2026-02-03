@@ -1,4 +1,3 @@
-import { HiCodeBracket as CodeIcon } from "react-icons/hi2";
 import { DetailedFeatureLink } from "./Feature";
 import { GitHubIcon } from "./Icons";
 
@@ -8,50 +7,36 @@ export const RepoArea = () => {
       <DetailedFeatureLink
         feature={{
           Icon: GitHubIcon,
-          description: `A marketplace for on-demand, multi-party crypto infrastructure`,
-          name: "Tangle Network Repo",
+          description:
+            "Protocol contracts and deployment tooling for Tangle v2.",
+          name: "tnt-core",
         }}
-        href="https://github.com/tangle-network/tangle"
+        href="https://github.com/tangle-network/tnt-core"
       />
       <DetailedFeatureLink
         feature={{
           Icon: GitHubIcon,
-          description: `Documentation for the Tangle Network`,
-          name: "Tangle Docs Repo",
+          description: "Blueprint SDK, runner, manager, and CLI tooling.",
+          name: "blueprint",
         }}
-        href="https://github.com/tangle-network/tangle-docs"
+        href="https://github.com/tangle-network/blueprint"
       />
-    </div>
-  );
-};
-
-export const StatsdApp = () => {
-  return (
-    <div className="grid grid-cols-1 mt-10 gap-x-6 gap-y-12 sm:grid-cols-2 lg:mt-10 lg:gap-x-8 lg:gap-y-12">
       <DetailedFeatureLink
         feature={{
           Icon: GitHubIcon,
-          description: "Monorepo for Tangle DApps",
-          name: "dApp",
+          description: "Documentation source for the Tangle site.",
+          name: "tangle-docs",
+        }}
+        href="https://github.com/webb-tools/tangle-docs"
+      />
+      <DetailedFeatureLink
+        feature={{
+          Icon: GitHubIcon,
+          description: "Frontend app for staking, claims, and protocol UX.",
+          name: "dapp",
         }}
         href="https://github.com/tangle-network/dapp"
-      ></DetailedFeatureLink>
-      <DetailedFeatureLink
-        feature={{
-          Icon: CodeIcon,
-          description: `The GraphQL Playground provides a way to query the SubQuery API`,
-          name: "GraphQL Playground",
-        }}
-        href="https://standalone-subql.tangle.tools/graphql"
-      ></DetailedFeatureLink>
-      <DetailedFeatureLink
-        feature={{
-          Icon: GitHubIcon,
-          description: "SubQuery implementation for Tangle Network",
-          name: "tangle-subql",
-        }}
-        href="https://github.com/tangle-network/tangle-subql"
-      ></DetailedFeatureLink>
+      />
     </div>
   );
 };

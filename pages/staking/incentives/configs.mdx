@@ -1,0 +1,46 @@
+---
+title: Reward Configs
+description: Key on-chain knobs for incentive programs and fee splits.
+---
+
+# Reward Configs
+
+This page summarizes the main on-chain configuration points for staking incentives. Exact addresses are deployment-dependent.
+
+## `RewardVaults` (Asset Incentives)
+
+Governance configures per-asset incentive vaults:
+
+- `createVault(asset, depositCap)`
+- `updateVaultConfig(asset, depositCap)`
+- `deactivateVault(asset)`
+- `setOperatorCommission(newBps)`
+- `setLockDurations(oneMonth, twoMonths, threeMonths, sixMonths)`
+
+## `InflationPool` (Funding and Distribution)
+
+`InflationPool` is pre-funded with TNT and distributes it in epochs:
+
+- `fund(amount)` (requires funder role)
+- `distributeEpoch()` (anyone can call when ready)
+- `distributeEpochWithServices(serviceIds)` (DISTRIBUTOR_ROLE; required for staker inflation)
+- `setWeights(stakingBps, operatorsBps, customersBps, developersBps, stakersBps)`
+- `setEpochLength(seconds)`
+- `setStakerInflationConfig(tangle, serviceFeeDistributor)`
+
+The staking portion of each epoch is transferred to `RewardVaults`.
+
+## Service Fee Splits
+
+Service payments are split between developer / protocol / operators / stakers:
+
+- `Tangle.setPaymentSplit({ developerBps, protocolBps, operatorBps, stakerBps })`
+
+If staker fee distribution is enabled, the protocol routes staker shares to `ServiceFeeDistributor`.
+
+## Wiring Checklist (One-Time Deployment Setup)
+
+- `Tangle.setServiceFeeDistributor(distributor)`
+- `MultiAssetDelegation.setServiceFeeDistributor(distributor)`
+- `ServiceFeeDistributor.setInflationPool(inflationPool)`
+- `InflationPool.setStakerInflationConfig(tangle, distributor)`

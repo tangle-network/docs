@@ -1,36 +1,39 @@
 # Operator Incentives
 
-Tangle Network operators earn revenue by running Blueprint instances for customers. The platform provides multiple revenue streams through an automated distribution system that rewards reliable infrastructure operation and service delivery.
+Operators earn revenue from service usage and optional TNT budgets. This page outlines the primary revenue paths in the v2 protocol.
 
-## Revenue Streams
+## Revenue Sources
 
-### Core Service Fees
+1. **Service fees (default split)**
 
-- Earn 30% of all Blueprint instance fees (shared with restakers)
-- Automatic distribution through smart contracts
-- Additional direct customer payments for compute and storage
+   - Fees paid by customers are split across developers, the protocol, operators, and stakers.
+   - The default split is **20% developer / 20% protocol / 40% operators / 20% stakers** (governance configurable).
 
-### Validator Synergies
+2. **Optional TNT incentives (pre-funded)**
 
-Operators can increase earnings by also running network validators:
+   - If governance funds `InflationPool`, operators can earn TNT based on activity metrics.
 
-- Enhanced protocol rewards
-- Higher visibility to delegators
+3. **Optional operator commission (delegation incentives)**
+   - If an operator enables commission, they earn a share of delegator incentives from `RewardVaults`.
 
-## Technical Requirements
+## How Service Fees Flow
 
-Successful operation requires:
+- Service fees are paid in the chosen payment token (native or ERC-20).
+- Operator rewards are weighted by service exposure and routed through on-chain accounting.
+- Staker fees are routed per operator to `ServiceFeeDistributor` for delegator payouts.
 
-- Reliable infrastructure and monitoring
-- High uptime maintenance
-- Performance benchmark compliance
-- Secure asset management
+See [Incentives](/network/incentives-overview) for the full fee flow.
 
-## Economic Model
+## Where This Lives in Code
 
-The system creates natural incentives for quality service:
+- `ServiceFeeDistributor`: https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol
+- `InflationPool`: https://github.com/tangle-network/tnt-core/blob/main/src/rewards/InflationPool.sol
+- `RewardVaults`: https://github.com/tangle-network/tnt-core/blob/main/src/rewards/RewardVaults.sol
 
-- Better performance → more customer instances
-- Reliable operation → increased restaking delegation
-- Strong reputation → premium service opportunities
-- Operational excellence → enhanced protocol rewards
+For a readable breakdown and links to contracts, see [Rewards Architecture](/developers/system-architecture/rewards).
+
+## Operator Success Factors
+
+- **Reliability**: uptime and correct execution impact service demand.
+- **Performance**: meeting blueprint and QoS expectations drives repeat usage.
+- **Transparency**: clear policies and monitoring improve operator selection.

@@ -1,117 +1,103 @@
-# Gadget SDK
+---
+title: Blueprint SDK
+description: The Rust toolkit for building and operating Tangle blueprints (services).
+---
 
-The Blueprint SDK is a powerful toolkit designed to streamline the development of Tangle Blueprints. It provides a comprehensive set of features and tools that make building multi-party services faster, easier, and more secure.
+import TableOfContentCards from "../../components/TableOfContentCards.tsx";
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
-## Getting Started
+# Blueprint SDK
 
-import TableOfContentCards from "../../components/TableOfContentCards.tsx"
+The [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2) is the Rust toolkit for building **blueprints** (off-chain services) and running them as an operator against Tangle’s EVM protocol.
 
-<TableOfContentCards items={[
-  {
-    title: "Getting Started",
-    href: "/developers/tangle-avs",
-    subItems: [
-      {
-        title: "Installation & Setup",
-        description: "Install dependencies and create your first Blueprint"
-      },
-      {
-        title: "Building & Deploying",
-        description: "Build and deploy your Blueprint to Tangle Network"
-      }
-    ]
-  },
-  {
-    title: "CLI Tools", 
-    href: "/developers/cli/quickstart",
-    subItems: [
-      {
-        title: "Installation",
-        href: "/developers/cli/installation",
-        description: "Install the Tangle CLI tools"
-      },
-      {
-        title: "Quickstart",
-        href: "/developers/cli/quickstart", 
-        description: "Get started with basic CLI commands"
-      },
-      {
-        title: "Tangle Blueprints",
-        href: "/developers/cli/tangle",
-        description: "Build and deploy Tangle Blueprints"
-      },
-      {
-        title: "Eigenlayer AVS Blueprints",
-        href: "/developers/cli/eigenlayer",
-        description: "Build and deploy Eigenlayer AVS Blueprints"
-      },
-      {
-        title: "Key Management",
-        href: "/developers/cli/keys",
-        description: "Create and manage keys and keystores for Blueprints"
-      }
-    ]
-  },
+It includes:
+
+- The **[Blueprint Runner](https://github.com/tangle-network/blueprint/tree/v2/crates/runner)** (router + producers + consumers + background services)
+- Typed **[contexts](https://github.com/tangle-network/blueprint/tree/v2/crates/contexts)** (keystore, EVM provider, Tangle EVM client)
+- The [`cargo-tangle` CLI](https://github.com/tangle-network/blueprint/tree/v2/cli) for creating, preregistering, and running blueprints
+
+**Source of truth repos**
+
+- SDK + runner + CLI: https://github.com/tangle-network/blueprint/tree/v2
+- On-chain contracts: https://github.com/tangle-network/tnt-core/tree/v2
+
+## What You Run (Operator Tooling)
+
+- [`cargo-tangle`](https://github.com/tangle-network/blueprint/tree/v2/cli): developer/operator CLI (register, run, service lifecycle, jobs)
+- [`blueprint-manager`](https://github.com/tangle-network/blueprint/tree/v2/crates/manager): long-lived operator runtime that watches chain events and runs services
+- [`pricing-engine-server`](https://github.com/tangle-network/blueprint/tree/v2/crates/pricing-engine): optional RFQ server that issues signed quotes
+
+## Configuration Surface (Tangle EVM)
+
+Most tooling needs the same deployment addresses and endpoints:
+
+- `http_rpc_url` / `ws_rpc_url`
+- `tangle_contract` (core protocol)
+- `staking_contract` (MultiAssetDelegation)
+- `status_registry_contract` (heartbeats; optional but recommended)
+- `keystore_path`
+
+The CLI exposes these as shared flags:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/v2/cli/src/command/tangle.rs"
+  fromLine={1}
+  toLine={70}
+  title="cargo-tangle: shared TangleClientArgs (RPC + contract addresses + keystore)"
+/>
+
+## Navigation
+
+<TableOfContentCards
+  items={[
     {
-    title: "Build Eigenlayer AVS",
-    href: "/developers/eigenlayer-avs/overview",
-    subItems: [
-      {
-        title: "CLI Usage",
-        href: "/developers/cli/eigenlayer",
-        description: "Use the CLI to create, deploy, and test your AVS"
-      },
-      {
-        title: "Eigenlayer Context",
-        href: "/developers/blueprint-contexts/eigenlayer-context",
-        description: "Eigenlayer integration utilities"
-      },
-      {
-        title: "BLS Template",
-        href: "/developers/eigenlayer-avs/bls-template",
-        description: "Build AVS with BLS aggregation service"
-      },
-      {
-        title: "ECDSA Template", 
-        href: "/developers/eigenlayer-avs/ecdsa-template",
-        description: "Build AVS with ECDSA contracts"
-      }
-    ]
-  },
-  {
-    title: "Blueprint Contexts",
-    href: "/developers/blueprint-contexts",
-    subItems: [
-      {
-        title: "Introduction",
-        href: "/developers/blueprint-contexts/introduction",
-        description: "Overview of context system"
-      },
-      {
-        title: "Keystore Context",
-        href: "/developers/blueprint-contexts/keystore-context",
-        description: "Secure key management"
-      },
-      {
-        title: "EVM Provider Context",
-        href: "/developers/blueprint-contexts/evm-provider-context",
-        description: "Interact with EVM chains"
-      },
-      {
-        title: "Tangle Client Context",
-        href: "/developers/blueprint-contexts/tangle-client-context",
-        description: "Interact with Tangle Network"
-      },
-      {
-        title: "Services Context",
-        href: "/developers/blueprint-contexts/services-context",
-        description: "Access Tangle services"
-      },
-      {
-        title: "Eigenlayer Context",
-        href: "/developers/blueprint-contexts/eigenlayer-context",
-        description: "Eigenlayer integration utilities"
-      }
-    ]
-  },
-]} />
+      title: "Build a Blueprint",
+      href: "/developers/blueprints/introduction",
+      subItems: [
+        {
+          title: "Hello Tangle Blueprint",
+          description: "Write a job + router and run it end-to-end",
+        },
+        {
+          title: "Run via CLI",
+          description: "Use cargo-tangle to preregister and run a blueprint",
+        },
+      ],
+    },
+    {
+      title: "Blueprint Runner",
+      href: "/developers/blueprint-runner/introduction",
+      subItems: [
+        { title: "Jobs", href: "/developers/blueprint-runner/jobs", description: "Define job handlers" },
+        { title: "Routers", href: "/developers/blueprint-runner/routers", description: "Route job calls to handlers" },
+        { title: "Producers", href: "/developers/blueprint-runner/producers", description: "Convert events to job calls" },
+        { title: "Consumers", href: "/developers/blueprint-runner/consumers", description: "Submit results back to chain" },
+      ],
+    },
+    {
+      title: "Contexts",
+      href: "/developers/blueprint-contexts/introduction",
+      subItems: [
+        { title: "Keystore", href: "/developers/blueprint-contexts/keystore-context", description: "Local and remote signing" },
+        { title: "EVM Provider", href: "/developers/blueprint-contexts/evm-provider-context", description: "Instrumented EVM provider access" },
+        { title: "Tangle EVM Client", href: "/developers/blueprint-contexts/tangle-client-context", description: "Interact with Tangle contracts" },
+      ],
+    },
+    {
+      title: "System Architecture",
+      href: "/developers/system-architecture/overview",
+      subItems: [
+        { title: "On-chain", href: "/developers/system-architecture/onchain", description: "Blueprint/service/job state machine" },
+        { title: "Off-chain", href: "/developers/system-architecture/offchain", description: "What operators run" },
+      ],
+    },
+    {
+      title: "CLI",
+      href: "/developers/cli/quickstart",
+      subItems: [
+        { title: "Install", href: "https://github.com/tangle-network/blueprint/tree/v2/cli", description: "Install cargo-tangle" },
+        { title: "Keys", href: "/developers/cli/keys", description: "Create and manage keystores" },
+      ],
+    },
+  ]}
+/>

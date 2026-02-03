@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#1f2937" />
+    </marker>
+  </defs>
+
+  <text x="450" y="32" text-anchor="middle" font-size="16" fill="#111827" font-family="Arial, sans-serif">
+    Liquid Delegation Vault Flow
+  </text>
+
+  <rect x="30" y="90" width="170" height="90" rx="12" fill="#eef6ff" stroke="#1f2937" stroke-width="2" />
+  <text x="115" y="125" text-anchor="middle" font-size="15" fill="#111827" font-family="Arial, sans-serif">Staker</text>
+  <text x="115" y="148" text-anchor="middle" font-size="12" fill="#111827" font-family="Arial, sans-serif">Holds shares</text>
+
+  <rect x="230" y="80" width="230" height="110" rx="12" fill="#fff7ed" stroke="#1f2937" stroke-width="2" />
+  <text x="345" y="114" text-anchor="middle" font-size="15" fill="#111827" font-family="Arial, sans-serif">Liquid Delegation Vault</text>
+  <text x="345" y="138" text-anchor="middle" font-size="12" fill="#111827" font-family="Arial, sans-serif">ERC-7540 shares</text>
+  <text x="345" y="158" text-anchor="middle" font-size="12" fill="#111827" font-family="Arial, sans-serif">Fixed operator + asset</text>
+
+  <rect x="490" y="80" width="210" height="110" rx="12" fill="#ecfdf5" stroke="#1f2937" stroke-width="2" />
+  <text x="595" y="114" text-anchor="middle" font-size="15" fill="#111827" font-family="Arial, sans-serif">MultiAssetDelegation</text>
+  <text x="595" y="138" text-anchor="middle" font-size="12" fill="#111827" font-family="Arial, sans-serif">Delegation + delays</text>
+
+  <rect x="730" y="90" width="150" height="90" rx="12" fill="#fef3c7" stroke="#1f2937" stroke-width="2" />
+  <text x="805" y="125" text-anchor="middle" font-size="15" fill="#111827" font-family="Arial, sans-serif">Operator Services</text>
+  <text x="805" y="148" text-anchor="middle" font-size="12" fill="#111827" font-family="Arial, sans-serif">Runs Blueprints</text>
+
+  <line x1="200" y1="135" x2="230" y2="135" stroke="#1f2937" stroke-width="2" marker-end="url(#arrow)" />
+  <text x="215" y="118" text-anchor="middle" font-size="11" fill="#111827" font-family="Arial, sans-serif">Deposit</text>
+
+  <line x1="460" y1="135" x2="490" y2="135" stroke="#1f2937" stroke-width="2" marker-end="url(#arrow)" />
+  <text x="475" y="118" text-anchor="middle" font-size="11" fill="#111827" font-family="Arial, sans-serif">Delegate</text>
+
+  <line x1="700" y1="135" x2="730" y2="135" stroke="#1f2937" stroke-width="2" marker-end="url(#arrow)" />
+  <text x="715" y="118" text-anchor="middle" font-size="11" fill="#111827" font-family="Arial, sans-serif">Secure</text>
+
+  <path d="M345 205 L345 250 L115 250 L115 190" fill="none" stroke="#1f2937" stroke-width="2" marker-end="url(#arrow)" />
+  <text x="230" y="270" text-anchor="middle" font-size="11" fill="#111827" font-family="Arial, sans-serif">
+    Redeem after delay window
+  </text>
+
+  <text x="595" y="210" text-anchor="middle" font-size="11" fill="#111827" font-family="Arial, sans-serif">
+    Slashing reduces backing
+  </text>
+</svg>

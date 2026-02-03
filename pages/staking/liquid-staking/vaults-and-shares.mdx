@@ -1,0 +1,33 @@
+# Vaults and Shares
+
+Liquid delegation vaults are ERC20 share tokens with an ERC-7540 redemption interface. Each vault represents a single delegation position with a fixed configuration.
+
+## Vault Configuration
+
+Each vault is bound to:
+
+- **Operator**: the operator the vault delegates to.
+- **Asset**: the ERC20 asset deposited into staking.
+- **Blueprint selection**:
+  - **All**: the vault tracks all blueprints the operator participates in, including future additions.
+  - **Fixed**: the vault delegates only to a specific list of blueprint IDs.
+
+Blueprint selection is set at vault creation and cannot be changed later.
+
+## Share Accounting
+
+Vaults use the same share-based accounting model as `MultiAssetDelegation` with a small virtual offset to prevent first-depositor inflation. As a result:
+
+- Shares are minted on deposit and represent a claim on the underlying delegated assets.
+- Share value can **move down** if the operator is slashed.
+- Share value can change over time as the underlying delegation changes.
+
+## Liquidity Properties
+
+Vault shares are standard ERC20 tokens:
+
+- **Transferable** between wallets.
+- **Approveable** for integrators and apps.
+- **Composable** with other token-based systems.
+
+The vault itself remains the on-chain delegator; individual share transfers do not change the underlying delegation record.

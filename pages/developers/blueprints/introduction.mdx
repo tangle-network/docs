@@ -7,63 +7,82 @@ import CardGrid from "../../../components/CardGrid.tsx"
 <CardGrid
   cards={[
     {
-      title: "Tangle's Blueprint Gadget SDK",
-      description: "Learn about the Gadget SDK and how to get started building your own gadgets.",
-      link: "/developers/gadget-sdk"
+      title: "Blueprint SDK",
+      description: "Build blueprints, operators, and jobs with the Rust SDK and CLI.",
+      link: "https://github.com/tangle-network/blueprint/tree/v2"
     },
     {
-      title: "Hello World Blueprint", 
-      description: "Get started with a simple Hello World example using Tangle Blueprints.",
-      link: "/developers/tangle-avs"
+      title: "Blueprint Manager",
+      description: "Understand the operator runtime that runs blueprint services.",
+      link: "/developers/blueprints/manager"
     },
     {
-      title: "Build an Eigenlayer AVS",
-      description: "Build an Eigenlayer AVS with the Tangle Blueprint SDK and hook into a variety of EVM compatible utilities for task automation, slashing, and more.",
-      link: "/developers/eigenlayer-avs/overview"
+      title: "Blueprint Use Cases",
+      description: "Explore service patterns and where blueprints fit in real products.",
+      link: "/developers/blueprints/use-cases"
     }
   ]}
 />
 
-**Blueprints** are Infrastructure as Code templates and **Instances** are their instantiations on the Tangle Network. Developers build Blueprints using our [Blueprint SDK](https://github.com/tangle-network/blueprint) and deploy them to the Tangle Network. Users can discover Blueprints and create Instances of them, which are run by Tangle Operators. The Tangle Network incentivizes operators to run these instances by rewarding them with TNT tokens and fees from execution.
+**Blueprints** are on-chain service definitions, and **Services** are their on-chain instantiations. Developers build
+Blueprints using the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2) and deploy them to Tangle v2.
+Customers discover Blueprints, create Services, and pay for execution. Operators run Services with the Blueprint Manager,
+earning fees and TNT incentives defined by the core protocol contracts in `tnt-core`.
 
-A Blueprint Instance is a computational service. Blueprints are reusable templates so that useful services can be leveraged by many customers. A key benefit of instancing Blueprints is that each instance can have different operators and different restaked assets securing them.
+A Blueprint Service is a reusable computational service. Each Service instance can select a different operator set,
+security configuration, and payment token while sharing the same underlying blueprint logic.
 
 A Tangle Blueprint is defined by:
 
-- An native program binary, a docker image, or a virtual machine binary.
-- A set of smart contracts that provide programmability over the service's output verification and handling of malicious failures
+- A **manager contract** (Blueprint Service Manager) that defines registration, request, and job verification logic.
+- A **blueprint definition** (metadata URI, job schemas, artifact sources) used by the Blueprint Manager.
+- **Executable artifacts** (native binary, container image, or WASM) for operators to run.
 
-Tangle Blueprints specify their target environment for program execution. The Blueprint's binary can run natively on the operator's machine, in a virtual machine, or in a containerized environment.
+Blueprints specify their runtime preferences so operators can execute services natively, in containers, or inside a VM.
 
 ## Detailed Interactions
 
 ### Developers
 
-Developers interact with Tangle Blueprints by developing and deploying them to the blockchain. The smart contracts are deployed to the Tangle EVM, while the metadata is stored in Tangle's runtime.
-
-The Blueprint includes smart contracts responsible with all aspects of customizing a Blueprint's behavior and features. Developers have the flexibility to extend this contract, create child contracts, and anything that adheres to the function signatures expected by the runtime when executing logic. The Blueprint smart contract handles:
+Developers deploy the blueprint manager contract and register a blueprint definition that points at the artifacts and job
+schemas operators should run. The on-chain manager contract handles:
 
 1. **Registration**: Specifies how Operators register for the Blueprint, allowing the developer to add additional fees, access control, KYC, and any other EVM-deployable functionality to the registration process.
-2. **Request**: Defines how customer of Blueprints initiates Service Instances, providing the same customizability as the EVM for the initialization process of Service Instances.
+2. **Request**: Defines how customers create Services and fund them (pay-once or subscription).
 3. **On Job Hooks**: Allows developers to specify custom logic to be executed when a job is created.
 4. **On Job Result Hooks**: Allows developers to specify custom logic to be executed when a job is completed, such as verifying a job's output.
-5. **Custom slashing conditions**: Allows developers to specify custom slashing conditions for Operators, such as failing to provide a service or providing a malicious service. These would be callable by anyone or privileged callers but is entirely up to the developer to design.
+5. **Custom slashing conditions**: Allows developers to define slashing logic for misbehavior, scoped to their Service.
 
-Blueprints empower developers to create, customize, and monetize technical service configurations on the Tangle Network, defining features, behavior, resource requirements, and the Gadget binary for services such as Threshold MPC, zero-knowledge provers, AI infrastructure, and more. Developers can programmatically incentivize operators to restake on their services and update them to improve and benefit from their long-term success. Tangle Blueprints are designed for reuse by various users and projects.
+Blueprints let developers define monetizable services (MPC, ZK proving, AI infrastructure, oracles) with on-chain
+verification and off-chain execution handled by operators running the Blueprint Manager.
 
 ### Customers
 
-Tangle Network provides a user-friendly platform for customers to discover, deploy, and manage Blueprint Instances. Customers can access tailored technical services with varying configurations and features, specify their requirements (e.g., threshold of participants, registration criteria), and select a subset of Operators to provide the service. The stake recursion process increases the economic security of reliable services.
+Customers discover blueprints, configure services, and select operators based on requirements (security, resources, price,
+or reputation). They fund services in ETH or ERC20 tokens and can choose a one-time payment or subscription model.
 
-Customers interact with Tangle by instancing Blueprints, which create Blueprint Instances. To initialize an Instance, a customer:
+To initialize a Service, a customer typically:
 
-1. Selects a participation selection strategy that satisfies the Blueprint's Request smart contract constraints.
-2. Provides metadata required by the Instance.
-3. Pays the fee required for the Instance configuration.
+1. Chooses an operator set and any service parameters required by the blueprint.
+2. Provides metadata required by the Service instance.
+3. Funds the service fee required by the blueprint manager contract.
 
 ### Operators
 
-Operators are incentivized to operate the Blueprint Instances by receiving rewards from the Tangle Network and fees from users who pay for the service. The rewards and incentives are distributed proportionally to the amount of stake that the Operator has restaked on the Instance.
+Operators register for blueprints, accept service assignments, and run the service artifacts through the Blueprint Manager.
+They earn an operator share of service payments (claimable from the `Tangle` contract) plus TNT incentives.
+
+### Payments and Incentives
+
+Service payments are split by the core protocol contracts in `tnt-core`:
+
+- **Developer + Treasury** shares transfer immediately.
+- **Operator** share accrues as pending rewards in the `Tangle` contract.
+- **Staker** share flows to `ServiceFeeDistributor` for later claims.
+
+Inflation incentives (TNT) are distributed separately via `InflationPool` and `RewardVaults`. For details, see
+`https://github.com/tangle-network/tnt-core/blob/v2/PAYMENT_FLOW.md` and
+`https://github.com/tangle-network/tnt-core/blob/v2/docs/rewards-system.md`.
 
 ## Composability and Ecosystem
 

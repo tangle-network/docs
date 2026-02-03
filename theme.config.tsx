@@ -15,12 +15,13 @@ function Head() {
   const { frontMatter } = useConfig();
 
   // Set default values for title and description
-  const defaultTitle = "Tangle Documentation";
+  const defaultTitle = "Tangle Docs";
+  const tabTitle = "Tangle Docs - Autonomous Work";
   const defaultDescription = "Comprehensive documentation for Tangle Tools";
 
   // Get the title and description from the front matter, or use the default values
   const title = frontMatter.title
-    ? `${frontMatter.title} - Tangle Network`
+    ? `${frontMatter.title} - ${defaultTitle}`
     : defaultTitle;
 
   const description = frontMatter.description || defaultDescription;
@@ -56,7 +57,7 @@ function Head() {
       <meta name="twitter:card" content="summary_medium_image" />
       <meta name="twitter:site" content="@tangle_network" />
       <meta name="twitter:creator" content="@tanglenetwork" />
-      <title>{title}</title>
+      <title>{tabTitle}</title>
       <meta name="description" content={description} />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />

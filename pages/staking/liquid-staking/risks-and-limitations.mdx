@@ -1,0 +1,33 @@
+# Risks and Limitations
+
+Liquid staking introduces convenience, but it does not remove protocol-level risks.
+
+## Slashing Risk
+
+If an operator is slashed, the vault's underlying delegation is reduced and the share value drops. Share transfers do not avoid this risk.
+
+## Delayed Exits
+
+Redemptions are asynchronous. Shares are burned at `requestRedeem`, and assets are only available after the protocol delay window elapses.
+
+## Fixed Vault Configuration
+
+Vaults are fixed to one operator, one asset, and one blueprint selection mode. Changing exposure requires moving to a different vault.
+
+## Reward Pass-Through
+
+Rewards accrue to the vault address as the delegator. The vault does not distribute rewards to share holders by itself, so integrators must add a pass-through mechanism if required.
+
+See [Claiming Cheatsheet](/staking/incentives/claiming) for the protocol claim surface.
+
+## Asset Availability
+
+Vaults can only be created for assets that are enabled in `MultiAssetDelegation`.
+
+## Native Asset Support
+
+Native-asset unwrapping is not enabled in the current vault implementation. Use wrapped assets when available.
+
+## Redeem Request Matching
+
+`redeem` matches the first claimable request with the provided share amount. Avoid multiple outstanding requests for the same share quantity to prevent ambiguity.

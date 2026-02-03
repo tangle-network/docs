@@ -2,85 +2,59 @@
 
 ## How to test your blueprint with Tangle
 
-This guide will walk you through the process of setting and running Tangle node locally to test your blueprint with Tangle.
+This guide walks through the local testing flow used by the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2). It spins up a seeded Anvil network with the
+Tangle v2 contracts from `tnt-core`, so you can test Blueprint Manager flows without running legacy infrastructure.
 
 ### Prerequisites
 
-First install and configure `rustup`:
+- Rust toolchain (`rustup`)
+- Foundry (`anvil`)
+- Docker (required for the Anvil test harness)
+
+### Generate a local operator key
 
 ```bash
-# Install
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-# Configure
-source ~/.cargo/env
+cargo tangle key --algo ecdsa --keystore ./local-operator-keys --name anvil-operator
+export BLUEPRINT_KEYSTORE_URI="$(pwd)/local-operator-keys"
 ```
 
-### Clone the tangle node
+The `BLUEPRINT_KEYSTORE_URI` value can be reused by the Blueprint Manager and `TangleEvmClient`.
+
+### Start a seeded Anvil network
+
+The [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2) ships a harness that boots Anvil with the pre-seeded Tangle v2 contracts:
+
+```rust
+use blueprint_anvil_testing_utils::harness_builder_from_env;
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let harness = harness_builder_from_env()
+        .include_anvil_logs(true)
+        .spawn()
+        .await?;
+    println!("HTTP RPC: {}", harness.http_endpoint());
+    println!("WS RPC:   {}", harness.ws_endpoint());
+    tokio::signal::ctrl_c().await?;
+    Ok(())
+}
+```
+
+The harness loads the `localtestnet-state.json` snapshot shipped in the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2). When the snapshot is missing or
+invalid, it replays the Foundry broadcast used by `tnt-core` fixtures.
+
+### Run your blueprint against local Tangle v2
+
+Point the Blueprint Manager at the harness RPC endpoints and your service settings:
 
 ```bash
-git clone https://github.com/tangle-network/tangle
-cd tangle
+cargo tangle blueprint run \
+  --protocol tangle-evm \
+  --http-rpc-url http://127.0.0.1:8545 \
+  --ws-rpc-url ws://127.0.0.1:8546 \
+  --keystore-path ./local-operator-keys \
+  --settings-file ./settings.env
 ```
 
-### Build the node for instant-seal
-
-This is different from the production tangle runtime which produces a block every 6 seconds. The instant-seal node produces a block only when a transaction is available.
-This allows for faster testing cycles.
-
-```bash
-cargo build --release --features manual-seal,txpool,testnet
-```
-
-### Run the node
-
-```bash
-./target/release/tangle --tmp --dev --validator -linfo \
---alice --rpc-cors all --rpc-methods=unsafe --rpc-external \
---rpc-port 9944 -levm=debug -lgadget=trace --sealing instant
-```
-
-If successful, you should see output indicating that the node is running:
-
-```bash
-./target/release/tangle --tmp --dev --validator -linfo --alice --rpc-cors all --rpc-methods=unsafe --rpc-external --rpc-port 9944 -levm=debug -lgadget=trace --sealing instant
-    ++++++++++++++++++++++++
-	+++++++++++++++++++++++++++
-	+++++++++++++++++++++++++++
-	+++        ++++++      +++         @%%%%%%%%%%%                                     %%%
-	++++++      ++++      +++++        %%%%%%%%%%%%                                     %%%@
-	++++++++++++++++++++++++++            %%%%      %%%%@     %%% %%@       @%%%%%%%   %%%@    %%%%@
-	       ++++++++                       %%%%    @%%%%%%%@   %%%%%%%%%   @%%%%%%%%%   %%%@  %%%%%%%%%
-	       ++++++++                       %%%%    %%%%%%%%%   %%%% @%%%@  %%%%  %%%%   %%%@  %%%%%%%%%%
-	++++++++++++++++++++++++++            %%%%    %%%%%%%%%   %%%   %%%%  %%%   @%%%   %%%@ @%%%%%  %%%%%
-	++++++      ++++      ++++++          %%%%    %%%%%%%%%   %%%   %%%%  %%%%%%%%%%   %%%@  %%%%%%%%%@
-	+++        ++++++        +++          %%%%    %%%%%%%%%   %%%   %%%@   %%%%%%%%%   %%%    %%%%%%%@
-	++++      +++++++++      +++                                           %%%%  %%%%
-	++++++++++++++++++++++++++++                                           %%%%%%%%%
-	  +++++++++++++++++++++++                                                 %%%%%
-
-2024-10-30 16:00:54.306  INFO main sc_cli::runner: Tangle Node
-2024-10-30 16:00:54.306  INFO main sc_cli::runner: ✌️  version 1.2.0-cedde5d83a0
-2024-10-30 16:00:54.306  INFO main sc_cli::runner: ❤️  by Webb Technologies Inc., 2023-2024
-2024-10-30 16:00:54.306  INFO main sc_cli::runner: 📋 Chain specification: Local Testnet
-2024-10-30 16:00:54.306  INFO main sc_cli::runner: 🏷  Node name: Alice
-2024-10-30 16:00:54.306  INFO main sc_cli::runner: 👤 Role: AUTHORITY
-2024-10-30 16:00:54.306  INFO main sc_cli::runner: 💾 Database: RocksDb at /var/folders/ht/41y18g597_9_1035dlw0m3700000gn/T/substrateGSJexb/chains/local_testnet/db/full
-2024-10-30 16:00:55.347  INFO main runtime::staking: [0] 💸 generated 5 npos voters, 5 from validators and 0 nominators
-2024-10-30 16:00:55.347  INFO main runtime::staking: [0] 💸 generated 5 npos targets
-```
-
-### How to build testnet runtime (without instant-seal)
-
-To build tangle node, without instant-seal, you can run:
-
-```bash
-cargo build --release --features txpool,testnet
-```
-
-And use the following command to run the node:
-
-```bash
-./target/release/tangle --tmp --dev --validator -linfo \
---alice --rpc-cors all --rpc-methods=unsafe --rpc-external \
---rpc-port 9944 -levm=debug -lgadget=trace
-```
+For the latest harness details and fixtures, see the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2) runbook:
+`https://github.com/tangle-network/blueprint/blob/v2/docs/operators/anvil.md`.

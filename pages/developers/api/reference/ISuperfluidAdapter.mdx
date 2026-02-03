@@ -1,0 +1,129 @@
+---
+title: ISuperfluidAdapter
+description: Auto-generated Solidity API reference.
+---
+
+# ISuperfluidAdapter
+
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/IStreamingPaymentAdapter.sol
+
+### ISuperfluidAdapter
+
+Extended interface for Superfluid-specific features
+
+#### Functions
+
+#### getNetFlowRate
+
+```solidity
+function getNetFlowRate(address account, address token) external view returns (int96 netFlowRate)
+```
+
+Get the net flow rate for an account (incoming - outgoing)
+
+##### Parameters
+
+| Name    | Type    | Description         |
+| ------- | ------- | ------------------- |
+| account | address | The account address |
+| token   | address | The super token     |
+
+##### Return Values
+
+| Name        | Type  | Description                     |
+| ----------- | ----- | ------------------------------- |
+| netFlowRate | int96 | Net flow rate (can be negative) |
+
+#### getRealtimeBalance
+
+```solidity
+function getRealtimeBalance(address account, address token) external view returns (int256 availableBalance, uint256 deposit)
+```
+
+Get the real-time balance of an account
+
+##### Parameters
+
+| Name    | Type    | Description         |
+| ------- | ------- | ------------------- |
+| account | address | The account address |
+| token   | address | The super token     |
+
+##### Return Values
+
+| Name             | Type    | Description               |
+| ---------------- | ------- | ------------------------- |
+| availableBalance | int256  | Current available balance |
+| deposit          | uint256 | Required deposit/buffer   |
+
+#### isSolvent
+
+```solidity
+function isSolvent(address account, address token) external view returns (bool solvent)
+```
+
+Check if an account is solvent (positive balance)
+
+##### Parameters
+
+| Name    | Type    | Description         |
+| ------- | ------- | ------------------- |
+| account | address | The account address |
+| token   | address | The super token     |
+
+##### Return Values
+
+| Name    | Type | Description                          |
+| ------- | ---- | ------------------------------------ |
+| solvent | bool | True if account has positive balance |
+
+#### getRequiredBuffer
+
+```solidity
+function getRequiredBuffer(address token, int96 flowRate) external view returns (uint256 bufferAmount)
+```
+
+Get the required buffer/deposit for a flow rate
+
+##### Parameters
+
+| Name     | Type    | Description             |
+| -------- | ------- | ----------------------- |
+| token    | address | The super token         |
+| flowRate | int96   | Flow rate in wei/second |
+
+##### Return Values
+
+| Name         | Type    | Description             |
+| ------------ | ------- | ----------------------- |
+| bufferAmount | uint256 | Required buffer deposit |
+
+#### wrapTokens
+
+```solidity
+function wrapTokens(address token, uint256 amount) external
+```
+
+Wrap underlying tokens to super tokens
+
+##### Parameters
+
+| Name   | Type    | Description          |
+| ------ | ------- | -------------------- |
+| token  | address | The underlying token |
+| amount | uint256 | Amount to wrap       |
+
+#### unwrapTokens
+
+```solidity
+function unwrapTokens(address token, uint256 amount) external
+```
+
+Unwrap super tokens to underlying
+
+##### Parameters
+
+| Name   | Type    | Description      |
+| ------ | ------- | ---------------- |
+| token  | address | The super token  |
+| amount | uint256 | Amount to unwrap |

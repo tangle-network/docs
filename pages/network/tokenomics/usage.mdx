@@ -1,34 +1,27 @@
-# TNT Token Information and Utility
+# TNT Token
 
-The Tangle Network's native token is TNT, used as the gas token, payment token, and base restaking asset for Tangle Blueprints and restaked services.
+TNT is Tangle’s **governance token** (an ERC‑20 on EVM chains).
 
-| Network        | Network Type | Native Asset Symbol | Native Asset Decimals |
-| -------------- | ------------ | ------------------- | --------------------- |
-| Tangle Network | Mainnet      | TNT                 | 18                    |
-| Tangle Testnet | Testnet      | tTNT                | 18                    |
+TNT is **not** the gas token. Gas fees are paid in the underlying chain’s native asset (e.g., ETH on Base).
 
 ## Usage Cases
 
-### Consensus Mechanism and nPoS:
+### Governance
 
-The Tangle Network's nominated proof-of-stake (nPoS) consensus mechanism requires TNT to be staked by validators to participate in validating blocks. Additionally, nominators can nominate their TNT to individual validators to participate in the rewards to that validator and increase that validator's tokens-at-stake.
+TNT holders participate in protocol governance (e.g., parameter updates, treasury actions, upgrades) using on-chain voting.
 
-### Network Economics
+### Protocol Alignment
 
-Tangle Network dynamically mints or burns TNT tokens to reward consensus protocol participants like validators and nominators, partially fund its treasury, manage inflation, and ensure the network's economic stability.
+TNT is the unit of alignment for the Tangle protocol: it is used to coordinate incentives across stakers, operators, blueprint developers, and users of services.
 
-### Restaking Economics
+### Staking Economics
 
-TNT serves as the currency for transactions between job submitters and validators within the Tangle Network's restaking infrastructure. This facilitates seamless, secure, and efficient execution of complex and on-demand computational services.
+TNT can be used within the staking ecosystem as an operator **self-stake** asset and as a delegatable staking asset (and may also be accepted for service payments depending on the deployed configuration).
 
-### Slashing Mechanisms:
+### Slashing Mechanisms
 
-To safeguard against malicious activities, TNT tokens are integral to Tangle's slashing protocols across consensus and the restaking system. These measures are designed to deter attacks and incentivize adherence to network protocols.
-
-### Governance Empowerment:
-
-TNT holders wield governance power, enabling them to partake in pivotal network decisions through referenda. This democratic approach ensures that the Tangle Network evolves in alignment with its community's interests.
+TNT can be used as collateral within the staking system, where slashing is applied for service-level violations. These measures deter malicious behavior and align operators with protocol requirements.
 
 ---
 
-A considerable portion of TNT will be actively engaged in the network, either staked by validators and nominators for network security or utilized in the execution of Tangle Blueprints. This not only ensures the network's resilience and security but also drives engagement and utility within the Tangle ecosystem.
+A considerable portion of TNT will be actively engaged in the protocol (e.g., governance, operator self-stake, incentives), and in the execution of Tangle Blueprints. This helps align economic security with real usage of services.

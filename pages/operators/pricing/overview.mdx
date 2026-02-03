@@ -1,23 +1,27 @@
 ---
-title: Blueprint Pricing Overview
+title: Blueprint Pricing
 ---
 
 # Blueprint Pricing
+
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/pricing-engine
+
+Operator preferences interface (GitHub): https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/ITangleOperators.sol
 
 As a blueprint operator, you'll need to set up pricing for your services to receive fair compensation for the resources you provide. This guide explains how pricing works in the Tangle Network and how to configure it properly.
 
 ## Prerequisites
 
 - Basic understanding of Tangle Network operations
-- Familiarity with running and maintaining a Tangle node
-- Knowledge of basic blueprint concepts
+- Familiarity with running the Blueprint Manager runtime
+- Knowledge of blueprint concepts and service lifecycles
 
 ## How Blueprint Pricing Works
 
 The pricing process follows these steps:
 
 1. **Registration**: When you register as an operator for a blueprint, you provide your pricing service address in your preferences
-   - **Note**: If your RPC server address changes, you can update it on-chain for any registered blueprint through the `updateRpcAddress` services extrinsic call
+   - **Note**: If your RPC server address changes, update it on-chain via `updateOperatorPreferences` on the `Tangle` contract (see `ITangleOperators`)
 2. **Quote Requests**: Users request price quotes from registered operators like you
 3. **Quote Generation**: Your service calculates prices based on resource requirements, creates security commitments, and signs quotes
 4. **Operator Selection**: Users select operators based on price and other factors
@@ -80,7 +84,7 @@ Where:
 When users request your services, they include security requirements that specify what percentage of assets you need to secure. Your pricing service needs to respond with your commitment:
 
 - **Exposure Percentage**: The percentage of assets you guarantee to secure (between the user's minimum and maximum requirements)
-- **Asset Types**: Can be Custom (u64) or ERC20 (H160 address)
+- **Asset Types**: Native (address(0)) or ERC20 (token address)
 
 This commitment will be included with your signed quote. The commitment used for the quote is automatically the minimum exposure percentage specified in the user's security requirements.
 

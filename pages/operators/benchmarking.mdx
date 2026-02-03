@@ -4,39 +4,38 @@ title: Understanding Benchmarking
 
 # Understanding Benchmarking
 
-As a Tangle Network operator, you should understand how the network benchmarks your system to determine pricing for blueprints. This guide explains the automated benchmarking process and how it affects the quotes generated for your node.
+As a Tangle Network operator, you should understand how the network benchmarks your system to determine pricing for blueprints. This guide explains the automated benchmarking process and how it affects the quotes generated for your operator runtime.
 
 ## What is Blueprint Benchmarking?
 
 Blueprint benchmarking is an automated process that measures your system's capabilities to determine:
 
-- The cost to run specific blueprints on your node
+- The cost to run specific blueprints on your operator host
 - The resource allocation for different blueprint types
-- Your node's competitive position in the operator marketplace
+- Your operator's competitive position in the operator marketplace
 
-When users request quotes from your node, Tangle's pricing engine uses these benchmark results to calculate fair prices based on your hardware profile.
+When users request quotes from your operator, Tangle's pricing engine uses these benchmark results to calculate fair prices based on your hardware profile.
 
 ## How Benchmarking Works
 
 The benchmarking process happens automatically in two key phases:
 
-### 1. During Operator Registration
+### 1. On Service Activation (Pricing Engine)
 
-When you register as an operator, the Tangle Network automatically runs baseline benchmarks on your system:
+When the pricing engine sees a `ServiceActivated` event for a blueprint, it runs a benchmark to refresh the local
+hardware profile for that blueprint:
 
-- Your node's hardware capabilities are measured
-- A baseline profile is created for your specific hardware
-- This profile is stored by blueprint ID in the network
-- The profile is used whenever quotes are requested from your node
+- The pricing engine listens to `ITangle` events via the Tangle EVM RPC.
+- A benchmark task runs and caches CPU/memory/storage/network measurements.
+- The cached profile is keyed by blueprint ID and used for future quote requests.
 
-### 2. During Blueprint Execution
+### 2. During Blueprint Runtime (QoS + Metrics)
 
-While blueprints run on your node, the system automatically monitors resource usage:
+While blueprints run on your operator host, runtime metrics can be collected for observability:
 
-- Measurements are taken before blueprint execution starts
-- Ongoing monitoring occurs during blueprint runtime
-- Final measurements capture the state after completion
-- This data can be used for future pricing calculations
+- The Blueprint Manager can emit QoS metrics and heartbeats.
+- Dashboards may display resource usage and job-level stats.
+- These metrics are for visibility; the pricing engine still relies on its local benchmark cache.
 
 ## Resources That Are Automatically Measured
 
@@ -60,11 +59,11 @@ memory = { count = 16384, price_per_unit = "0.00005" }
 storage = { count = 1024000, price_per_unit = "0.00002" }
 ```
 
-## How Benchmarking Affects Your Node's Quotes
+## How Benchmarking Affects Your Operator's Quotes
 
 The benchmark results directly influence how the pricing engine generates quotes:
 
-1. When a user requests a blueprint quote from your node, the system retrieves your benchmark profile
+1. When a user requests a blueprint quote from your operator, the pricing engine retrieves the cached benchmark profile
 2. It applies the blueprint's resource requirements to your profile
 3. It calculates the quote using this formula:
 
@@ -74,7 +73,7 @@ Quote = Base Resource Cost × Time Multiplier × Security Commitment Factor
 
 Where:
 
-- **Base Resource Cost**: Derived from your node's benchmarking results
+- **Base Resource Cost**: Derived from your operator benchmarking results
 - **Time Multiplier**: Adjusts cost based on how long the service will run
 - **Security Commitment Factor**: Based on the asset security commitments required by the request
 
@@ -94,15 +93,16 @@ The final quote would then be adjusted based on network conditions and security 
 
 ## Viewing Benchmark Information
 
-Depending upon the service or blueprint being run, you may have information or metrics available to view. This will be accessible where you submitted your request and job, but it will depend upon the blueprint in question.
+Benchmark results are stored in the pricing engine’s local cache and surfaced via logs/metrics. QoS dashboards are
+blueprint-specific and depend on what the operator exposes.
 
 ## Frequently Asked Questions
 
 **Q: Do I need to manually run benchmarks?**  
-A: No, the benchmarking process is fully automated. It runs during registration and periodically thereafter.
+A: No, the pricing engine runs benchmarks automatically when services activate and refreshes its cache as needed.
 
 **Q: Can I improve my benchmark scores?**  
-A: While you can't directly modify the benchmarking process, upgrading your hardware or optimizing your system can indirectly improve your node's performance.
+A: While you can't directly modify the benchmarking process, upgrading your hardware or optimizing your system can indirectly improve your operator performance.
 
 **Q: How often are benchmarks updated?**  
 A: Benchmarks are initially created during registration and may be updated periodically or when significant system changes are detected.
@@ -115,7 +115,7 @@ A: Yes, users may choose operators based partly on performance metrics derived f
 To learn more about operating on the Tangle Network, you may want to review:
 
 - [Pricing Strategies](/operators/pricing)
-- [Node Configuration](/operators/node-basics)
-- [Monitoring Your Node](/operators/monitoring)
+- [Blueprint Manager](/operators/manager/introduction)
+- [Quality of Service](/operators/quality-of-service)
 
-Understanding the benchmarking process helps you better appreciate how the Tangle Network determines pricing for blueprints running on your node.
+Understanding the benchmarking process helps you better appreciate how the Tangle Network determines pricing for blueprints running on your operator.

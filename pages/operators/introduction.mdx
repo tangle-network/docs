@@ -1,5 +1,54 @@
-import OperatorIntroCards from "../../components/OperatorIntro.tsx"
-
 # Operating on Tangle
 
-<OperatorIntroCards />
+Operators run Blueprint services and earn fees for reliable execution. This section covers everything you need to deploy and maintain operator infrastructure.
+
+## Quick Start
+
+1. **Set up the Blueprint Manager**: [Manager Setup](/operators/manager/setup)
+2. **Configure your keystore**: [Key Management](/developers/cli/keys)
+3. **Register on-chain**: [Join as Operator](/operators/operator/join_operator/join)
+4. **Monitor your services**: [Quality of Service](/operators/quality-of-service)
+
+## What Operators Do
+
+- Run the Blueprint Manager to execute service instances.
+- Submit heartbeats to prove liveness.
+- Respond to job calls and submit results on-chain.
+- Maintain uptime to avoid QoS degradation and potential slashing.
+
+## Choosing Isolation
+
+Operators select how to isolate workloads:
+
+| Method              | Security | Performance | Use Case                |
+| ------------------- | -------- | ----------- | ----------------------- |
+| Native (no sandbox) | Low      | Highest     | Trusted blueprints only |
+| Cloud-hypervisor VM | High     | Good        | Production default      |
+| Kata Containers     | High     | Good        | Kubernetes deployments  |
+
+See [Requirements](/operators/manager/requirements) for setup details.
+
+## Earning and Risks
+
+Operators earn from:
+
+- **Service fees**: Paid by customers, split with developers and stakers.
+- **Optional TNT incentives**: When governance funds incentive pools.
+
+Operators risk slashing for:
+
+- Missing heartbeats beyond the grace period.
+- Submitting invalid or late results.
+- Violating isolation guarantees.
+
+## Sandbox Runtime Hosting (Early Access)
+
+Operators can also host the sandbox runtime that powers autonomous work. It is designed with capacity-aware scheduling, optional host pooling and autoscaling, and Prometheus-style metrics for fleet visibility.
+
+Learn more in [Runtime Architecture](/infrastructure/architecture).
+
+## Next Steps
+
+- [Operator Runbook](/operators/runbook): Daily operations checklist.
+- [Pricing](/operators/pricing/overview): How to set competitive rates.
+- [Benchmarking](/operators/benchmarking): Test blueprint performance.

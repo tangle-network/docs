@@ -1,0 +1,42 @@
+# Operator Runbook
+
+This is a minimal operational checklist for keeping Blueprint services healthy and safe in production.
+
+## Daily Checks
+
+- Verify the Blueprint Manager process is running and connected to RPC + WS endpoints.
+- Confirm service heartbeats are progressing (no sustained gaps).
+- Review job error rates and retry spikes.
+- Check disk usage for cache + data directories.
+
+## Key Signals to Watch
+
+- **Heartbeat drift**: late or missing heartbeats can trigger QoS degradation.
+- **Job queue backlog**: growing queues indicate capacity pressure.
+- **RPC latency**: slow RPCs lead to missed service events.
+- **Crash loops**: repeated restarts usually imply config or artifact issues.
+
+## Incident Response
+
+1. Pause new work by stopping the manager.
+2. Capture logs + recent job failures for root cause.
+3. Restore service with a known-good config and pinned artifact versions.
+4. Run a small validation job before resuming full traffic.
+
+## Capacity Planning
+
+- Reserve headroom for spikes in service requests and simulations.
+- Size storage for artifacts + per-service data.
+- Isolate noisy workloads into separate hosts when possible.
+
+## Security Hygiene
+
+- Keep keystores isolated and use least-privilege access.
+- Rotate operator keys on schedule.
+- Use separate RPC credentials per environment.
+
+## Related Docs
+
+- [Blueprint Manager setup](/operators/manager/setup)
+- [Quality of Service](/operators/quality-of-service)
+- [Benchmarking](/operators/benchmarking)

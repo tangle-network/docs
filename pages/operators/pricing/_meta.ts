@@ -1,7 +1,7 @@
 import { Meta } from "nextra";
 
 const meta: Meta = {
-  overview: "Overview",
+  overview: "Pricing Basics",
 };
 
 export default meta;

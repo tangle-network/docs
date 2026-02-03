@@ -1,0 +1,107 @@
+# Profile Schema
+
+This page documents the profile schema used to configure sidecar agents. Today, the schema maps to OpenCode. Over time, additional backends will share the same profile surface where possible.
+
+## Current Support
+
+- **OpenCode**: Full profile support (models, permissions, tools, tool servers, plugins).
+- **Future backends**: We will document compatibility notes as new runtimes are added.
+
+## Top-Level Fields
+
+- **name**: Human-friendly identifier.
+- **description**: Optional detail about what the profile is for.
+- **extends**: Name of a base profile to inherit from.
+- **model**: Primary model to use, in `provider/model-id` format.
+- **small_model**: Optional secondary model for lighter tasks.
+- **agent**: Map of per-agent overrides (plan, build, explore, or custom).
+- **permission**: Global permission policy (edit, bash, webfetch, tool servers).
+- **tools**: Map of tool names to `true` or `false`.
+- **mcp**: Tool server configurations (allowlisted local or remote).
+- **plugin**: Allowlisted plugin names.
+
+## Agent Overrides
+
+The `agent` field is a map keyed by role name. Common keys include `plan`, `build`, and `explore`, but custom names are allowed.
+
+Each agent config can include:
+
+- **model**: Override model for this agent.
+- **temperature**: Sampling temperature (0.0 to 2.0).
+- **top_p**: Nucleus sampling (0.0 to 1.0).
+- **prompt**: Agent-specific system prompt.
+- **tools**: Per-agent tool enablement map.
+- **disable**: Disable this agent entirely.
+- **description**: Human-readable note about this agent.
+- **mode**: `primary`, `subagent`, or `all`.
+- **permission**: Optional per-agent permission overrides.
+- **maxSteps**: Hard cap on reasoning steps.
+
+## Permission Policy
+
+Permissions gate sensitive actions. Each field is one of `ask`, `allow`, or `deny`.
+
+- **edit**: File edit access.
+- **bash**: Shell access (global or per-command map).
+- **webfetch**: Web access.
+- **mcp**: Tool server access.
+
+Policies can cap permissions (for example, forcing `bash` to `ask`), even if the profile requests more.
+
+## Tools
+
+The `tools` map enables or disables individual tools by name. This is the primary way to scope what the sidecar can execute.
+
+## Tool Servers (MCP)
+
+The `mcp` field defines allowlisted tool servers. Each entry is either:
+
+- **Local**
+
+  - `type`: `local`
+  - `command`: array of command arguments
+  - `environment`: optional env map
+  - `enabled`: optional boolean
+  - `timeout`: optional milliseconds
+
+- **Remote**
+  - `type`: `remote`
+  - `url`: HTTPS endpoint
+  - `headers`: optional headers map
+  - `enabled`: optional boolean
+  - `timeout`: optional milliseconds
+
+Local tool servers are typically restricted by policy in production environments.
+
+## Plugins
+
+The `plugin` field is an array of allowlisted plugin names. Policies can block plugins entirely.
+
+## Inheritance And Merging
+
+If `extends` is set, the runtime loads the base profile and merges the override fields. Nested objects are merged so you can override only what changes.
+
+## Minimal Example
+
+```json
+{
+  "name": "team-default",
+  "extends": "tangle/base",
+  "model": "provider/model-id",
+  "agent": {
+    "plan": { "temperature": 0.2, "maxSteps": 8 },
+    "build": { "temperature": 0.1 }
+  },
+  "permission": {
+    "edit": "ask",
+    "bash": "ask",
+    "webfetch": "allow",
+    "mcp": "ask"
+  },
+  "tools": {
+    "git": true,
+    "search": true,
+    "bash": false
+  }
+}
+```

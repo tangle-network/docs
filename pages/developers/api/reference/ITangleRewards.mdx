@@ -1,0 +1,80 @@
+---
+title: ITangleRewards
+description: Auto-generated Solidity API reference.
+---
+
+# ITangleRewards
+
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/ITangleRewards.sol
+
+### ITangleRewards
+
+Reward distribution and claiming interface
+
+#### Functions
+
+#### claimRewards
+
+```solidity
+function claimRewards() external
+```
+
+Claim accumulated rewards (native token)
+
+#### claimRewards
+
+```solidity
+function claimRewards(address token) external
+```
+
+Claim accumulated rewards for a specific token
+
+#### claimRewardsBatch
+
+```solidity
+function claimRewardsBatch(address[] tokens) external
+```
+
+Claim accumulated rewards for multiple tokens
+
+#### claimRewardsAll
+
+```solidity
+function claimRewardsAll() external
+```
+
+Claim accumulated rewards for all pending tokens
+
+#### pendingRewards
+
+```solidity
+function pendingRewards(address account) external view returns (uint256)
+```
+
+Get pending rewards for an account (native token)
+
+#### pendingRewards
+
+```solidity
+function pendingRewards(address account, address token) external view returns (uint256)
+```
+
+Get pending rewards for an account and token
+
+#### rewardTokens
+
+```solidity
+function rewardTokens(address account) external view returns (address[])
+```
+
+List tokens with non-zero pending rewards for an account
+
+_Convenience view; mappings are not enumerable._
+
+#### Events
+
+#### RewardsClaimed
+
+```solidity
+event RewardsClaimed(address account, address token, uint256 amount)
+```

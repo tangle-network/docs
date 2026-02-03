@@ -1,42 +1,44 @@
 import { Meta } from "nextra";
 
 const meta: Meta = {
-  "-- intro": {
+  "-- overview": {
     type: "separator",
-    title: "Introduction",
+    title: "Getting Started",
   },
   blueprints: "Blueprints",
-  cli: "Blueprint CLI",
-  "-- gadget-tutorial": {
+  "blueprint-sdk": "Blueprint SDK",
+  "-- build": {
     type: "separator",
-    title: "Blueprint Developers",
+    title: "Build with Blueprints",
   },
-  "blueprint-sdk": "Introduction",
   "blueprint-contexts": "Contexts",
   "blueprint-runner": "Blueprint Runner",
-  "blueprint-qos": "Quality of Service Integration",
+  "blueprint-qos": "Quality of Service",
   "p2p-networking": "P2P Networking",
-  "tangle-avs": "Build a Tangle Blueprint",
-  "eigenlayer-avs": "Build an Eigenlayer AVS",
-  "testing-with-tangle": "Testing with Tangle",
-  deployment: "Deployment",
-  troubleshooting: "Troubleshooting",
-  "-- solution-developers": {
+  "-- tooling": {
     type: "separator",
-    title: "Solution Developers",
+    title: "Tooling",
   },
-  endpoints: "Endpoints and Integration",
-  precompiles: "EVM Precompiles",
-  technicals: "EVM Development",
+  cli: "CLI",
+  deployment: "Deployment",
+  "testing-with-tangle": "Testing",
+  troubleshooting: "Troubleshooting",
+  "-- protocol": {
+    type: "separator",
+    title: "Protocol Integration",
+  },
+  endpoints: "Endpoints",
+  "protocol-architecture": "Protocol Architecture",
+  "system-architecture": "System Architecture",
   "-- contribute": {
     type: "separator",
     title: "Contribute",
   },
   contribute: "Bug Reports",
   github: {
-    title: "Tangle on Github",
+    title: "Tangle Network on GitHub",
     type: "page",
-    href: "https://github.com/tangle-network/tangle",
+    href: "https://github.com/tangle-network",
     newWindow: true,
   },
 };

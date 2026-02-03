@@ -6,6 +6,8 @@ import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
 # Routers
 
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/runner
+
 Routers are a critical component of the [Blueprint Runner](/developers/blueprint-runner/introduction) architecture. They are responsible for directing job calls to the appropriate job handlers based on job IDs. This document explains how routers work, how to configure them, and best practices for implementation.
 
 ## What are Routers?
@@ -32,10 +34,9 @@ Routers are configured when building the Blueprint Runner in the `main.rs` file 
 A simple router setup might look like this, assuming you have already created a job and context:
 
 ```rust
-use blueprint_sdk::runner::BlueprintRunner;
 use blueprint_sdk::Router;
 
-let router = Router::builder()
+let router = Router::new()
     .route(MY_JOB_ID, my_job)
     .with_context(my_context);
 ```
@@ -43,9 +44,9 @@ let router = Router::builder()
 Below is a real example from our Incredible Squaring Blueprint Example:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/a9860d2e3a161af63a75d6d800f662d303e92e5b/examples/incredible-squaring/incredible-squaring-bin/src/main.rs"
-  fromLine={33}
-  toLine={48}
+  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
+  fromLine={109}
+  toLine={125}
   title="Router Configuration in Incredible Squaring Example"
 />
 
@@ -54,9 +55,9 @@ Below is a real example from our Incredible Squaring Blueprint Example:
 Layers are used to filter job calls based on certain criteria. There are two places layers can be used:
 
 1. A specific Route:
-   - A job can be given a layer. This can be seen in the above code example, where the job is in the `TangleLayer`. This allows the consumer, which operates in that layer, to see the results from that job. This simplifies your Blueprint when you have many jobs, routes, and consumers.
+   - A job can be given a layer. This can be seen in the above code example, where the job is wrapped in the `TangleEvmLayer`. This adds Tangle EVM metadata to job results for the consumer.
 2. A whole Router:
-   - A layer can be used to filter job calls based on some criteria. This can also be seen in the above code example, where the router is given a filter for the service ID. This allows the router to only process jobs with a matching service ID.
+   - A layer can be used to filter job calls based on criteria you control (for example, metadata from Tangle EVM extractors).
 
 ## Integration with Other Components
 
@@ -75,4 +76,4 @@ Now that you understand routers, check out:
 
 ## Conclusion
 
-Routers are a fundamental component of Blueprint Runners, enabling efficient job execution and management. By properly configuring and utilizing routers, you can build robust and performant Blueprints and AVSs.
+Routers are a fundamental component of Blueprint Runners, enabling efficient job execution and management. By properly configuring and utilizing routers, you can build robust and performant Blueprints.

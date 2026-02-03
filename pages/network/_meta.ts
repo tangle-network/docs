@@ -1,39 +1,29 @@
 import { Meta } from "nextra";
 
 const meta: Meta = {
-  overview: "Overview",
-  tokenomics: "Tokenomics",
-  "-- incentives": {
+  "-- core": {
     type: "separator",
-    title: "Restaking Incentives",
+    title: "Protocol Core",
   },
-  "incentives-overview": "Overview",
-  "incentives-restakers": "For Restakers",
-  "incentives-operators": "For Operators",
-  "incentives-developers": "For Developers",
-  slashing: "Slashing",
-  "-- restaking infrastructure": {
+  overview: "Protocol Foundation",
+  "network-parameters": "Protocol Parameters",
+  "metrics-and-scoring": "Metrics and Scoring",
+  "-- economics": {
     type: "separator",
-    title: "Restaking Infrastructure",
+    title: "Economics",
   },
-  differences: "Tangle vs. Eigenlayer",
+  tokenomics: "TNT Token",
+  "incentives-overview": "Incentives",
+  "incentives-operators": "Operator Incentives",
+  "incentives-developers": "Developer Incentives",
+  "incentives-stakers": "Staker Incentives",
   "-- launch": {
     type: "separator",
-    title: "Network Launch",
+    title: "Launch and Migration",
   },
-  "claim-airdrop": "Claim the Airdrop",
-  launch: "About the Launch",
-  "points-mechanics": "Points Mechanics",
-  "-- governance": {
-    type: "separator",
-    title: "Governance",
-  },
-  governance: "On-chain Governance",
-  "-- various": {
-    type: "separator",
-    title: "Miscellaenous",
-  },
-  "network-parameters": "Network Parameters",
+  launch: "Launch",
+  "claim-airdrop": "TNT Migration and Claims",
+  "points-mechanics": "Participation Credits",
 };
 
 export default meta;

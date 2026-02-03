@@ -1,0 +1,121 @@
+---
+title: Claiming Cheatsheet
+description: One place to see where rewards accrue, how to visualize them, and how to claim efficiently.
+---
+
+# Claiming Cheatsheet
+
+This page answers three common questions:
+
+1. **Where do my rewards accrue?**
+2. **How do I visualize them by source?**
+3. **How do I claim with the fewest transactions?**
+
+## Quick Map (By Contract)
+
+- **Core protocol service fees (operators):** `Tangle` (`claimRewards`, `claimRewardsBatch`, `claimRewardsAll`).
+- **Staker service fees + staker inflation:** `ServiceFeeDistributor` (`claimAll`, `claimAllBatch`, `claimFor`).
+- **Staking incentives (TNT):** `RewardVaults` (`claimDelegatorRewards`, `claimDelegatorRewardsBatch`).
+- **InflationPool merit rewards:** `InflationPool` (`claimOperatorRewards`, `claimCustomerRewards`, `claimDeveloperRewards`).
+
+## Delegator (Staker)
+
+**Where rewards accrue**
+
+- **Service fees + staker inflation:** `ServiceFeeDistributor` (per payment token).
+- **TNT incentives:** `RewardVaults` (per staking asset).
+
+**How to visualize**
+
+- `ServiceFeeDistributor.pendingRewards(delegator, token)`
+- `ServiceFeeDistributor.delegatorOperators(delegator)` and `delegatorAssets(delegator, operator)`
+- `RewardVaults.pendingDelegatorRewards(asset, delegator, operator)`
+- `RewardVaults.pendingDelegatorRewardsAll(asset, delegator)`
+- `RewardVaults.getDelegatorPositions(asset, delegator)`
+
+**How to claim**
+
+- **Per token:** `ServiceFeeDistributor.claimAll(token)`
+- **Multiple tokens in one tx:** `ServiceFeeDistributor.claimAllBatch(tokens)`
+- **TNT incentives:** `RewardVaults.claimDelegatorRewardsBatch(asset, operators)`
+
+**Tx count expectation**
+
+- 1 tx per token in `ServiceFeeDistributor`, plus 1 tx per asset in `RewardVaults` (or use multicall).
+
+## Operator
+
+**Where rewards accrue**
+
+- **Service fee operator share:** `Tangle` pending rewards per payment token.
+- **TNT operator incentives:** `InflationPool` pending operator rewards.
+- **Optional TNT commission (from delegators):** `RewardVaults` pending commission per asset.
+
+**How to visualize**
+
+- `Tangle.rewardTokens(operator)` + `Tangle.pendingRewards(operator, token)`
+- `InflationPool.pendingOperatorRewards(operator)`
+- `RewardVaults.pendingOperatorCommission(asset, operator)`
+
+**How to claim**
+
+- **All tokens:** `Tangle.claimRewardsAll()`
+- **Specific tokens:** `Tangle.claimRewardsBatch(tokens)`
+- **Inflation incentives:** `InflationPool.claimOperatorRewards()`
+- **Vault commission:** `RewardVaults.claimOperatorCommission(asset)`
+
+**Tx count expectation**
+
+- 1 tx for all operator service-fee tokens + 1 tx for InflationPool + 1 tx per reward-vault asset.
+
+## Customer
+
+**Where rewards accrue**
+
+- **Optional TNT incentives:** `InflationPool` pending customer rewards (only if weights allocate customer incentives).
+
+**How to visualize**
+
+- `InflationPool.pendingCustomerRewards(customer)`
+
+**How to claim**
+
+- `InflationPool.claimCustomerRewards()` (single tx)
+
+## Developer
+
+**Where rewards accrue**
+
+- **Service fees:** paid directly to the developer address at payment time (no claim).
+- **Optional TNT incentives:** `InflationPool` pending developer rewards.
+
+**How to visualize**
+
+- `InflationPool.pendingDeveloperRewards(developer)`
+
+**How to claim**
+
+- `InflationPool.claimDeveloperRewards()` (single tx)
+
+## When To Use Multicall
+
+If you want a **single transaction** across multiple contracts (e.g., claim service fees + vault incentives + inflation rewards together), use a multicall.
+
+A typical call bundle for a staker might include:
+
+- `ServiceFeeDistributor.claimAllBatch(tokens)`
+- `RewardVaults.claimDelegatorRewardsBatch(asset, operators)` (per asset)
+
+## Code References
+
+- `src/v2/core/Payments.sol` (operator service-fee claims)
+- `src/v2/rewards/ServiceFeeDistributor.sol` (staker fee + staker inflation claims)
+- `src/v2/rewards/RewardVaults.sol` (TNT vault incentives + operator commissions)
+- `src/v2/rewards/InflationPool.sol` (operator/customer/developer inflation rewards)
+
+## Tests Worth Reading
+
+- `test/v2/tangle/Payments.t.sol`
+- `test/v2/rewards/ServiceFeeDistributor.t.sol`
+- `test/v2/Rewards.t.sol`
+- `test/v2/InflationPool.t.sol`

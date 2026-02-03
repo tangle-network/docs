@@ -1,0 +1,21 @@
+# Orchestration
+
+Orchestration turns workbench intent into sandboxed execution. It coordinates sidecar placement, session lifecycle, and runtime signals across hosts.
+
+## Execution Lifecycle (Simplified)
+
+1. The orchestrator validates policies and checks capacity.
+2. A sidecar is selected or started on an available host.
+3. A session is created and queued executions run in order.
+4. Events stream to clients with buffering and replay support.
+5. Completion, failure, or cancellation updates metrics and metadata.
+
+## What Orchestration Covers
+
+- **Placement and capacity**: Host health, resource-aware limits, and pool membership.
+- **Execution control**: Per-session queues, timeouts, and cancellation.
+- **Batch and simulation runs**: Large task sets can queue and retry with backoff.
+- **Autoscaling (optional)**: Standby hosts can be promoted and webhooks can request new capacity.
+- **Observability hooks**: Health endpoints and metrics for fleet visibility.
+
+This is how the workbench and protocol workloads remain predictable even when the compute layer is distributed.

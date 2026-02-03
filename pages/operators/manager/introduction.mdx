@@ -1,3 +1,24 @@
 # Blueprint Manager
 
-TODO
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/manager
+
+The Blueprint Manager is the operator-side runtime that turns on-chain services into running off-chain infrastructure.
+
+At a high level, the Blueprint Manager:
+
+- Watches the chain for service lifecycle events (service activation, job calls, service termination).
+- Fetches and verifies blueprint artifacts (native binaries, containers, WASM, etc.).
+- Runs service instances in the target execution environment.
+- Submits liveness heartbeats and optional QoS metrics on-chain.
+- Handles streamed fee drips (when services use streaming payments).
+
+This page focuses on the operational role of the Blueprint Manager. For integration details, see:
+
+- [Blueprint Manager (Developer View)](/developers/blueprints/manager)
+- [Quality of Service Monitoring](/operators/quality-of-service)
+
+For operator setup and runtime choices, continue with:
+
+- [Setup](/operators/manager/setup)
+- [Runtime Requirements](/operators/manager/requirements)
+- [Sizing](/operators/manager/sizing)

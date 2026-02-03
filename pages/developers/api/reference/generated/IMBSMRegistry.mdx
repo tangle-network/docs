@@ -1,0 +1,100 @@
+---
+title: IMBSMRegistry
+description: Auto-generated Solidity API reference.
+---
+
+# IMBSMRegistry
+
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/IMBSMRegistry.sol
+
+### IMBSMRegistry
+
+Minimal interface for the Master Blueprint Service Manager registry
+
+#### Functions
+
+#### getMBSM
+
+```solidity
+function getMBSM(uint64 blueprintId) external view returns (address mbsmAddress)
+```
+
+Get the MBSM address currently pinned for a blueprint
+
+##### Parameters
+
+| Name        | Type   | Description              |
+| ----------- | ------ | ------------------------ |
+| blueprintId | uint64 | The blueprint identifier |
+
+##### Return Values
+
+| Name        | Type    | Description                               |
+| ----------- | ------- | ----------------------------------------- |
+| mbsmAddress | address | The pinned MBSM (or latest if not pinned) |
+
+#### getPinnedRevision
+
+```solidity
+function getPinnedRevision(uint64 blueprintId) external view returns (uint32 revision)
+```
+
+Get the revision pinned for a blueprint (0 = latest)
+
+#### getLatestMBSM
+
+```solidity
+function getLatestMBSM() external view returns (address mbsmAddress)
+```
+
+Get the latest registered MBSM address
+
+##### Return Values
+
+| Name        | Type    | Description     |
+| ----------- | ------- | --------------- |
+| mbsmAddress | address | The latest MBSM |
+
+#### getMBSMByRevision
+
+```solidity
+function getMBSMByRevision(uint32 revision) external view returns (address mbsmAddress)
+```
+
+Get an MBSM by explicit revision
+
+##### Parameters
+
+| Name     | Type   | Description                       |
+| -------- | ------ | --------------------------------- |
+| revision | uint32 | The registry revision (1-indexed) |
+
+##### Return Values
+
+| Name        | Type    | Description                             |
+| ----------- | ------- | --------------------------------------- |
+| mbsmAddress | address | The registered address for the revision |
+
+#### getLatestRevision
+
+```solidity
+function getLatestRevision() external view returns (uint32)
+```
+
+Get the latest revision number registered in the registry
+
+#### pinBlueprint
+
+```solidity
+function pinBlueprint(uint64 blueprintId, uint32 revision) external
+```
+
+Pin a blueprint to a specific revision (0 disallowed)
+
+#### unpinBlueprint
+
+```solidity
+function unpinBlueprint(uint64 blueprintId) external
+```
+
+Unpin a blueprint (reverting to latest)

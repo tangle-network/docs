@@ -1,0 +1,51 @@
+---
+title: AI
+description: The shared operating layer for autonomous work, unifying the agentic workbench, secure sandboxes, and operator payments.
+---
+
+# AI
+
+Tangle is the shared operating layer for autonomous work. Teams and agents collaborate in shared workbenches or separate ones, work runs in secure sandboxes, and the protocol pays the operators who host the runtime. Workflows improve through agent and task evaluations collected from each run.
+
+<figure>
+  <img
+    src="/images/architecture/autonomous-work-loop.svg"
+    alt="Autonomous work loop"
+  />
+  <figcaption>
+    Autonomous work loop: workbench -> sandbox runtime -> protocol (payments +
+    evaluation).
+  </figcaption>
+</figure>
+
+## Agentic Workbench
+
+The agentic workbench is multiplayer by design. It is where teammates across engineering, product, and business collaborate with agents in a shared workspace.
+
+Key traits:
+
+- **Shared workspaces** for humans and agents across teams.
+- **Agent profiles** that control models, tools, and budgets.
+- **Background execution** so long tasks keep running.
+- **Simulations** for evaluating workflows across many tasks.
+- **Integrations** for connecting internal tools and data.
+
+## Secure Sandbox Runtime
+
+Work executes inside isolated sandboxes so tasks are contained and repeatable. The runtime is built to host autonomous work safely at scale.
+
+Core capabilities:
+
+- **Sandboxed execution** with explicit policies and resource limits.
+- **Task isolation** so background work can be reviewed and accepted before merge.
+- **Orchestrator + sidecar** separation for lifecycle control and execution.
+
+## Evaluation Loop
+
+Each run produces task and agent evaluations. That data feeds back into the workbench to improve prompts, policies, and workflows over time.
+
+## Learn More
+
+- [Workbench details](/vibe/introduction)
+- [Runtime and sandboxing](/infrastructure/introduction)
+- [Operator onboarding](/operators/introduction)

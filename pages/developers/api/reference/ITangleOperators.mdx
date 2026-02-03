@@ -1,0 +1,159 @@
+---
+title: ITangleOperators
+description: Auto-generated Solidity API reference.
+---
+
+# ITangleOperators
+
+Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/ITangleOperators.sol
+
+### ITangleOperators
+
+Operator registration and management interface
+
+_Operator liveness is tracked via OperatorStatusRegistry heartbeats,
+not a setOperatorOnline call. Use submitHeartbeat/isOnline/getOperatorStatus
+on the registry for liveness signals._
+
+#### Functions
+
+#### preRegister
+
+```solidity
+function preRegister(uint64 blueprintId) external
+```
+
+Signal intent to register for a blueprint
+
+#### registerOperator
+
+```solidity
+function registerOperator(uint64 blueprintId, bytes ecdsaPublicKey, string rpcAddress) external
+```
+
+Register as operator for a blueprint
+
+##### Parameters
+
+| Name           | Type   | Description                                                                                                                                                                |
+| -------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| blueprintId    | uint64 | The blueprint to register for                                                                                                                                              |
+| ecdsaPublicKey | bytes  | The ECDSA public key for gossip network identity This key is used for signing/verifying messages in the P2P gossip network and may differ from the wallet key (msg.sender) |
+| rpcAddress     | string | The operator's RPC endpoint URL                                                                                                                                            |
+
+#### registerOperator
+
+```solidity
+function registerOperator(uint64 blueprintId, bytes ecdsaPublicKey, string rpcAddress, bytes registrationInputs) external
+```
+
+Register as operator providing blueprint-specific registration inputs
+
+##### Parameters
+
+| Name               | Type   | Description                                     |
+| ------------------ | ------ | ----------------------------------------------- |
+| blueprintId        | uint64 |                                                 |
+| ecdsaPublicKey     | bytes  |                                                 |
+| rpcAddress         | string |                                                 |
+| registrationInputs | bytes  | Encoded payload validated by blueprint's schema |
+
+#### unregisterOperator
+
+```solidity
+function unregisterOperator(uint64 blueprintId) external
+```
+
+Unregister from a blueprint
+
+#### updateOperatorPreferences
+
+```solidity
+function updateOperatorPreferences(uint64 blueprintId, bytes ecdsaPublicKey, string rpcAddress) external
+```
+
+Update operator preferences for a blueprint
+
+##### Parameters
+
+| Name           | Type   | Description                                               |
+| -------------- | ------ | --------------------------------------------------------- |
+| blueprintId    | uint64 | The blueprint to update preferences for                   |
+| ecdsaPublicKey | bytes  | New ECDSA public key (pass empty bytes to keep unchanged) |
+| rpcAddress     | string | New RPC endpoint (pass empty string to keep unchanged)    |
+
+#### getOperatorRegistration
+
+```solidity
+function getOperatorRegistration(uint64 blueprintId, address operator) external view returns (struct Types.OperatorRegistration)
+```
+
+Get operator registration for a blueprint
+
+#### getOperatorPreferences
+
+```solidity
+function getOperatorPreferences(uint64 blueprintId, address operator) external view returns (struct Types.OperatorPreferences)
+```
+
+Get operator preferences for a blueprint (includes ECDSA public key)
+
+#### getOperatorPublicKey
+
+```solidity
+function getOperatorPublicKey(uint64 blueprintId, address operator) external view returns (bytes)
+```
+
+Get operator's ECDSA public key for gossip network identity
+
+_Returns the key used for signing/verifying gossip messages_
+
+#### isOperatorRegistered
+
+```solidity
+function isOperatorRegistered(uint64 blueprintId, address operator) external view returns (bool)
+```
+
+Check if operator is registered for a blueprint
+
+#### Events
+
+#### OperatorRegistered
+
+```solidity
+event OperatorRegistered(uint64 blueprintId, address operator, bytes ecdsaPublicKey, string rpcAddress)
+```
+
+Emitted when an operator registers for a blueprint
+
+##### Parameters
+
+| Name           | Type    | Description                                      |
+| -------------- | ------- | ------------------------------------------------ |
+| blueprintId    | uint64  | The blueprint ID                                 |
+| operator       | address | The operator address (wallet)                    |
+| ecdsaPublicKey | bytes   | The ECDSA public key for gossip network identity |
+| rpcAddress     | string  | The operator's RPC endpoint                      |
+
+#### OperatorUnregistered
+
+```solidity
+event OperatorUnregistered(uint64 blueprintId, address operator)
+```
+
+#### OperatorPreferencesUpdated
+
+```solidity
+event OperatorPreferencesUpdated(uint64 blueprintId, address operator, bytes ecdsaPublicKey, string rpcAddress)
+```
+
+Emitted when an operator updates their preferences
+
+##### Parameters
+
+| Name           | Type    | Description                                              |
+| -------------- | ------- | -------------------------------------------------------- |
+| blueprintId    | uint64  | The blueprint ID                                         |
+| operator       | address | The operator address                                     |
+| ecdsaPublicKey | bytes   | The updated ECDSA public key (may be empty if unchanged) |
+| rpcAddress     | string  | The updated RPC endpoint (may be empty if unchanged)     |

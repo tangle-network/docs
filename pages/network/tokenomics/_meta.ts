@@ -1,7 +1,7 @@
 import { Meta } from "nextra";
 
 const meta: Meta = {
-  usage: "Token Overview",
+  usage: "Token Utility",
   allocation: "Allocation",
   inflation: "Inflation",
 };

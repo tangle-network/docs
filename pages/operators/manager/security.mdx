@@ -1,0 +1,55 @@
+# Sandboxing and Security
+
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/manager
+
+Running the Blueprint Manager in production should prioritize isolation and key safety. The recommendations below assume Tangle's EVM protocol.
+
+## Recommended: VM sandbox for native blueprints (Linux)
+
+The native VM sandbox uses `cloud-hypervisor` to isolate blueprint binaries.
+
+1. Install `cloud-hypervisor` and make sure it is in `PATH`.
+2. Grant the manager `CAP_NET_ADMIN` so it can manage VM networking:
+
+```bash
+sudo setcap cap_net_admin+eip /path/to/blueprint-manager
+```
+
+3. Run with VM preferences enabled:
+
+```bash
+cargo tangle blueprint run \
+  --protocol tangle-evm \
+  --http-rpc-url "$RPC_URL" \
+  --ws-rpc-url "$WS_RPC_URL" \
+  --keystore-path ./keystore \
+  --settings-file ./settings.env \
+  --spawn-method vm
+```
+
+The manager handles kernel and disk image downloads automatically.
+
+## Containers and Kata
+
+If you deploy container-based blueprints, use a hardened runtime such as Kata Containers and follow Kubernetes best practices for least privilege.
+
+## Key and data safety
+
+- Store keystores on encrypted storage.
+- Restrict filesystem permissions to the operator user.
+- Avoid running the manager as root unless required for sandboxing.
+
+## Keystore management
+
+Create a dedicated ECDSA key for the operator and keep the keystore path consistent across services:
+
+```bash
+cargo tangle key --algo ecdsa --keystore ./keystore --name operator
+export BLUEPRINT_KEYSTORE_URI="$(pwd)/keystore"
+```
+
+The manager uses `--keystore-path`, and QoS uses `BLUEPRINT_KEYSTORE_URI` for heartbeat signing. Keep the keystore path stable and isolated per environment.
+
+## Dry-run safety
+
+For validation or benchmarking, `cargo tangle blueprint service spawn --dry-run` runs a service runtime without submitting default on-chain transactions (registration, results, heartbeats). Custom job logic can still submit transactions if it does so explicitly. This is not a production substitute for the manager.

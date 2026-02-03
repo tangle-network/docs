@@ -2,7 +2,7 @@ import GithubFileReaderDisplay from "../../components/GithubFileReaderDisplay";
 
 # Troubleshooting Guide
 
-This guide helps developers troubleshoot common issues when working with Tangle Network blueprints and AVS development.
+This guide helps developers troubleshoot common issues when working with Tangle Network blueprints.
 
 ## Common Issues
 
@@ -27,13 +27,11 @@ Caused by:
   note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 ```
 
-Verify that your blueprint's jobs and reports are implemented correctly. Occasionally, our SDK may have breaking changes to the error reporting. You will want to consider commenting out metadata generation and then rebuilding to check for errors in the blueprint.
-
-{/* TODO: Add URL */}
+Verify that your blueprint's jobs and reports are implemented correctly. If metadata generation is failing, temporarily comment out the build script section that writes metadata and rebuild to surface compiler errors in your blueprint code.
 
 <GithubFileReaderDisplay
-  url=""
-  startLine={3}
-  toLine={11}
-  title="Comment out metadata generation to assess blueprint implementation errors"
+  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring/incredible-squaring-bin/build.rs"
+  fromLine={1}
+  toLine={22}
+  title="Blueprint metadata build script (v2 example)"
 />

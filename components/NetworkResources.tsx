@@ -1,14 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { BlockCopyButton } from "./ui/block-copy-button";
-import {
-  FlaskConical,
-  WalletMinimal,
-  Waypoints,
-  SendToBack,
-} from "lucide-react";
+import { FlaskConical, WalletMinimal, Waypoints } from "lucide-react";
 import WalletTable from "./WalletTable";
-import EvmToSubstrateConverter from "./EvmToSubstrateConverter";
 
 type NetworkDetail = {
   property: string;
@@ -33,14 +27,9 @@ const NETWORK_DATA = {
       },
     },
     {
-      property: "PolkadotJS Apps",
-      value: {
-        type: "link",
-        url: "https://polkadot.js.org/apps/?rpc=wss://rpc.tangle.tools#/explorer",
-        text: "polkadot.js.org/apps/?rpc=wss://rpc.tangle.tools",
-      },
+      property: "Block Explorers",
+      value: "",
     },
-    { property: "Block Explorers", value: "" },
     {
       property: "EVM Explorer",
       value: {
@@ -49,22 +38,12 @@ const NETWORK_DATA = {
         text: "explorer.tangle.tools",
       },
     },
-    {
-      property: "Substrate Block Explorer",
-      value: {
-        type: "link",
-        url: "https://tangle.statescan.io/",
-        text: "tangle.statescan.io",
-      },
-    },
     { property: "Asset Details", value: "" },
-    { property: "Native Asset Symbol", value: "TNT" },
-    { property: "Native Asset Decimals", value: "18" },
+    { property: "Gas Token Symbol", value: "ETH" },
+    { property: "Gas Token Decimals", value: "18" },
     { property: "Developer Resources", value: "" },
-    { property: "Address Prefix", value: { type: "wss", url: "tg" } },
-    { property: "Network Type", value: "Substrate aka Polkadot SDK with EVM" },
-    { property: "Chain ID", value: { type: "wss", url: "5845" } },
-    { property: "Standard Account", value: "*25519" },
+    { property: "Chain ID", value: { type: "wss", url: "8453" } },
+    { property: "Host Chain", value: "Base Mainnet" },
     {
       property: "Public RPC URL",
       value: { type: "wss", url: "https://rpc.tangle.tools" },
@@ -74,31 +53,19 @@ const NETWORK_DATA = {
       value: { type: "wss", url: "wss://rpc.tangle.tools" },
     },
     {
-      property: "Public WSS URL by Dwellir",
-      value: { type: "wss", url: "wss://tangle-mainnet-rpc.n.dwellir.com" },
-    },
-    {
-      property: "Runtime Types",
+      property: "Protocol Contracts",
       value: {
         type: "link",
-        url: "https://www.npmjs.com/package/@tangle-network/tangle-substrate-types",
-        text: "@tangle-network/tangle-substrate-types",
+        url: "https://github.com/tangle-network/tnt-core/tree/v2",
+        text: "github.com/tangle-network/tnt-core",
       },
     },
     {
-      property: "Telemetry",
+      property: "Blueprint SDK",
       value: {
         type: "link",
-        url: "https://telemetry.polkadot.io/#list/0x44f68476df71ebf765b630bf08dc1e0fedb2bf614a1aa0563b3f74f20e47b3e0",
-        text: "Telemetry",
-      },
-    },
-    {
-      property: "GitHub Repo",
-      value: {
-        type: "link",
-        url: "https://github.com/tangle-network/tangle",
-        text: "github.com/tangle-network/tangle",
+        url: "https://github.com/tangle-network/blueprint/tree/v2",
+        text: "github.com/tangle-network/blueprint",
       },
     },
   ] satisfies NetworkDetail[],
@@ -113,39 +80,23 @@ const NETWORK_DATA = {
       },
     },
     {
-      property: "PolkadotJS Apps",
-      value: {
-        type: "link",
-        url: "https://polkadot.js.org/apps/?rpc=wss://testnet-rpc.tangle.tools#/explorer",
-        text: "polkadot.js.org/apps/?rpc=wss://testnet-rpc.tangle.tools",
-      },
+      property: "Block Explorers",
+      value: "",
     },
-    { property: "Block Explorers", value: "" },
     {
-      property: "EVM Explorers",
+      property: "EVM Explorer",
       value: {
         type: "link",
         url: "https://testnet-explorer.tangle.tools",
         text: "testnet-explorer.tangle.tools",
       },
     },
-    {
-      property: "Substrate Explorer",
-      value: {
-        type: "link",
-        url: "https://polkadot.js.org/apps/?rpc=wss://testnet-rpc.tangle.tools#/explorer",
-        text: "polkadot.js.org/apps/?rpc=wss://testnet-rpc.tangle.tools",
-      },
-    },
     { property: "Asset Details", value: "" },
-    { property: "Native Asset Symbol", value: "tTNT" },
-    { property: "Native Asset Decimals", value: "18" },
+    { property: "Gas Token Symbol", value: "ETH" },
+    { property: "Gas Token Decimals", value: "18" },
     { property: "Developer Resources", value: "" },
-    { property: "Address Prefix", value: "tg" },
-    { property: "Network Type", value: "Substrate aka Polkadot SDK with EVM" },
-    { property: "Chain ID", value: "3799" },
-    { property: "Address Prefix", value: "tg" },
-    { property: "Standard Account", value: "*25519" },
+    { property: "Chain ID", value: { type: "wss", url: "84532" } },
+    { property: "Host Chain", value: "Base Sepolia" },
     {
       property: "Public RPC URL",
       value: { type: "wss", url: "https://testnet-rpc.tangle.tools" },
@@ -155,27 +106,19 @@ const NETWORK_DATA = {
       value: { type: "wss", url: "wss://testnet-rpc.tangle.tools" },
     },
     {
-      property: "Runtime Types",
+      property: "Protocol Contracts",
       value: {
         type: "link",
-        url: "https://www.npmjs.com/package/@tangle-network/tangle-substrate-types",
-        text: "@tangle-network/tangle-substrate-types",
+        url: "https://github.com/tangle-network/tnt-core/tree/v2",
+        text: "github.com/tangle-network/tnt-core",
       },
     },
     {
-      property: "Telemetry",
+      property: "Blueprint SDK",
       value: {
         type: "link",
-        url: "https://telemetry.polkadot.io/#list/0x3d22af97d919611e03bbcbda96f65988758865423e89b2d99547a6bb61452db3",
-        text: "Polkadot Telemetry",
-      },
-    },
-    {
-      property: "GitHub Repo",
-      value: {
-        type: "link",
-        url: "https://github.com/tangle-network/tangle",
-        text: "github.com/tangle-network/tangle",
+        url: "https://github.com/tangle-network/blueprint/tree/v2",
+        text: "github.com/tangle-network/blueprint",
       },
     },
   ] satisfies NetworkDetail[],
@@ -190,7 +133,7 @@ const NetworkTabs = () => {
     const hash = window.location.hash.substring(1);
 
     // If hash matches one of our tabs, set it as active
-    if (["mainnet", "testnet", "wallets", "evmToSubstrate"].includes(hash)) {
+    if (["mainnet", "testnet", "wallets"].includes(hash)) {
       setActiveTab(hash);
     } else {
       // Explicitly set to mainnet if no valid hash is present
@@ -329,28 +272,11 @@ const NetworkTabs = () => {
             Wallets
           </a>
         </li>
-        <li className="inline-flex items-center justify-center px-4 pt-8 text-xl border-b-2 border-transparent rounded-t-lg group">
-          {" "}
-          <a
-            href="#"
-            onClick={() => handleTabClick("evmToSubstrate")}
-            className={`inline-block p-4 rounded-t-lg ${
-              activeTab === "evmToSubstrate"
-                ? "text-blue-600 bg-gray-100 active dark:bg-gray-800 dark:text-blue-500"
-                : "hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:text-gray-300"
-            }`}
-          >
-            <SendToBack className="inline w-4 h-4 text-blue-600 me-2 dark:text-blue-500" />
-            Address Converter
-          </a>
-        </li>
       </ul>
 
       <div className="w-full table-auto">
         {activeTab === "wallets" ? (
           <WalletTable />
-        ) : activeTab === "evmToSubstrate" ? (
-          <EvmToSubstrateConverter />
         ) : activeTab === "mainnet" || activeTab === "testnet" ? (
           renderTable(NETWORK_DATA[activeTab])
         ) : null}
