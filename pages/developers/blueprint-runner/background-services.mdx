@@ -21,9 +21,19 @@ Background services refer to any long-running processes that operate independent
 
 Unlike job handlers that execute in response to specific requests, background services operate autonomously to provide supporting functionality.
 
+## Built-in Keepers
+
+The SDK provides built-in background keepers for common lifecycle automation:
+
+- **EpochKeeper**: Triggers at epoch boundaries for inflation distribution and reward calculations.
+- **StreamKeeper**: Manages payment stream settlement and fee drip processing.
+- **RoundKeeper**: Coordinates round-based protocols (threshold signatures, MPC ceremonies).
+
+These keepers handle the timing and coordination logic so your blueprint can focus on the actual work.
+
 ## Common Use Cases
 
-Background services could be used for various purposes in Blueprints, with the following being only a few examples:
+Background services can be used for various purposes in Blueprints:
 
 ### Data Collection and Aggregation
 
