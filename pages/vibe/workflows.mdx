@@ -16,6 +16,14 @@ The workbench treats agent development as a workflow problem. You define the goa
 - **Profile and limits** to control cost and risk in the runtime sidecar.
 - **Review point** before changes reach production systems.
 
+## Parallel Agents
+
+Traditional AI interfaces present single-threaded conversation. Real projects involve exploration, comparison, and parallel investigation.
+
+- **Spawning sub-agents**: A primary agent working on a task can spawn sub-agents to research alternatives, investigate dependencies, or draft tests. Each runs independently and reports results back.
+- **Forking for exploration**: Facing a decision, fork the context and direct each fork down a different path. Both develop in parallel. Compare results and pick the winner.
+- **Spatial overview**: The workbench presents parallel activity visually, showing all active agents, their status, recent outputs, and relationships.
+
 ## Why This Matters
 
 Teams need predictability when agents touch real systems. The workbench makes behavior reproducible, comparable, and reviewable while keeping execution controlled.

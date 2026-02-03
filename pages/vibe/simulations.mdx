@@ -12,6 +12,16 @@ Simulations are how you evaluate agent performance before shipping. Instead of a
 
 Each simulation produces a structured record of inputs, outputs, and logs. This makes it easier to score results, audit failures, and tune workflows based on evidence instead of anecdotes.
 
+## The Evaluation Loop
+
+Every execution generates traces: what agents did, inputs received, outputs produced, timing. These traces feed evaluation systems:
+
+- Which prompt structures produce better results?
+- Which model configurations work for which tasks?
+- Which tool combinations reduce errors?
+
+This creates a flywheel: more usage generates more traces, better traces improve the system, and a better system drives more usage. Early users benefit from infrastructure; later users benefit from accumulated learning.
+
 ## When To Run Simulations
 
 - Before shipping a new workflow.
