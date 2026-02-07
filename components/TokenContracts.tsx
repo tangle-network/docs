@@ -850,7 +850,10 @@ const TokenRow = memo(({ token }: { token: Token }) => (
           fetchPriority="high"
         />
         <span className="font-medium">
-          {token.name} <span className="text-gray-500 dark:text-gray-400">({token.symbol})</span>
+          {token.name}{" "}
+          <span className="text-gray-500 dark:text-gray-400">
+            ({token.symbol})
+          </span>
         </span>
       </div>
     </TableCell>
