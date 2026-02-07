@@ -124,21 +124,21 @@ const ExpandableImage: React.FC<ExpandableImageProps> = ({
               <div className="absolute flex space-x-2 bottom-4 right-4">
                 <button
                   onClick={handleZoomIn}
-                  className="p-2 transition-colors bg-white bg-opacity-50 rounded-full hover:bg-opacity-75"
+                  className="p-2 transition-colors bg-white bg-opacity-50 rounded-full hover:bg-opacity-75 dark:bg-gray-800 dark:bg-opacity-50 dark:hover:bg-opacity-75"
                   aria-label="Zoom in"
                 >
                   <FiZoomIn size={24} />
                 </button>
                 <button
                   onClick={handleZoomOut}
-                  className="p-2 transition-colors bg-white bg-opacity-50 rounded-full hover:bg-opacity-75"
+                  className="p-2 transition-colors bg-white bg-opacity-50 rounded-full hover:bg-opacity-75 dark:bg-gray-800 dark:bg-opacity-50 dark:hover:bg-opacity-75"
                   aria-label="Zoom out"
                 >
                   <FiZoomOut size={24} />
                 </button>
                 <button
                   onClick={resetZoom}
-                  className="p-2 transition-colors bg-white bg-opacity-50 rounded-full hover:bg-opacity-75"
+                  className="p-2 transition-colors bg-white bg-opacity-50 rounded-full hover:bg-opacity-75 dark:bg-gray-800 dark:bg-opacity-50 dark:hover:bg-opacity-75"
                   aria-label="Reset zoom"
                 >
                   <FiRefreshCw size={24} />

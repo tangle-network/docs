@@ -4,7 +4,7 @@ const HelpDiscordBtn: React.FC<{ className?: string }> = ({ className }) => {
   return (
     <a href="https://discord.com/invite/cv8EfJu3Tn" className={className}>
       <div className="flex items-center justify-center">
-        <button className="flex items-center px-3 py-1 text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-md shadow-md h-7 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+        <button className="flex items-center px-3 py-1 text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-md shadow-md h-7 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700">
           <svg
             className="w-6 h-5 mr-0 lg:mr-2"
             xmlns="http://www.w3.org/2000/svg"
