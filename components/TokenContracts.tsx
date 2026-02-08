@@ -850,7 +850,10 @@ const TokenRow = memo(({ token }: { token: Token }) => (
           fetchPriority="high"
         />
         <span className="font-medium">
-          {token.name} <span className="text-gray-500">({token.symbol})</span>
+          {token.name}{" "}
+          <span className="text-gray-500 dark:text-gray-400">
+            ({token.symbol})
+          </span>
         </span>
       </div>
     </TableCell>
@@ -942,15 +945,15 @@ export const TokenContracts = () => {
           type="text"
           placeholder="Search tokens..."
           onChange={handleSearch}
-          className="flex-1 max-w-sm px-4 py-2 bg-white border border-gray-200 rounded-lg dark:border-gray-800 dark:bg-gray-900"
+          className="flex-1 max-w-sm px-4 py-2 bg-white border border-gray-200 rounded-lg dark:border-gray-800 dark:bg-gray-900 dark:text-white dark:placeholder-gray-400"
         />
         <div className="relative">
           <select
             value={selectedChain}
             onChange={(e) => setSelectedChain(e.target.value)}
-            className="h-10 w-[180px] appearance-none rounded-lg border border-gray-200 bg-white pl-10 pr-10 text-sm 
+            className="h-10 w-[180px] appearance-none rounded-lg border border-gray-200 bg-white pl-10 pr-10 text-sm
             hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500
-            dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700"
+            dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:text-white"
           >
             <option value="">All Chains</option>
             {CHAIN_OPTIONS.map((chain) => (
@@ -976,7 +979,7 @@ export const TokenContracts = () => {
               />
             ) : (
               <svg
-                className="w-4 h-4 text-gray-500"
+                className="w-4 h-4 text-gray-500 dark:text-gray-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

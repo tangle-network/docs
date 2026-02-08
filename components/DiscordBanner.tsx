@@ -18,7 +18,7 @@ const DiscordBanner = () => {
           </svg>
           <div>
             <h2 className="text-lg font-semibold text-white">Need Help?</h2>
-            <p className="text-sm max-w-72 text-gray-400">
+            <p className="text-sm max-w-72 text-gray-400 dark:text-gray-300">
               Ask questions, get to know the project and community in Discord.
             </p>
           </div>
