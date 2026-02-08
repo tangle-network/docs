@@ -16,6 +16,7 @@ The Blueprint QoS system provides a complete observability stack:
 
 - **Heartbeat Service**: submits periodic liveness signals to the status registry
 - **Metrics Collection**: exports system and job metrics via a Prometheus-compatible HTTP endpoint
+- **Custom On-Chain Metrics**: reports arbitrary numeric metrics on-chain via ABI-encoded heartbeats
 - **Logging**: streams logs to Loki (optional)
 - **Dashboards**: builds Grafana dashboards (optional)
 - **Server Management**: can run Grafana and Loki (and optionally Prometheus) for you
@@ -226,6 +227,215 @@ if let Some(qos) = &ctx.qos_service {
 }
 ```
 
+## Custom On-Chain Metrics
+
+Custom on-chain metrics let your Blueprint report arbitrary numeric values that are ABI-encoded into each heartbeat, stored on the `OperatorStatusRegistry` contract, and queryable by anyone. This enables transparent SLA enforcement, slashing based on performance, and cross-operator comparison.
+
+### How It Works
+
+The flow from Rust to on-chain storage:
+
+```
+Blueprint Rust code                    Heartbeat Service                 On-Chain
+───────────────────                    ─────────────────                 ────────
+provider.add_on_chain_metric(          Periodically drains               Contract stores
+  "response_time_ms", 150              metrics, ABI-encodes              MetricPair[] in
+)                                      as MetricPair[], signs            operatorMetrics
+provider.add_on_chain_metric(          and submits via                   mapping, validates
+  "uptime_percent", 99                 submitHeartbeatDirect()           against definitions
+)
+```
+
+Metrics use Solidity-compatible ABI encoding (`MetricPair[]`), not Rust-specific serialization. The encoding is handled automatically by the SDK.
+
+### On-Chain Setup (Service Owner)
+
+Before operators can report custom metrics, the service owner must enable them on the `OperatorStatusRegistry` contract and optionally define validation bounds.
+
+```solidity
+// Enable custom metrics for the service
+registry.enableCustomMetrics(serviceId, true);
+
+// Define metric schemas with validation bounds
+IOperatorStatusRegistry.MetricDefinition[] memory defs =
+    new IOperatorStatusRegistry.MetricDefinition[](2);
+
+defs[0] = IOperatorStatusRegistry.MetricDefinition({
+    name: "response_time_ms",
+    minValue: 0,
+    maxValue: 5000,
+    required: true
+});
+
+defs[1] = IOperatorStatusRegistry.MetricDefinition({
+    name: "uptime_percent",
+    minValue: 0,
+    maxValue: 100,
+    required: false
+});
+
+registry.setMetricDefinitions(serviceId, defs);
+```
+
+`MetricDefinition` fields:
+
+| Field    | Type    | Description                                       |
+| -------- | ------- | ------------------------------------------------- |
+| name     | string  | Metric identifier (must match Rust key)           |
+| minValue | uint256 | Minimum acceptable value (inclusive)              |
+| maxValue | uint256 | Maximum acceptable value (inclusive)              |
+| required | bool    | If `true`, missing metric emits `MetricViolation` |
+
+When a heartbeat arrives with metrics, the contract validates each reported value against these definitions. Out-of-bounds or missing required metrics emit a `MetricViolation` event but do not auto-slash. An off-chain keeper can monitor these events and call `reportForSlashing()` when policy warrants it.
+
+### Reporting Metrics in Rust
+
+In your Blueprint Rust code, use the `MetricsProvider` trait to push on-chain metrics:
+
+```rust
+use blueprint_qos::metrics::types::MetricsProvider;
+
+// Get the provider from the QoS service
+let provider = qos_service.provider().unwrap();
+
+// Report metrics (these accumulate until the next heartbeat drains them)
+provider.add_on_chain_metric("response_time_ms".into(), 150).await;
+provider.add_on_chain_metric("uptime_percent".into(), 99).await;
+```
+
+Metrics are accumulated in memory and automatically drained into the next heartbeat. No ABI encoding knowledge is required on the developer side.
+
+The two metric APIs serve different purposes:
+
+| Method                  | Value Type | Destination            | Use Case                           |
+| ----------------------- | ---------- | ---------------------- | ---------------------------------- |
+| `add_custom_metric()`   | `String`   | Prometheus / Grafana   | Observability, dashboards          |
+| `add_on_chain_metric()` | `u64`      | On-chain via heartbeat | SLA enforcement, slashing, billing |
+
+### Querying Metrics On-Chain
+
+Anyone can read stored operator metrics from the contract:
+
+```solidity
+// Get a specific metric value for an operator
+uint256 responseTime = registry.getMetricValue(
+    serviceId,
+    operatorAddress,
+    "response_time_ms"
+);
+
+// Get all metric definitions for a service
+IOperatorStatusRegistry.MetricDefinition[] memory defs =
+    registry.getMetricDefinitions(serviceId);
+
+// Check if an operator's heartbeat is current
+bool current = registry.isHeartbeatCurrent(serviceId, operatorAddress);
+
+// Get operators who have missed too many heartbeats
+address[] memory slashable = registry.getSlashableOperators(serviceId);
+```
+
+### Metric Validation and Slashing
+
+The contract validates metrics against `MetricDefinition` bounds on every heartbeat. Violations emit events:
+
+```solidity
+event MetricViolation(
+    uint64 indexed serviceId,
+    address indexed operator,
+    string metricName,
+    string reason
+);
+```
+
+Violation reasons include:
+
+- `"required metric missing"` — a required metric was not reported
+- `"value below minimum"` — reported value < `minValue`
+- `"value above maximum"` — reported value > `maxValue`
+
+Slashing is intentionally decoupled from validation. Auto-slashing from metric violations is dangerous because transient spikes or network delays could trigger false positives. Instead:
+
+1. An off-chain keeper monitors `MetricViolation` events
+2. When policy warrants it (e.g., repeated violations), the keeper calls `reportForSlashing(serviceId, operator, reason)`
+3. The contract sets the operator's status to `Slashed`
+4. The staking layer can then execute the actual slash
+
+### ABI Encoding Details
+
+The SDK uses `alloy-sol-types` to produce ABI-encoded bytes matching `abi.decode(data, (MetricPair[]))`:
+
+```rust
+// This is handled internally, but for reference:
+sol! {
+    struct MetricPair {
+        string name;
+        uint256 value;
+    }
+}
+
+fn encode_metric_pairs(metrics: &[(String, u64)]) -> Vec<u8> {
+    let pairs: Vec<MetricPair> = metrics.iter().map(|(name, value)| {
+        MetricPair {
+            name: name.clone(),
+            value: alloy_primitives::U256::from(*value),
+        }
+    }).collect();
+    pairs.abi_encode()
+}
+```
+
+The `u64` to `uint256` conversion is safe because all realistic metric values fit within `u64::MAX`.
+
+### End-to-End Example
+
+Here is a complete example showing a Blueprint that reports response time and uptime metrics:
+
+**Solidity setup (service deployment script):**
+
+```solidity
+// In your Blueprint Service Manager constructor or setup
+registry.configureHeartbeat(serviceId, HeartbeatConfig({
+    interval: 60,
+    maxMissed: 3,
+    customMetrics: true
+}));
+
+registry.enableCustomMetrics(serviceId, true);
+
+MetricDefinition[] memory defs = new MetricDefinition[](2);
+defs[0] = MetricDefinition("response_time_ms", 0, 5000, true);
+defs[1] = MetricDefinition("uptime_percent", 0, 100, false);
+registry.setMetricDefinitions(serviceId, defs);
+```
+
+**Rust Blueprint handler:**
+
+```rust
+async fn handle_job(ctx: &BlueprintContext) -> Result<(), Error> {
+    let start = std::time::Instant::now();
+
+    // ... do work ...
+
+    let duration_ms = start.elapsed().as_millis() as u64;
+
+    // Report to on-chain metrics (flows to next heartbeat automatically)
+    if let Some(provider) = ctx.qos_service.as_ref().and_then(|q| q.provider()) {
+        provider.add_on_chain_metric("response_time_ms".into(), duration_ms).await;
+        provider.add_on_chain_metric("uptime_percent".into(), 99).await;
+    }
+
+    Ok(())
+}
+```
+
+**Querying on-chain (from any contract or script):**
+
+```solidity
+uint256 rt = registry.getMetricValue(serviceId, operator, "response_time_ms");
+require(rt <= 5000, "SLA violated");
+```
+
 ## Creating Grafana Dashboards
 
 ```rust
@@ -246,8 +456,15 @@ if let Some(qos) = &ctx.qos_service {
     if let Some(provider) = qos.provider() {
         let system_metrics = provider.get_system_metrics().await;
         let _cpu = system_metrics.cpu_usage;
+
+        // Prometheus/Grafana metrics (string values)
         provider
             .add_custom_metric("custom.label".into(), "value".into())
+            .await;
+
+        // On-chain metrics (u64 values, included in next heartbeat)
+        provider
+            .add_on_chain_metric("jobs_completed".into(), 42)
             .await;
     }
 }
@@ -255,18 +472,23 @@ if let Some(qos) = &ctx.qos_service {
 
 ## Best Practices
 
-✅ DO:
+**DO:**
 
 - Initialize QoS early in your Blueprint startup sequence.
 - Use `BlueprintRunner::qos_service(...)` to auto-wire RPC + keystore + status registry.
 - Bind the metrics endpoint to `127.0.0.1` unless you explicitly want it scraped remotely.
 - Replace default Grafana credentials when using managed servers.
+- Use `add_on_chain_metric()` for values that affect SLA/slashing; use `add_custom_metric()` for observability-only data.
+- Define `MetricDefinition` bounds conservatively. Tight bounds catch real issues; overly tight bounds cause false positives.
+- Set `required: true` only for metrics your Blueprint always reports. Optional metrics should use `required: false`.
 
-❌ DON'T:
+**DON'T:**
 
 - Don't enable heartbeats without setting `BLUEPRINT_KEYSTORE_URI`.
 - Don't expose managed Grafana publicly without auth.
 - Don't ignore QoS startup errors; they usually indicate misconfigured ports or credentials.
+- Don't auto-slash on `MetricViolation` events. Use a keeper with policy logic to avoid slashing on transient spikes.
+- Don't submit metrics with string keys that don't match your `MetricDefinition` names. Unrecognized metrics are stored but not validated.
 
 ## QoS Components Reference
 
@@ -275,6 +497,24 @@ if let Some(qos) = &ctx.qos_service {
 | Unified Service   | `QoSService`       | `QoSConfig`       | Main entry point for QoS integration       |
 | Heartbeat         | `HeartbeatService` | `HeartbeatConfig` | Liveness signals to the status registry    |
 | Metrics           | `MetricsService`   | `MetricsConfig`   | System + job metrics and Prometheus export |
+| On-Chain Metrics  | `MetricsProvider`  | N/A               | `add_on_chain_metric()` for chain storage  |
+| ABI Encoding      | `MetricPair`       | N/A               | Solidity-compatible encoding via alloy     |
 | Logging           | N/A                | `LokiConfig`      | Log aggregation via Loki                   |
 | Dashboards        | `GrafanaClient`    | `GrafanaConfig`   | Dashboards and datasources                 |
 | Server Management | `ServerManager`    | Server configs    | Manages Docker containers for the stack    |
+
+## Contract Reference
+
+The `OperatorStatusRegistry` contract provides these key functions for metrics:
+
+| Function                                         | Access        | Description                                           |
+| ------------------------------------------------ | ------------- | ----------------------------------------------------- |
+| `enableCustomMetrics(serviceId, bool)`           | Service Owner | Enable/disable custom metric processing               |
+| `setMetricDefinitions(serviceId, defs[])`        | Service Owner | Set validation bounds for metrics                     |
+| `addMetricDefinition(serviceId, ...)`            | Service Owner | Add a single metric definition                        |
+| `getMetricValue(serviceId, operator, name)`      | Anyone        | Read a stored metric value                            |
+| `getMetricDefinitions(serviceId)`                | Anyone        | List all metric definitions                           |
+| `isHeartbeatCurrent(serviceId, operator)`        | Anyone        | Check operator liveness                               |
+| `getSlashableOperators(serviceId)`               | Anyone        | List operators past heartbeat threshold               |
+| `reportForSlashing(serviceId, operator, reason)` | Anyone        | Flag an operator for slashing                         |
+| `getOperatorState(serviceId, operator)`          | Anyone        | Full operator state (heartbeat, status, metrics hash) |

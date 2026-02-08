@@ -4,7 +4,7 @@ title: Quality of Service Monitoring
 
 # Quality of Service Monitoring
 
-QoS is the observability layer for running Blueprints. As an operator, you decide how metrics, logs, and dashboards are exposed to your team or customers. This page outlines what QoS exports and how to configure access safely.
+QoS is the observability layer for running Blueprints. As an operator, you decide how metrics, logs, and dashboards are exposed to your team or customers. This page outlines what QoS exports, how to configure access safely, and how on-chain metrics affect your operator status.
 
 ## What Gets Exported
 
@@ -20,6 +20,42 @@ Notes:
 
 - If QoS metrics are enabled, it will bind a metrics listener. If you do not want a metrics endpoint, disable metrics in your QoS config.
 - The query routes on the metrics endpoint are intended for convenience and debugging, not as a replacement for a full Prometheus deployment.
+
+## On-Chain Metrics and Operator Status
+
+Blueprints can report custom numeric metrics on-chain via heartbeats. These metrics are stored in the `OperatorStatusRegistry` contract and visible to anyone. As an operator, you should understand how this affects you.
+
+### What Gets Reported
+
+The Blueprint developer defines which metrics are reported. Common examples include response time, uptime percentage, job completion rate, and resource utilization. Each metric has a name and a `u64` value.
+
+### Validation and Violations
+
+Service owners can define `MetricDefinition` bounds for each metric (min/max values, required flag). When your operator submits a heartbeat with metrics:
+
+- Values outside the defined range trigger a `MetricViolation` event
+- Missing required metrics also trigger violations
+- Violations are **logged on-chain** but do not auto-slash
+
+### Slashing Risk
+
+Violations alone do not slash your stake. However, an off-chain keeper or governance process can call `reportForSlashing()` based on repeated violations. To minimize risk:
+
+- Ensure your node has stable network connectivity (missed heartbeats accumulate)
+- Monitor your operator's status via `isHeartbeatCurrent(serviceId, yourAddress)`
+- Check if you appear in `getSlashableOperators(serviceId)` and resolve issues promptly
+- Review the Blueprint's metric definitions to understand what values are expected
+
+### Checking Your Status
+
+Query the contract directly or use a block explorer:
+
+```bash
+# Using cast (foundry)
+cast call $REGISTRY "isHeartbeatCurrent(uint64,address)" $SERVICE_ID $YOUR_ADDRESS --rpc-url $RPC
+cast call $REGISTRY "getOperatorState(uint64,address)" $SERVICE_ID $YOUR_ADDRESS --rpc-url $RPC
+cast call $REGISTRY "getMetricValue(uint64,address,string)" $SERVICE_ID $YOUR_ADDRESS "response_time_ms" --rpc-url $RPC
+```
 
 ## Managed Stack vs External Stack
 
@@ -45,18 +81,36 @@ This approach keeps credentials and retention policies under your control.
 ## Quick Verification
 
 ```bash
+# Check if QoS metrics endpoint is running
 curl -s http://localhost:9090/health
+
+# View exported metrics
 curl -s http://localhost:9090/metrics | head -n 20
+
+# Check heartbeat status on-chain
+cast call $REGISTRY "isHeartbeatCurrent(uint64,address)" $SERVICE_ID $YOUR_ADDRESS --rpc-url $RPC
 ```
+
+## Environment Variables
+
+| Variable                      | Default | Description                             |
+| ----------------------------- | ------- | --------------------------------------- |
+| `QOS_ENABLED`                 | `false` | Enable the QoS service                  |
+| `QOS_HEARTBEAT_INTERVAL_SECS` | `300`   | Heartbeat interval in seconds           |
+| `QOS_METRICS_INTERVAL_SECS`   | `60`    | Metrics collection interval in seconds  |
+| `QOS_DRY_RUN`                 | `true`  | Skip on-chain submissions (for testing) |
+| `BLUEPRINT_KEYSTORE_URI`      | —       | Path to keystore for signing heartbeats |
 
 ## Security Notes
 
 - Do not expose Grafana with default credentials.
 - Prefer a reverse proxy with auth and TLS.
 - If you allow public dashboards, isolate them from write endpoints.
+- On-chain metrics are public. Do not report sensitive data as metric values.
 
 ## Related Docs
 
+- [Blueprint Developer QoS Guide](/developers/blueprint-qos)
 - [Blueprint Manager setup](/operators/manager/setup)
 - [Operator Runbook](/operators/runbook)
 - [Benchmarking](/operators/benchmarking)
