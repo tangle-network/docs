@@ -37,6 +37,24 @@ The agentic workbench and [Blueprint SDK](https://github.com/tangle-network/blue
 The SDK also includes optional gateways for integrating external events and payment-driven HTTP job execution (webhooks,
 x402).
 
+## Interfaces and Integration Points
+
+Not every service fits a pure on-chain request flow. Tangle supports multiple integration styles:
+
+- On-chain triggers: jobs and services can be created and invoked through protocol transactions.
+- External triggers: operators can expose HTTP ingress (webhooks) that translate external events into job executions.
+- Alternative settlement: operators can optionally accept paid HTTP job calls via x402 (stablecoin settlement on EVM
+  chains), then translate them into job executions.
+- Multi-tenant APIs: when services expose off-chain HTTP or gRPC endpoints, operators can front them with an auth proxy
+  that injects tenant identity and enforces scopes.
+
+Developer references:
+
+- Job triggers map: `/developers/blueprint-runner/job-triggers`
+- Webhooks: `/developers/blueprint-runner/webhooks`
+- x402: `/developers/blueprint-runner/x402`
+- Auth proxy: `/developers/blueprint-auth`
+
 ## Trust and Delegation
 
 Autonomous work only scales when delegation is safe. Tangle enforces policy gates before execution, emits logs and execution metadata for every run, and keeps results reviewable so teams can decide what reaches production.
