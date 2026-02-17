@@ -1,0 +1,44 @@
+---
+title: Protocol Deployment (tnt-core)
+description: How protocol deployments are orchestrated in tnt-core (FullDeploy, manifests, and slashing wiring).
+---
+
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
+
+# Protocol Deployment (tnt-core)
+
+This page is for protocol and infrastructure engineers deploying the Tangle EVM contracts. Blueprint operators do not
+need these steps for day to day service operation.
+
+The source of truth for deployment is the `tnt-core` repo, which uses Foundry scripts and writes manifest JSON outputs
+for downstream tooling.
+
+## Source of Truth
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/v2/docs/DEPLOYMENT_RUNBOOK.md"
+  fromLine={1}
+  toLine={120}
+  title="tnt-core: Deployment Runbook (excerpt)"
+/>
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/v2/docs/full-deploy.md"
+  fromLine={1}
+  toLine={120}
+  title="tnt-core: FullDeploy orchestration (excerpt)"
+/>
+
+## What To Document in Runbooks
+
+If you operate a production environment, keep these items in your internal runbook so deployments stay reproducible:
+
+- the `FULL_DEPLOY_CONFIG` JSON you used (and any env var overrides)
+- the manifest output path and the produced manifest JSON
+- role handoff targets (timelock, multisig, treasury) and whether bootstrap roles were revoked
+- any cross-chain slashing wiring (Hyperlane or LayerZero) and the connector and receiver manifests
+
+## Related Docs
+
+- Protocol architecture overview: `/developers/protocol-architecture`
+- Network parameters and contract addresses: `/network/network-parameters`

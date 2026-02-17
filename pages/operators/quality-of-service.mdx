@@ -16,11 +16,16 @@ QoS uses Prometheus-compatible metrics by default, with optional Grafana and Lok
 | Grafana UI         | `http://<host>:3000`                  | Only when configured or managed by QoS.                                |
 | Loki push API      | `http://<host>:3100/loki/api/v1/push` | Only when configured or managed by QoS.                                |
 
+Notes:
+
+- If QoS metrics are enabled, it will bind a metrics listener. If you do not want a metrics endpoint, disable metrics in your QoS config.
+- The query routes on the metrics endpoint are intended for convenience and debugging, not as a replacement for a full Prometheus deployment.
+
 ## Managed Stack vs External Stack
 
 ### Managed Stack (Docker)
 
-If the Blueprint enables `manage_servers`, QoS will launch Grafana/Loki/Prometheus containers. You should:
+If the Blueprint enables `manage_servers`, QoS can launch Grafana and Loki containers (and Prometheus if configured). You should:
 
 - Ensure Docker is available on the host.
 - Mount persistent volumes for Grafana and Loki (`data_dir`).

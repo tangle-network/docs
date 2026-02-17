@@ -1,0 +1,91 @@
+---
+title: Webhooks Gateway
+description: Trigger Blueprint jobs from external HTTP webhooks using WebhookGateway (axum) and WebhookProducer.
+---
+
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
+
+# Webhooks Gateway
+
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/webhooks
+
+The webhooks feature is an optional HTTP ingress path for a Blueprint Runner. It lets you expose one or more HTTP
+endpoints that:
+
+- verify an auth policy (none, bearer, HMAC-SHA256, or API key)
+- accept an arbitrary request body
+- inject a `JobCall` into the runner for a configured `job_id`
+
+This is useful when your blueprint needs to react to external events that are not natively on-chain.
+
+## When to Use It
+
+- TradingView alerts, exchange notifications, monitoring events
+- external schedulers or orchestrators that should trigger a job handler
+- bridging legacy systems into a service instance without writing a custom producer
+
+## How It Fits In the Runner
+
+`WebhookGateway` runs as a `BackgroundService` (an `axum` server), and `WebhookProducer` is the paired producer that
+turns verified webhook requests into `JobCall`s.
+
+The gateway stamps each `JobCall` with metadata:
+
+- `X-TANGLE-SERVICE-ID` and `X-TANGLE-CALL-ID` (synthetic, for correlation)
+- `X-WEBHOOK-PATH` and `X-WEBHOOK-NAME` (if configured)
+
+Quick start (from the crate docs):
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/v2/crates/webhooks/src/lib.rs"
+  fromLine={16}
+  toLine={31}
+  title="WebhookGateway + WebhookProducer integration"
+/>
+
+## Enabling It (Blueprint SDK)
+
+If you are using `blueprint-sdk`, enable the feature flag:
+
+```toml
+[dependencies]
+blueprint-sdk = { version = "*", features = ["webhooks"] }
+```
+
+You can also depend on `blueprint-webhooks` directly if you do not want the full SDK re-export surface.
+
+## Configuration (TOML)
+
+Webhook endpoints are configured in TOML. Each endpoint maps a URL path to a `job_id` and an auth mode.
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/v2/crates/webhooks/src/config.rs"
+  fromLine={8}
+  toLine={64}
+  title="WebhookConfig and endpoint schema (includes example TOML)"
+/>
+
+Notes:
+
+- `path` must start with `/`.
+- For `bearer`, `hmac-sha256`, and `api-key`, `secret` is required.
+- `secret` supports `env:VAR_NAME` expansion.
+- `service_id` is set at runtime, not from TOML. If it is left as `0`, downstream components that rely on a service ID
+  will not behave as expected.
+
+## Auth Modes
+
+Supported auth modes are:
+
+- `none`: accepts any request.
+- `bearer`: requires `Authorization: Bearer <token>`.
+- `hmac-sha256`: checks a hex signature over the raw body. The gateway accepts `X-Signature-256`,
+  `X-Hub-Signature-256`, or `X-Webhook-Signature`. Values may be prefixed with `sha256=`.
+- `api-key`: checks a static key in a header (default `X-API-Key`, configurable via `api_key_header`).
+
+## Operational Notes
+
+- Health endpoint: `GET /webhooks/health` returns `ok`.
+- Each configured webhook endpoint responds `202 Accepted` on success and returns a `call_id`.
+- Treat webhook ingress as untrusted input. Validate and parse the request body inside the job handler.
+- Prefer `hmac-sha256` or `bearer` when receiving webhooks from the public internet.

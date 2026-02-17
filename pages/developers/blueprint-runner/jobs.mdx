@@ -44,8 +44,8 @@ In this example:
 
 - `XSQUARE_JOB_ID` is a constant that uniquely identifies the job
 - `square` is the function that implements the job's logic
-- The job takes a single ABI-encoded input parameter `x` extracted by `TangleEvmArg<u64>`
-- The job returns a `TangleEvmResult<u64>`, which the runner ABI-encodes for submission
+- The job takes a single ABI-encoded input parameter `x` extracted by `TangleArg<u64>`
+- The job returns a `TangleResult<u64>`, which the runner ABI-encodes for submission
 
 ## Job Context
 

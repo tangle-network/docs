@@ -5,6 +5,7 @@ const meta: Meta = {
   architecture: "Architecture",
   orchestration: "Orchestration",
   sandboxing: "Sandboxing and Safety",
+  "protocol-deployment": "Protocol Deployment",
 };
 
 export default meta;

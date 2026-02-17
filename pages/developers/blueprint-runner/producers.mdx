@@ -25,18 +25,18 @@ Producers are typically configured in the `main.rs` file of your Blueprint binar
 
 ### Basic Producer Setup
 
-First, you define the producer you want to use. For example, a `TangleEvmProducer` that listens for `JobSubmitted` events on Tangle EVM. After which, you pass the producer to the Blueprint Runner's builder.
+First, you define the producer you want to use. For example, a `TangleProducer` that listens for `JobSubmitted` events on Tangle. After which, you pass the producer to the Blueprint Runner's builder.
 
 ```rust
 let env = BlueprintEnvironment::load()?;
-let tangle_client = env.tangle_evm_client().await?;
+let tangle_client = env.tangle_client().await?;
 let service_id = env
     .protocol_settings
-    .tangle_evm()?
+    .tangle()?
     .service_id
     .ok_or_else(|| blueprint_sdk::Error::Other("No service ID configured".to_string()))?;
-let tangle_producer = TangleEvmProducer::new(tangle_client.clone(), service_id);
-let tangle_config = TangleEvmConfig::default();
+let tangle_producer = TangleProducer::new(tangle_client.clone(), service_id);
+let tangle_config = TangleConfig::default();
 
 BlueprintRunner::builder(tangle_config, env)
     .router(router) // Assuming your router is already defined
@@ -55,13 +55,13 @@ These producers listen for events from a blockchain, such as smart contract even
 
 There are currently two built-in blockchain producers:
 
-#### Tangle EVM Producer
+#### Tangle Producer
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/crates/tangle-evm-extra/src/producer.rs"
-  fromLine={24}
-  toLine={86}
-  title="Tangle EVM Producer Definition"
+  url="https://github.com/tangle-network/blueprint/blob/v2/crates/tangle-extra/src/producer.rs"
+  fromLine={1}
+  toLine={120}
+  title="TangleProducer Definition"
 />
 
 #### EVM Polling Producer

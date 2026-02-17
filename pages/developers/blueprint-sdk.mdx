@@ -15,6 +15,7 @@ It includes:
 - The **[Blueprint Runner](https://github.com/tangle-network/blueprint/tree/v2/crates/runner)** (router + producers + consumers + background services)
 - Typed **[contexts](https://github.com/tangle-network/blueprint/tree/v2/crates/contexts)** (keystore, EVM provider, Tangle EVM client)
 - The [`cargo-tangle` CLI](https://github.com/tangle-network/blueprint/tree/v2/cli) for creating, preregistering, and running blueprints
+- Optional gateways for HTTP ingress and settlement (webhooks, x402)
 
 **Source of truth repos**
 
@@ -71,6 +72,8 @@ The CLI exposes these as shared flags:
         { title: "Jobs", href: "/developers/blueprint-runner/jobs", description: "Define job handlers" },
         { title: "Routers", href: "/developers/blueprint-runner/routers", description: "Route job calls to handlers" },
         { title: "Producers", href: "/developers/blueprint-runner/producers", description: "Convert events to job calls" },
+        { title: "Webhooks", href: "/developers/blueprint-runner/webhooks", description: "Trigger jobs from external HTTP" },
+        { title: "x402 Payments", href: "/developers/blueprint-runner/x402", description: "Paid job calls via x402 settlement" },
         { title: "Consumers", href: "/developers/blueprint-runner/consumers", description: "Submit results back to chain" },
       ],
     },

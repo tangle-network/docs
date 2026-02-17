@@ -6,95 +6,65 @@ title: Blueprint Pricing
 
 SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/pricing-engine
 
-Operator preferences interface (GitHub): https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/ITangleOperators.sol
+Operator preferences interface (GitHub): https://github.com/tangle-network/tnt-core/blob/v2/src/interfaces/ITangleOperators.sol
 
-As a blueprint operator, you'll need to set up pricing for your services to receive fair compensation for the resources you provide. This guide explains how pricing works in the Tangle Network and how to configure it properly.
+As an operator, you get paid based on how a blueprint is configured to charge. Some pricing is fixed on-chain (no quote
+service required). Other flows require operators to serve signed quotes off-chain (RFQ).
 
 ## Prerequisites
 
 - Basic understanding of Tangle Network operations
-- Familiarity with running the Blueprint Manager runtime
-- Knowledge of blueprint concepts and service lifecycles
+- Familiarity with the Blueprint Manager runtime
+- Knowledge of blueprint service lifecycles
 
-## How Blueprint Pricing Works
+## Pricing Models (What You Need to Run)
 
-The pricing process follows these steps:
+Every blueprint declares a pricing model at registration time. As an operator, your responsibilities depend on the model.
 
-1. **Registration**: When you register as an operator for a blueprint, you provide your pricing service address in your preferences
-   - **Note**: If your RPC server address changes, update it on-chain via `updateOperatorPreferences` on the `Tangle` contract (see `ITangleOperators`)
-2. **Quote Requests**: Users request price quotes from registered operators like you
-3. **Quote Generation**: Your service calculates prices based on resource requirements, creates security commitments, and signs quotes
-4. **Operator Selection**: Users select operators based on price and other factors
-5. **Service Execution**: Once selected, you'll begin execution of the blueprint and receive payment
+Reference: `/developers/blueprints/pricing-and-payments`
 
-## Setting Up Your Pricing Service
+### Fixed On-Chain Pricing (No RFQ)
 
-Your pricing service needs to be available via gRPC for users to request quotes. Here's how to configure it:
+In most deployments these flows do not require you to run a quote server:
 
-### Pricing Configuration
+- `Subscription`: the service is billed on-chain at a fixed `subscriptionRate` each interval (escrow funded by the owner).
+- `EventDriven` with fixed per-job rates: the job submitter pays a fixed amount at `submitJob()`, resolved from the
+  blueprint config and optional per-job overrides.
 
-Create a TOML configuration file with your pricing structure. The file should include both default pricing for all blueprints and specific pricing for particular blueprints:
+In these models, you still need normal operational hygiene (uptime, heartbeats, QoS, and correct consumer behavior), but
+you do not need to publish off-chain quotes to get paid.
 
-```toml
-# Default pricing for all blueprints
-[default]
-resources = [
-  { kind = "CPU", count = 1, price_per_unit_rate = 0.001 },
-  { kind = "MemoryMB", count = 1024, price_per_unit_rate = 0.00005 },
-  { kind = "StorageMB", count = 1024, price_per_unit_rate = 0.00002 },
-  { kind = "NetworkEgressMB", count = 1024, price_per_unit_rate = 0.00003 },
-  { kind = "NetworkIngressMB", count = 1024, price_per_unit_rate = 0.00001 },
-  { kind = "GPU", count = 1, price_per_unit_rate = 0.005 }
-]
+### RFQ Pricing (You Must Serve Quotes)
 
-# Blueprint-specific pricing (overrides default)
-[123]  # Blueprint ID
-resources = [
-  { kind = "CPU", count = 1, price_per_unit_rate = 0.0012 },
-  { kind = "MemoryMB", count = 2048, price_per_unit_rate = 0.00006 },
-  { kind = "StorageMB", count = 1024, price_per_unit_rate = 0.00002 },
-  { kind = "NetworkEgressMB", count = 1024, price_per_unit_rate = 0.00003 },
-  { kind = "NetworkIngressMB", count = 1024, price_per_unit_rate = 0.00001 },
-  { kind = "GPU", count = 1, price_per_unit_rate = 0.005 }
-]
-```
+These flows require operators to generate and sign EIP-712 quotes off-chain:
 
-Each resource type defines:
+- `PayOnce`: users create a service using `createServiceFromQuotes(...)`.
+- Job RFQ: users submit jobs using `submitJobFromQuote(...)`.
 
-- `kind`: The resource type (CPU, MemoryMB, StorageMB, etc.)
-- `count`: The baseline quantity for the resource
-- `price_per_unit_rate`: The price per unit in USD with decimal precision, where it is generally the price per block for the resource
+To participate in RFQ, you need:
 
-### How Prices Are Calculated
+- a quote serving endpoint (typically the `pricing-engine` gRPC server)
+- your on-chain operator preferences updated with that endpoint
 
-The formula used to calculate blueprint execution pricing is:
+If your quote server address changes, update it on-chain via `updateOperatorPreferences` (see `ITangleOperators`).
 
-```
-Price = Resource Cost × Duration Factor × Security Factor
-```
+## Running the Pricing Engine (Recommended)
 
-Where:
+The simplest path is to run the `pricing-engine-server` binary and configure:
 
-- **Resource Cost** = resource_count × price_per_unit_rate
-- **Duration Factor** = time_blocks × BLOCK_TIME
-- **Security Factor** = Factor based on security commitment parameters
+- operator identity and quote signing key (`operator.toml`)
+- service quote pricing tables (resource pricing TOML)
+- job quote pricing tables (job pricing TOML)
 
-## Security Commitments
+Developer and operator details live here:
 
-When users request your services, they include security requirements that specify what percentage of assets you need to secure. Your pricing service needs to respond with your commitment:
+- `/developers/blueprints/pricing-engine`
 
-- **Exposure Percentage**: The percentage of assets you guarantee to secure (between the user's minimum and maximum requirements)
-- **Asset Types**: Native (address(0)) or ERC20 (token address)
+## Optional: x402 Settlement (Paid HTTP Jobs)
 
-This commitment will be included with your signed quote. The commitment used for the quote is automatically the minimum exposure percentage specified in the user's security requirements.
+If you want an HTTP-first paid job interface (stablecoin settlement on EVM chains), you can run the SDK’s x402 gateway.
+This is separate from on-chain payment collection and is operated as a Blueprint Runner background service.
 
-## Quote Security Considerations
+Reference:
 
-### Quote Signature
-
-- To ensure the validity of your quotes, your quotes are automatically signed. Users then verify the signature included in an Operator's quote when they receive it. This ensures a user is getting genuine quotes from you and other operators.
-
-### Protection Against Abuse
-
-- **Proof-of-Work Verification**: Users provide proof-of-work with their requests, defending against Denial-of-Service (DoS) attacks
-- **Quote Expiry**: Quotes include an expiry time (typically 10-15 minutes) to prevent stale quotes
+- `/developers/blueprint-runner/x402`
