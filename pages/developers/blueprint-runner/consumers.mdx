@@ -6,7 +6,7 @@ import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
 # Consumers
 
-SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/runner
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/runner
 
 Consumers are a vital component of the [Blueprint Runner](/developers/blueprint-runner/introduction) architecture that handle the results of processed jobs. This document explains how consumers work, how to configure them, and best practices for implementation.
 
@@ -67,7 +67,7 @@ Blueprint Runners can utilize various types of consumers depending on the requir
 A Tangle Consumer is a consumer that submits job results to the Tangle Jobs contract.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/crates/tangle-extra/src/consumer.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/tangle-extra/src/consumer.rs"
   fromLine={1}
   toLine={90}
   title="TangleConsumer Definition"
@@ -78,7 +78,7 @@ A Tangle Consumer is a consumer that submits job results to the Tangle Jobs cont
 A generic EVM Consumer handles job results that encode EVM transaction requests.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/crates/evm-extra/src/consumer/mod.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/evm-extra/src/consumer/mod.rs"
   fromLine={31}
   toLine={90}
   title="EVM Consumer Definition"

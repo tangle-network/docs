@@ -7,7 +7,7 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
 # Webhooks Gateway
 
-SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/webhooks
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/webhooks
 
 The webhooks feature is an optional HTTP ingress path for a Blueprint Runner. It lets you expose one or more HTTP
 endpoints that:
@@ -37,7 +37,7 @@ The gateway stamps each `JobCall` with metadata:
 Quick start (from the crate docs):
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/crates/webhooks/src/lib.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/webhooks/src/lib.rs"
   fromLine={16}
   toLine={31}
   title="WebhookGateway + WebhookProducer integration"
@@ -59,7 +59,7 @@ You can also depend on `blueprint-webhooks` directly if you do not want the full
 Webhook endpoints are configured in TOML. Each endpoint maps a URL path to a `job_id` and an auth mode.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/crates/webhooks/src/config.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/webhooks/src/config.rs"
   fromLine={8}
   toLine={64}
   title="WebhookConfig and endpoint schema (includes example TOML)"

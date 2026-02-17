@@ -7,7 +7,7 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
 # x402 Payment Gateway
 
-SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/x402
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/x402
 
 x402 is an optional, off-chain payment ingress path for job execution. It exposes HTTP endpoints that require a valid
 x402 payment (typically stablecoins on an EVM chain) and then injects a `JobCall` into the Blueprint Runner after the
@@ -24,7 +24,7 @@ into `JobCall`s.
 Quick start (from the crate docs):
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/crates/x402/src/lib.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/x402/src/lib.rs"
   fromLine={26}
   toLine={42}
   title="X402Gateway + X402Producer integration"
@@ -57,7 +57,7 @@ The operator configures:
 - conversion rates from wei-denominated job prices into token amounts (`rate_per_native_unit`, plus optional `markup_bps`)
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/crates/x402/src/config.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/x402/src/config.rs"
   fromLine={14}
   toLine={96}
   title="X402Config schema (includes example TOML)"

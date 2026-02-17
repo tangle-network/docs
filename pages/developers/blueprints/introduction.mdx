@@ -9,7 +9,7 @@ import CardGrid from "../../../components/CardGrid.tsx"
     {
       title: "Blueprint SDK",
       description: "Build blueprints, operators, and jobs with the Rust SDK and CLI.",
-      link: "https://github.com/tangle-network/blueprint/tree/v2"
+      link: "https://github.com/tangle-network/blueprint/tree/main"
     },
     {
       title: "Blueprint Manager",
@@ -25,7 +25,7 @@ import CardGrid from "../../../components/CardGrid.tsx"
 />
 
 **Blueprints** are on-chain service definitions, and **Services** are their on-chain instantiations. Developers build
-Blueprints using the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2) and deploy them to Tangle v2.
+Blueprints using the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main) and deploy them to Tangle v2.
 Customers discover Blueprints, create Services, and pay for execution. Operators run Services with the Blueprint Manager,
 earning fees and TNT incentives defined by the core protocol contracts in `tnt-core`.
 
@@ -81,8 +81,8 @@ Service payments are split by the core protocol contracts in `tnt-core`:
 - **Staker** share flows to `ServiceFeeDistributor` for later claims.
 
 Inflation incentives (TNT) are distributed separately via `InflationPool` and `RewardVaults`. For details, see
-`https://github.com/tangle-network/tnt-core/blob/v2/PAYMENT_FLOW.md` and
-`https://github.com/tangle-network/tnt-core/blob/v2/docs/rewards-system.md`.
+`/developers/system-architecture/rewards` and the `tnt-core` pricing integration guide:
+`https://github.com/tangle-network/tnt-core/blob/main/docs/PRICING.md`.
 
 ## Composability and Ecosystem
 

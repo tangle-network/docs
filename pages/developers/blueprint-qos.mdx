@@ -6,7 +6,7 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
 # Quality of Service (QoS) Integration Guide
 
-SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/qos
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/qos
 
 This guide explains how to integrate the Blueprint SDK Quality of Service (QoS) system for observability, monitoring, and dashboards. QoS combines heartbeats, metrics, logs, and Grafana dashboards into a single service that you can run alongside any Blueprint.
 
@@ -57,7 +57,7 @@ Important behavior:
 Reference:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/crates/runner/src/lib.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/runner/src/lib.rs"
   fromLine={411}
   toLine={545}
   title="BlueprintRunner::qos_service forces manage_servers(true)"
@@ -106,7 +106,7 @@ This enables heartbeat, metrics, Loki logging, and Grafana integration. By defau
 Reference:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/crates/qos/src/lib.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/qos/src/lib.rs"
   fromLine={1}
   toLine={115}
   title="blueprint_qos::default_qos_config()"

@@ -6,7 +6,7 @@ import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
 # Background Services
 
-SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/runner
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/runner
 
 Background services are optional components in the [Blueprint Runner](/developers/blueprint-runner/introduction) architecture that run continuously to support the operation of your blueprint. This document explains how background services work, how to configure them, and best practices for implementation.
 
@@ -52,7 +52,7 @@ Background services are typically configured in the `main.rs` file of your Bluep
 The only requirement for a background service is that it implements the `BackgroundService` trait:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
   fromLine={23}
   toLine={34}
   title="Defining a Background Service"
@@ -61,7 +61,7 @@ The only requirement for a background service is that it implements the `Backgro
 With a background service defined, it is passed into the Blueprint Runner's builder as producers and consumers are:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring/incredible-squaring-bin/src/main.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/examples/incredible-squaring/incredible-squaring-bin/src/main.rs"
   fromLine={36}
   toLine={67}
   title="Adding a Background Service to the Blueprint Runner"

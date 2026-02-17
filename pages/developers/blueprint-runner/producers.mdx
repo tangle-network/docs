@@ -6,7 +6,7 @@ import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
 # Producers
 
-SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/runner
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/runner
 
 Producers are a key component of the [Blueprint Runner](/developers/blueprint-runner/introduction) architecture that capture events and prepare them for processing. This document explains how producers work, how to configure them, and how to implement them.
 
@@ -58,7 +58,7 @@ There are currently two built-in blockchain producers:
 #### Tangle Producer
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/crates/tangle-extra/src/producer.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/tangle-extra/src/producer.rs"
   fromLine={1}
   toLine={120}
   title="TangleProducer Definition"
@@ -67,7 +67,7 @@ There are currently two built-in blockchain producers:
 #### EVM Polling Producer
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/crates/evm-extra/src/producer/polling.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/evm-extra/src/producer/polling.rs"
   fromLine={53}
   toLine={136}
   title="EVM Polling Producer Definition"
@@ -76,7 +76,7 @@ There are currently two built-in blockchain producers:
 ### Cron Jobs
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/crates/producers-extra/src/cron.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/producers-extra/src/cron.rs"
   fromLine={10}
   toLine={93}
   title="Cron Job Producer Definition"

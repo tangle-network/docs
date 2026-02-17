@@ -19,8 +19,8 @@ This page focuses on how **service users** obtain credentials and how **service 
 
 Source of truth (implementation-focused):
 
-- Auth proxy flows and endpoints: https://github.com/tangle-network/blueprint/blob/v2/crates/auth/AUTH_WORKFLOW.md
-- OAuth JWT bearer assertion policy: https://github.com/tangle-network/blueprint/blob/v2/crates/auth/src/oauth/README.md
+- Auth proxy flows and endpoints: https://github.com/tangle-network/blueprint/blob/main/crates/auth/AUTH_WORKFLOW.md
+- OAuth JWT bearer assertion policy: https://github.com/tangle-network/blueprint/blob/main/crates/auth/src/oauth/README.md
 
 ## What It Applies To (And What It Does Not)
 
@@ -116,7 +116,7 @@ Your upstream is responsible for:
 - `--auth-proxy-host` (default `0.0.0.0`)
 - `--auth-proxy-port` (default `8276`)
 
-See: https://github.com/tangle-network/blueprint/blob/v2/crates/manager/src/config/mod.rs
+See: https://github.com/tangle-network/blueprint/blob/main/crates/manager/src/config/mod.rs
 
 ## Configuration Status (OAuth Policy)
 
@@ -126,4 +126,4 @@ stored by `service_id`.
 At time of writing, the policy format and verification rules are implemented and tested, but operator-facing tooling for
 managing policies may be limited. Start here:
 
-- Policy schema + rules: https://github.com/tangle-network/blueprint/blob/v2/crates/auth/src/oauth/README.md
+- Policy schema + rules: https://github.com/tangle-network/blueprint/blob/main/crates/auth/src/oauth/README.md

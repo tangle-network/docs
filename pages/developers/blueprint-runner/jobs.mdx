@@ -6,7 +6,7 @@ import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
 # Jobs
 
-SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/runner
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/runner
 
 Jobs are the core building blocks of a [Blueprint Runner](/developers/blueprint-runner/introduction). They define the computational tasks that your Blueprint will execute in response to events. This document explains how jobs work, how to define them, and how to integrate them with other components of your Blueprint.
 
@@ -34,7 +34,7 @@ Jobs in a Blueprint are defined in the library package of your project. A job de
 Here's an example of a simple job definition from the Incredible Squaring example:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
   fromLine={36}
   toLine={53}
   title="Job Definition from Incredible Squaring Example"
@@ -69,7 +69,7 @@ let router = Router::new()
 Jobs need to be registered to a route with the [router](/developers/blueprint-runner/routers) to be accessible. This is done when defining a Blueprint Runner:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
   fromLine={109}
   toLine={125}
   title="Job Registration in Router Configuration"
