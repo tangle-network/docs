@@ -90,12 +90,14 @@ Run the blueprint manager/runner against a deployment:
 
 ```bash
 cargo tangle blueprint run \
-  --protocol tangle-evm \
+  --protocol tangle \
   --http-rpc-url https://... \
   --ws-rpc-url wss://... \
   --keystore-path ./keystore \
   --settings-file ./settings.env
 ```
+
+`--protocol tangle-evm` is accepted as an alias for `--protocol tangle`.
 
 For local validation only, you can spawn a single service without on-chain transactions:
 

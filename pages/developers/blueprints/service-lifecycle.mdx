@@ -1,0 +1,104 @@
+---
+title: Service Lifecycle
+description: Renewal, migration, and expiry semantics for services, plus safety recommendations for stateful and custodial blueprints.
+---
+
+# Service Lifecycle
+
+This page describes how service renewal, migration, and expiry work at the protocol level, and what blueprint developers
+should assume when designing stateful or custodial systems.
+
+For the canonical on-chain API surface, see:
+
+- `/developers/api/reference/ITangleServices`
+- `/developers/api/reference/ITangleJobs`
+
+## Concepts
+
+- **Blueprint**: the service template.
+- **Service**: a single configured instance of a blueprint, created for a specific owner and operator set.
+- **Service owner**: the account that owns the service and controls administrative actions such as termination.
+- **Operators**: the parties that execute jobs for the service.
+- **TTL**: time-to-live for a service. In the current protocol implementation, TTL checks use `block.timestamp`. A TTL of
+  `0` means "no expiry".
+
+## Creating A Service
+
+There are two high-level creation flows:
+
+1. Request and approve flow (`requestService*`): the customer requests a service and operators approve (or reject).
+2. RFQ flow (`createServiceFromQuotes`): the customer collects signed operator quotes off-chain, then creates the service
+   on-chain in one transaction.
+
+The CLI primarily covers the request and approve flow. RFQ flows often require custom client code today.
+
+## Extending A Service (Renewal)
+
+The protocol supports renewal for RFQ-created services via:
+
+```solidity
+extendServiceFromQuotes(uint64 serviceId, Types.SignedQuote[] quotes, uint64 extensionDuration)
+```
+
+Key properties to design around:
+
+- Only the **service owner** can extend a service.
+- Extension applies to services that have a TTL (`ttl != 0`).
+- Quotes must come from the **current operators of the service**. Extension does not change the operator set.
+- Payment is provided with the transaction (for example, via `msg.value` depending on the quote format and payment asset).
+- Extension can be executed even after the service has expired, as long as it is still active. The service can resume job
+  acceptance after TTL is increased.
+
+If you need to extend a service that was created via the request and approve flow, the typical path today is to create a
+new service (request flow or RFQ flow), then migrate at the blueprint layer.
+
+## Migrating Or Rotating Operators
+
+If an extension requires a new operator set, the protocol does not provide a single "extend and replace operators"
+transaction.
+
+Options depend on the blueprint membership model:
+
+- Fixed membership: create a new service with a new operator set, then migrate state.
+- Dynamic membership: operators can join and leave an active service, subject to on-chain bounds and manager hooks. This
+  can be used for gradual rotation if the blueprint is built for it.
+
+Blueprint managers can also force-remove operators from a service for emergency response. Blueprint developers should
+treat this as a last-resort tool and design for the possibility that the operator set changes unexpectedly.
+
+## What Expiry Means
+
+Expiry is enforced by function-level checks. When a service is expired (`block.timestamp > createdAt + ttl`), critical
+paths like job submission and subscription billing revert.
+
+Expiry does not necessarily mean "terminated" in the protocol's service status. If you need explicit cleanup or refund
+behavior, ensure your operational tooling calls `terminateService(serviceId)` when a service should end.
+
+## Safety Recommendations For Stateful Or Custodial Blueprints
+
+If your blueprint holds user funds, tokens, or state that must remain withdrawable, assume that:
+
+- Operators may not be willing to renew a service.
+- A service can expire without any party submitting a renewal transaction.
+- Job execution can stop permanently for that service ID.
+
+Recommended design patterns:
+
+- Provide an escape hatch that does not require fresh job execution. Examples include time-locked withdrawals, emergency
+  exit keys, or an explicit state migration path to a new service ID.
+- Make job handlers idempotent when possible so retries and replays do not corrupt state.
+- Surface TTL and renewal status to end users early. If users build a business on a service instance, renewal should be a
+  monitored event with alerts well before expiry.
+
+## Common Failure Scenarios
+
+### Operators Refuse To Quote A Renewal
+
+This is best treated as a market dynamic, not a protocol fault. A blueprint can enforce performance requirements while a
+service is active, but renewal is a new agreement. If continuity is critical, design for migration to a new service with
+a new operator set.
+
+### Service Expires With Assets Still In Use
+
+This is a blueprint design issue, not something the protocol can universally solve. Blueprint developers should document
+what users must do before expiry, and should provide a safe way for users to exit even if the service cannot be renewed.
