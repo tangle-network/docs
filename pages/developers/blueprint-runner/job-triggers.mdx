@@ -1,0 +1,107 @@
+---
+title: Job Triggers
+description: A map of the common ways a Blueprint Runner receives work (on-chain events, cron, webhooks, x402, and custom producers).
+---
+
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
+
+# Job Triggers
+
+In Blueprint Runner terms, most "triggers" are just ways to produce a `JobCall`.
+
+If something can emit a stream of `JobCall`s, the runner can route them to job handlers.
+
+This page is a guide to the common trigger patterns and where they live in the SDK.
+
+## Mental Model
+
+- A `Producer` is a `Stream<Item = Result<JobCall, BoxError>>`.
+- A `JobCall` is the unit the router dispatches.
+- Some trigger types are pure producers (on-chain, cron).
+- Some trigger types are a gateway plus a producer:
+  - the gateway runs an HTTP server as a background service
+  - the producer converts verified inbound requests into `JobCall`s
+
+## On-Chain Event Triggers (Tangle)
+
+Use this when you want jobs to run in response to Tangle protocol events (for example job submissions).
+
+The built-in `TangleProducer` listens for on-chain job submission events and yields `JobCall`s:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/tangle-extra/src/producer.rs"
+  fromLine={1}
+  toLine={120}
+  title="TangleProducer (on-chain trigger)"
+/>
+
+Docs:
+
+- `/developers/blueprint-runner/producers`
+
+## Polling Triggers (EVM Polling)
+
+If the event source is not an indexed event stream, polling can still produce `JobCall`s at your own cadence:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/evm-extra/src/producer/polling.rs"
+  fromLine={53}
+  toLine={136}
+  title="EVM polling producer (example pattern)"
+/>
+
+Docs:
+
+- `/developers/blueprint-runner/producers`
+
+## Cron Triggers (Scheduled Jobs)
+
+For scheduled work, use a cron producer that emits `JobCall`s on a schedule:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/producers-extra/src/cron.rs"
+  fromLine={10}
+  toLine={105}
+  title="Cron job producer (scheduled trigger)"
+/>
+
+Docs:
+
+- `/developers/blueprint-runner/producers`
+
+## Webhooks (HTTP Ingress)
+
+If an external system should trigger a job by calling an HTTP endpoint, use the webhook gateway:
+
+- Gateway: verifies auth, accepts the request, then injects an event
+- Producer: turns verified events into `JobCall`s
+
+Docs:
+
+- `/developers/blueprint-runner/webhooks`
+
+## x402 (Paid HTTP Job Calls)
+
+If you want HTTP job calls that require payment (stablecoins on EVM chains, verified via an x402 facilitator), use the
+x402 gateway:
+
+- Gateway: advertises payment requirements, verifies and settles payment, then injects a verified payment
+- Producer: turns verified payments into `JobCall`s
+
+Docs:
+
+- `/developers/blueprint-runner/x402`
+
+## Custom Triggers (Bring Your Own Producer)
+
+If none of the built-ins fit, implement your own producer. The only hard requirement is that your producer yields
+`JobCall`s that your router understands.
+
+Typical patterns:
+
+- poll an external API and emit a `JobCall` when a condition is met
+- consume a message queue (Kafka, NATS, SQS) and convert messages into `JobCall`s
+- subscribe to a websocket feed and emit `JobCall`s from inbound frames
+
+If you also need to run a long-lived side task (HTTP server, queue consumer, subscription reconnection loop), you can
+combine a `BackgroundService` with a channel-based producer, the same pattern used by the webhooks and x402 gateways.

@@ -13,6 +13,7 @@ const meta: Meta = {
   },
   "blueprint-contexts": "Contexts",
   "blueprint-runner": "Blueprint Runner",
+  "blueprint-auth": "Auth Proxy",
   "blueprint-qos": "Quality of Service",
   "p2p-networking": "P2P Networking",
   "-- tooling": {

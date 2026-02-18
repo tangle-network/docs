@@ -43,15 +43,15 @@ Tangle is an EVM protocol for instantiating and operating **services (“bluepri
 | `ServiceFeeDistributor`  | Staker fee distribution (USD-weighted, per-asset commitments)        | https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol                                |
 | `OperatorStatusRegistry` | Heartbeats, QoS signals, and optional metric forwarding              | [OperatorStatusRegistry.sol](https://github.com/tangle-network/tnt-core/blob/main/src/staking/OperatorStatusRegistry.sol) |
 | `TangleMetrics`          | Lightweight activity recorder used by incentives                     | https://github.com/tangle-network/tnt-core/blob/main/src/rewards/TangleMetrics.sol                                        |
-| `TangleMigration`        | TNT legacy-chain migration claim (Merkle + SP1/ZK)                   | https://github.com/tangle-network/tnt-core/blob/v2/packages/migration-claim/src/TangleMigration.sol                       |
+| `TangleMigration`        | TNT legacy-chain migration claim (Merkle + SP1/ZK)                   | https://github.com/tangle-network/tnt-core/blob/main/packages/migration-claim/src/TangleMigration.sol                     |
 
-### Off-Chain ([Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2))
+### Off-Chain ([Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main))
 
-| Component                    | Responsibility                                                      | Code                                                                                  |
-| ---------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Manager                      | Loads services from chain, selects runtime sources, runs blueprints | https://github.com/tangle-network/blueprint/tree/v2/crates/manager                    |
-| Tangle EVM contexts          | Provides typed clients + operator identity + env                    | https://github.com/tangle-network/blueprint/blob/v2/crates/contexts/src/tangle_evm.rs |
-| Tangle EVM producer/consumer | EVM event ingestion + result submission helpers                     | https://github.com/tangle-network/blueprint/tree/v2/crates/tangle-evm-extra/src       |
+| Component                | Responsibility                                                      | Code                                                                                |
+| ------------------------ | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Manager                  | Loads services from chain, selects runtime sources, runs blueprints | https://github.com/tangle-network/blueprint/tree/main/crates/manager                |
+| Tangle contexts          | Provides typed clients + operator identity + env                    | https://github.com/tangle-network/blueprint/blob/main/crates/contexts/src/tangle.rs |
+| Tangle producer/consumer | Job ingestion + result submission helpers                           | https://github.com/tangle-network/blueprint/tree/main/crates/tangle-extra/src       |
 
 ## The Entrypoint Contract (Composition)
 

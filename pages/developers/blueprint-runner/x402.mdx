@@ -1,0 +1,100 @@
+---
+title: x402 Payment Gateway
+description: Accept x402 payments over HTTP and translate them into paid job executions inside a Blueprint Runner.
+---
+
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
+
+# x402 Payment Gateway
+
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/x402
+
+x402 is an optional, off-chain payment ingress path for job execution. It exposes HTTP endpoints that require a valid
+x402 payment (typically stablecoins on an EVM chain) and then injects a `JobCall` into the Blueprint Runner after the
+payment is verified and settled by an x402 facilitator.
+
+This is useful when you want a service to accept payments from clients on EVM chains without requiring the client to
+submit on-chain Tangle transactions for each job.
+
+## How It Fits In the Runner
+
+`X402Gateway` runs as a `BackgroundService` and `X402Producer` is the paired producer that converts verified payments
+into `JobCall`s.
+
+Quick start (from the crate docs):
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/x402/src/lib.rs"
+  fromLine={26}
+  toLine={42}
+  title="X402Gateway + X402Producer integration"
+/>
+
+Each x402-originated `JobCall` includes metadata for correlation and accounting:
+
+- `X-X402-ORIGIN` and `X-X402-QUOTE-DIGEST`
+- `X-X402-PAYMENT-NETWORK` and `X-X402-PAYMENT-TOKEN`
+- `X-TANGLE-SERVICE-ID` and `X-TANGLE-CALL-ID` (synthetic, for correlation)
+
+## Enabling It (Blueprint SDK)
+
+If you are using `blueprint-sdk`, enable the feature flag:
+
+```toml
+[dependencies]
+blueprint-sdk = { version = "*", features = ["x402"] }
+```
+
+You can also depend on `blueprint-x402` directly.
+
+## Configuration (TOML)
+
+The operator configures:
+
+- where the gateway listens (`bind_address`)
+- which facilitator to use (`facilitator_url`)
+- which tokens and chains are accepted (`accepted_tokens`)
+- conversion rates from wei-denominated job prices into token amounts (`rate_per_native_unit`, plus optional `markup_bps`)
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/x402/src/config.rs"
+  fromLine={14}
+  toLine={96}
+  title="X402Config schema (includes example TOML)"
+/>
+
+## Job Pricing Input
+
+The x402 gateway needs a per-job price map in wei:
+
+- key: `(service_id, job_index)`
+- value: `price_wei`
+
+This is the same shape as the pricing engine job pricing config, and it is intentionally explicit. If a job is not in
+the map, the gateway returns `404` for that job.
+
+## HTTP Endpoints
+
+The gateway exposes:
+
+- `GET /x402/health`: returns `ok`.
+- `GET /x402/jobs/{service_id}/{job_index}/price`: discovery endpoint that returns the wei price and settlement options
+  (no payment required).
+- `POST /x402/jobs/{service_id}/{job_index}`: paid job execution. The x402 middleware returns `402` with payment
+  requirements if no valid payment is provided. After payment settles, the gateway returns `202 Accepted` and injects a
+  `JobCall` into the runner.
+
+## Relationship to RFQ and the Pricing Engine
+
+Tangle’s on-chain RFQ path is `submitJobFromQuote`. Separately, operators can expose x402 as an off-chain settlement
+path.
+
+The pricing engine proto includes optional x402 fields (`settlement_options`, `x402_endpoint`) in `GetJobPriceResponse`.
+At time of writing, enabling those fields requires constructing `PricingEngineService` programmatically with
+`with_x402_settlement`, since the `pricing-engine-server` binary does not expose x402 flags yet.
+
+## Operational Notes
+
+- Keep `facilitator_url` pinned to a trusted HTTPS endpoint.
+- Keep conversion rates current. Stale `rate_per_native_unit` values create user-facing price surprises.
+- Treat the HTTP body as untrusted input and validate it inside the job handler.

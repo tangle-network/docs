@@ -17,7 +17,9 @@ Autonomous work today is brittle: tasks run outside policy, results lack evidenc
 ## What Exists Today
 
 - **Managed workbench + runtime**: build, run, and review agent workflows with isolation, policy gates, and evaluation tools.
-- **[Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2)**: package services into reusable components with predictable interfaces.
+- **[Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main)**: package services into reusable components with predictable interfaces.
+- **Service connectivity primitives**: optional webhook ingress and paid HTTP job calls (x402) for integrating with external systems.
+- **Multi-tenant service access**: when services expose off-chain HTTP or gRPC endpoints, operators can front them with an auth proxy that enforces authentication and injects tenant identity.
 
 ## Where It Goes
 
@@ -41,7 +43,7 @@ Autonomous work today is brittle: tasks run outside policy, results lack evidenc
 ## Start Here
 
 - **Build workflows** in the [workbench](/vibe/introduction).
-- **Package services** with the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2).
+- **Package services** with the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main).
 - **Host workloads** via the [runtime](/infrastructure/introduction).
 - **Integrate payments and coordination** in the [protocol](/network/overview).
 

@@ -6,7 +6,7 @@ import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
 # Routers
 
-SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/runner
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/runner
 
 Routers are a critical component of the [Blueprint Runner](/developers/blueprint-runner/introduction) architecture. They are responsible for directing job calls to the appropriate job handlers based on job IDs. This document explains how routers work, how to configure them, and best practices for implementation.
 
@@ -44,7 +44,7 @@ let router = Router::new()
 Below is a real example from our Incredible Squaring Blueprint Example:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
   fromLine={109}
   toLine={125}
   title="Router Configuration in Incredible Squaring Example"
@@ -55,9 +55,9 @@ Below is a real example from our Incredible Squaring Blueprint Example:
 Layers are used to filter job calls based on certain criteria. There are two places layers can be used:
 
 1. A specific Route:
-   - A job can be given a layer. This can be seen in the above code example, where the job is wrapped in the `TangleEvmLayer`. This adds Tangle EVM metadata to job results for the consumer.
+   - A job can be given a layer. This can be seen in the above code example, where the job is wrapped in the `TangleLayer`. This adds Tangle metadata to job results for the consumer.
 2. A whole Router:
-   - A layer can be used to filter job calls based on criteria you control (for example, metadata from Tangle EVM extractors).
+   - A layer can be used to filter job calls based on criteria you control (for example, metadata from Tangle extractors).
 
 ## Integration with Other Components
 

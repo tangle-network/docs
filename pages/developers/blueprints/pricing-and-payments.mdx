@@ -1,0 +1,117 @@
+---
+title: Pricing and Payments
+description: Protocol-level pricing models (PayOnce, Subscription, EventDriven), per-job rates, and RFQ job/service quotes.
+---
+
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
+
+# Pricing and Payments
+
+This page describes the protocol-level pricing surface for Tangle blueprints: which pricing models exist, when to use
+them, and how fixed rates vs RFQ (request-for-quote) work for both services and jobs.
+
+If you are looking for the operator-side gRPC daemon that generates EIP-712 quotes, see:
+
+- `/developers/blueprints/pricing-engine`
+
+## Source Of Truth
+
+The most comprehensive, protocol-accurate reference lives in `tnt-core`:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/tnt-core/blob/main/docs/PRICING.md"
+  fromLine={1}
+  toLine={120}
+  title="tnt-core: Pricing & Payment Integration Guide (excerpt)"
+/>
+
+## Pricing Models (BlueprintConfig)
+
+Every blueprint declares a `PricingModel` at registration time. This cannot be changed after registration.
+
+- `PayOnce`: user pays up front when creating a service.
+- `Subscription`: service owner funds escrow; anyone can trigger periodic billing.
+- `EventDriven`: job submitter pays per job (with optional per-job overrides).
+
+## CLI and Tooling
+
+The protocol supports multiple pricing paths, but the CLI does not cover every one yet.
+
+Supported CLI flows:
+
+- Service lifecycle request and approval flow: `cargo tangle blueprint service request`, then `service approve` (operator) and related commands. See `/developers/cli/tangle`.
+- Standard job submission: `cargo tangle blueprint jobs submit` and `jobs watch`. This uses on-chain pricing for the service and blueprint (fixed rates, or whatever the blueprint config resolves to at submission time).
+
+Flows that typically require custom code today:
+
+- Per-job RFQ submission (`submitJobFromQuote`): you need to request signed quotes off-chain, then submit the job with the quotes.
+- Service RFQ creation (`createServiceFromQuotes` / `extendServiceFromQuotes`): you need to request signed service quotes off-chain, then create or extend the service using those quotes.
+
+For Rust clients, `TangleClient` supports RFQ job submission:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/clients/tangle/src/client.rs"
+  fromLine={2368}
+  toLine={2440}
+  title="TangleClient::submit_job_from_quote (RFQ job submission)"
+/>
+
+## Fixed Pricing (EventDriven: Per-Job Rates)
+
+For `EventDriven`, price resolution is:
+
+1. Per-job override (set by blueprint owner) for `(blueprintId, jobIndex)`
+2. Fallback to `BlueprintConfig.eventRate`
+
+This is the simplest path for predictable job costs.
+
+If you need per-job overrides, plan for an operator or owner tool that calls `setJobEventRates` on-chain. Many teams do this via a Foundry script or a small Rust admin binary.
+
+## Job RFQ (submitJobFromQuote)
+
+Use Job RFQ when the price should be negotiated per request (LLM model selection, variable compute, discounts, etc.).
+
+High-level flow:
+
+1. User requests a per-job quote from one or more operators (off-chain).
+2. Operators respond with an EIP-712 signed `JobQuoteDetails { serviceId, jobIndex, price, timestamp, expiry }`.
+3. User submits the job on-chain with the signed quote(s) via `submitJobFromQuote`.
+
+Key properties:
+
+- `msg.value` must equal `sum(quote.price)` across quotes.
+- Quotes are replay-protected and expire (protocol also enforces `maxQuoteAge`).
+- Only quoted operators can submit results for RFQ jobs.
+
+## Off-Chain Settlement (x402, optional)
+
+Some services want an HTTP-first, stablecoin settlement path for paid job execution. The Blueprint SDK includes an
+optional x402 gateway that can:
+
+1. advertise payment requirements per job
+2. accept and verify x402 payments via a facilitator
+3. inject the paid request as a `JobCall` into the Blueprint Runner
+
+This is separate from on-chain payment collection (`submitJob` / `submitJobFromQuote`), and it is implemented as an
+operator-run gateway. See:
+
+- `/developers/blueprint-runner/x402`
+
+## Service RFQ (createServiceFromQuotes / extendServiceFromQuotes)
+
+Service RFQ lets a user create a service instantly using operator quotes:
+
+1. User requests service quotes from operators for `(blueprintId, ttlBlocks, security requirements)`.
+2. Operators sign EIP-712 `QuoteDetails { blueprintId, ttlBlocks, totalCost, timestamp, expiry, ... }`.
+3. User calls `createServiceFromQuotes(...)` (or `extendServiceFromQuotes(...)`) with quotes and payment.
+
+This is separate from the request and approval service lifecycle flow that the CLI exposes under `cargo tangle blueprint service`.
+
+For renewal and expiry semantics (including limitations of `extendServiceFromQuotes` and migration recommendations), see:
+
+- `/developers/blueprints/service-lifecycle`
+
+## Payment Tokens and Escrow (Subscription)
+
+For `Subscription`, a service owner funds escrow and billing is triggered on an interval. If escrow is insufficient,
+billing reverts until it is funded again. See the `tnt-core` pricing guide for exact functions and semantics.

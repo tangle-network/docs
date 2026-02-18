@@ -56,7 +56,7 @@ const NETWORK_DATA = {
       property: "Protocol Contracts",
       value: {
         type: "link",
-        url: "https://github.com/tangle-network/tnt-core/tree/v2",
+        url: "https://github.com/tangle-network/tnt-core/tree/main",
         text: "github.com/tangle-network/tnt-core",
       },
     },
@@ -64,7 +64,7 @@ const NETWORK_DATA = {
       property: "Blueprint SDK",
       value: {
         type: "link",
-        url: "https://github.com/tangle-network/blueprint/tree/v2",
+        url: "https://github.com/tangle-network/blueprint/tree/main",
         text: "github.com/tangle-network/blueprint",
       },
     },
@@ -109,7 +109,7 @@ const NETWORK_DATA = {
       property: "Protocol Contracts",
       value: {
         type: "link",
-        url: "https://github.com/tangle-network/tnt-core/tree/v2",
+        url: "https://github.com/tangle-network/tnt-core/tree/main",
         text: "github.com/tangle-network/tnt-core",
       },
     },
@@ -117,7 +117,7 @@ const NETWORK_DATA = {
       property: "Blueprint SDK",
       value: {
         type: "link",
-        url: "https://github.com/tangle-network/blueprint/tree/v2",
+        url: "https://github.com/tangle-network/blueprint/tree/main",
         text: "github.com/tangle-network/blueprint",
       },
     },

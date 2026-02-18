@@ -1,6 +1,6 @@
 # Using the P2P Networking Utilities
 
-SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/v2/crates/networking
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/networking
 
 To spin up a P2P network, build a `NetworkConfig` and start a `NetworkService`. The service spawns its event loop and
 returns a `NetworkServiceHandle` you can clone into jobs and background services.
@@ -77,7 +77,7 @@ Store the `NetworkServiceHandle` inside your context so job handlers and backgro
 ```rust
 use blueprint_sdk::crypto::k256::K256Ecdsa;
 use blueprint_sdk::networking::NetworkServiceHandle;
-use blueprint_sdk::{Router, tangle_evm::TangleEvmLayer};
+use blueprint_sdk::{Router, tangle::TangleLayer};
 
 #[derive(Clone)]
 struct P2pContext {
@@ -89,7 +89,7 @@ let context = P2pContext {
 };
 
 let router = Router::new()
-    .route(MY_JOB_ID, my_job.layer(TangleEvmLayer))
+    .route(MY_JOB_ID, my_job.layer(TangleLayer))
     .with_context(context);
 ```
 
