@@ -55,11 +55,13 @@ The operator configures:
 - which facilitator to use (`facilitator_url`)
 - which tokens and chains are accepted (`accepted_tokens`)
 - conversion rates from wei-denominated job prices into token amounts (`rate_per_native_unit`, plus optional `markup_bps`)
+- default x402 exposure policy (`default_invocation_mode`)
+- per-job invocation and auth policies (`job_policies`)
 
 <GithubFileReaderDisplay
   url="https://github.com/tangle-network/blueprint/blob/main/crates/x402/src/config.rs"
   fromLine={14}
-  toLine={96}
+  toLine={170}
   title="X402Config schema (includes example TOML)"
 />
 
@@ -73,16 +75,58 @@ The x402 gateway needs a per-job price map in wei:
 This is the same shape as the pricing engine job pricing config, and it is intentionally explicit. If a job is not in
 the map, the gateway returns `404` for that job.
 
+## Invocation and Authorization Model
+
+x402 job exposure is explicit and policy-driven per `(service_id, job_index)`.
+
+Invocation modes:
+
+- `disabled`: job cannot be invoked via x402
+- `public_paid`: payment-gated, otherwise public
+- `restricted_paid`: payment-gated plus caller authorization and on-chain parity checks
+
+Restricted auth modes:
+
+- `payer_is_caller`: settled payer is treated as caller
+- `delegated_caller_signature`: caller is asserted via signed headers
+
+For restricted jobs, the gateway performs an on-chain parity check with:
+
+- `isPermittedCaller(service_id, caller)` via `eth_call`
+
+Delegated mode headers:
+
+- `X-TANGLE-CALLER`
+- `X-TANGLE-CALLER-SIG`
+- `X-TANGLE-CALLER-NONCE`
+- `X-TANGLE-CALLER-EXPIRY`
+
+Delegated signed payload format:
+
+```text
+x402-authorize:{service_id}:{job_index}:{keccak(body)_hex_no_0x}:{nonce}:{expiry_unix_secs}
+```
+
 ## HTTP Endpoints
 
 The gateway exposes:
 
 - `GET /x402/health`: returns `ok`.
+- `GET /x402/stats`: lightweight counters for accepted, denied, replay-denied, enqueue-failed, and dry-run outcomes.
 - `GET /x402/jobs/{service_id}/{job_index}/price`: discovery endpoint that returns the wei price and settlement options
-  (no payment required).
+  (no payment required). Returns `403 x402_disabled` if job exists but is disabled for x402.
 - `POST /x402/jobs/{service_id}/{job_index}`: paid job execution. The x402 middleware returns `402` with payment
   requirements if no valid payment is provided. After payment settles, the gateway returns `202 Accepted` and injects a
   `JobCall` into the runner.
+- `POST /x402/jobs/{service_id}/{job_index}/auth-dry-run`: runs restricted auth + `eth_call` policy check without
+  enqueueing work or settling payment.
+
+## Receipt and Replay Semantics
+
+- `202 Accepted` means the paid request was accepted and enqueued, not that the job has completed.
+- In delegated restricted mode, duplicate nonce reuse in the same caller/job scope is rejected in paid flow with
+  `409 signature_replay`.
+- `auth-dry-run` is non-mutating and does not consume delegated nonces.
 
 ## Relationship to RFQ and the Pricing Engine
 
@@ -98,3 +142,5 @@ At time of writing, enabling those fields requires constructing `PricingEngineSe
 - Keep `facilitator_url` pinned to a trusted HTTPS endpoint.
 - Keep conversion rates current. Stale `rate_per_native_unit` values create user-facing price surprises.
 - Treat the HTTP body as untrusted input and validate it inside the job handler.
+- For restricted jobs, pin `tangle_rpc_url` and `tangle_contract` to stable production infrastructure.
+- Use `auth-dry-run` before enabling restricted jobs to verify caller policy parity and signature wiring.
