@@ -1,48 +1,66 @@
 ---
-title: Blueprint Pricing
+title: Pricing Engine (RFQ Server)
 ---
 
-# Blueprint Pricing
+import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
-Tangle v2 supports fixed-price and quote-based pricing. The pricing engine is the operator-side RFQ server that produces
-signed quotes for instant service creation.
+# Pricing Engine (RFQ Server)
+
+Tangle supports fixed pricing and RFQ (request-for-quote). The pricing engine is the operator-side gRPC server that
+generates EIP-712 signed quotes that users submit on-chain.
+
+Protocol overview (pricing models, fixed per-job rates, RFQ semantics):
+
+- `/developers/blueprints/pricing-and-payments`
 
 ## When to Use the Pricing Engine
 
-- Use it when your blueprint expects RFQ quotes and you want customers to create services immediately with signed
-  operator quotes.
-- If your blueprint uses standard pay-once or subscription pricing, you can skip the pricing engine.
+- Use it when you want operators to answer RFQs off-chain (service creation quotes and/or per-job quotes).
+- If your blueprint only uses fixed pricing (e.g. per-job rates via `setJobEventRates`), you can skip it.
 
 ## End-to-End Flow
 
-1. **Operator runs `pricing-engine-server`** with a pricing config and the Tangle RPC + contract addresses.
-2. **Customer requests quotes** over gRPC (`GetPrice`) with TTL, proof-of-work, and security requirements.
-3. **Operator returns a signed quote** (ECDSA signature over ABI-encoded `QuoteDetails`).
-4. **Customer creates a service** by calling
-   [`ITangleServices.createServiceFromQuotes`](/developers/api/reference/ITangleServices) with the selected quotes.
-   Use `extendServiceFromQuotes` to add TTL later.
+The pricing engine supports two RFQ modes:
 
-## Quote Format
+1. Service creation quotes (`GetPrice`) to use with `createServiceFromQuotes` / `extendServiceFromQuotes`
+2. Per-job quotes (`GetJobPrice`) to use with `submitJobFromQuote`
 
-The gRPC schema matches `ITangle.SignedQuote`. The `QuoteDetails` payload looks like:
+`GetJobPriceResponse` also includes optional x402 settlement fields (`settlement_options`, `x402_endpoint`). Clients that
+do not use x402 can ignore them.
 
-```proto
-message QuoteDetails {
-  uint64 blueprint_id = 1;
-  uint64 ttl_blocks = 2;
-  double total_cost_rate = 3;
-  uint64 timestamp = 4;
-  uint64 expiry = 5;
-  repeated ResourcePricing resources = 6;
-  repeated AssetSecurityCommitment security_commitments = 7;
-}
-```
+See the upstream README for exact semantics, flags, and configuration formats:
 
-## Pricing Configuration
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/pricing-engine/README.md"
+  fromLine={1}
+  toLine={130}
+  title="blueprint: crates/pricing-engine/README.md (excerpt)"
+/>
 
-Pricing rates live in a TOML file. A default section applies to every blueprint, and you can override rates per
-blueprint ID. The SDK ships a sample at
-`crates/pricing-engine/config/default_pricing.toml`.
+## Operator Configuration (TOML)
+
+These are the files operators typically tune:
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/pricing-engine/operator.toml"
+  fromLine={1}
+  toLine={140}
+  title="pricing-engine operator.toml"
+/>
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/pricing-engine/config/default_pricing.toml"
+  fromLine={1}
+  toLine={120}
+  title="resource pricing table (service quotes)"
+/>
+
+<GithubFileReaderDisplay
+  url="https://github.com/tangle-network/blueprint/blob/main/crates/pricing-engine/config/job_pricing.toml"
+  fromLine={1}
+  toLine={80}
+  title="per-job pricing table (job quotes)"
+/>
 
 ## Runbook (Operator)
 
@@ -71,16 +89,27 @@ Important environment variables:
 - `GetPrice` uses proof-of-work to rate-limit RPC abuse.
 - Quotes include TTL + expiry and are signed with the operator ECDSA key to prevent replay.
 
+## x402 Settlement Options (Optional)
+
+The pricing engine has a programmatic integration point that can attach x402 settlement options to every per-job quote.
+This is intended to pair with the SDK’s x402 gateway.
+
+At time of writing, the `pricing-engine-server` binary does not expose CLI flags for x402 settlement. If you want the
+gRPC server to return x402 settlement options, you need to construct the pricing engine service in code using
+`PricingEngineService::with_x402_settlement`, and run an x402 gateway at the returned `x402_endpoint`.
+
 ## Source of Truth
 
-- Pricing engine README: https://github.com/tangle-network/blueprint/blob/v2/crates/pricing-engine/README.md
-- Pricing proto: https://github.com/tangle-network/blueprint/blob/v2/crates/pricing-engine/proto/pricing.proto
+- Pricing engine README: https://github.com/tangle-network/blueprint/blob/main/crates/pricing-engine/README.md
+- Pricing proto: https://github.com/tangle-network/blueprint/blob/main/crates/pricing-engine/proto/pricing.proto
 
-1. **Get Multiple Quotes**: Always request quotes from all registered operators to compare prices
-2. **Verify All Signatures**: Always verify the signature of each quote before using it
-3. **Check Expiry Times**: Ensure quotes haven't expired before submitting them to the blockchain
-4. **Include Complete Security Requirements**: Specify all necessary security parameters in your requests
-5. **Handle Errors Gracefully**: Implement proper error handling for failed quote requests
-6. **Keep Quotes Intact**: Never modify quote details after receiving them
-7. **Use Fresh Proof-of-Work**: Generate a new proof-of-work for each request
-8. **Expect Price Variation**: Don't assume all operators will provide the same price
+## Best Practices
+
+1. Get multiple quotes from multiple operators and compare them.
+2. Verify signatures before using quotes on-chain.
+3. Check quote expiry before submission.
+4. Include complete security requirements in RFQ requests, otherwise quotes may not be usable for your desired service.
+5. Handle request failures and timeouts explicitly.
+6. Keep quote details intact. Never modify quote payloads after they are signed.
+7. Generate fresh proof-of-work per request if your deployment uses PoW gating.
+8. Expect price variation across operators.

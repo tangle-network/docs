@@ -2,7 +2,7 @@
 
 ## How to test your blueprint with Tangle
 
-This guide walks through the local testing flow used by the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2). It spins up a seeded Anvil network with the
+This guide walks through the local testing flow used by the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main). It spins up a seeded Anvil network with the
 Tangle v2 contracts from `tnt-core`, so you can test Blueprint Manager flows without running legacy infrastructure.
 
 ### Prerequisites
@@ -22,7 +22,7 @@ The `BLUEPRINT_KEYSTORE_URI` value can be reused by the Blueprint Manager and `T
 
 ### Start a seeded Anvil network
 
-The [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2) ships a harness that boots Anvil with the pre-seeded Tangle v2 contracts:
+The [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main) ships a harness that boots Anvil with the pre-seeded Tangle v2 contracts:
 
 ```rust
 use blueprint_anvil_testing_utils::harness_builder_from_env;
@@ -40,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
 }
 ```
 
-The harness loads the `localtestnet-state.json` snapshot shipped in the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2). When the snapshot is missing or
+The harness loads the `localtestnet-state.json` snapshot shipped in the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main). When the snapshot is missing or
 invalid, it replays the Foundry broadcast used by `tnt-core` fixtures.
 
 ### Run your blueprint against local Tangle v2
@@ -56,5 +56,5 @@ cargo tangle blueprint run \
   --settings-file ./settings.env
 ```
 
-For the latest harness details and fixtures, see the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2) runbook:
-`https://github.com/tangle-network/blueprint/blob/v2/docs/operators/anvil.md`.
+For the latest harness details and fixtures, see the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main) runbook:
+`https://github.com/tangle-network/blueprint/blob/main/docs/operators/anvil.md`.

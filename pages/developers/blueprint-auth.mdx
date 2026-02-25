@@ -1,0 +1,129 @@
+---
+title: Blueprint Auth Proxy
+description: How blueprint-manager enforces authn/authz for off-chain HTTP/gRPC services (multi-tenancy, scopes, OAuth, mTLS).
+---
+
+# Blueprint Auth Proxy (`blueprint-auth`)
+
+Blueprints often expose off-chain HTTP/gRPC endpoints (APIs, agents, gateways, etc.). In the Tangle Blueprint stack,
+those endpoints are typically fronted by an **auth proxy** that runs inside `blueprint-manager`.
+
+That proxy is implemented by the `blueprint-auth` crate and is the **single enforcement point** for:
+
+- Authentication (API keys, OAuth assertions, mTLS)
+- Authorization (scopes)
+- Multi-tenancy (canonical tenant identity injection)
+- Header hygiene (strip spoofable auth headers; validate forwarded headers)
+
+This page focuses on how **service users** obtain credentials and how **service developers** consume identity safely.
+
+Source of truth (implementation-focused):
+
+- Auth proxy flows and endpoints: https://github.com/tangle-network/blueprint/blob/main/crates/auth/AUTH_WORKFLOW.md
+- OAuth JWT bearer assertion policy: https://github.com/tangle-network/blueprint/blob/main/crates/auth/src/oauth/README.md
+
+## What It Applies To (And What It Does Not)
+
+- Applies to: **off-chain** requests that go through the manager’s proxy to your service `upstream_url`.
+- Does not apply to: **on-chain jobs** (`jobs submit`, contract calls). On-chain callers authenticate by signing transactions.
+
+## Key Concepts
+
+- `service_id`: Identifies the service behind the proxy. Minting endpoints require `X-Service-Id: <service_id>`.
+- Tenant identity: The proxy injects **`x-tenant-id`** (a privacy-safe hash) so upstreams can partition data safely.
+- Scopes: The proxy can inject **`x-scopes`** (space-delimited) derived from an authorized token.
+- Trust boundary: Upstreams should treat the proxy as the only trusted source of tenant/scopes headers.
+
+## How A User Gets An Access Token
+
+Users don’t generate `v4.local...` access tokens locally. They obtain them from the auth proxy by proving identity via
+one of the supported mechanisms.
+
+### Option A: OAuth 2.0 JWT Bearer Assertion (Typical End-User Flow)
+
+If your service is configured with an OAuth policy, a user can exchange a signed JWT assertion for a short-lived access
+token:
+
+1. The user authenticates with an issuer you trust (your IdP) and receives a signed JWT assertion containing `sub`,
+   `iss`, `iat`, `exp`, and a unique `jti`.
+2. The user calls the proxy:
+
+```bash
+curl -sS -X POST "http://<manager-host>:8276/v1/oauth/token" \
+  -H "X-Service-Id: <service_id>" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
+  --data-urlencode "assertion=<compact-jwt>"
+```
+
+3. The proxy verifies the assertion (signature + claims + replay protection via `jti`) and returns a short-lived
+   `v4.local...` token.
+4. The user calls your service through the proxy:
+
+```bash
+curl -sS "http://<manager-host>:8276/<your-upstream-path>" \
+  -H "Authorization: Bearer v4.local.<...>"
+```
+
+What your upstream receives (conceptually):
+
+- `x-tenant-id`: derived from the verified OAuth `sub` (hashed)
+- `x-scopes`: a normalized scope list if allowed by your per-service policy
+
+### Option B: API Key Exchange (Service Owner / Operator Flow)
+
+This is primarily for service owners/operators and automation:
+
+1. Owner proves control of a registered owner key (challenge/verify).
+2. Proxy returns a long-lived API key (`ak_...`).
+3. Owner exchanges the API key for a short-lived access token:
+
+```bash
+curl -sS -X POST "http://<manager-host>:8276/v1/auth/exchange" \
+  -H "Authorization: Bearer ak_<key_id>.<secret>" \
+  -H "Content-Type: application/json" \
+  -d '{"additional_headers": {"X-Tenant-Id": "optional-tenant-hint"}}'
+```
+
+### Option C: mTLS (High-Trust Environments)
+
+If a service is configured to require client mTLS, the client authenticates using a certificate trusted by the proxy.
+The proxy can inject certificate identity headers (subject/issuer/serial) and an auth method header.
+
+## Multi-Tenancy: What Happens For A New User vs Existing User
+
+From the proxy’s perspective, multi-tenancy is **stateless**:
+
+- A “new user” is simply a request whose derived `x-tenant-id` has not been seen by your upstream before.
+- An “existing user” is one whose derived `x-tenant-id` matches previously observed requests.
+
+The proxy is responsible for:
+
+- Deriving/injecting a canonical `x-tenant-id` after validating the caller
+- Stripping any client-supplied `x-tenant-*` or `x-scopes` headers (prevent spoofing)
+- Validating/normalizing any additional forwarded headers (size, count, forbidden headers)
+
+Your upstream is responsible for:
+
+- Using `x-tenant-id` as the partition key (database namespace, row-level filter, object prefix, etc.)
+- Enforcing scope checks based on `x-scopes` (if your service uses scopes)
+- Ensuring requests cannot bypass the proxy (network policy, firewall rules, service binding to localhost/private network)
+
+## Operator Notes (Manager Defaults)
+
+`blueprint-manager` runs the auth proxy by default and exposes CLI flags:
+
+- `--auth-proxy-host` (default `0.0.0.0`)
+- `--auth-proxy-port` (default `8276`)
+
+See: https://github.com/tangle-network/blueprint/blob/main/crates/manager/src/config/mod.rs
+
+## Configuration Status (OAuth Policy)
+
+OAuth verification is driven by a **per-service policy** (allowed issuers/audiences/public keys/scopes/TTL caps)
+stored by `service_id`.
+
+At time of writing, the policy format and verification rules are implemented and tested, but operator-facing tooling for
+managing policies may be limited. Start here:
+
+- Policy schema + rules: https://github.com/tangle-network/blueprint/blob/main/crates/auth/src/oauth/README.md

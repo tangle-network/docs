@@ -8,24 +8,25 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
 # Blueprint SDK
 
-The [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/v2) is the Rust toolkit for building **blueprints** (off-chain services) and running them as an operator against Tangle’s EVM protocol.
+The [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main) is the Rust toolkit for building **blueprints** (off-chain services) and running them as an operator against Tangle’s EVM protocol.
 
 It includes:
 
-- The **[Blueprint Runner](https://github.com/tangle-network/blueprint/tree/v2/crates/runner)** (router + producers + consumers + background services)
-- Typed **[contexts](https://github.com/tangle-network/blueprint/tree/v2/crates/contexts)** (keystore, EVM provider, Tangle EVM client)
-- The [`cargo-tangle` CLI](https://github.com/tangle-network/blueprint/tree/v2/cli) for creating, preregistering, and running blueprints
+- The **[Blueprint Runner](https://github.com/tangle-network/blueprint/tree/main/crates/runner)** (router + producers + consumers + background services)
+- Typed **[contexts](https://github.com/tangle-network/blueprint/tree/main/crates/contexts)** (keystore, EVM provider, Tangle EVM client)
+- The [`cargo-tangle` CLI](https://github.com/tangle-network/blueprint/tree/main/cli) for creating, preregistering, and running blueprints
+- Optional gateways for HTTP ingress and settlement (webhooks, x402)
 
 **Source of truth repos**
 
-- SDK + runner + CLI: https://github.com/tangle-network/blueprint/tree/v2
-- On-chain contracts: https://github.com/tangle-network/tnt-core/tree/v2
+- SDK + runner + CLI: https://github.com/tangle-network/blueprint/tree/main
+- On-chain contracts: https://github.com/tangle-network/tnt-core/tree/main
 
 ## What You Run (Operator Tooling)
 
-- [`cargo-tangle`](https://github.com/tangle-network/blueprint/tree/v2/cli): developer/operator CLI (register, run, service lifecycle, jobs)
-- [`blueprint-manager`](https://github.com/tangle-network/blueprint/tree/v2/crates/manager): long-lived operator runtime that watches chain events and runs services
-- [`pricing-engine-server`](https://github.com/tangle-network/blueprint/tree/v2/crates/pricing-engine): optional RFQ server that issues signed quotes
+- [`cargo-tangle`](https://github.com/tangle-network/blueprint/tree/main/cli): developer/operator CLI (register, run, service lifecycle, jobs)
+- [`blueprint-manager`](https://github.com/tangle-network/blueprint/tree/main/crates/manager): long-lived operator runtime that watches chain events and runs services
+- [`pricing-engine-server`](https://github.com/tangle-network/blueprint/tree/main/crates/pricing-engine): optional RFQ server that issues signed quotes
 
 ## Configuration Surface (Tangle EVM)
 
@@ -40,7 +41,7 @@ Most tooling needs the same deployment addresses and endpoints:
 The CLI exposes these as shared flags:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/v2/cli/src/command/tangle.rs"
+  url="https://github.com/tangle-network/blueprint/blob/main/cli/src/command/tangle.rs"
   fromLine={1}
   toLine={70}
   title="cargo-tangle: shared TangleClientArgs (RPC + contract addresses + keystore)"
@@ -71,6 +72,8 @@ The CLI exposes these as shared flags:
         { title: "Jobs", href: "/developers/blueprint-runner/jobs", description: "Define job handlers" },
         { title: "Routers", href: "/developers/blueprint-runner/routers", description: "Route job calls to handlers" },
         { title: "Producers", href: "/developers/blueprint-runner/producers", description: "Convert events to job calls" },
+        { title: "Webhooks", href: "/developers/blueprint-runner/webhooks", description: "Trigger jobs from external HTTP" },
+        { title: "x402 Payments", href: "/developers/blueprint-runner/x402", description: "Paid job calls via x402 settlement" },
         { title: "Consumers", href: "/developers/blueprint-runner/consumers", description: "Submit results back to chain" },
       ],
     },
@@ -95,7 +98,7 @@ The CLI exposes these as shared flags:
       title: "CLI",
       href: "/developers/cli/quickstart",
       subItems: [
-        { title: "Install", href: "https://github.com/tangle-network/blueprint/tree/v2/cli", description: "Install cargo-tangle" },
+        { title: "Install", href: "https://github.com/tangle-network/blueprint/tree/main/cli", description: "Install cargo-tangle" },
         { title: "Keys", href: "/developers/cli/keys", description: "Create and manage keystores" },
       ],
     },
