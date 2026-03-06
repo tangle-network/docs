@@ -2,6 +2,10 @@
 
 Blueprints can be built and distributed in multiple formats (visible on the sidebar).
 
+Sources describe how operators fetch and execute your artifact. They do not describe confidentiality policy. If your
+blueprint should run in a TEE, declare that separately in `metadata.execution_profile.confidentiality`. See
+[Execution Confidentiality](/developers/blueprints/execution-confidentiality).
+
 A blueprint can define many sources of different types in the manifest of its binary crate:
 
 ```toml
@@ -20,3 +24,6 @@ sources = [
 The above example has two container sources, which allows an operator to attempt a pull from different sources in the event
 that one of the registries is unreachable. Additionally, it has a native source which can act as a fallback for operators
 that either cannot or prefer not to support running containerized blueprints.
+
+Today, only container sources are eligible for TEE placement on the Tangle manager path. That still does not make TEE a
+new source type; it remains a deployment policy layered on top of container execution.

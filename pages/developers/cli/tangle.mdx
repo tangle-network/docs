@@ -37,6 +37,10 @@ cargo tangle blueprint preregister \
   --settings-file ./settings.env
 ```
 
+Blueprint definition manifests can include `metadata.execution_profile.confidentiality` to declare `any`,
+`tee_preferred`, `tee_required`, or `standard_required`. See
+[/developers/blueprints/execution-confidentiality](/developers/blueprints/execution-confidentiality).
+
 ## Register as an Operator for a Blueprint
 
 Register your operator against the on-chain protocol contracts:
@@ -68,6 +72,10 @@ Examples and flags are subject to change; prefer `--help` output for your instal
 cargo tangle blueprint service --help
 cargo tangle blueprint service request --help
 ```
+
+The protocol now supports confidentiality intent on service requests and RFQ service quotes. Depending on the SDK/CLI
+version you are running, the newest confidentiality argument may appear first in the raw contract interfaces before every
+high-level helper command exposes it.
 
 Example (operator approval flow):
 

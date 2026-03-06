@@ -8,6 +8,7 @@ This is a minimal operational checklist for keeping Blueprint services healthy a
 - Confirm service heartbeats are progressing (no sustained gaps).
 - Review job error rates and retry spikes.
 - Check disk usage for cache + data directories.
+- For TEE-required workloads, confirm the active host or provider still satisfies the confidentiality policy.
 
 ## Key Signals to Watch
 
@@ -15,6 +16,8 @@ This is a minimal operational checklist for keeping Blueprint services healthy a
 - **Job queue backlog**: growing queues indicate capacity pressure.
 - **RPC latency**: slow RPCs lead to missed service events.
 - **Crash loops**: repeated restarts usually imply config or artifact issues.
+- **TEE prerequisite failures**: missing Kata, missing attestation verifier, or non-TEE provider selection should be
+  treated as deployment blockers, not degraded operation.
 
 ## Incident Response
 
@@ -38,5 +41,6 @@ This is a minimal operational checklist for keeping Blueprint services healthy a
 ## Related Docs
 
 - [Blueprint Manager setup](/operators/manager/setup)
+- [Confidential Compute](/operators/manager/confidential-compute)
 - [Quality of Service](/operators/quality-of-service)
 - [Benchmarking](/operators/benchmarking)

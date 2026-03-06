@@ -16,7 +16,7 @@ Service lifecycle management interface
 #### requestService
 
 ```solidity
-function requestService(uint64 blueprintId, address[] operators, bytes config, address[] permittedCallers, uint64 ttl, address paymentToken, uint256 paymentAmount) external payable returns (uint64 requestId)
+function requestService(uint64 blueprintId, address[] operators, bytes config, address[] permittedCallers, uint64 ttl, address paymentToken, uint256 paymentAmount, enum Types.ConfidentialityPolicy confidentiality) external payable returns (uint64 requestId)
 ```
 
 Request a new service
@@ -24,7 +24,7 @@ Request a new service
 #### requestServiceWithExposure
 
 ```solidity
-function requestServiceWithExposure(uint64 blueprintId, address[] operators, uint16[] exposureBps, bytes config, address[] permittedCallers, uint64 ttl, address paymentToken, uint256 paymentAmount) external payable returns (uint64 requestId)
+function requestServiceWithExposure(uint64 blueprintId, address[] operators, uint16[] exposureBps, bytes config, address[] permittedCallers, uint64 ttl, address paymentToken, uint256 paymentAmount, enum Types.ConfidentialityPolicy confidentiality) external payable returns (uint64 requestId)
 ```
 
 Request a service with explicit exposure commitments
@@ -32,12 +32,20 @@ Request a service with explicit exposure commitments
 #### requestServiceWithSecurity
 
 ```solidity
-function requestServiceWithSecurity(uint64 blueprintId, address[] operators, struct Types.AssetSecurityRequirement[] securityRequirements, bytes config, address[] permittedCallers, uint64 ttl, address paymentToken, uint256 paymentAmount) external payable returns (uint64 requestId)
+function requestServiceWithSecurity(uint64 blueprintId, address[] operators, struct Types.AssetSecurityRequirement[] securityRequirements, bytes config, address[] permittedCallers, uint64 ttl, address paymentToken, uint256 paymentAmount, enum Types.ConfidentialityPolicy confidentiality) external payable returns (uint64 requestId)
 ```
 
 Request a service with multi-asset security requirements
 
 _Each operator must provide security commitments matching these requirements when approving_
+
+#### getServiceRequestResourceRequirements
+
+```solidity
+function getServiceRequestResourceRequirements(uint64 requestId) external view returns (struct Types.ResourceCommitment[])
+```
+
+Get resource requirements for a service request
 
 #### approveService
 
@@ -56,6 +64,22 @@ function approveServiceWithCommitments(uint64 requestId, struct Types.AssetSecur
 Approve a service request with multi-asset security commitments
 
 _Commitments must match the security requirements specified in the request_
+
+#### approveServiceWithBls
+
+```solidity
+function approveServiceWithBls(uint64 requestId, uint8 stakingPercent, uint256[4] blsPubkey) external
+```
+
+Approve a service request with BLS public key for aggregated signature verification
+
+#### approveServiceWithCommitmentsAndBls
+
+```solidity
+function approveServiceWithCommitmentsAndBls(uint64 requestId, struct Types.AssetSecurityCommitment[] commitments, uint256[4] blsPubkey) external
+```
+
+Approve a service request with both security commitments and BLS public key
 
 #### rejectService
 
@@ -100,6 +124,14 @@ function terminateService(uint64 serviceId) external
 ```
 
 Terminate a service (as owner)
+
+#### terminateServiceForNonPayment
+
+```solidity
+function terminateServiceForNonPayment(uint64 serviceId) external
+```
+
+Permissionlessly terminate an unpaid subscription after grace period
 
 #### addPermittedCaller
 
@@ -361,13 +393,13 @@ Get current service count
 #### ServiceRequested
 
 ```solidity
-event ServiceRequested(uint64 requestId, uint64 blueprintId, address requester)
+event ServiceRequested(uint64 requestId, uint64 blueprintId, address requester, enum Types.ConfidentialityPolicy confidentiality)
 ```
 
 #### ServiceRequestedWithSecurity
 
 ```solidity
-event ServiceRequestedWithSecurity(uint64 requestId, uint64 blueprintId, address requester)
+event ServiceRequestedWithSecurity(uint64 requestId, uint64 blueprintId, address requester, enum Types.ConfidentialityPolicy confidentiality)
 ```
 
 #### ServiceApproved
@@ -385,13 +417,19 @@ event ServiceRejected(uint64 requestId, address operator)
 #### ServiceActivated
 
 ```solidity
-event ServiceActivated(uint64 serviceId, uint64 requestId, uint64 blueprintId)
+event ServiceActivated(uint64 serviceId, uint64 requestId, uint64 blueprintId, enum Types.ConfidentialityPolicy confidentiality)
 ```
 
 #### ServiceTerminated
 
 ```solidity
 event ServiceTerminated(uint64 serviceId)
+```
+
+#### ServiceTerminatedForNonPayment
+
+```solidity
+event ServiceTerminatedForNonPayment(uint64 serviceId, address triggeredBy, uint64 dueAt, uint64 graceEndsAt, uint256 requiredAmount, uint256 escrowBalance)
 ```
 
 #### OperatorJoinedService

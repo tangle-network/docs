@@ -46,6 +46,8 @@ Flows that typically require custom code today:
 
 - Per-job RFQ submission (`submitJobFromQuote`): you need to request signed quotes off-chain, then submit the job with the quotes.
 - Service RFQ creation (`createServiceFromQuotes` / `extendServiceFromQuotes`): you need to request signed service quotes off-chain, then create or extend the service using those quotes.
+- Service confidentiality selection: the protocol now carries confidentiality intent on service requests and RFQ service
+  quotes, so advanced integrations may need direct contract bindings until all helper layers expose the new field.
 
 For Rust clients, `TangleClient` supports RFQ job submission:
 
@@ -101,9 +103,12 @@ operator-run gateway. See:
 
 Service RFQ lets a user create a service instantly using operator quotes:
 
-1. User requests service quotes from operators for `(blueprintId, ttlBlocks, security requirements)`.
-2. Operators sign EIP-712 `QuoteDetails { blueprintId, ttlBlocks, totalCost, timestamp, expiry, ... }`.
+1. User requests service quotes from operators for `(blueprintId, ttlBlocks, confidentiality, security requirements)`.
+2. Operators sign EIP-712 `QuoteDetails { blueprintId, ttlBlocks, totalCost, timestamp, expiry, confidentiality, ... }`.
 3. User calls `createServiceFromQuotes(...)` (or `extendServiceFromQuotes(...)`) with quotes and payment.
+
+All quotes for a single RFQ service creation or extension must agree on confidentiality. Changing confidentiality mode is
+treated as a new service agreement, not an in-place extension.
 
 This is separate from the request and approval service lifecycle flow that the CLI exposes under `cargo tangle blueprint service`.
 

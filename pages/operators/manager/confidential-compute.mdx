@@ -1,0 +1,89 @@
+# Confidential Compute
+
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/manager
+
+This page covers the operator requirements for running services that prefer or require TEE execution.
+
+## Two TEE Paths
+
+Operators can satisfy confidentiality requirements in two different ways today:
+
+- Local container TEE path: run container sources on Kubernetes with the `kata` runtime class.
+- Remote TEE path: provision a confidential-compute VM through a supported cloud provider and run the blueprint there.
+
+The blueprint manager treats TEE as a deployment policy. It does not require a separate "TEE source" entry in the
+blueprint manifest.
+
+## Local Container TEE Path
+
+For container sources on the Tangle manager path:
+
+- `tee_required` fails closed if no container source exists.
+- `tee_required` fails closed if Kubernetes does not expose the `kata` runtime class.
+- `tee_preferred` uses Kata when available, but can still fall back to standard execution.
+
+At minimum, operators need:
+
+- Kubernetes
+- Docker or a compatible container runtime
+- Kata Containers installed and exposed as the `kata` runtime class
+
+## Remote TEE Path
+
+Remote confidential-compute deployments currently require a TEE-capable provider:
+
+- AWS
+- GCP
+- Azure
+
+When TEE is required, the manager must not silently fall back to non-TEE providers.
+
+## Preflight Workflow
+
+The fastest way to validate remote TEE readiness is:
+
+```bash
+cargo tangle cloud configure aws --region us-east-1 --set-default
+cargo tangle cloud preflight --tee-required --bootstrap-env
+```
+
+That checks provider configuration, cloud credentials, TEE capability, and attestation policy requirements before you run
+the manager.
+
+## Required Environment
+
+For remote TEE deployments, operators should expect to configure:
+
+```bash
+export BLUEPRINT_REMOTE_TEE_REQUIRED=true
+export BLUEPRINT_REMOTE_TEE_ATTESTATION_POLICY=cryptographic
+export BLUEPRINT_REMOTE_TEE_ATTESTATION_VERIFY_CMD=/usr/local/bin/verify-tee-attestation
+export TEE_BACKEND=aws-nitro
+```
+
+`BLUEPRINT_REMOTE_TEE_ATTESTATION_POLICY` supports:
+
+- `cryptographic`: requires `BLUEPRINT_REMOTE_TEE_ATTESTATION_VERIFY_CMD` to be present and executable.
+- `structural`: checks structural provider readiness without an external verifier command.
+
+If GCP is the selected provider, the preflight path also expects:
+
+```bash
+export BLUEPRINT_ALLOWED_SSH_CIDRS=10.0.0.0/8
+export BLUEPRINT_ALLOWED_QOS_CIDRS=10.0.0.0/8
+```
+
+## What Operators Should Expect
+
+- `tee_required` prevents non-TEE fallback.
+- The manager injects `TEE_REQUIRED=true` and `TEE_BACKEND` into remote deployments when TEE is required.
+- Cryptographic attestation policy fails the deployment if attestation verification fails.
+- `tee_preferred` is softer: the operator can still serve the workload without hard failure if the blueprint policy allows
+  fallback.
+
+## Related Docs
+
+- [Requirements](/operators/manager/requirements)
+- [Setup](/operators/manager/setup)
+- [Sandboxing and Security](/operators/manager/security)
+- [Execution Confidentiality](/developers/blueprints/execution-confidentiality)

@@ -37,7 +37,15 @@ The requirements for running blueprints with [Container Sources](/developers/dep
 
 - [Kubernetes]
 - [Docker]
-- The [Kata Containers] runtime
+
+For standard container execution, Kubernetes and Docker are enough.
+
+For confidentiality-aware execution:
+
+- `tee_required` needs the [Kata Containers] runtime exposed as the Kubernetes `kata` runtime class.
+- `tee_preferred` should also use Kata when available, but may fall back if the blueprint policy permits it.
+
+See [Confidential Compute](/operators/manager/confidential-compute) for the full operator flow.
 
 ## WASM Sources (WIP)
 

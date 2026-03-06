@@ -2,6 +2,9 @@
 
 In order for a blueprint to be instance-able, it'll need to be deployed and have one or more sources defined.
 
+If your blueprint has confidentiality requirements, also declare an execution policy in blueprint metadata. TEE is not a
+separate source type. See [Execution Confidentiality](/developers/blueprints/execution-confidentiality).
+
 ## Defining Sources
 
 Before deploying, you must specify the sources from which to fetch the blueprint binaries.
