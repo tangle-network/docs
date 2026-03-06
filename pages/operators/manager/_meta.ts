@@ -4,6 +4,7 @@ const meta: Meta = {
   introduction: "Introduction",
   requirements: "Requirements",
   setup: "Setup",
+  "confidential-compute": "Confidential Compute",
   sizing: "Sizing",
   security: "Sandboxing and Security",
 };

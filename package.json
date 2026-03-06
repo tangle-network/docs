@@ -11,6 +11,7 @@
     "build:sitemap": "next-sitemap --config next-sitemap.config.js",
     "build:pagefind": "pagefind --site .next/server/pages --output-path dist/_pagefind",
     "export": "next export",
+    "check:tnt-core-sync": "node ./scripts/check-tnt-core-sync.mjs",
     "lint": "next lint && yarn format",
     "schema": "turbo-gen ./public/schema.json",
     "format": "prettier --write \"{components,pages}/**/*.{mdx,ts,js,jsx,tsx,json}\" ",

@@ -2,6 +2,9 @@
 
 In order for a blueprint to be instance-able, it'll need to be deployed and have one or more sources defined.
 
+If your blueprint has confidentiality requirements, also declare an execution policy in blueprint metadata. TEE is not a
+separate source type. See [Execution Confidentiality](/developers/blueprints/execution-confidentiality).
+
 ## Defining Sources
 
 Before deploying, you must specify the sources from which to fetch the blueprint binaries.
@@ -25,6 +28,6 @@ export EVM_SIGNER="0xcb6df9de1efca7a3998a8ead4e02159d5fa99c3e0d4fd6432667390bb47
 cargo tangle blueprint deploy tangle --devnet
 ```
 
-See [deploy command reference](/developers/cli/tangle#deploying-a-blueprint) for all options.
+See [Tangle CLI reference](/developers/cli/tangle) for the current command flow and options.
 
 [cargo-tangle]: https://github.com/tangle-network/blueprint/tree/main/cli

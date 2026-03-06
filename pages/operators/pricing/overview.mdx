@@ -41,6 +41,9 @@ These flows require operators to generate and sign EIP-712 quotes off-chain:
 - `PayOnce`: users create a service using `createServiceFromQuotes(...)`.
 - Job RFQ: users submit jobs using `submitJobFromQuote(...)`.
 
+If the customer requests a specific confidentiality mode for the service, that confidentiality intent is part of the
+service RFQ agreement and should be reflected in your quote and operating cost assumptions.
+
 To participate in RFQ, you need:
 
 - a quote serving endpoint (typically the `pricing-engine` gRPC server)

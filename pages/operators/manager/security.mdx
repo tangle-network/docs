@@ -33,6 +33,22 @@ The manager handles kernel and disk image downloads automatically.
 
 If you deploy container-based blueprints, use a hardened runtime such as Kata Containers and follow Kubernetes best practices for least privilege.
 
+When a blueprint or service runs with `tee_required`, missing Kata support should be treated as a hard error rather than a
+reason to fall back silently to standard container execution.
+
+## Remote TEE attestation
+
+For remote confidential-compute deployments, operators should treat attestation as part of the deployment gate, not as an
+optional afterthought.
+
+- `BLUEPRINT_REMOTE_TEE_ATTESTATION_POLICY=cryptographic` is the strongest mode and requires an executable verifier
+  command.
+- `BLUEPRINT_REMOTE_TEE_ATTESTATION_POLICY=structural` is weaker, but still enforces TEE-aware provider selection.
+- When TEE is required, provider selection should be limited to TEE-capable providers and should not fall back to
+  standard VMs.
+
+See [Confidential Compute](/operators/manager/confidential-compute) for the exact preflight workflow and environment.
+
 ## Key and data safety
 
 - Store keystores on encrypted storage.

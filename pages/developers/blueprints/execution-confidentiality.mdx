@@ -1,0 +1,113 @@
+---
+title: Execution Confidentiality
+description: How blueprint developers declare TEE intent, how operators enforce it, and how customers request confidentiality on-chain.
+---
+
+# Execution Confidentiality
+
+Tangle models trusted execution as an execution policy, not as a separate source type. A blueprint still publishes
+normal artifact sources such as containers or native binaries. Confidentiality intent is declared in blueprint metadata
+and, at the protocol layer, can also be requested by the customer when a service is created.
+
+## Confidentiality Policies
+
+Tangle uses four confidentiality modes:
+
+- `any`: standard execution and TEE execution are both acceptable.
+- `tee_preferred`: prefer TEE placement when the operator can satisfy it, but allow standard execution.
+- `tee_required`: require TEE placement and fail closed if it cannot be satisfied.
+- `standard_required`: require non-TEE execution.
+
+## How Developers Declare It
+
+When you register a blueprint through a definition manifest, set the execution policy under
+`metadata.execution_profile.confidentiality`:
+
+```json
+{
+  "metadata_uri": "ipfs://your-blueprint-metadata",
+  "metadata": {
+    "name": "confidential-prover",
+    "execution_profile": {
+      "confidentiality": "tee_required"
+    }
+  },
+  "sources": [
+    {
+      "kind": "container",
+      "registry": "ghcr.io",
+      "image": "acme/confidential-prover",
+      "tag": "1.2.0"
+    }
+  ]
+}
+```
+
+If you prefer TOML:
+
+```toml
+metadata_uri = "ipfs://your-blueprint-metadata"
+
+[metadata]
+name = "confidential-prover"
+
+[metadata.execution_profile]
+confidentiality = "tee_required"
+```
+
+The CLI injects this into on-chain `profilingData` as structured JSON metadata.
+
+## What The Manager Does
+
+On the Tangle manager path, the confidentiality policy changes source selection and runtime behavior:
+
+- Only container sources are eligible for TEE placement today.
+- `tee_required` filters launch candidates down to container sources and fails if none exist.
+- `tee_required` also fails closed if the operator does not have the required TEE runtime prerequisites.
+- `tee_preferred` prioritizes container execution and uses Kata when available, but can still fall back.
+- `standard_required` keeps the service on the standard, non-TEE path.
+
+For local container execution, `tee_required` currently means the operator must have Kubernetes configured with the
+`kata` runtime class. For remote deployments, the operator must configure a TEE-capable provider and attestation policy.
+
+## Source Design Guidance
+
+Do not create a separate "TEE source" entry in your blueprint manifest. Keep sources focused on how the artifact is
+fetched and executed:
+
+- `Container` tells operators where to fetch the image.
+- `Native` tells operators where to fetch the binary.
+- `Wasm` tells operators which WASM runtime to use.
+
+Confidentiality is a deployment policy layered on top of those sources.
+
+In practice, if you want a blueprint to run in a TEE on Tangle today, publish a container source and declare either
+`tee_preferred` or `tee_required`.
+
+## Customer Request Semantics
+
+At the protocol layer, service requests and service RFQ quotes now carry a confidentiality intent. That lets a customer
+ask for standard execution, preferred TEE execution, or required TEE execution as part of the service agreement.
+
+Important consequences:
+
+- Request-and-approve flows include confidentiality on the service request.
+- RFQ service creation includes confidentiality inside `QuoteDetails`.
+- All quotes in a single RFQ service creation or extension must agree on confidentiality.
+- Service extensions preserve the active service's confidentiality mode. If you need to switch modes, create a new
+  service.
+
+## Tooling Status
+
+Blueprint definition manifests already support `metadata.execution_profile.confidentiality`.
+
+The protocol API also supports customer-selected confidentiality in `ITangleServices`, but high-level helper surfaces may
+lag behind the newest contract fields. If your installed SDK or CLI does not expose the latest confidentiality argument
+yet, use the current contract bindings or raw interface calls for service creation.
+
+## Related Docs
+
+- [Deploying Blueprints](/developers/deployment/introduction)
+- [Blueprint Sources](/developers/deployment/sources/introduction)
+- [Service Lifecycle](/developers/blueprints/service-lifecycle)
+- [Blueprint Manager Setup](/operators/manager/setup)

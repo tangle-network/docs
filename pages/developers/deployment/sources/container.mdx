@@ -3,6 +3,10 @@
 The `Container` source is used for blueprints that are intended to be built as container images and published to image
 registries, such as `docker.io`.
 
+Container sources are also the only TEE-eligible artifact source on the current Tangle manager path. If you want to
+allow or require TEE execution, keep using `Container` and declare the confidentiality policy in blueprint metadata. See
+[Execution Confidentiality](/developers/blueprints/execution-confidentiality).
+
 ## Requirements
 
 The requirements for running containerized blueprints are available [here](/operators/manager/requirements#container-sources)

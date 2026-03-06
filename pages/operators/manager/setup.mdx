@@ -61,3 +61,25 @@ cargo tangle blueprint run \
 - The manager maintains a cache for downloaded artifacts (defaults to `./cache`).
 
 Plan capacity based on the number of services you expect to host. See [Sizing and Capacity](/operators/manager/sizing).
+
+## 5) Remote TEE preflight
+
+If you want to satisfy remote `tee_required` workloads, validate your cloud and attestation configuration before starting
+the manager:
+
+```bash
+cargo tangle cloud configure aws --region us-east-1 --set-default
+cargo tangle cloud preflight --tee-required --bootstrap-env
+```
+
+The preflight flow prints the bootstrap environment expected by the manager, including:
+
+- `BLUEPRINT_REMOTE_TEE_REQUIRED=true`
+- `BLUEPRINT_REMOTE_TEE_ATTESTATION_POLICY`
+- `BLUEPRINT_REMOTE_TEE_ATTESTATION_VERIFY_CMD` for cryptographic verification
+- `TEE_BACKEND`
+
+Use `--write-env-file` if you want to materialize that output into an env file for your supervisor.
+
+For local container TEE execution instead of remote provisioning, configure Kubernetes with the `kata` runtime class. See
+[Confidential Compute](/operators/manager/confidential-compute).

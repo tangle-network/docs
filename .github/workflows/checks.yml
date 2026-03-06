@@ -7,6 +7,34 @@ on:
   workflow_dispatch:
 
 jobs:
+  tnt_core_sync:
+    name: tnt-core sync
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v3
+
+      - name: Checkout tnt-core main
+        uses: actions/checkout@v3
+        with:
+          repository: tangle-network/tnt-core
+          ref: main
+          path: tnt-core
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Validate docs against tnt-core
+        run: node ./scripts/check-tnt-core-sync.mjs
+        env:
+          TNT_CORE_DIR: ${{ github.workspace }}/tnt-core
+
   lint:
     name: lint
     runs-on: ubuntu-latest
@@ -81,7 +109,17 @@ jobs:
       - name: Link Checker
         uses: lycheeverse/lychee-action@v1.9.0
         with:
-          args: --verbose --no-progress './**/*.md' './**/*.html' './**/*.mdx'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: >-
+            --verbose
+            --no-progress
+            --max-concurrency 16
+            --max-retries 5
+            --retry-wait-time 2
+            --accept '100..=103,200..=299,403,429'
+            './**/*.md'
+            './**/*.html'
+            './**/*.mdx'
           fail: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -30,7 +30,7 @@ Customers discover Blueprints, create Services, and pay for execution. Operators
 earning fees and TNT incentives defined by the core protocol contracts in `tnt-core`.
 
 A Blueprint Service is a reusable computational service. Each Service instance can select a different operator set,
-security configuration, and payment token while sharing the same underlying blueprint logic.
+security configuration, payment token, and execution confidentiality while sharing the same underlying blueprint logic.
 
 A Tangle Blueprint is defined by:
 
@@ -39,6 +39,8 @@ A Tangle Blueprint is defined by:
 - **Executable artifacts** (native binary, container image, or WASM) for operators to run.
 
 Blueprints specify their runtime preferences so operators can execute services natively, in containers, or inside a VM.
+They can also declare execution confidentiality policy in metadata. See
+[/developers/blueprints/execution-confidentiality](/developers/blueprints/execution-confidentiality).
 
 ## Detailed Interactions
 
@@ -56,6 +58,8 @@ schemas operators should run. The on-chain manager contract handles:
 Blueprints let developers define monetizable services (MPC, ZK proving, AI infrastructure, oracles) with on-chain
 verification and off-chain execution handled by operators running the Blueprint Manager.
 
+Developers can also declare whether a service may run in a TEE, should prefer TEE placement, or must run in a TEE.
+
 ### Customers
 
 Customers discover blueprints, configure services, and select operators based on requirements (security, resources, price,
@@ -65,12 +69,16 @@ To initialize a Service, a customer typically:
 
 1. Chooses an operator set and any service parameters required by the blueprint.
 2. Provides metadata required by the Service instance.
-3. Funds the service fee required by the blueprint manager contract.
+3. Selects the desired execution confidentiality when the service flow supports it.
+4. Funds the service fee required by the blueprint manager contract.
 
 ### Operators
 
 Operators register for blueprints, accept service assignments, and run the service artifacts through the Blueprint Manager.
 They earn an operator share of service payments (claimable from the `Tangle` contract) plus TNT incentives.
+
+Execution confidentiality changes how operators satisfy those assignments. For example, a `tee_required` service must fail
+closed if the operator cannot satisfy the TEE runtime requirements.
 
 ### Payments and Incentives
 

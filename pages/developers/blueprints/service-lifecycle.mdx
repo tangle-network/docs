@@ -32,6 +32,10 @@ There are two high-level creation flows:
 
 The CLI primarily covers the request and approve flow. RFQ flows often require custom client code today.
 
+Both flows can now carry execution confidentiality intent at the protocol layer. That means service creation can bind not
+just operator set and payment terms, but also whether the service should run in standard execution, prefer TEE, or
+require TEE.
+
 ## Extending A Service (Renewal)
 
 The protocol supports renewal for RFQ-created services via:
@@ -45,6 +49,8 @@ Key properties to design around:
 - Only the **service owner** can extend a service.
 - Extension applies to services that have a TTL (`ttl != 0`).
 - Quotes must come from the **current operators of the service**. Extension does not change the operator set.
+- Extensions preserve the active service's confidentiality mode. If you need a different confidentiality policy, create a
+  new service.
 - Payment is provided with the transaction (for example, via `msg.value` depending on the quote format and payment asset).
 - Extension can be executed even after the service has expired, as long as it is still active. The service can resume job
   acceptance after TTL is increased.
