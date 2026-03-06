@@ -109,7 +109,17 @@ jobs:
       - name: Link Checker
         uses: lycheeverse/lychee-action@v1.9.0
         with:
-          args: --verbose --no-progress './**/*.md' './**/*.html' './**/*.mdx'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: >-
+            --verbose
+            --no-progress
+            --max-concurrency 16
+            --max-retries 5
+            --retry-wait-time 2
+            --accept '100..=103,200..=299,403,429'
+            './**/*.md'
+            './**/*.html'
+            './**/*.mdx'
           fail: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
