@@ -1,0 +1,88 @@
+# Code Merge Process
+
+This document describes Tangle Network's process for merging code into production branches across all active repositories.
+
+## Overview
+
+All Tangle Network repositories use GitHub as the source control platform. The `main` branch is the production branch. Merging to `main` triggers automated deployment pipelines.
+
+## Repositories in Scope
+
+All active repositories under the [tangle-network](https://github.com/tangle-network) GitHub organization, including:
+
+| Repository                                                    | Description                      |
+| ------------------------------------------------------------- | -------------------------------- |
+| [blueprint](https://github.com/tangle-network/blueprint)     | Core blueprint SDK and runtime   |
+| [tangle](https://github.com/tangle-network/tangle)           | Tangle substrate node            |
+| [tnt-core](https://github.com/tangle-network/tnt-core)       | Core token and protocol logic    |
+| [tcloud](https://github.com/tangle-network/tcloud)           | Tangle cloud infrastructure      |
+| [dapp](https://github.com/tangle-network/dapp)               | Frontend application             |
+| [docs](https://github.com/tangle-network/docs)               | Documentation site               |
+
+## Merge Process
+
+### 1. Branch and Develop
+
+All changes are developed on feature branches. Direct commits to `main` are not permitted.
+
+```
+main ← feature-branch (via pull request only)
+```
+
+### 2. Pull Request Requirements
+
+Every change to `main` must go through a GitHub Pull Request (PR) that satisfies the following:
+
+- **Code review**: At least one approving review from a maintainer or team member is required before merge.
+- **CI checks must pass**: All required status checks must complete successfully before the PR can be merged (see CI Gates below).
+- **PR description**: The pull request must describe the change, motivation, and any relevant context.
+- **Conversation resolution**: All review comments should be resolved before merge.
+
+### 3. CI Gates
+
+The following automated checks run on every pull request and must pass before merge:
+
+| Check                    | Description                                         |
+| ------------------------ | --------------------------------------------------- |
+| **Build**                | Full compilation and build verification             |
+| **Tests**                | Unit and integration test suites                    |
+| **Clippy**               | Rust linting via `clippy` (Rust repositories)       |
+| **Lint**                 | Code style and formatting checks                    |
+| **Security audit**       | `cargo audit` / dependency vulnerability scanning   |
+| **Package dependencies** | Dependency resolution and compatibility checks      |
+| **Security scans**       | Automated security scanning for known vulnerabilities |
+| **PR Quality Gate**      | Automated PR quality and standards enforcement      |
+
+These checks are enforced via GitHub Actions workflows (`CI`, `PR Quality Gate`, `Release`) configured in each repository.
+
+### 4. Branch Protection Rules
+
+Production branches (`main`) are protected with the following GitHub branch protection settings:
+
+- **Require pull request before merging**: Direct pushes to `main` are blocked.
+- **Require approvals**: Minimum 1 approving review required.
+- **Require status checks to pass**: CI pipeline must complete successfully.
+- **No force pushes**: Force pushes to `main` are prohibited.
+- **No deletions**: The `main` branch cannot be deleted.
+
+### 5. Merge and Deploy
+
+Once all requirements are met:
+
+1. The PR author or an approving reviewer merges the PR into `main`.
+2. Merging to `main` automatically triggers the deployment pipeline.
+3. Releases are managed via [Release Please](https://github.com/googleapis/release-please) automation where applicable, which creates versioned releases from conventional commits.
+
+## Automated Tooling
+
+| Tool           | Purpose                                       |
+| -------------- | --------------------------------------------- |
+| GitHub Actions | CI/CD pipeline execution                      |
+| Dependabot     | Automated dependency update PRs               |
+| Clippy         | Rust static analysis                          |
+| `cargo audit`  | Rust dependency security auditing             |
+| Release Please | Automated release versioning and changelogs   |
+
+## External Contributors
+
+External contributors follow the [fork-and-pull workflow](/developers/contribute). Their PRs are subject to the same CI gates and review requirements as internal changes.

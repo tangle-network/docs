@@ -35,6 +35,8 @@ const meta: Meta = {
     type: "separator",
     title: "Contribute",
   },
+  "code-merge-process": "Code Merge Process",
+  "key-contacts": "Key Contacts",
   contribute: "Bug Reports",
   github: {
     title: "Tangle Network on GitHub",
