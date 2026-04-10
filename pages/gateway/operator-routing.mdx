@@ -7,9 +7,23 @@ description: Route inference through decentralized operators on the Tangle netwo
 
 Operators are independent inference providers registered on the Tangle network. They run models on their own hardware, set their own prices, and earn from every request routed through them.
 
+## Blueprints
+
+Operators run **Blueprints** — on-chain service definitions that specify what an operator does. The inference-related Blueprints the gateway routes through:
+
+| Blueprint | What it serves | Repo |
+|-----------|---------------|------|
+| **LLM Inference** | Chat completions, text generation (Llama, Qwen, Mistral, etc.) | [tangle-network/llm-inference-blueprint](https://github.com/tangle-network/llm-inference-blueprint) |
+| **Vector Store** | Embedding storage and retrieval for RAG | Operator-deployed |
+| **Custom** | Any model/pipeline an operator chooses to serve | [Build your own](/developers/blueprints/introduction) |
+
+The LLM Inference Blueprint uses [tangle-inference-core](https://github.com/tangle-network/tangle-inference-core) — a shared Rust crate for EIP-712 signature verification, nonce management, and on-chain settlement. Operators compile it into a binary (`operator-lite`) that runs alongside their model server.
+
+To build and deploy your own inference Blueprint, see the [Blueprint SDK docs](/developers/blueprints/introduction) and the [Blueprint Runner](/developers/blueprint-runner/introduction).
+
 ## How operators are discovered
 
-1. Operators register on-chain via the Blueprint Service Manager (BSM) contract
+1. Operators register on-chain via the [Blueprint Service Manager (BSM)](/developers/blueprints/service-lifecycle) contract
 2. The gateway syncs operator data from the chain every 60 seconds
 3. Operators are stored in the database with their endpoint URL, pricing, and status
 4. The [scoring algorithm](/gateway/smart-routing) ranks operators per-request

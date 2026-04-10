@@ -50,3 +50,5 @@ SpendAuth uses the `ShieldedCredits` contract deployed on the Tangle network. Th
 - Balance management (deposit, authorize, claim)
 - Authorization verification (EIP-712 signature recovery)
 - Payment settlement (operator claims after serving)
+
+The operator-side settlement logic is implemented in [tangle-inference-core](https://github.com/tangle-network/tangle-inference-core), a shared Rust crate used by the [LLM Inference Blueprint](https://github.com/tangle-network/llm-inference-blueprint) and other inference Blueprints.

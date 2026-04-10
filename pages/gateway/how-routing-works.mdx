@@ -15,11 +15,12 @@ Request → Tier 1: Operators → Tier 2: LiteLLM → Tier 3: Direct Provider �
 
 ### Tier 1: Operator routing
 
-Operators are independent inference providers registered on the Tangle network. They stake tokens, serve models, and compete on price, latency, and reputation.
+Operators run [Blueprints](/developers/blueprints/introduction) — on-chain service definitions like the [LLM Inference Blueprint](https://github.com/tangle-network/llm-inference-blueprint). They stake tokens, serve models, and compete on price, latency, and reputation.
 
 - Selected by [scoring algorithm](/gateway/smart-routing): reputation (40%) + latency (30%) + price (30%)
-- Discovered automatically from on-chain Blueprint Service Manager contracts
+- Discovered automatically from on-chain [Blueprint Service Manager](/developers/blueprints/service-lifecycle) contracts
 - Can be pinned by blueprint, service, or operator address
+- See [Operator Routing](/gateway/operator-routing) for the full Blueprint catalog
 
 **When it's used:** Default for `auto` routing mode, required for SpendAuth (on-chain payments).
 

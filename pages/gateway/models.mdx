@@ -28,7 +28,15 @@ Tangle Gateway provides access to models from 20+ providers through a single API
 | Z.ai | `zai` | GLM-4.7, GLM-5 |
 | Moonshot | `moonshot` | Kimi |
 
-Plus operators on the Tangle network serving custom and open-source models.
+Plus decentralized operators on the Tangle network running [Blueprints](/developers/blueprints/introduction):
+
+| Blueprint | Models | How to route |
+|-----------|--------|-------------|
+| [LLM Inference](https://github.com/tangle-network/llm-inference-blueprint) | Llama, Qwen, Mistral, any vLLM-compatible model | `X-Tangle-Routing: operator` or auto |
+| Vector Store | Embedding models for RAG | `/v1/collections` and `/v1/rag/query` |
+| Custom Blueprints | Any model the operator deploys | Pin by Blueprint ID or operator slug |
+
+Operators set their own pricing and the gateway [scores them](/gateway/smart-routing) on reputation, latency, and price. See [Operator Routing](/gateway/operator-routing) for details.
 
 ## Model ID format
 
