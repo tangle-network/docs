@@ -1,0 +1,55 @@
+---
+title: SpendAuth (On-Chain Payments)
+description: Pay operators directly on-chain via EIP-712 signed authorizations.
+---
+
+# SpendAuth
+
+SpendAuth lets you pay operators directly on-chain without a credit card or account. Sign an EIP-712 typed data message with your wallet, attach it to the request, and the operator claims payment after serving inference.
+
+## How it works
+
+1. **Sign:** Create an EIP-712 SpendAuth payload with your wallet
+2. **Send:** Attach the signature as `X-Payment-Signature` header
+3. **Authorize:** The gateway verifies the signature and calls `authorizeSpend` on-chain
+4. **Serve:** The operator processes your inference request
+5. **Claim:** The operator calls `claimPayment` to receive funds
+
+## Request format
+
+```bash
+curl -X POST "https://router.tangle.tools/v1/chat/completions" \
+  -H "Content-Type: application/json" \
+  -H "X-Payment-Signature: {
+    \"commitment\": \"0xabc...\",
+    \"serviceId\": \"1\",
+    \"jobIndex\": 0,
+    \"amount\": \"1000000\",
+    \"operator\": \"0x70997970...\",
+    \"nonce\": \"42\",
+    \"expiry\": \"1712793600\",
+    \"signature\": \"0xff...\"
+  }" \
+  -d '{"model": "llama-3.1-70b", "messages": [...]}'
+```
+
+## Security
+
+- **EIP-712 signatures:** Cryptographically verified against the signing address
+- **Nonce replay protection:** Each nonce can only be used once per commitment (in-memory + Redis store)
+- **On-chain verification:** The `ShieldedCredits` contract validates authorization and deducts balance
+- **Expiry:** SpendAuth payloads have a timestamp-based expiry
+
+## Rate limits
+
+SpendAuth requests get a generous 120 req/min limit per commitment since every request is paid.
+
+## On-chain contracts
+
+SpendAuth uses the `ShieldedCredits` contract deployed on the Tangle network. The contract handles:
+
+- Balance management (deposit, authorize, claim)
+- Authorization verification (EIP-712 signature recovery)
+- Payment settlement (operator claims after serving)
+
+The operator-side settlement logic is implemented in [tangle-inference-core](https://github.com/tangle-network/tangle-inference-core), a shared Rust crate used by the [LLM Inference Blueprint](https://github.com/tangle-network/llm-inference-blueprint) and other inference Blueprints.

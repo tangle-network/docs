@@ -1,0 +1,55 @@
+---
+title: GET /v1/generation
+description: Look up detailed information about a specific request.
+---
+
+# GET /v1/generation
+
+Retrieve detailed information about a specific generation by its ID. Requires authentication.
+
+## Request
+
+```
+GET https://router.tangle.tools/v1/generation?id=gen_01ARZ3NDEKTSV4RRFFQ69G5FAV
+Authorization: Bearer sk-tan-YOUR_KEY
+```
+
+## Parameters
+
+| Parameter | Required | Description                          |
+| --------- | -------- | ------------------------------------ |
+| `id`      | Yes      | Generation ID (format: `gen_<ulid>`) |
+
+## Response
+
+```json
+{
+  "data": {
+    "id": "gen_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+    "total_cost": 0.00123,
+    "usage": 0.00123,
+    "created_at": "2026-04-10T12:00:00.000Z",
+    "model": "anthropic/claude-sonnet-4-6",
+    "is_byok": false,
+    "provider_name": "anthropic",
+    "streamed": true,
+    "latency": 200,
+    "generation_time": 1500,
+    "tokens_prompt": 100,
+    "tokens_completion": 50,
+    "native_tokens_cached": 80,
+    "native_tokens_reasoning": 0,
+    "status": "success",
+    "routing_trace": {...},
+    "cache_hit": false
+  }
+}
+```
+
+## Errors
+
+| Status | Code        | Description                                     |
+| ------ | ----------- | ----------------------------------------------- |
+| 400    | —           | Missing or invalid generation ID                |
+| 401    | —           | Authentication required                         |
+| 404    | `not_found` | Generation not found or belongs to another user |

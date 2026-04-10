@@ -1,0 +1,57 @@
+---
+title: Authentication
+description: Authentication methods for Tangle Gateway.
+---
+
+# Authentication
+
+Four authentication methods, each with different rate limits and capabilities.
+
+## API Key
+
+Create keys at the dashboard. Keys start with `sk-tan-` and are SHA256-hashed before storage.
+
+```bash
+curl -H "Authorization: Bearer sk-tan-YOUR_KEY" \
+  https://router.tangle.tools/v1/chat/completions
+```
+
+- **Rate limit:** 60 req/min
+- **Credit check:** Yes (402 if balance is zero on non-free-tier models)
+- **Key features:** Expiration dates, soft revocation, last-used tracking
+
+## Session (Cookie)
+
+Browser-based authentication via Better Auth. Supports email/password and OAuth (Google, GitHub).
+
+- **Rate limit:** 30 req/min
+- **Credit check:** Yes
+
+## SIWE (Sign-In with Ethereum)
+
+Wallet-based authentication via EIP-191 signatures. Authenticate with your Ethereum wallet.
+
+```
+POST /api/siwe/verify
+{ "address": "0x...", "signature": "0x...", "message": "..." }
+```
+
+## SpendAuth (On-Chain Payment)
+
+EIP-712 signed payment authorization. No account needed — pay operators directly on-chain.
+
+```bash
+curl -H "X-Payment-Signature: {\"commitment\":\"0x...\",\"amount\":\"1000000\",...}" \
+  https://router.tangle.tools/v1/chat/completions
+```
+
+- **Rate limit:** 120 req/min per commitment
+- **Credit check:** No (payment is on-chain)
+- See [SpendAuth](/gateway/spend-auth) for details.
+
+## Anonymous
+
+No authentication required for [free tier models](/gateway/free-tier).
+
+- **Rate limit:** 10 req/min, 5 req/day
+- **Model access:** Free tier only (gpt-4o-mini, llama-3.1-8b, etc.)

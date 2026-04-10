@@ -44,8 +44,20 @@ Core capabilities:
 
 Each run produces task and agent evaluations. That data feeds back into the workbench to improve prompts, policies, and workflows over time.
 
+## Inference Gateway
+
+The [Tangle Gateway](/gateway) is the inference routing layer. Agents and applications call a single API to access hundreds of models across centralized providers and decentralized operators. The gateway handles model selection, compliance routing, billing, and payment settlement.
+
+Key capabilities:
+
+- **One API, any model.** OpenAI, Anthropic, Google, Groq, and 20+ providers.
+- **Decentralized operators.** Route to operators on the Tangle network who compete on price and latency.
+- **Compliance.** [Zero Data Retention](/gateway/zdr) and [no-train](/gateway/no-train) routing with verified provider agreements.
+- **On-chain payments.** [SpendAuth](/gateway/spend-auth) — pay operators directly without a credit card.
+
 ## Learn More
 
+- [Gateway — Getting Started](/gateway/getting-started)
 - [Workbench details](/vibe/introduction)
 - [Runtime and sandboxing](/infrastructure/introduction)
 - [Operator onboarding](/operators/introduction)

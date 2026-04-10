@@ -1,0 +1,89 @@
+---
+title: Operator Routing
+description: Route inference through decentralized operators on the Tangle network.
+---
+
+# Operator Routing
+
+Operators are independent inference providers registered on the Tangle network. They run models on their own hardware, set their own prices, and earn from every request routed through them.
+
+## Blueprints
+
+Operators run **Blueprints** — on-chain service definitions that specify what an operator does. The inference-related Blueprints the gateway routes through:
+
+| Blueprint         | What it serves                                                 | Repo                                                                                                |
+| ----------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **LLM Inference** | Chat completions, text generation (Llama, Qwen, Mistral, etc.) | [tangle-network/llm-inference-blueprint](https://github.com/tangle-network/llm-inference-blueprint) |
+| **Vector Store**  | Embedding storage and retrieval for RAG                        | Operator-deployed                                                                                   |
+| **Custom**        | Any model/pipeline an operator chooses to serve                | [Build your own](/developers/blueprints/introduction)                                               |
+
+The LLM Inference Blueprint uses [tangle-inference-core](https://github.com/tangle-network/tangle-inference-core) — a shared Rust crate for EIP-712 signature verification, nonce management, and on-chain settlement. Operators compile it into a binary (`operator-lite`) that runs alongside their model server.
+
+To build and deploy your own inference Blueprint, see the [Blueprint SDK docs](/developers/blueprints/introduction) and the [Blueprint Runner](/developers/blueprint-runner/introduction).
+
+## How operators are discovered
+
+1. Operators register on-chain via the [Blueprint Service Manager (BSM)](/developers/blueprints/service-lifecycle) contract
+2. The gateway syncs operator data from the chain every 60 seconds
+3. Operators are stored in the database with their endpoint URL, pricing, and status
+4. The [scoring algorithm](/gateway/smart-routing) ranks operators per-request
+
+## Routing to operators
+
+### Automatic (default)
+
+In `auto` mode, the gateway checks for operators serving the requested model before trying centralized providers:
+
+```bash
+curl -X POST "https://router.tangle.tools/v1/chat/completions" \
+  -H "Authorization: Bearer sk-tan-YOUR_KEY" \
+  -d '{"model": "llama-3.1-70b", "messages": [...]}'
+```
+
+### Pin to a Blueprint
+
+Route only to operators registered under a specific Blueprint:
+
+```bash
+curl -X POST "https://router.tangle.tools/v1/chat/completions" \
+  -H "X-Tangle-Blueprint: 42" \
+  -d '{"model": "llama-3.1-70b", "messages": [...]}'
+```
+
+### Pin to an operator
+
+Route to a specific operator by slug or Ethereum address:
+
+```bash
+curl -X POST "https://router.tangle.tools/v1/chat/completions" \
+  -H "X-Tangle-Operator: tangle-core-1" \
+  -d '{"model": "llama-3.1-70b", "messages": [...]}'
+```
+
+### Pin to a service instance
+
+```bash
+curl -X POST "https://router.tangle.tools/v1/chat/completions" \
+  -H "X-Tangle-Service: 7" \
+  -d '{"model": "llama-3.1-70b", "messages": [...]}'
+```
+
+## What's verified on-chain
+
+| Data                      | Verified?                          |
+| ------------------------- | ---------------------------------- |
+| Operator Ethereum address | Yes (signed transaction)           |
+| Active/inactive status    | Yes (BSM contract state)           |
+| Staked amount             | Yes (on-chain balance)             |
+| Pricing (per-token)       | Yes (BSM contract)                 |
+| Endpoint URL              | No (self-reported at registration) |
+| Backing provider          | No (not tracked)                   |
+
+Because endpoint URL and backing provider are self-reported, operator routing is **not compatible with [ZDR](/gateway/zdr) or [no-train](/gateway/no-train)** compliance requirements. When compliance is required, operators are skipped and the gateway routes directly to verified providers.
+
+## Payment
+
+Operator requests can be paid two ways:
+
+1. **Platform credits** — deducted from your credit balance at the operator's listed price
+2. **SpendAuth (on-chain)** — direct EIP-712 signed payment to the operator. No credit card needed. See [SpendAuth](/gateway/spend-auth).

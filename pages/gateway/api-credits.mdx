@@ -1,0 +1,29 @@
+---
+title: GET /v1/credits
+description: Check your credit balance and total usage.
+---
+
+# GET /v1/credits
+
+Check your credit balance. Requires authentication.
+
+## Request
+
+```
+GET https://router.tangle.tools/v1/credits
+Authorization: Bearer sk-tan-YOUR_KEY
+```
+
+## Response
+
+```json
+{
+  "balance": "95.50",
+  "total_used": "4.50"
+}
+```
+
+| Field        | Description                    |
+| ------------ | ------------------------------ |
+| `balance`    | Remaining credit balance (USD) |
+| `total_used` | Total credits consumed (USD)   |

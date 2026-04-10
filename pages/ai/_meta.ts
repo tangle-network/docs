@@ -2,6 +2,26 @@ import type { Meta } from "nextra";
 
 const meta: Meta = {
   index: "AI Introduction",
+  "-- gateway": {
+    type: "separator",
+    title: "Inference Gateway",
+  },
+  "gateway-intro": {
+    title: "Introduction",
+    href: "/gateway",
+  },
+  "gateway-start": {
+    title: "Getting Started",
+    href: "/gateway/getting-started",
+  },
+  "gateway-models": {
+    title: "Models & Providers",
+    href: "/gateway/models",
+  },
+  "gateway-zdr": {
+    title: "Zero Data Retention",
+    href: "/gateway/zdr",
+  },
   "-- workbench": {
     type: "separator",
     title: "Agentic Workbench",

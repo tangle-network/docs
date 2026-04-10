@@ -1,0 +1,71 @@
+---
+title: Generation Lookup
+description: Retrieve detailed information about any request by its generation ID.
+---
+
+# Generation Lookup
+
+Every request returns a unique generation ID in the `X-Generation-Id` header. Use it to look up full request details.
+
+## Endpoint
+
+```
+GET /v1/generation?id=gen_01ARZ3NDEKTSV4RRFFQ69G5FAV
+```
+
+Requires authentication. Returns details only for requests made by the authenticated user.
+
+## Example
+
+```bash
+curl -H "Authorization: Bearer sk-tan-YOUR_KEY" \
+  "https://router.tangle.tools/v1/generation?id=gen_01ARZ3NDEKTSV4RRFFQ69G5FAV"
+```
+
+## Response
+
+```json
+{
+  "data": {
+    "id": "gen_01ARZ3NDEKTSV4RRFFQ69G5FAV",
+    "total_cost": 0.00123,
+    "usage": 0.00123,
+    "created_at": "2026-04-10T12:00:00.000Z",
+    "model": "anthropic/claude-sonnet-4-6",
+    "is_byok": false,
+    "provider_name": "anthropic",
+    "streamed": true,
+    "latency": 200,
+    "generation_time": 1500,
+    "tokens_prompt": 100,
+    "tokens_completion": 50,
+    "native_tokens_cached": 80,
+    "native_tokens_reasoning": 0,
+    "status": "success",
+    "routing_trace": {
+      "planningReasoning": "ZDR requested: filtering to 13 ZDR providers",
+      "modelAttempts": [...],
+      "totalLatencyMs": 1500
+    },
+    "cache_hit": false
+  }
+}
+```
+
+## Fields
+
+| Field                                 | Description                                    |
+| ------------------------------------- | ---------------------------------------------- |
+| `id`                                  | Generation ID (`gen_<ulid>`)                   |
+| `total_cost`                          | Total cost in USD                              |
+| `model`                               | Model that served the request                  |
+| `is_byok`                             | Whether BYOK credentials were used             |
+| `provider_name`                       | Provider that served the request               |
+| `streamed`                            | Whether the request used streaming             |
+| `latency`                             | Time to first token (ms)                       |
+| `generation_time`                     | Total generation time (ms)                     |
+| `tokens_prompt` / `tokens_completion` | Token counts                                   |
+| `native_tokens_cached`                | Tokens served from provider cache              |
+| `native_tokens_reasoning`             | Reasoning tokens (o1/o3/o4 models)             |
+| `routing_trace`                       | Full routing attempt history                   |
+| `cache_hit`                           | Whether response was served from gateway cache |

@@ -1,0 +1,86 @@
+---
+title: Bring Your Own Key (BYOK)
+description: Use your own provider API keys with Tangle Gateway for zero-markup access.
+---
+
+# Bring Your Own Key (BYOK)
+
+Use your existing provider API keys with Tangle Gateway. BYOK requests have **zero platform markup** — you pay the provider's list price directly.
+
+## Per-request BYOK
+
+Pass credentials in `providerOptions.gateway.byok`:
+
+```json
+{
+  "model": "anthropic/claude-sonnet-4-6",
+  "messages": [{"role": "user", "content": "Hello"}],
+  "providerOptions": {
+    "gateway": {
+      "byok": {
+        "anthropic": [{"apiKey": "sk-ant-your-key"}]
+      }
+    }
+  }
+}
+```
+
+### Multiple credentials
+
+Specify multiple credentials per provider. The gateway tries them in order:
+
+```json
+{
+  "providerOptions": {
+    "gateway": {
+      "byok": {
+        "anthropic": [
+          {"apiKey": "sk-ant-primary"},
+          {"apiKey": "sk-ant-backup"}
+        ]
+      }
+    }
+  }
+}
+```
+
+### Multiple providers
+
+```json
+{
+  "providerOptions": {
+    "gateway": {
+      "byok": {
+        "anthropic": [{"apiKey": "sk-ant-..."}],
+        "openai": [{"apiKey": "sk-..."}]
+      }
+    }
+  }
+}
+```
+
+## Automatic fallback
+
+If your BYOK credentials fail (401, 403, rate limit), the gateway automatically falls back to platform credentials. This fallback preserves all compliance filters — if you requested [ZDR](/gateway/zdr), the fallback will only use ZDR-compliant system credentials.
+
+The `X-Tangle-BYOK` response header indicates whether the request used your credentials:
+
+```
+X-Tangle-BYOK: true    # Your key was used
+```
+
+If the header is absent, platform credentials were used (possibly via fallback).
+
+## Pricing
+
+| Credential type      | Markup                       |
+| -------------------- | ---------------------------- |
+| BYOK                 | **0%** — provider list price |
+| Platform credentials | 20% markup (configurable)    |
+
+## Security
+
+- BYOK credentials are never logged, stored, or persisted.
+- Credentials exist only in memory for the duration of the request.
+- The `providerOptions` field is stripped from the request body before forwarding to providers.
+- Credentials are validated by structure (`apiKey` must be a string) and sanitized against prototype pollution.

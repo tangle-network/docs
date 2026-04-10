@@ -1,0 +1,77 @@
+---
+title: Migrate from OpenAI
+description: Switch from OpenAI's API to Tangle Gateway in under 5 minutes.
+---
+
+# Migrate from OpenAI
+
+Tangle Gateway is OpenAI-compatible. Change two lines and you're done.
+
+## Python
+
+```diff
+  from openai import OpenAI
+
+  client = OpenAI(
+-     api_key="sk-...",
++     api_key="sk-tan-YOUR_KEY",
++     base_url="https://router.tangle.tools/v1",
+  )
+
+  response = client.chat.completions.create(
+-     model="gpt-4o",
++     model="openai/gpt-4o",  # or just "gpt-4o" — auto-resolved
+      messages=[{"role": "user", "content": "Hello"}]
+  )
+```
+
+## TypeScript
+
+```diff
+  import OpenAI from 'openai'
+
+  const client = new OpenAI({
+-   apiKey: 'sk-...',
++   apiKey: 'sk-tan-YOUR_KEY',
++   baseURL: 'https://router.tangle.tools/v1',
+  })
+```
+
+## curl
+
+```diff
+- curl https://api.openai.com/v1/chat/completions \
+-   -H "Authorization: Bearer sk-..." \
++ curl https://router.tangle.tools/v1/chat/completions \
++   -H "Authorization: Bearer sk-tan-YOUR_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{"model": "gpt-4o", "messages": [...]}'
+```
+
+## What you get
+
+By switching to Tangle Gateway, you get:
+
+- **Access to every provider** through the same client. Try `anthropic/claude-sonnet-4-6` or `groq/llama-3.1-70b` without changing SDKs.
+- **Automatic fallbacks.** If OpenAI is down, configure backup models.
+- **Cost visibility.** Every response tells you exactly what it cost via `X-Tangle-Price-*` headers.
+- **Compliance routing.** One flag for ZDR, one flag for no-train.
+- **BYOK.** Keep using your OpenAI key with zero markup. Add it to [`providerOptions.gateway.byok`](/gateway/byok).
+
+## Keep your OpenAI key (zero markup)
+
+If you already have an OpenAI API key, use [BYOK](/gateway/byok) for zero platform markup:
+
+```python
+response = client.chat.completions.create(
+    model="openai/gpt-4o",
+    messages=[{"role": "user", "content": "Hello"}],
+    extra_body={
+        "providerOptions": {
+            "gateway": {
+                "byok": {"openai": [{"apiKey": "sk-YOUR_OPENAI_KEY"}]}
+            }
+        }
+    }
+)
+```

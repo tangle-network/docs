@@ -1,0 +1,84 @@
+---
+title: Zero Data Retention
+description: Route requests only through providers with verified zero data retention agreements.
+---
+
+# Zero Data Retention (ZDR)
+
+When ZDR is enabled, the gateway routes requests **only** through providers that have verified agreements to delete all request data immediately after processing.
+
+## Enable per-request
+
+```json
+{
+  "model": "anthropic/claude-sonnet-4-6",
+  "messages": [{"role": "user", "content": "Analyze this sensitive data..."}],
+  "providerOptions": {
+    "gateway": {
+      "zeroDataRetention": true
+    }
+  }
+}
+```
+
+## Enable team-wide
+
+Set `zdrEnabled: true` on your team record. All requests from team members will enforce ZDR. Team-wide ZDR overrides per-request `zeroDataRetention: false`.
+
+## How it works
+
+When ZDR is enabled:
+
+1. **Operators are skipped.** Operators self-report their backing provider. The gateway cannot verify what provider an operator actually routes through, so operators are excluded from ZDR-compliant routing.
+
+2. **LiteLLM is skipped.** LiteLLM has its own internal fallback chain that may route to non-ZDR providers. Since we can't control LiteLLM's routing decisions, it's excluded.
+
+3. **Direct provider only.** The gateway calls the provider API directly, selecting only from verified ZDR providers.
+
+4. **BYOK fallback preserves ZDR.** If your [BYOK](/gateway/byok) credentials fail, the fallback to platform credentials still enforces ZDR filtering.
+
+## ZDR-verified providers
+
+| Provider       | ZDR | No-Train | Policy                                                                                                 |
+| -------------- | --- | -------- | ------------------------------------------------------------------------------------------------------ |
+| Anthropic      | Yes | Yes      | [ZDR policy](https://platform.claude.com/docs/en/build-with-claude/zero-data-retention)                |
+| Amazon Bedrock | Yes | Yes      | [Data protection](https://docs.aws.amazon.com/bedrock/latest/userguide/data-protection.html)           |
+| Azure OpenAI   | Yes | Yes      | [Data privacy](https://learn.microsoft.com/en-us/azure/foundry/responsible-ai/openai/data-privacy)     |
+| Groq           | Yes | Yes      | [ZDR policy](https://console.groq.com/docs/your-data#zero-data-retention)                              |
+| Mistral        | Yes | Yes      | [Terms](https://legal.mistral.ai/terms)                                                                |
+| Fireworks      | Yes | Yes      | [Data handling](https://docs.fireworks.ai/guides/security_compliance/data_handling)                    |
+| Together       | Yes | Yes      | [Terms](https://www.together.ai/terms-of-service)                                                      |
+| Cerebras       | Yes | Yes      | [Privacy](https://www.cerebras.ai/privacy-policy)                                                      |
+| Google Vertex  | Yes | Yes      | [ZDR policy](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/vertex-ai-zero-data-retention) |
+| Nebius         | Yes | Yes      | [Legal guide](https://docs.tokenfactory.nebius.com/legal/legal-quick-guide)                            |
+| Parasail       | Yes | Yes      | [Terms](https://parasail.io/legal/terms-of-service)                                                    |
+| Baseten        | Yes | Yes      | [Security](https://docs.baseten.co/observability/security)                                             |
+| DeepInfra      | Yes | Yes      | [Data handling](https://deepinfra.com/docs/data)                                                       |
+
+Compliance data is managed via the admin API (`PUT /api/admin/compliance`) and can be updated without code deploys.
+
+## Trust model
+
+| Routing tier            | ZDR behavior                                               |
+| ----------------------- | ---------------------------------------------------------- |
+| **Operators**           | Skipped. Self-reported backing provider is unverifiable.   |
+| **LiteLLM**             | Skipped. Internal fallback chain is uncontrollable.        |
+| **Direct provider**     | Routed only to verified ZDR providers.                     |
+| **BYOK fallback**       | ZDR filters preserved on fallback to platform credentials. |
+| **Operator-only + ZDR** | 400 error. Conflicting requirements.                       |
+
+The Tangle chain verifies operator **identity and stake**, not **behavior**. When compliance matters, the gateway routes direct.
+
+## Error responses
+
+If no ZDR-compliant provider is available for the requested model:
+
+```json
+{
+  "error": {
+    "message": "No ZDR providers available for model: deepseek/deepseek-chat. Providers considered: anthropic, groq, mistral, ...",
+    "type": "invalid_request_error",
+    "code": "no_providers_available"
+  }
+}
+```

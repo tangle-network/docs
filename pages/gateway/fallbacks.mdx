@@ -1,0 +1,71 @@
+---
+title: Model Fallbacks
+description: Configure backup models that are tried when the primary model fails.
+---
+
+# Model Fallbacks
+
+Specify backup models that are tried in order if the primary model fails or is unavailable.
+
+## Usage
+
+Pass a `models` array in `providerOptions.gateway`:
+
+```json
+{
+  "model": "openai/gpt-4o",
+  "messages": [{"role": "user", "content": "Hello"}],
+  "providerOptions": {
+    "gateway": {
+      "models": ["anthropic/claude-sonnet-4-6", "groq/llama-3.1-70b-versatile"]
+    }
+  }
+}
+```
+
+The gateway tries:
+
+1. `openai/gpt-4o` (primary model)
+2. `anthropic/claude-sonnet-4-6` (first fallback)
+3. `groq/llama-3.1-70b-versatile` (second fallback)
+
+The response comes from the first model that succeeds.
+
+## How fallback works
+
+For each model in the list, the gateway runs the full routing chain:
+
+1. **Operators** — try operators serving this model (if available)
+2. **LiteLLM** — try the proxy with built-in retries
+3. **Direct provider** — call the provider API directly
+
+If all tiers fail for a model, the gateway moves to the next model in the list.
+
+## Combining with provider ordering
+
+Use `models` with `order` to control both model fallback and provider preference:
+
+```json
+{
+  "model": "openai/gpt-4o",
+  "providerOptions": {
+    "gateway": {
+      "models": ["anthropic/claude-sonnet-4-6"],
+      "order": ["bedrock", "anthropic"]
+    }
+  }
+}
+```
+
+This tries:
+
+1. `openai/gpt-4o` via available providers
+2. `anthropic/claude-sonnet-4-6` via Bedrock first, then Anthropic direct
+
+## Observability
+
+When fallbacks occur, the [routing trace](/gateway/routing-trace) shows every model and provider attempted:
+
+```
+X-Tangle-Routing-Trace: openai/gpt-4o[openai(err:5001ms)], anthropic/claude-sonnet-4-6[anthropic(200:1847ms)]
+```

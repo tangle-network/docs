@@ -1,0 +1,43 @@
+---
+title: Disallow Prompt Training
+description: Route only through providers that don't use your data for model training.
+---
+
+# Disallow Prompt Training
+
+Ensure your prompts and responses are never used by providers to train their models.
+
+## Usage
+
+```json
+{
+  "providerOptions": {
+    "gateway": {
+      "disallowPromptTraining": true
+    }
+  }
+}
+```
+
+## Relationship to ZDR
+
+Disallow prompt training is a **subset** of [Zero Data Retention](/gateway/zdr). All ZDR-compliant providers also disallow prompt training, but more providers disallow training than offer full ZDR.
+
+| Filter                  | Verified providers |
+| ----------------------- | ------------------ |
+| No-train only           | 25 providers       |
+| ZDR (includes no-train) | 13 providers       |
+
+Use `disallowPromptTraining` when you care about IP protection but don't need full data deletion guarantees.
+
+## No-train verified providers
+
+All ZDR providers plus: OpenAI, Google AI Studio, Cohere, Perplexity, xAI, Morph AI, Novita AI, Voyage AI, and others.
+
+See the full list at [`GET /api/gateway/compliance`](/gateway/api-compliance).
+
+## Routing behavior
+
+Same as ZDR: operators and LiteLLM are skipped. Only direct provider calls to verified no-train providers.
+
+Can be enabled team-wide via `noTrainEnabled: true` on the team record.
