@@ -26,13 +26,13 @@ Some providers require explicit cache markers to enable prompt caching, while ot
 
 ## How it works
 
-| Provider | Caching Type | What `auto` does |
-|----------|-------------|-----------------|
-| OpenAI | Implicit | No change needed. Caching happens automatically. |
-| Google | Implicit | No change needed. |
-| DeepSeek | Implicit | No change needed. |
-| Anthropic | Explicit | Adds `cache_control: { type: 'ephemeral' }` to the last system message. |
-| Anthropic (via Bedrock/Vertex) | Explicit | Same as Anthropic direct. |
+| Provider                       | Caching Type | What `auto` does                                                        |
+| ------------------------------ | ------------ | ----------------------------------------------------------------------- |
+| OpenAI                         | Implicit     | No change needed. Caching happens automatically.                        |
+| Google                         | Implicit     | No change needed.                                                       |
+| DeepSeek                       | Implicit     | No change needed.                                                       |
+| Anthropic                      | Explicit     | Adds `cache_control: { type: 'ephemeral' }` to the last system message. |
+| Anthropic (via Bedrock/Vertex) | Explicit     | Same as Anthropic direct.                                               |
 
 For Anthropic, the gateway converts:
 

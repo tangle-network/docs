@@ -9,33 +9,33 @@ Every response from the gateway includes metadata headers.
 
 ## Standard headers
 
-| Header | Description | Example |
-|--------|-------------|---------|
-| `X-Generation-Id` | Unique request ID | `gen_01J5K7ABCD...` |
-| `X-Tangle-Price-Input` | USD per input token | `0.000003` |
-| `X-Tangle-Price-Output` | USD per output token | `0.000015` |
-| `X-Tangle-Cache` | Response cache status | `HIT` or `MISS` |
-| `X-RateLimit-Limit` | Requests allowed per window | `60` |
-| `X-RateLimit-Remaining` | Requests remaining | `42` |
-| `X-RateLimit-Reset` | Window reset (Unix seconds) | `1712793600` |
+| Header                  | Description                 | Example             |
+| ----------------------- | --------------------------- | ------------------- |
+| `X-Generation-Id`       | Unique request ID           | `gen_01J5K7ABCD...` |
+| `X-Tangle-Price-Input`  | USD per input token         | `0.000003`          |
+| `X-Tangle-Price-Output` | USD per output token        | `0.000015`          |
+| `X-Tangle-Cache`        | Response cache status       | `HIT` or `MISS`     |
+| `X-RateLimit-Limit`     | Requests allowed per window | `60`                |
+| `X-RateLimit-Remaining` | Requests remaining          | `42`                |
+| `X-RateLimit-Reset`     | Window reset (Unix seconds) | `1712793600`        |
 
 ## Conditional headers
 
-| Header | When present | Description |
-|--------|-------------|-------------|
-| `X-Tangle-Routing-Trace` | When `ENABLE_ROUTING_TRACE` is on | Compact routing path |
-| `X-Tangle-Operator` | When served by an operator | Operator slug |
-| `X-Tangle-BYOK` | When BYOK credentials used | `true` |
-| `X-Tangle-Caching` | When prompt caching applied | `auto` |
-| `X-Tangle-Guardrails` | When guardrails flagged content | `pii:low,prompt_injection:high` |
-| `X-Payment-Settled` | When SpendAuth payment succeeded | `true` |
-| `X-Free-Tier-Remaining` | Free tier requests | `3` |
-| `X-Free-Tier-Limit` | Free tier daily cap | `5` |
+| Header                   | When present                      | Description                     |
+| ------------------------ | --------------------------------- | ------------------------------- |
+| `X-Tangle-Routing-Trace` | When `ENABLE_ROUTING_TRACE` is on | Compact routing path            |
+| `X-Tangle-Operator`      | When served by an operator        | Operator slug                   |
+| `X-Tangle-BYOK`          | When BYOK credentials used        | `true`                          |
+| `X-Tangle-Caching`       | When prompt caching applied       | `auto`                          |
+| `X-Tangle-Guardrails`    | When guardrails flagged content   | `pii:low,prompt_injection:high` |
+| `X-Payment-Settled`      | When SpendAuth payment succeeded  | `true`                          |
+| `X-Free-Tier-Remaining`  | Free tier requests                | `3`                             |
+| `X-Free-Tier-Limit`      | Free tier daily cap               | `5`                             |
 
 ## Error response headers
 
-| Header | When present | Description |
-|--------|-------------|-------------|
+| Header               | When present  | Description               |
+| -------------------- | ------------- | ------------------------- |
 | `X-Payment-Required` | 402 responses | Amount needed (micro-USD) |
-| `X-Payment-Currency` | 402 responses | `tsUSD` |
-| `X-Payment-Methods` | 402 responses | `credits,spend_auth` |
+| `X-Payment-Currency` | 402 responses | `tsUSD`                   |
+| `X-Payment-Methods`  | 402 responses | `credits,spend_auth`      |

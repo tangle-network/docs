@@ -9,13 +9,13 @@ All gateway features are on by default. Set any flag to `false` to disable it wi
 
 ## Available flags
 
-| Environment Variable | Default | Controls |
-|---------------------|---------|----------|
-| `ENABLE_GUARDRAILS` | `true` | PII detection, prompt injection scanning |
-| `ENABLE_RESPONSE_CACHE` | `true` | Response caching for deterministic requests |
-| `ENABLE_COMPLIANCE_FILTER` | `true` | Early ZDR/no-train validation (routing enforcement stays on) |
-| `ENABLE_PROMPT_CACHING` | `true` | Auto `cache_control` injection for Anthropic |
-| `ENABLE_ROUTING_TRACE` | `true` | `X-Tangle-Routing-Trace` response header |
+| Environment Variable       | Default | Controls                                                     |
+| -------------------------- | ------- | ------------------------------------------------------------ |
+| `ENABLE_GUARDRAILS`        | `true`  | PII detection, prompt injection scanning                     |
+| `ENABLE_RESPONSE_CACHE`    | `true`  | Response caching for deterministic requests                  |
+| `ENABLE_COMPLIANCE_FILTER` | `true`  | Early ZDR/no-train validation (routing enforcement stays on) |
+| `ENABLE_PROMPT_CACHING`    | `true`  | Auto `cache_control` injection for Anthropic                 |
+| `ENABLE_ROUTING_TRACE`     | `true`  | `X-Tangle-Routing-Trace` response header                     |
 
 ## Usage
 

@@ -50,23 +50,23 @@ All standard OpenAI parameters (`tools`, `tool_choice`, `response_format`, `top_
 
 ### Routing headers (optional)
 
-| Header | Effect |
-|--------|--------|
-| `X-Tangle-Routing` | `operator`, `provider`, or `auto` (default) |
-| `X-Tangle-Blueprint` | Pin to operators under this Blueprint ID |
-| `X-Tangle-Service` | Pin to a specific service instance |
-| `X-Tangle-Operator` | Pin to a specific operator (slug or 0x address) |
-| `X-Payment-Signature` | SpendAuth JSON payload for on-chain payment |
+| Header                | Effect                                          |
+| --------------------- | ----------------------------------------------- |
+| `X-Tangle-Routing`    | `operator`, `provider`, or `auto` (default)     |
+| `X-Tangle-Blueprint`  | Pin to operators under this Blueprint ID        |
+| `X-Tangle-Service`    | Pin to a specific service instance              |
+| `X-Tangle-Operator`   | Pin to a specific operator (slug or 0x address) |
+| `X-Payment-Signature` | SpendAuth JSON payload for on-chain payment     |
 
 ### Validation
 
-| Field | Constraint |
-|-------|-----------|
-| `model` | Required. Alphanumeric + `/-.:\\_`, max 128 chars. |
-| `messages` | Required. Non-empty array. Each must have `role`. |
-| `max_tokens` | Optional. 1-128,000. Default: 4,096. |
-| `temperature` | Optional. 0-2. Default: 1. |
-| Body size | Max 1MB. |
+| Field         | Constraint                                         |
+| ------------- | -------------------------------------------------- |
+| `model`       | Required. Alphanumeric + `/-.:\\_`, max 128 chars. |
+| `messages`    | Required. Non-empty array. Each must have `role`.  |
+| `max_tokens`  | Optional. 1-128,000. Default: 4,096.               |
+| `temperature` | Optional. 0-2. Default: 1.                         |
+| Body size     | Max 1MB.                                           |
 
 ## Response (non-streaming)
 

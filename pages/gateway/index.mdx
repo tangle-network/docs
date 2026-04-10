@@ -34,11 +34,11 @@ Works with any OpenAI-compatible SDK. Change the base URL and you're done.
 
 The gateway routes through three tiers, in order:
 
-| Tier | What | When |
-|------|------|------|
-| **Operators** | Decentralized inference providers on Tangle | Default for operator-pinned requests and SpendAuth |
-| **LiteLLM** | Proxy with 100+ provider integrations and built-in retries | Default for standard requests |
-| **Direct** | Straight to provider API (OpenAI, Anthropic, etc.) | Fallback when LiteLLM unavailable, or when compliance required |
+| Tier          | What                                                       | When                                                           |
+| ------------- | ---------------------------------------------------------- | -------------------------------------------------------------- |
+| **Operators** | Decentralized inference providers on Tangle                | Default for operator-pinned requests and SpendAuth             |
+| **LiteLLM**   | Proxy with 100+ provider integrations and built-in retries | Default for standard requests                                  |
+| **Direct**    | Straight to provider API (OpenAI, Anthropic, etc.)         | Fallback when LiteLLM unavailable, or when compliance required |
 
 When [Zero Data Retention](/gateway/zdr) or [no-train](/gateway/no-train) is requested, operators and LiteLLM are skipped — the gateway routes directly to verified providers only.
 

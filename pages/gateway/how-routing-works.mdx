@@ -54,12 +54,12 @@ Tiers 1 and 2 are completely bypassed. The gateway routes only to providers with
 
 ## Routing control
 
-| Method | Effect |
-|--------|--------|
-| `routing: "auto"` | Try all three tiers (default) |
-| `routing: "operator"` | Operators only. Fails if no operator available. |
-| `routing: "provider"` | Skip operators, use LiteLLM + direct only. |
-| `X-Tangle-Blueprint: <id>` | Pin to operators under this Blueprint. |
-| `X-Tangle-Operator: <slug>` | Pin to a specific operator. |
+| Method                          | Effect                                               |
+| ------------------------------- | ---------------------------------------------------- |
+| `routing: "auto"`               | Try all three tiers (default)                        |
+| `routing: "operator"`           | Operators only. Fails if no operator available.      |
+| `routing: "provider"`           | Skip operators, use LiteLLM + direct only.           |
+| `X-Tangle-Blueprint: <id>`      | Pin to operators under this Blueprint.               |
+| `X-Tangle-Operator: <slug>`     | Pin to a specific operator.                          |
 | `providerOptions.gateway.order` | Control which providers are tried and in what order. |
-| `providerOptions.gateway.only` | Restrict to these providers only. |
+| `providerOptions.gateway.only`  | Restrict to these providers only.                    |

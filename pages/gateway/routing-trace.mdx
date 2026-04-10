@@ -24,6 +24,7 @@ X-Tangle-Routing-Trace: openai/gpt-4o[openai(500:2100ms)], anthropic/claude-sonn
 ## Sanitization
 
 The trace header is sanitized for safety:
+
 - Operator names are shown as generic `operator` (slugs not exposed)
 - Error messages are not included (only status codes)
 - Internal URLs and hostnames are never leaked

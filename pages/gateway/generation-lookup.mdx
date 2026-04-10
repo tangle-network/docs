@@ -54,18 +54,18 @@ curl -H "Authorization: Bearer sk-tan-YOUR_KEY" \
 
 ## Fields
 
-| Field | Description |
-|-------|-------------|
-| `id` | Generation ID (`gen_<ulid>`) |
-| `total_cost` | Total cost in USD |
-| `model` | Model that served the request |
-| `is_byok` | Whether BYOK credentials were used |
-| `provider_name` | Provider that served the request |
-| `streamed` | Whether the request used streaming |
-| `latency` | Time to first token (ms) |
-| `generation_time` | Total generation time (ms) |
-| `tokens_prompt` / `tokens_completion` | Token counts |
-| `native_tokens_cached` | Tokens served from provider cache |
-| `native_tokens_reasoning` | Reasoning tokens (o1/o3/o4 models) |
-| `routing_trace` | Full routing attempt history |
-| `cache_hit` | Whether response was served from gateway cache |
+| Field                                 | Description                                    |
+| ------------------------------------- | ---------------------------------------------- |
+| `id`                                  | Generation ID (`gen_<ulid>`)                   |
+| `total_cost`                          | Total cost in USD                              |
+| `model`                               | Model that served the request                  |
+| `is_byok`                             | Whether BYOK credentials were used             |
+| `provider_name`                       | Provider that served the request               |
+| `streamed`                            | Whether the request used streaming             |
+| `latency`                             | Time to first token (ms)                       |
+| `generation_time`                     | Total generation time (ms)                     |
+| `tokens_prompt` / `tokens_completion` | Token counts                                   |
+| `native_tokens_cached`                | Tokens served from provider cache              |
+| `native_tokens_reasoning`             | Reasoning tokens (o1/o3/o4 models)             |
+| `routing_trace`                       | Full routing attempt history                   |
+| `cache_hit`                           | Whether response was served from gateway cache |

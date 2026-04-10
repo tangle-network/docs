@@ -11,11 +11,11 @@ Operators are independent inference providers registered on the Tangle network. 
 
 Operators run **Blueprints** — on-chain service definitions that specify what an operator does. The inference-related Blueprints the gateway routes through:
 
-| Blueprint | What it serves | Repo |
-|-----------|---------------|------|
+| Blueprint         | What it serves                                                 | Repo                                                                                                |
+| ----------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | **LLM Inference** | Chat completions, text generation (Llama, Qwen, Mistral, etc.) | [tangle-network/llm-inference-blueprint](https://github.com/tangle-network/llm-inference-blueprint) |
-| **Vector Store** | Embedding storage and retrieval for RAG | Operator-deployed |
-| **Custom** | Any model/pipeline an operator chooses to serve | [Build your own](/developers/blueprints/introduction) |
+| **Vector Store**  | Embedding storage and retrieval for RAG                        | Operator-deployed                                                                                   |
+| **Custom**        | Any model/pipeline an operator chooses to serve                | [Build your own](/developers/blueprints/introduction)                                               |
 
 The LLM Inference Blueprint uses [tangle-inference-core](https://github.com/tangle-network/tangle-inference-core) — a shared Rust crate for EIP-712 signature verification, nonce management, and on-chain settlement. Operators compile it into a binary (`operator-lite`) that runs alongside their model server.
 
@@ -70,14 +70,14 @@ curl -X POST "https://router.tangle.tools/v1/chat/completions" \
 
 ## What's verified on-chain
 
-| Data | Verified? |
-|------|-----------|
-| Operator Ethereum address | Yes (signed transaction) |
-| Active/inactive status | Yes (BSM contract state) |
-| Staked amount | Yes (on-chain balance) |
-| Pricing (per-token) | Yes (BSM contract) |
-| Endpoint URL | No (self-reported at registration) |
-| Backing provider | No (not tracked) |
+| Data                      | Verified?                          |
+| ------------------------- | ---------------------------------- |
+| Operator Ethereum address | Yes (signed transaction)           |
+| Active/inactive status    | Yes (BSM contract state)           |
+| Staked amount             | Yes (on-chain balance)             |
+| Pricing (per-token)       | Yes (BSM contract)                 |
+| Endpoint URL              | No (self-reported at registration) |
+| Backing provider          | No (not tracked)                   |
 
 Because endpoint URL and backing provider are self-reported, operator routing is **not compatible with [ZDR](/gateway/zdr) or [no-train](/gateway/no-train)** compliance requirements. When compliance is required, operators are skipped and the gateway routes directly to verified providers.
 
