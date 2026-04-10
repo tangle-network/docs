@@ -20,6 +20,7 @@ Tangle ties together three layers most platforms separate: the workbench where w
 | Layer           | Runs here                     | Examples                                                 |
 | --------------- | ----------------------------- | -------------------------------------------------------- |
 | Workbench       | Human and agent collaboration | Workflows, profiles, simulations, reviews                |
+| Gateway         | Inference routing and billing | Model access, BYOK, ZDR compliance, operator selection   |
 | Sandbox runtime | Executed tasks and tools      | Agent sessions, tool calls, file edits                   |
 | Protocol        | Coordination and settlement   | Service registry, operator payments, staking, incentives |
 
@@ -28,10 +29,13 @@ Tangle ties together three layers most platforms separate: the workbench where w
 **1) Execution Layer**  
 Sandboxed runtimes with isolation, resource limits, and audit logs. This is where tasks actually run.
 
-**2) Protocol Layer**  
+**2) Inference Layer**  
+The [Gateway](/gateway) routes inference requests across centralized providers and decentralized operators. It handles model selection, compliance filtering ([ZDR](/gateway/zdr), [no-train](/gateway/no-train)), [BYOK](/gateway/byok) credential management, and billing.
+
+**3) Protocol Layer**  
 The coordination plane. It handles operator discovery, payment routing, and incentive enforcement.
 
-**3) Experience Layer**  
+**4) Experience Layer**  
 The agentic workbench and [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main). This is where teams design workflows, run simulations, and ship services.
 
 The SDK also includes optional gateways for integrating external events and payment-driven HTTP job execution (webhooks,
