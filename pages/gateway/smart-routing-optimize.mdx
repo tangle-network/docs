@@ -1,0 +1,72 @@
+---
+title: Smart Routing (optimize)
+description: Automatically select the cheapest, fastest, or highest-quality provider for your request.
+---
+
+# Smart Routing (optimize)
+
+Let the gateway pick the best provider for your request based on cost, latency, or quality.
+
+## Usage
+
+```json
+{
+  "model": "openai/gpt-4o",
+  "messages": [{ "role": "user", "content": "Hello" }],
+  "providerOptions": {
+    "gateway": {
+      "optimize": "cost"
+    }
+  }
+}
+```
+
+## Strategies
+
+| Strategy  | What it optimizes      | How it ranks                                              |
+| --------- | ---------------------- | --------------------------------------------------------- |
+| `cost`    | Cheapest provider      | Inverse of per-token price from ModelPricing              |
+| `latency` | Fastest provider       | Inverse of avg latency from last 24h UsageEvent data      |
+| `quality` | Most reliable provider | Weighted: success rate (60%) + latency (20%) + cost (20%) |
+
+## How it works
+
+1. Gateway collects all providers that have credentials configured
+2. Queries `ModelPricing` for per-token costs and `UsageEvent` for 24h latency/success stats
+3. Scores each provider by the chosen strategy
+4. Tries providers in score order (best first)
+5. Falls back to next-best if the top choice fails
+
+Provider stats are cached for 5 minutes to avoid DB queries on every request.
+
+## Combining with other options
+
+`optimize` works with compliance filters:
+
+```json
+{
+  "providerOptions": {
+    "gateway": {
+      "optimize": "cost",
+      "zeroDataRetention": true
+    }
+  }
+}
+```
+
+This finds the cheapest ZDR-compliant provider. Non-ZDR providers are filtered out before ranking.
+
+`optimize` is overridden by explicit `order`:
+
+```json
+{
+  "providerOptions": {
+    "gateway": {
+      "order": ["groq", "cerebras"],
+      "optimize": "cost"
+    }
+  }
+}
+```
+
+When `order` is specified, it takes priority — `optimize` is ignored.

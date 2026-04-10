@@ -19,6 +19,8 @@ const meta: Meta = {
   "how-routing-works": "How Routing Works",
   "operator-routing": "Operator Routing",
   "smart-routing": "Smart Routing",
+  "smart-routing-optimize": "Optimize (cost/latency/quality)",
+  "web-search": "Web Search",
   "-- security": {
     type: "separator",
     title: "Security & Compliance",

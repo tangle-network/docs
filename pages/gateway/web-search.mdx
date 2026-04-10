@@ -1,0 +1,66 @@
+---
+title: Web Search
+description: Give any model access to current web information through gateway-level search.
+---
+
+# Web Search
+
+Enable web search for any model, regardless of whether the provider supports it natively. The gateway executes a search via Perplexity, injects the results into the conversation context, then forwards to your chosen model.
+
+## Usage
+
+```json
+{
+  "model": "openai/gpt-4o-mini",
+  "messages": [{ "role": "user", "content": "What happened in tech news today?" }],
+  "providerOptions": {
+    "gateway": {
+      "webSearch": true
+    }
+  }
+}
+```
+
+## With recency filter
+
+Restrict results to recent content:
+
+```json
+{
+  "providerOptions": {
+    "gateway": {
+      "webSearch": {
+        "searchRecency": "day"
+      }
+    }
+  }
+}
+```
+
+Options: `day`, `week`, `month`, `year`.
+
+## How it works
+
+1. Gateway extracts the search query from the last user message
+2. Calls Perplexity's search API (`sonar` model) with the query
+3. Injects search results as a system message before the user's messages
+4. Forwards the enriched conversation to your chosen model
+5. Your model responds with access to current information
+
+The search results are injected as:
+
+```
+[Web Search Results for: "What happened in tech news today?"]
+
+<search results from Perplexity>
+
+Sources: https://example.com, https://example2.com
+```
+
+## Requirements
+
+Requires `PERPLEXITY_API_KEY` environment variable to be set on the gateway.
+
+## Pricing
+
+Search requests are charged at Perplexity's rate plus the normal model inference cost. The search call adds ~100-500 tokens to the context.
