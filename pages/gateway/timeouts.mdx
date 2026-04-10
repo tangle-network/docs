@@ -1,0 +1,56 @@
+---
+title: Provider Timeouts
+description: Configure per-provider timeouts for fast failover.
+---
+
+# Provider Timeouts
+
+Set timeouts to trigger fast failover when a provider is slow. Values are clamped to 1-120 seconds.
+
+## Global timeout
+
+Apply the same timeout to all providers:
+
+```json
+{
+  "providerOptions": {
+    "gateway": {
+      "timeout": 5000
+    }
+  }
+}
+```
+
+## Per-provider timeouts
+
+Different providers have different latency profiles. Set timeouts individually:
+
+```json
+{
+  "providerOptions": {
+    "gateway": {
+      "timeout": {
+        "openai": 5000,
+        "anthropic": 10000,
+        "groq": 3000
+      }
+    }
+  }
+}
+```
+
+## Default behavior
+
+Without explicit timeouts, the gateway uses a 30-second default for all providers and a 30-second idle timeout for streaming responses.
+
+## Bounds
+
+All timeout values are clamped:
+- **Minimum:** 1,000ms (1 second)
+- **Maximum:** 120,000ms (2 minutes)
+
+Values outside this range are silently clamped to the nearest bound.
+
+## Interaction with fallbacks
+
+When a provider times out, it counts as a failure in the [routing trace](/gateway/routing-trace) and the gateway moves to the next option — either a different provider for the same model, or the next [fallback model](/gateway/fallbacks).

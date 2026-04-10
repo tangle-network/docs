@@ -1,0 +1,58 @@
+---
+title: Smart Routing
+description: How the gateway scores and selects operators.
+---
+
+# Smart Routing
+
+When multiple operators serve the same model, the gateway selects the best one using a weighted scoring algorithm.
+
+## Scoring formula
+
+```
+score = reputation(40%) + latency(30%) + price(30%)
+```
+
+| Factor | Weight | What it measures |
+|--------|--------|-----------------|
+| **Reputation** | 40% | Normalized reputation score (0-100) from on-chain history |
+| **Latency** | 30% | Inverse of average response time (lower = better) |
+| **Price** | 30% | Inverse of per-token price (cheaper = better) |
+
+## Operator selection
+
+1. Query all operators serving the requested model
+2. Filter: only `active` or `degraded` status, must be pipeline head
+3. Score each operator
+4. Sort by score descending
+5. Route to the highest-scoring operator
+
+If a preferred operator is specified (via `X-Tangle-Operator`), it's moved to the top of the ranked list regardless of score.
+
+## Health tracking
+
+The gateway tracks operator health via:
+
+- **Health checks** — periodic probes stored in `OperatorHealthCheck`
+- **Request outcomes** — success/failure recorded per request
+- **Latency tracking** — rolling average updated per request
+
+Operators that consistently fail are automatically deprioritized by their dropping reputation and rising latency scores.
+
+## Provider ordering (non-operator)
+
+For direct provider routing, use `providerOptions.gateway.order` and `only`:
+
+```json
+{
+  "providerOptions": {
+    "gateway": {
+      "order": ["bedrock", "anthropic"],
+      "only": ["bedrock", "anthropic"]
+    }
+  }
+}
+```
+
+- `order`: Try providers in this order. First with valid credentials wins.
+- `only`: Restrict to these providers. Others are excluded even if they have credentials.

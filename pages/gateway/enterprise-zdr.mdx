@@ -1,0 +1,93 @@
+---
+title: Enterprise ZDR Setup
+description: Configure Zero Data Retention for your organization.
+---
+
+# Enterprise ZDR Setup
+
+This guide walks through configuring ZDR for an organization that needs to guarantee no prompts or responses are retained by AI providers.
+
+## Step 1: Understand the trust model
+
+Read the [ZDR trust model](/gateway/zdr#trust-model) first. Key points:
+
+- ZDR is enforced at the **direct provider** level only.
+- **Operators are skipped** when ZDR is enabled (their backing provider is unverifiable).
+- **LiteLLM is skipped** (its internal routing is uncontrollable).
+- BYOK fallback to platform credentials preserves ZDR filtering.
+
+## Step 2: Choose your approach
+
+### Option A: Team-wide ZDR (recommended)
+
+Enable ZDR for all requests from your team. No code changes needed — every request is automatically filtered.
+
+Contact your admin to set `zdrEnabled: true` on your team record via the admin API:
+
+```bash
+# Admin sets team-wide ZDR
+curl -X PUT https://router.tangle.tools/api/admin/compliance \
+  -H "Cookie: session_token=ADMIN_SESSION" \
+  -d '{"providerId": "...", "zdr": true}'
+```
+
+### Option B: Per-request ZDR
+
+Add `zeroDataRetention: true` to individual requests. Useful for mixed workloads where only some requests handle sensitive data.
+
+```python
+response = client.chat.completions.create(
+    model="anthropic/claude-sonnet-4-6",
+    messages=[...],
+    extra_body={
+        "providerOptions": {
+            "gateway": {"zeroDataRetention": True}
+        }
+    }
+)
+```
+
+## Step 3: Verify provider coverage
+
+Check which providers are ZDR-verified for the models you need:
+
+```bash
+curl https://router.tangle.tools/api/gateway/compliance | jq '.providers[] | select(.zdr == true)'
+```
+
+If your required model is only available from a non-ZDR provider, the request will return 400 with a clear error listing which providers were considered.
+
+## Step 4: Set up BYOK (optional)
+
+For maximum control, use [BYOK](/gateway/byok) with your own provider keys. This gives you:
+- Zero platform markup
+- Direct contractual relationship with the provider
+- ZDR enforcement still applies on the fallback path
+
+## Step 5: Monitor compliance
+
+Use the [generation lookup API](/gateway/generation-lookup) to audit requests:
+
+```bash
+# Check if a specific request used a ZDR provider
+curl -H "Authorization: Bearer sk-tan-..." \
+  "https://router.tangle.tools/v1/generation?id=gen_..." \
+  | jq '.data.provider_name'
+```
+
+The `routing_trace` field shows exactly which providers were considered and filtered.
+
+## Combining ZDR + no-train
+
+Both flags work as an AND: when both are enabled, requests are routed only to providers that satisfy both criteria. This is the strictest compliance level.
+
+```json
+{
+  "providerOptions": {
+    "gateway": {
+      "zeroDataRetention": true,
+      "disallowPromptTraining": true
+    }
+  }
+}
+```

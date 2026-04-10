@@ -1,0 +1,94 @@
+---
+title: Getting Started
+description: Make your first inference request through Tangle Gateway in 2 minutes.
+---
+
+# Getting Started
+
+## 1. Get an API key
+
+Sign up at [router.tangle.tools](https://router.tangle.tools) and create an API key from the dashboard. Keys start with `sk-tan-`.
+
+## 2. Make a request
+
+### curl
+
+```bash
+curl -X POST "https://router.tangle.tools/v1/chat/completions" \
+  -H "Authorization: Bearer sk-tan-YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/gpt-4o-mini",
+    "messages": [{"role": "user", "content": "What is Tangle?"}],
+    "stream": false
+  }'
+```
+
+### Python (OpenAI SDK)
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="sk-tan-YOUR_KEY",
+    base_url="https://router.tangle.tools/v1"
+)
+
+response = client.chat.completions.create(
+    model="anthropic/claude-sonnet-4-6",
+    messages=[{"role": "user", "content": "What is Tangle?"}]
+)
+print(response.choices[0].message.content)
+```
+
+### TypeScript (AI SDK)
+
+```typescript
+import { generateText } from 'ai'
+import { createOpenAI } from '@ai-sdk/openai'
+
+const tangle = createOpenAI({
+  apiKey: 'sk-tan-YOUR_KEY',
+  baseURL: 'https://router.tangle.tools/v1',
+})
+
+const { text } = await generateText({
+  model: tangle('anthropic/claude-sonnet-4-6'),
+  prompt: 'What is Tangle?',
+})
+```
+
+## 3. Check the response headers
+
+Every response includes metadata headers:
+
+```
+X-Generation-Id: gen_01J5K7...       # Unique request ID
+X-Tangle-Price-Input: 0.000003       # USD per input token
+X-Tangle-Price-Output: 0.000015      # USD per output token
+X-Tangle-Cache: MISS                 # Response cache status
+X-RateLimit-Remaining: 59            # Requests left in window
+```
+
+Use the generation ID to look up request details later via [`GET /v1/generation`](/gateway/api-generation).
+
+## 4. Try different models
+
+The model ID format is `provider/model-name`:
+
+```
+openai/gpt-4o-mini
+anthropic/claude-sonnet-4-6
+google/gemini-2.0-flash-lite
+groq/llama-3.1-8b-instant
+deepseek/deepseek-chat
+mistral/mistral-large-latest
+```
+
+You can also use bare model names (`gpt-4o-mini`, `claude-sonnet-4-6`) — the gateway resolves the provider automatically.
+
+## What's next
+
+- [Bring Your Own Key](/gateway/byok) — use your existing provider API keys for zero markup
+- [Model Fallbacks](/gateway/fallbacks) — configure backup models
+- [Zero Data Retention](/gateway/zdr) — compliance for sensitive workloads

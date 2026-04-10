@@ -1,0 +1,35 @@
+---
+title: Feature Flags
+description: Disable gateway features without a code deploy.
+---
+
+# Feature Flags
+
+All gateway features are on by default. Set any flag to `false` to disable it without deploying new code.
+
+## Available flags
+
+| Environment Variable | Default | Controls |
+|---------------------|---------|----------|
+| `ENABLE_GUARDRAILS` | `true` | PII detection, prompt injection scanning |
+| `ENABLE_RESPONSE_CACHE` | `true` | Response caching for deterministic requests |
+| `ENABLE_COMPLIANCE_FILTER` | `true` | Early ZDR/no-train validation (routing enforcement stays on) |
+| `ENABLE_PROMPT_CACHING` | `true` | Auto `cache_control` injection for Anthropic |
+| `ENABLE_ROUTING_TRACE` | `true` | `X-Tangle-Routing-Trace` response header |
+
+## Usage
+
+Set in your environment:
+
+```bash
+ENABLE_GUARDRAILS=false    # Disable all guardrail scanning
+ENABLE_RESPONSE_CACHE=false # Disable response cache reads/writes
+```
+
+## Notes
+
+- `ENABLE_COMPLIANCE_FILTER` only disables the early validation check that returns a 400 before routing. The actual ZDR/no-train enforcement in the routing tiers (skip operators, skip LiteLLM) stays active regardless. This flag is for suppressing the early error, not for bypassing compliance.
+
+- When `ENABLE_GUARDRAILS=false`, no PII or injection scanning occurs. The `X-Tangle-Guardrails` header is never set. GuardrailEvent records are not created.
+
+- When `ENABLE_RESPONSE_CACHE=false`, every request hits the provider. Cached entries are not read or written. Existing cache entries are not purged (they expire naturally via TTL).

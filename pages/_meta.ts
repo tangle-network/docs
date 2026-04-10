@@ -18,6 +18,10 @@ const meta: Meta = {
     title: "Workbench",
     type: "page",
   },
+  gateway: {
+    title: "Gateway",
+    type: "page",
+  },
   infrastructure: {
     title: "Runtime",
     type: "page",

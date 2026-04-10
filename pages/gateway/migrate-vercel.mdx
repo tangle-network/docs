@@ -1,0 +1,80 @@
+---
+title: Migrate from Vercel AI Gateway
+description: Switch from Vercel AI Gateway to Tangle Gateway.
+---
+
+# Migrate from Vercel AI Gateway
+
+Tangle Gateway supports the same `providerOptions.gateway` schema as Vercel AI Gateway. Most code works unchanged.
+
+## What maps directly
+
+| Vercel Feature | Tangle Equivalent | Notes |
+|---|---|---|
+| `providerOptions.gateway.byok` | Same | Identical schema |
+| `providerOptions.gateway.zeroDataRetention` | Same | 13 verified providers |
+| `providerOptions.gateway.disallowPromptTraining` | Same | 25 verified providers |
+| `providerOptions.gateway.caching: 'auto'` | Same | Anthropic cache_control injection |
+| `providerOptions.gateway.order` | Same | Provider priority |
+| `providerOptions.gateway.only` | Same | Provider allowlist |
+| `models` fallback array | Same | Model-level failover |
+| `GET /v1/credits` | Same | Balance check |
+| `GET /v1/generation` | Same | Request detail lookup |
+
+## What's different
+
+| Feature | Vercel | Tangle |
+|---------|--------|--------|
+| **Base URL** | `ai-gateway.vercel.sh/v1` | `router.tangle.tools/v1` |
+| **Auth** | API key or OIDC token | API key, session, SIWE (wallet), or SpendAuth (on-chain) |
+| **Pricing** | Zero markup | 20% markup (0% with BYOK) |
+| **Operator network** | None | Decentralized operators compete on price/latency |
+| **On-chain payments** | None | SpendAuth (EIP-712) — pay without a credit card |
+| **Guardrails** | None | PII + injection detection built-in |
+| **Web search tools** | Perplexity, Parallel, provider-native | Not yet (planned) |
+| **OIDC auth** | Vercel-only | Not applicable |
+
+## Code change
+
+### AI SDK
+
+```diff
+  import { generateText } from 'ai'
++ import { createOpenAI } from '@ai-sdk/openai'
+
++ const tangle = createOpenAI({
++   apiKey: 'sk-tan-YOUR_KEY',
++   baseURL: 'https://router.tangle.tools/v1',
++ })
+
+  const { text } = await generateText({
+-   model: 'anthropic/claude-sonnet-4-6',
++   model: tangle('anthropic/claude-sonnet-4-6'),
+    prompt: 'Hello',
+    providerOptions: {
+      gateway: {
+        zeroDataRetention: true,  // works the same
+        caching: 'auto',          // works the same
+      },
+    },
+  })
+```
+
+### OpenAI SDK
+
+```diff
+  const client = new OpenAI({
+-   apiKey: process.env.AI_GATEWAY_API_KEY,
+-   baseURL: 'https://ai-gateway.vercel.sh/v1',
++   apiKey: process.env.TANGLE_API_KEY,
++   baseURL: 'https://router.tangle.tools/v1',
+  })
+```
+
+## What you gain
+
+- **Operator network.** Access decentralized inference providers who compete on price and latency.
+- **On-chain payments.** Pay with crypto via SpendAuth — no Stripe/credit card required.
+- **Wallet auth.** Sign in with Ethereum (SIWE) for web3-native access.
+- **Guardrails.** Built-in PII and prompt injection detection on every request.
+- **Self-hostable.** Deploy your own gateway instance — it's open source.

@@ -1,0 +1,96 @@
+---
+title: POST /v1/chat/completions
+description: OpenAI-compatible chat completion endpoint with gateway extensions.
+---
+
+# POST /v1/chat/completions
+
+OpenAI-compatible chat completion endpoint. Supports streaming, tool use, and all standard parameters, plus gateway-specific extensions via `providerOptions.gateway`.
+
+## Request
+
+```bash
+POST https://router.tangle.tools/v1/chat/completions
+Authorization: Bearer sk-tan-YOUR_KEY
+Content-Type: application/json
+```
+
+### Body
+
+```json
+{
+  "model": "anthropic/claude-sonnet-4-6",
+  "messages": [
+    {"role": "system", "content": "You are a helpful assistant."},
+    {"role": "user", "content": "Hello"}
+  ],
+  "temperature": 0.7,
+  "max_tokens": 4096,
+  "stream": true,
+  "tools": [...],
+  "tool_choice": "auto",
+  "response_format": {"type": "json_object"},
+  "top_p": 0.9,
+  "frequency_penalty": 0,
+  "presence_penalty": 0,
+  "stop": ["\n\n"],
+  "providerOptions": {
+    "gateway": {
+      "byok": {"anthropic": [{"apiKey": "sk-ant-..."}]},
+      "zeroDataRetention": true,
+      "caching": "auto",
+      "models": ["openai/gpt-4o"],
+      "timeout": 5000
+    }
+  }
+}
+```
+
+All standard OpenAI parameters (`tools`, `tool_choice`, `response_format`, `top_p`, `frequency_penalty`, `presence_penalty`, `stop`, `logprobs`) are forwarded to the provider.
+
+### Routing headers (optional)
+
+| Header | Effect |
+|--------|--------|
+| `X-Tangle-Routing` | `operator`, `provider`, or `auto` (default) |
+| `X-Tangle-Blueprint` | Pin to operators under this Blueprint ID |
+| `X-Tangle-Service` | Pin to a specific service instance |
+| `X-Tangle-Operator` | Pin to a specific operator (slug or 0x address) |
+| `X-Payment-Signature` | SpendAuth JSON payload for on-chain payment |
+
+### Validation
+
+| Field | Constraint |
+|-------|-----------|
+| `model` | Required. Alphanumeric + `/-.:\\_`, max 128 chars. |
+| `messages` | Required. Non-empty array. Each must have `role`. |
+| `max_tokens` | Optional. 1-128,000. Default: 4,096. |
+| `temperature` | Optional. 0-2. Default: 1. |
+| Body size | Max 1MB. |
+
+## Response (non-streaming)
+
+Standard OpenAI chat completion response:
+
+```json
+{
+  "id": "chatcmpl-...",
+  "choices": [{
+    "message": {"role": "assistant", "content": "Hello! How can I help?"},
+    "finish_reason": "stop"
+  }],
+  "usage": {
+    "prompt_tokens": 15,
+    "completion_tokens": 8,
+    "total_tokens": 23
+  }
+}
+```
+
+## Response (streaming)
+
+Server-sent events with `data: {...}` lines and `data: [DONE]` terminator.
+
+## Response headers
+
+See [Response Headers](/gateway/response-headers) for the full list.

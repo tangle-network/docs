@@ -1,0 +1,69 @@
+---
+title: Supported Models
+description: Browse models available through Tangle Gateway across 20+ providers.
+---
+
+# Supported Models
+
+Tangle Gateway provides access to models from 20+ providers through a single API.
+
+## Providers
+
+| Provider | Slug | Models |
+|----------|------|--------|
+| OpenAI | `openai` | GPT-4o, GPT-4o-mini, o1, o3, o4, DALL-E, Whisper, TTS |
+| Anthropic | `anthropic` | Claude Opus, Sonnet, Haiku |
+| Google | `google` | Gemini 2.5 Pro, Flash, Flash-Lite |
+| Groq | `groq` | Llama 3.1/3.2 (fast inference) |
+| Together AI | `together` | Open-source models (Llama, Qwen, Mixtral) |
+| DeepSeek | `deepseek` | DeepSeek Chat, DeepSeek Coder |
+| Mistral | `mistral` | Mistral Large, Codestral, Pixtral |
+| Fireworks | `fireworks` | Phi, StarCoder, open models |
+| Cohere | `cohere` | Command R/R+ |
+| xAI | `xai` | Grok 2, Grok 3 |
+| Cerebras | `cerebras` | Llama (fast inference) |
+| SambaNova | `sambanova` | Fast open-model inference |
+| AI21 | `ai21` | Jamba |
+| Nvidia | `nvidia` | Nemotron |
+| Z.ai | `zai` | GLM-4.7, GLM-5 |
+| Moonshot | `moonshot` | Kimi |
+
+Plus operators on the Tangle network serving custom and open-source models.
+
+## Model ID format
+
+Use `provider/model-name`:
+
+```
+anthropic/claude-sonnet-4-6
+openai/gpt-4o-mini
+groq/llama-3.1-70b-versatile
+```
+
+Or use bare names — the gateway resolves the provider by prefix:
+
+| Prefix | Resolves to |
+|--------|-------------|
+| `gpt-`, `o1-`, `o3-`, `o4-` | OpenAI |
+| `claude-` | Anthropic |
+| `gemini-`, `gemma-` | Google |
+| `llama-`, `mixtral-` | Groq |
+| `deepseek-` | DeepSeek |
+| `mistral-`, `codestral-` | Mistral |
+| `grok-` | xAI |
+| `glm-` | Z.ai |
+| `command-` | Cohere |
+
+## Modalities
+
+| Modality | Endpoint | Examples |
+|----------|----------|---------|
+| Text | `/v1/chat/completions` | All chat models |
+| Images | `/v1/images/generations` | DALL-E, FLUX |
+| Audio | `/v1/audio/transcriptions`, `/v1/audio/speech` | Whisper, TTS |
+| Embeddings | `/v1/embeddings` | text-embedding-3-small/large |
+| Video | `/v1/video/*` | Avatar generation, dubbing (via ph0ny) |
+
+## Dynamic discovery
+
+The model catalog is available at [`GET /api/models`](https://router.tangle.tools/api/models) with pricing, context length, and modality information for every model.

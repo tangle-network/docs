@@ -1,0 +1,58 @@
+---
+title: Tangle Gateway
+description: Unified API for hundreds of AI models with built-in routing, compliance, and on-chain payments.
+---
+
+# Tangle Gateway
+
+Tangle Gateway is a unified inference API. One endpoint, hundreds of models, automatic routing across centralized providers and decentralized operators.
+
+## What it does
+
+- **One key, any model.** Access OpenAI, Anthropic, Google, Groq, Mistral, and 20+ providers through a single API key.
+- **Operator network.** Route to decentralized operators on the Tangle network who compete on price, latency, and reputation.
+- **Compliance routing.** Zero Data Retention and no-train filtering with verified provider agreements.
+- **BYOK.** Bring your own provider keys for zero-markup access.
+- **On-chain payments.** Pay operators directly via SpendAuth — no credit card required.
+
+## Quick example
+
+```bash
+curl -X POST "https://router.tangle.tools/v1/chat/completions" \
+  -H "Authorization: Bearer $TANGLE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "anthropic/claude-sonnet-4-6",
+    "messages": [{"role": "user", "content": "Hello"}],
+    "stream": true
+  }'
+```
+
+Works with any OpenAI-compatible SDK. Change the base URL and you're done.
+
+## Architecture
+
+The gateway routes through three tiers, in order:
+
+| Tier | What | When |
+|------|------|------|
+| **Operators** | Decentralized inference providers on Tangle | Default for operator-pinned requests and SpendAuth |
+| **LiteLLM** | Proxy with 100+ provider integrations and built-in retries | Default for standard requests |
+| **Direct** | Straight to provider API (OpenAI, Anthropic, etc.) | Fallback when LiteLLM unavailable, or when compliance required |
+
+When [Zero Data Retention](/gateway/zdr) or [no-train](/gateway/no-train) is requested, operators and LiteLLM are skipped — the gateway routes directly to verified providers only.
+
+## How it fits
+
+```
+Workbench (agents) → Gateway (inference) → Operators (serving) → Protocol (settlement)
+```
+
+The gateway sits between the [Workbench](/vibe/introduction) where agents run and the [Protocol](/network/overview) where operators get paid. Agents in the workbench call the gateway for model access. The gateway selects the best provider or operator, routes the request, tracks usage, and settles payment.
+
+## Next steps
+
+- [Getting Started](/gateway/getting-started) — make your first request in 2 minutes
+- [Supported Models](/gateway/models) — browse the model catalog
+- [How Routing Works](/gateway/how-routing-works) — understand the 3-tier architecture
+- [Zero Data Retention](/gateway/zdr) — compliance for regulated industries

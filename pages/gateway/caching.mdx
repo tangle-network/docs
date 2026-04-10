@@ -1,0 +1,72 @@
+---
+title: Automatic Caching
+description: Enable prompt caching across providers with a single flag.
+---
+
+# Automatic Caching
+
+Some providers require explicit cache markers to enable prompt caching, while others cache automatically. Use `caching: 'auto'` to let the gateway handle it.
+
+## Usage
+
+```json
+{
+  "model": "anthropic/claude-sonnet-4-6",
+  "messages": [
+    {"role": "system", "content": "You are a helpful assistant with a large knowledge base..."},
+    {"role": "user", "content": "What is Tangle?"}
+  ],
+  "providerOptions": {
+    "gateway": {
+      "caching": "auto"
+    }
+  }
+}
+```
+
+## How it works
+
+| Provider | Caching Type | What `auto` does |
+|----------|-------------|-----------------|
+| OpenAI | Implicit | No change needed. Caching happens automatically. |
+| Google | Implicit | No change needed. |
+| DeepSeek | Implicit | No change needed. |
+| Anthropic | Explicit | Adds `cache_control: { type: 'ephemeral' }` to the last system message. |
+| Anthropic (via Bedrock/Vertex) | Explicit | Same as Anthropic direct. |
+
+For Anthropic, the gateway converts:
+
+```json
+{"role": "system", "content": "You are helpful..."}
+```
+
+Into:
+
+```json
+{"role": "system", "content": [{"type": "text", "text": "You are helpful...", "cache_control": {"type": "ephemeral"}}]}
+```
+
+This caches the system prompt so subsequent messages in the same conversation reuse it, reducing costs by up to 90%.
+
+## Response caching
+
+Separately from prompt caching, the gateway caches complete responses for **deterministic requests** (temperature ≤ 0.01, non-streaming). Cached responses are free.
+
+```
+X-Tangle-Cache: HIT     # Served from cache
+X-Tangle-Cache: MISS    # Fetched from provider
+```
+
+Disable per-request:
+
+```json
+{
+  "providerOptions": {
+    "gateway": {
+      "cache": false
+    }
+  }
+}
+```
+
+The response cache key includes: model, messages, temperature, max_tokens, tools, response_format, and top_p. Different parameters always produce different cache entries.

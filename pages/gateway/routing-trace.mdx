@@ -1,0 +1,35 @@
+---
+title: Routing Trace
+description: See exactly which providers were tried for every request.
+---
+
+# Routing Trace
+
+Every response includes an `X-Tangle-Routing-Trace` header showing the routing path — which providers were tried, whether they succeeded, and how long each took.
+
+## Header format
+
+```
+X-Tangle-Routing-Trace: openai/gpt-4o[operator(err:5001ms)→litellm(200:340ms)]
+```
+
+Format: `model[provider(status:latency)→provider(status:latency)]`
+
+Multiple models (from [fallbacks](/gateway/fallbacks)):
+
+```
+X-Tangle-Routing-Trace: openai/gpt-4o[openai(500:2100ms)], anthropic/claude-sonnet-4-6[anthropic(200:1847ms)]
+```
+
+## Sanitization
+
+The trace header is sanitized for safety:
+- Operator names are shown as generic `operator` (slugs not exposed)
+- Error messages are not included (only status codes)
+- Internal URLs and hostnames are never leaked
+
+For the full unredacted trace including error messages, use the [generation lookup API](/gateway/generation-lookup) — the `routing_trace` field in the response contains the complete history.
+
+## Disabling
+
+Set `ENABLE_ROUTING_TRACE=false` to omit the header from all responses. See [Feature Flags](/gateway/feature-flags).

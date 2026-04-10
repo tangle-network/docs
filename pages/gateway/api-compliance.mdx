@@ -1,0 +1,49 @@
+---
+title: Provider Compliance API
+description: Query and manage provider ZDR and no-train compliance data.
+---
+
+# Provider Compliance API
+
+## GET /api/gateway/compliance
+
+List compliance data for all providers. Public endpoint (rate-limited).
+
+```bash
+curl https://router.tangle.tools/api/gateway/compliance
+```
+
+```json
+{
+  "providers": [
+    {
+      "provider": "anthropic",
+      "name": "Anthropic",
+      "zdr": true,
+      "no_train": true,
+      "supports_prompt_caching": true,
+      "caching_type": "explicit",
+      "policy_url": "https://platform.claude.com/docs/en/build-with-claude/zero-data-retention",
+      "verified_at": "2026-04-10T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+## PUT /api/admin/compliance
+
+Update compliance data for a provider. Admin-only (requires `ADMIN_EMAILS` session).
+
+```bash
+curl -X PUT https://router.tangle.tools/api/admin/compliance \
+  -H "Cookie: session_token=ADMIN_SESSION" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "providerId": "openai",
+    "zdr": true,
+    "noTrain": true,
+    "policyUrl": "https://openai.com/policies/api-data-usage-policies"
+  }'
+```
+
+Only fields included in the request body are updated. Omitted fields remain unchanged. `verifiedAt` is automatically set to the current timestamp.

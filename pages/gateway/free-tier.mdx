@@ -1,0 +1,62 @@
+---
+title: Free Tier
+description: Free access to small models with daily limits.
+---
+
+# Free Tier
+
+Try the gateway without credits. Free tier restricts to cheap, fast models with daily request limits.
+
+## Limits
+
+| Tier | Daily limit | Rate limit |
+|------|------------|------------|
+| Anonymous (no auth) | 5 req/day | 10 req/min |
+| Authenticated (zero credits) | 20 req/day | 30 req/min |
+| Paid (any credits) | Unlimited | 60 req/min |
+
+## Allowed models
+
+Free tier requests can use:
+
+| Model | Provider | Why it's free |
+|-------|----------|---------------|
+| `gpt-4o-mini` | OpenAI | Small, cheap |
+| `claude-3-5-haiku-20241022` | Anthropic | Fast, cheap |
+| `llama-3.1-8b-instant` | Groq | Free tier inference |
+| `llama-3.2-1b-preview` | Groq | Tiny model |
+| `llama-3.2-3b-preview` | Groq | Small model |
+| `gemini-2.0-flash-lite` | Google | Free tier |
+| `cerebras/llama-3.1-8b` | Cerebras | Fast, cheap |
+| `deepseek-chat` | DeepSeek | Very cheap |
+
+## Blocked models
+
+These models require credits:
+
+- **OpenAI reasoning:** o1, o3, o4 (all variants)
+- **OpenAI flagship:** gpt-4o, gpt-4, gpt-5 (gpt-4o-mini is allowed)
+- **Anthropic flagship:** claude-opus, claude-sonnet (haiku is allowed)
+- **Google flagship:** gemini-2.5-pro, gemini-2.5-ultra
+- **xAI flagship:** grok-2, grok-3
+
+Requesting a blocked model without credits returns 402:
+
+```json
+{
+  "error": {
+    "message": "Model \"gpt-4o\" requires credits. Free tier models: gpt-4o-mini, llama-3.1-8b-instant, gemini-2.0-flash-lite, deepseek-chat. Add credits or use a free tier model.",
+    "type": "insufficient_funds",
+    "code": "free_tier_limit"
+  }
+}
+```
+
+## Response headers
+
+Free tier responses include remaining quota:
+
+```
+X-Free-Tier-Remaining: 3
+X-Free-Tier-Limit: 5
+```

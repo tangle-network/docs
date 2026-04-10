@@ -1,0 +1,55 @@
+---
+title: Credits & Pricing
+description: How billing works on Tangle Gateway.
+---
+
+# Credits & Pricing
+
+## Pricing model
+
+| Credential type | Markup |
+|----------------|--------|
+| Platform credentials | 20% above provider list price |
+| [BYOK](/gateway/byok) | **0%** — provider list price, no markup |
+| [SpendAuth](/gateway/spend-auth) | Operator-set prices (typically competitive) |
+
+The 20% platform markup on non-BYOK requests funds operator payouts and platform infrastructure. Operators earn a share of every request routed through them.
+
+## Credits
+
+Credits are denominated in USD. Purchase via Stripe or receive as part of a subscription plan.
+
+Check your balance:
+
+```bash
+curl -H "Authorization: Bearer sk-tan-YOUR_KEY" \
+  https://router.tangle.tools/v1/credits
+```
+
+```json
+{
+  "balance": "95.50",
+  "total_used": "4.50"
+}
+```
+
+## Cost per request
+
+Each request is charged based on tokens:
+
+```
+cost = (input_tokens × input_price) + (output_tokens × output_price)
+```
+
+Pricing varies by model. Check per-model pricing at [`GET /api/models`](https://router.tangle.tools/api/models) or in the `X-Tangle-Price-Input` / `X-Tangle-Price-Output` response headers.
+
+## Billing transparency
+
+Every response includes pricing headers so you know the cost before it hits your balance:
+
+```
+X-Tangle-Price-Input: 0.000003      # USD per input token
+X-Tangle-Price-Output: 0.000015     # USD per output token
+```
+
+Look up detailed billing for any request via [`GET /v1/generation`](/gateway/api-generation).

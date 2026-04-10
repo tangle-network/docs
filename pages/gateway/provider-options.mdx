@@ -1,0 +1,70 @@
+---
+title: providerOptions.gateway
+description: Complete reference for gateway-specific request options.
+---
+
+# providerOptions.gateway
+
+All gateway-specific options are passed inside `providerOptions.gateway` in the request body. These are stripped before forwarding to providers.
+
+## Full schema
+
+```typescript
+interface GatewayOptions {
+  // Bring Your Own Key
+  byok?: Record<string, Array<{ apiKey: string }>>
+
+  // Compliance routing
+  zeroDataRetention?: boolean
+  disallowPromptTraining?: boolean
+
+  // Caching
+  caching?: 'auto' | false
+  cache?: false  // disable response caching
+
+  // Provider routing
+  order?: string[]   // provider priority
+  only?: string[]    // provider allowlist
+
+  // Model fallbacks
+  models?: string[]  // tried in order after primary model
+
+  // Timeouts (1s-120s, clamped)
+  timeout?: number | Record<string, number>
+}
+```
+
+## Options reference
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `byok` | `Record<string, Array<{apiKey}>>` | — | Per-request provider credentials. [Details](/gateway/byok) |
+| `zeroDataRetention` | `boolean` | `false` | Route only to ZDR-verified providers. [Details](/gateway/zdr) |
+| `disallowPromptTraining` | `boolean` | `false` | Route only to no-train providers. [Details](/gateway/no-train) |
+| `caching` | `'auto'` | — | Auto-inject prompt cache markers. [Details](/gateway/caching) |
+| `cache` | `false` | — | Set `false` to skip response cache for this request. |
+| `order` | `string[]` | — | Provider priority order. [Details](/gateway/smart-routing) |
+| `only` | `string[]` | — | Restrict to these providers only. |
+| `models` | `string[]` | — | Fallback model list. [Details](/gateway/fallbacks) |
+| `timeout` | `number \| Record<string, number>` | `30000` | Timeout in ms. [Details](/gateway/timeouts) |
+
+## Example: everything at once
+
+```json
+{
+  "model": "anthropic/claude-sonnet-4-6",
+  "messages": [{"role": "user", "content": "Hello"}],
+  "providerOptions": {
+    "gateway": {
+      "byok": {
+        "anthropic": [{"apiKey": "sk-ant-..."}]
+      },
+      "zeroDataRetention": true,
+      "caching": "auto",
+      "models": ["openai/gpt-4o"],
+      "timeout": {"anthropic": 10000, "openai": 5000},
+      "order": ["anthropic", "openai"]
+    }
+  }
+}
+```
