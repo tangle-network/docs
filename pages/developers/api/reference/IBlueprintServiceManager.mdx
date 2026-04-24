@@ -532,6 +532,8 @@ function queryIsPaymentAssetAllowed(uint64 serviceId, address asset) external vi
 
 Check if a payment asset is allowed for this blueprint
 
+_`serviceId` acts as the payment-policy context ID. In current core semantics, this check is strict/fail-closed: if a manager returns `false` for a context, the asset is denied for that context, and missing/reverting manager queries are treated as denied._
+
 ##### Parameters
 
 | Name      | Type    | Description                                       |

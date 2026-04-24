@@ -8,6 +8,8 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 # x402 Payment Gateway
 
 SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/x402
+Crate README (GitHub): https://github.com/tangle-network/blueprint/blob/main/crates/x402/README.md
+Example blueprint (GitHub): https://github.com/tangle-network/blueprint/blob/main/examples/x402-blueprint/README.md
 
 x402 is an optional, off-chain payment ingress path for job execution. It exposes HTTP endpoints that require a valid
 x402 payment (typically stablecoins on an EVM chain) and then injects a `JobCall` into the Blueprint Runner after the
@@ -65,6 +67,33 @@ The operator configures:
   title="X402Config schema (includes example TOML)"
 />
 
+## Restricted Policy Example (Recommended Baseline)
+
+Use `default_invocation_mode = "disabled"` and opt in job-by-job:
+
+```toml
+default_invocation_mode = "disabled"
+
+[[job_policies]]
+service_id = 1
+job_index = 0
+invocation_mode = "public_paid"
+
+[[job_policies]]
+service_id = 1
+job_index = 1
+invocation_mode = "restricted_paid"
+auth_mode = "payer_is_caller"
+tangle_rpc_url = "https://rpc.tangle.tools"
+tangle_contract = "0xYourTangleContract"
+```
+
+If the caller should be asserted independently of the settled payer, use:
+
+```toml
+auth_mode = "delegated_caller_signature"
+```
+
 ## Job Pricing Input
 
 The x402 gateway needs a per-job price map in wei:
@@ -120,6 +149,12 @@ The gateway exposes:
   `JobCall` into the runner.
 - `POST /x402/jobs/{service_id}/{job_index}/auth-dry-run`: runs restricted auth + `eth_call` policy check without
   enqueueing work or settling payment.
+
+## Callable Surface vs Other Triggers
+
+- x402 can invoke only jobs that are both priced and enabled by x402 job policy.
+- Cron/on-chain/webhook producers remain separate trigger paths.
+- A job handler can be reachable from multiple triggers only if you explicitly wire and expose it that way.
 
 ## Receipt and Replay Semantics
 
