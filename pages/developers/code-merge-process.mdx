@@ -10,14 +10,14 @@ All Tangle Network repositories use GitHub as the source control platform. The `
 
 All active repositories under the [tangle-network](https://github.com/tangle-network) GitHub organization, including:
 
-| Repository                                                    | Description                      |
-| ------------------------------------------------------------- | -------------------------------- |
-| [blueprint](https://github.com/tangle-network/blueprint)     | Core blueprint SDK and runtime   |
-| [tangle](https://github.com/tangle-network/tangle)           | Tangle substrate node            |
-| [tnt-core](https://github.com/tangle-network/tnt-core)       | Core token and protocol logic    |
-| [tcloud](https://github.com/tangle-network/tcloud)           | Tangle cloud infrastructure      |
-| [dapp](https://github.com/tangle-network/dapp)               | Frontend application             |
-| [docs](https://github.com/tangle-network/docs)               | Documentation site               |
+| Repository                                               | Description                    |
+| -------------------------------------------------------- | ------------------------------ |
+| [blueprint](https://github.com/tangle-network/blueprint) | Core blueprint SDK and runtime |
+| [tangle](https://github.com/tangle-network/tangle)       | Tangle substrate node          |
+| [tnt-core](https://github.com/tangle-network/tnt-core)   | Core token and protocol logic  |
+| [tcloud](https://github.com/tangle-network/tcloud)       | Tangle cloud infrastructure    |
+| [dapp](https://github.com/tangle-network/dapp)           | Frontend application           |
+| [docs](https://github.com/tangle-network/docs)           | Documentation site             |
 
 ## Merge Process
 
@@ -42,16 +42,16 @@ Every change to `main` must go through a GitHub Pull Request (PR) that satisfies
 
 The following automated checks run on every pull request and must pass before merge:
 
-| Check                    | Description                                         |
-| ------------------------ | --------------------------------------------------- |
-| **Build**                | Full compilation and build verification             |
-| **Tests**                | Unit and integration test suites                    |
-| **Clippy**               | Rust linting via `clippy` (Rust repositories)       |
-| **Lint**                 | Code style and formatting checks                    |
-| **Security audit**       | `cargo audit` / dependency vulnerability scanning   |
-| **Package dependencies** | Dependency resolution and compatibility checks      |
+| Check                    | Description                                           |
+| ------------------------ | ----------------------------------------------------- |
+| **Build**                | Full compilation and build verification               |
+| **Tests**                | Unit and integration test suites                      |
+| **Clippy**               | Rust linting via `clippy` (Rust repositories)         |
+| **Lint**                 | Code style and formatting checks                      |
+| **Security audit**       | `cargo audit` / dependency vulnerability scanning     |
+| **Package dependencies** | Dependency resolution and compatibility checks        |
 | **Security scans**       | Automated security scanning for known vulnerabilities |
-| **PR Quality Gate**      | Automated PR quality and standards enforcement      |
+| **PR Quality Gate**      | Automated PR quality and standards enforcement        |
 
 These checks are enforced via GitHub Actions workflows (`CI`, `PR Quality Gate`, `Release`) configured in each repository.
 
@@ -75,13 +75,13 @@ Once all requirements are met:
 
 ## Automated Tooling
 
-| Tool           | Purpose                                       |
-| -------------- | --------------------------------------------- |
-| GitHub Actions | CI/CD pipeline execution                      |
-| Dependabot     | Automated dependency update PRs               |
-| Clippy         | Rust static analysis                          |
-| `cargo audit`  | Rust dependency security auditing             |
-| Release Please | Automated release versioning and changelogs   |
+| Tool           | Purpose                                     |
+| -------------- | ------------------------------------------- |
+| GitHub Actions | CI/CD pipeline execution                    |
+| Dependabot     | Automated dependency update PRs             |
+| Clippy         | Rust static analysis                        |
+| `cargo audit`  | Rust dependency security auditing           |
+| Release Please | Automated release versioning and changelogs |
 
 ## External Contributors
 
