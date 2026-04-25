@@ -8,7 +8,7 @@ export const RepoArea = () => {
         feature={{
           Icon: GitHubIcon,
           description:
-            "Protocol contracts and deployment tooling for Tangle v2.",
+            "Protocol contracts and deployment tooling for Tangle Network.",
           name: "tnt-core",
         }}
         href="https://github.com/tangle-network/tnt-core"

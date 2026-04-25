@@ -2,96 +2,156 @@ import CardGrid from "../../../components/CardGrid.tsx"
 
 # Blueprints
 
-## Getting Started
+A Blueprint is a template for software that can run as a service.
+
+Think of it like a deployable backend definition. A Blueprint describes what code runs, what jobs it exposes, what inputs those jobs accept, how operators run it, and how customers create running instances of it.
+
+A Service is a running instance of a Blueprint.
+
+For example, an LLM inference Blueprint can define the model-serving code, the job API, pricing rules, and operator requirements. A customer can then create a Service from that Blueprint with a chosen operator set, payment method, and runtime configuration.
+
+## Quick Start
 
 <CardGrid
   cards={[
     {
       title: "Blueprint SDK",
-      description: "Build blueprints, operators, and jobs with the Rust SDK and CLI.",
-      link: "https://github.com/tangle-network/blueprint/tree/main"
+      description:
+        "Build blueprints, jobs, operators, and local test flows with the Rust SDK and CLI.",
+      link: "https://github.com/tangle-network/blueprint/tree/main",
     },
     {
       title: "Blueprint Manager",
-      description: "Understand the operator runtime that runs blueprint services.",
-      link: "/developers/blueprints/manager"
+      description:
+        "Run blueprint service instances as an operator.",
+      link: "/developers/blueprints/manager",
     },
     {
       title: "Blueprint Use Cases",
-      description: "Explore service patterns and where blueprints fit in real products.",
-      link: "/developers/blueprints/use-cases"
-    }
+      description:
+        "See concrete examples: inference, training, proving, oracles, automation, and more.",
+      link: "/developers/blueprints/use-cases",
+    },
   ]}
 />
 
-**Blueprints** are on-chain service definitions, and **Services** are their on-chain instantiations. Developers build
-Blueprints using the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main) and deploy them to Tangle v2.
-Customers discover Blueprints, create Services, and pay for execution. Operators run Services with the Blueprint Manager,
-earning fees and TNT incentives defined by the core protocol contracts in `tnt-core`.
+## The Basic Model
 
-A Blueprint Service is a reusable computational service. Each Service instance can select a different operator set,
-security configuration, payment token, and execution confidentiality while sharing the same underlying blueprint logic.
+There are three core objects:
 
-A Tangle Blueprint is defined by:
+| Object        | What it means                                                                                                                                       |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Blueprint** | A reusable service template. It defines the software, jobs, metadata, artifacts, and optional protocol logic.                                       |
+| **Service**   | A live instance of a Blueprint. It has a requester, operators, configuration, payment terms, and lifecycle state.                                   |
+| **Job**       | A callable unit of work inside a Service. Jobs can be called by users, systems, smart contracts, webhooks, cron schedules, or machine payment APIs. |
 
-- A **manager contract** (Blueprint Service Manager) that defines registration, request, and job verification logic.
-- A **blueprint definition** (metadata URI, job schemas, artifact sources) used by the Blueprint Manager.
-- **Executable artifacts** (native binary, container image, or WASM) for operators to run.
+Blueprints do not have to be blockchain applications. A Blueprint can be a normal web service, an app backend, an AI model server, a scheduled worker, a data pipeline, a prover, or an automation service.
 
-Blueprints specify their runtime preferences so operators can execute services natively, in containers, or inside a VM.
-They can also declare execution confidentiality policy in metadata. See
-[/developers/blueprints/execution-confidentiality](/developers/blueprints/execution-confidentiality).
+Tangle adds protocol coordination around that software: discovery, operator registration, service creation, payments, incentives, and lifecycle tracking.
 
-## Detailed Interactions
+## What Developers Build
+
+Developers build Blueprints by packaging application logic into jobs and publishing the metadata needed to run them.
+
+A Blueprint usually includes:
+
+- **Executable code**: a native binary, container image, WASM module, or another artifact operators can run.
+- **Jobs**: typed functions or handlers that perform work.
+- **Inputs and outputs**: schemas for job parameters and results.
+- **Triggers**: the events that call jobs.
+- **Metadata**: name, description, source repository, image/logo, docs, job descriptions, and UI hints.
+- **Optional protocol contract**: a Blueprint Service Manager that customizes registration, service requests, verification, payments, or slashing.
+
+The Blueprint SDK provides the Rust framework, runner, and CLI for building and testing this package.
+
+## How Jobs Are Triggered
+
+A Blueprint can be designed around one trigger type or several:
+
+| Trigger                     | Use it for                                                                                               |
+| --------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **HTTP or webhooks**        | API calls, SaaS integrations, callbacks, GitHub events, payment events, and external system events.      |
+| **Cron**                    | Scheduled jobs such as batch processing, periodic inference, monitoring, rebalancing, or data refreshes. |
+| **Onchain events**          | Blockchain events emitted by smart contracts, transactions, or protocol state changes.                   |
+| **x402 / machine payments** | Paid HTTP APIs where a caller pays to trigger a job.                                                     |
+| **Custom producers**        | Any event source a developer connects to the Blueprint Runner.                                           |
+
+The same Blueprint can expose a normal API and also react to onchain events. That is the point: the application logic lives in the Blueprint, while the trigger layer decides when that logic runs.
+
+## Where Tangle Fits
+
+Tangle is the coordination layer for Blueprints.
+
+When a Blueprint is registered with Tangle Network, the protocol can track:
+
+- who published the Blueprint;
+- what metadata and artifacts define it;
+- which operators registered to run it;
+- which Services were created from it;
+- which operators were selected for each Service;
+- what payments, fees, and incentives apply;
+- which lifecycle events happened.
+
+The onchain part is handled by Tangle Protocol contracts. The offchain part is handled by operators running the Blueprint Manager and the Blueprint Runner.
+
+This means a Blueprint can have blockchain-native lifecycle tracking without forcing all application logic to run inside a smart contract. Most real services should run offchain. Smart contracts are used for coordination, payment, verification, and state.
+
+## Roles
 
 ### Developers
 
-Developers deploy the blueprint manager contract and register a blueprint definition that points at the artifacts and job
-schemas operators should run. The on-chain manager contract handles:
+Developers write the Blueprint.
 
-1. **Registration**: Specifies how Operators register for the Blueprint, allowing the developer to add additional fees, access control, KYC, and any other EVM-deployable functionality to the registration process.
-2. **Request**: Defines how customers create Services and fund them (pay-once or subscription).
-3. **On Job Hooks**: Allows developers to specify custom logic to be executed when a job is created.
-4. **On Job Result Hooks**: Allows developers to specify custom logic to be executed when a job is completed, such as verifying a job's output.
-5. **Custom slashing conditions**: Allows developers to define slashing logic for misbehavior, scoped to their Service.
+They define the jobs, package the artifacts, publish metadata, and optionally deploy a Blueprint Service Manager contract. The manager contract can customize:
 
-Blueprints let developers define monetizable services (MPC, ZK proving, AI infrastructure, oracles) with on-chain
-verification and off-chain execution handled by operators running the Blueprint Manager.
+1. How operators register for the Blueprint.
+2. How customers create Services.
+3. How jobs are authorized.
+4. How job results are verified.
+5. How payments, fees, or slashing rules work.
 
-Developers can also declare whether a service may run in a TEE, should prefer TEE placement, or must run in a TEE.
+Developers can build simple Blueprints with minimal protocol customization, or advanced Blueprints with custom contracts and verification logic.
 
 ### Customers
 
-Customers discover blueprints, configure services, and select operators based on requirements (security, resources, price,
-or reputation). They fund services in ETH or ERC20 tokens and can choose a one-time payment or subscription model.
+Customers create Services from Blueprints.
 
-To initialize a Service, a customer typically:
-
-1. Chooses an operator set and any service parameters required by the blueprint.
-2. Provides metadata required by the Service instance.
-3. Selects the desired execution confidentiality when the service flow supports it.
-4. Funds the service fee required by the blueprint manager contract.
+They choose a Blueprint, configure the instance, select operators or operator requirements, choose payment terms, and submit the service request. After the Service is active, they use its job API or wait for configured triggers to run it.
 
 ### Operators
 
-Operators register for blueprints, accept service assignments, and run the service artifacts through the Blueprint Manager.
-They earn an operator share of service payments (claimable from the `Tangle` contract) plus TNT incentives.
+Operators run Services.
 
-Execution confidentiality changes how operators satisfy those assignments. For example, a `tee_required` service must fail
-closed if the operator cannot satisfy the TEE runtime requirements.
+They register for Blueprints they are willing to operate, run the required artifacts, listen for jobs, execute those jobs, and return results. Operators earn fees and may earn protocol incentives when those incentives are enabled.
 
-### Payments and Incentives
+## Payments
 
-Service payments are split by the core protocol contracts in `tnt-core`:
+Blueprints can support several payment paths:
 
-- **Developer + Treasury** shares transfer immediately.
-- **Operator** share accrues as pending rewards in the `Tangle` contract.
-- **Staker** share flows to `ServiceFeeDistributor` for later claims.
+- fixed service creation fees;
+- subscriptions;
+- per-job pricing;
+- operator-signed quotes;
+- x402 and machine payment compatible APIs;
+- custom payment logic in a Blueprint Service Manager.
 
-Inflation incentives (TNT) are distributed separately via `InflationPool` and `RewardVaults`. For details, see
-`/developers/system-architecture/rewards` and the `tnt-core` pricing integration guide:
-`https://github.com/tangle-network/tnt-core/blob/main/docs/PRICING.md`.
+For protocol-level payment details, see [Pricing & Payments](/developers/blueprints/pricing-and-payments) and the `tnt-core` pricing guide:
 
-## Composability and Ecosystem
+`https://github.com/tangle-network/tnt-core/blob/main/docs/PRICING.md`
 
-Blueprints can be composed and linked together to create sophisticated, interoperable applications, fostering innovation and collaboration within the Tangle ecosystem. The Tangle architecture is uniquely suited for complex cryptographic applications, such as multi-party computation (MPC) and zero-knowledge (ZK) services, as well as oracles, custody solutions, bridge co-processors, and proving networks. Developers are encouraged to collaborate and contribute to expanding the library of apps and services on Tangle, and will be rewarded with incentives for their valuable contributions.
+## A Simple Example
+
+Imagine a video transcription Blueprint.
+
+The developer publishes:
+
+- a container image that runs the transcription service;
+- a job called `transcribe`;
+- an input schema with a video URL and language hint;
+- an output schema with transcript text and timestamps;
+- metadata with docs and repository links;
+- pricing rules for each transcription job.
+
+Operators register for the Blueprint and run the container. A customer creates a Service from the Blueprint. Then the job can be triggered by an HTTP request, a webhook when a video is uploaded, a cron schedule, an onchain event, or a paid x402 API call.
+
+The software still looks like a normal backend service. Tangle adds operator coordination, payment, lifecycle tracking, and optional protocol verification around it.

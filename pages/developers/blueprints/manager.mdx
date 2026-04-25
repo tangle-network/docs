@@ -6,8 +6,8 @@ SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crate
 
 <ExpandableImage src="/images/blueprint-manager-diagram.png" alt="Blueprint Manager Diagram" />
 
-On Tangle, Blueprints have both on-chain and off-chain lifecycles. The off-chain component is managed by the
-**Blueprint Manager**, which is the operator runtime for Tangle v2 services. This on-chain and off-chain logic
+On Tangle, Blueprints have both onchain and offchain lifecycles. The offchain component is managed by the
+**Blueprint Manager**, which is the operator runtime for Tangle services. This onchain and offchain logic
 functions as follows:
 
 1. Operators must register for Blueprints onchain. This indicates an operators willingness to accept requests for Blueprint Instances of that type.
@@ -35,7 +35,7 @@ For renewal, migration, and expiry edge cases, see:
 
 Blueprints provide a useful abstraction, allowing developers to create reusable service infrastructures as if they were smart contracts. This enables developers to monetize their work and align long-term incentives with the success of their creations, benefiting proportionally to their Blueprint's usage.
 
-Blueprints and Services are managed by the Tangle v2 contracts in `tnt-core`, including the core `Tangle` contract and
+Blueprints and Services are managed by the Tangle Protocol contracts in `tnt-core`, including the core `Tangle` contract and
 the `BlueprintServiceManager` stack. Staking and operator registration live in these contracts, and the Blueprint
 Manager watches their events to decide what to run.
 

@@ -16,7 +16,7 @@ const WalletTable = () => {
     <div>
       <h2 className="text-2xl mb-4">Wallets</h2>
       <span className="mb-4">
-        Tangle v2 is EVM-first. Use standard EVM wallets to connect, sign
+        Tangle Network is EVM-first. Use standard EVM wallets to connect, sign
         transactions, and add the network with the Chain ID and RPC URLs listed
         above.
       </span>
