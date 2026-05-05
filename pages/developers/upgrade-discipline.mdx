@@ -1,0 +1,152 @@
+---
+title: Upgrade Discipline
+description: UUPS upgrade rules, storage gap discipline, and parameter migration playbook for Tangle protocol contracts.
+---
+
+# Upgrade Discipline
+
+Every upgradeable Tangle contract is UUPS. The role that gates `_authorizeUpgrade` differs by contract: `UPGRADER_ROLE` on most peripherals, `ADMIN_ROLE` on `MultiAssetDelegation`, `onlyGovernance` on `TangleGovernor`, and `onlySelf` on `TangleTimelock`. In production the relevant role SHOULD be held by [`TangleTimelock`](https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleTimelock.sol) so all upgrades flow through governance with a delay window. This page lists the rules for upgrading the protocol so changes stay safe and reviewable.
+
+## Upgradeable Contracts
+
+| Contract                  | Upgrade gate                                                | Source                                                                                                                                    |
+| ------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `Tangle`                  | `UPGRADER_ROLE`                                             | [`src/Tangle.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/Tangle.sol)                                                   |
+| `MultiAssetDelegation`    | `ADMIN_ROLE` (no `UPGRADER_ROLE` on this contract)          | [`src/staking/MultiAssetDelegation.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/staking/MultiAssetDelegation.sol)       |
+| `MBSMRegistry`            | `UPGRADER_ROLE`                                             | [`src/MBSMRegistry.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/MBSMRegistry.sol)                                       |
+| `TangleGovernor`          | `onlyGovernance` (proposal-driven)                          | [`src/governance/TangleGovernor.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleGovernor.sol)             |
+| `TangleTimelock`          | `onlySelf` (the timelock executing its own queued proposal) | [`src/governance/TangleTimelock.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleTimelock.sol)             |
+| `TangleToken`             | `UPGRADER_ROLE`                                             | [`src/governance/TangleToken.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleToken.sol)                   |
+| `RewardVaults`            | `UPGRADER_ROLE`                                             | [`src/rewards/RewardVaults.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/RewardVaults.sol)                       |
+| `InflationPool`           | `UPGRADER_ROLE`                                             | [`src/rewards/InflationPool.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/InflationPool.sol)                     |
+| `ServiceFeeDistributor`   | `UPGRADER_ROLE`                                             | [`src/rewards/ServiceFeeDistributor.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol)     |
+| `StreamingPaymentManager` | `UPGRADER_ROLE`                                             | [`src/rewards/StreamingPaymentManager.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/StreamingPaymentManager.sol) |
+| `TangleMetrics`           | `UPGRADER_ROLE`                                             | [`src/rewards/TangleMetrics.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/TangleMetrics.sol)                     |
+
+## Storage Layout Rules
+
+Each upgradeable contract reserves a `__gap` array at the end of its storage. New state variables MUST be added between the existing variables and the gap, AND the gap size MUST be reduced by the number of slots consumed.
+
+### Gap Pattern
+
+```solidity
+// Existing storage above this line is locked.
+mapping(uint64 => Service) internal _services;
+// ... other vars ...
+
+// Reserved for future fields. Reduce by exactly N when adding N slots.
+uint256[44] private __gap;
+```
+
+When adding a `mapping` or a single `uint256`, reduce the gap by 1. When adding a struct that occupies 3 slots in storage, reduce by 3. Adding a `uint64` AND a `uint64` AND an `address` that pack into a single slot reduces by 1. Pay attention to packing.
+
+For a struct stored INSIDE a mapping, appending fields to the struct does NOT consume gap slots in the parent contract (the struct is not inline). Slashing's `SlashProposal` and `SlashConfig` are extended this way.
+
+### Discipline Checklist (Every Upgrade)
+
+1. List every new state variable in the upgrade.
+2. Determine slot consumption (account for packing).
+3. Reduce the relevant `__gap` by exactly that count.
+4. Run a storage layout diff against the prior deployment:
+   ```
+   forge inspect Tangle storage-layout > new.json
+   # diff against the snapshot taken from the previously deployed bytecode
+   ```
+5. Confirm only appends, never reorders or removes existing variables.
+
+### When You Would NOT Decrement
+
+- The deployment is greenfield (first deploy). Gaps are arbitrary on the first slot map; later upgrades inherit them.
+- The struct change is to a struct stored in a mapping (the struct is heap-allocated per key, not inline in the parent contract's slot map).
+
+### When You MUST Decrement
+
+- Any direct addition of a state variable in the contract or any inherited base.
+- An inherited OpenZeppelin contract that uses ERC-7201 namespaced storage (e.g. `AccessControlUpgradeable`, `TimelockControllerUpgradeable`) SHOULD be vetted before upgrading. Such contracts do not consume the parent's gap; they live in their own namespaced slot. tnt-core's own contracts use sequential storage with `__gap` arrays, not ERC-7201 namespacing.
+
+## Authorization (the Upgrade Itself)
+
+Each upgradeable contract has an `_authorizeUpgrade(address)` override gated as listed in the table above. Whichever role gates a given contract MUST be held by `TangleTimelock` (or, for `TangleGovernor`/`TangleTimelock` themselves, the contract is structurally self-controlled). An EOA MUST NOT hold any of these roles in production.
+
+Upgrade flow:
+
+1. Author writes new implementation `MyContractV2`.
+2. Storage layout diff verified clean.
+3. Governance proposal targets the proxy: `tangle.upgradeToAndCall(MyContractV2, initData)`.
+4. Proposal reaches quorum, queues to timelock, ages out the timelock delay.
+5. Anyone executes the timelock operation.
+6. Proxy now points at V2.
+
+The `proxiableUUID()` check on the new implementation prevents pointing the proxy at a non-UUPS contract, which would brick the proxy.
+
+## TangleTimelock Storage Write
+
+The timelock's `_minDelay` is in OZ's ERC-7201 namespaced storage at:
+
+```
+TIMELOCK_CONTROLLER_STORAGE_LOCATION
+  = 0x9a37c2aa9d186a0969ff8a8267bf4e07e864c2f2768f5040949e28a624fb3600
+```
+
+The struct layout is `(_timestamps mapping, _minDelay uint256)`, so `_minDelay` lives at `STORAGE_LOCATION + 1`. This slot is hardcoded in [`TangleTimelock._setMinDelay`](https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleTimelock.sol). It is pinned to OpenZeppelin Contracts Upgradeable 5.1.0. Before bumping OZ, confirm:
+
+1. `TimelockControllerStorageLocation` is unchanged.
+2. The struct order (mapping first, `_minDelay` second) is unchanged.
+3. If either changed, update the constant and run the regression test in [`test/security/TimelockSetMinDelayTest.t.sol`](https://github.com/tangle-network/tnt-core/blob/main/test/security/TimelockSetMinDelayTest.t.sol).
+
+## Parameter Migrations
+
+A parameter change that does NOT alter storage layout (e.g. tuning slashing config) goes through the standard governance setter path. No upgrade needed.
+
+A parameter change that DOES alter storage layout (e.g. moving `_treasury` from a single address to a mapping) requires:
+
+1. Storage migration plan: how do existing values move?
+2. Initializer: post-upgrade `initializeV2` or similar to copy values.
+3. Storage gap reduction.
+4. Test against a fork: deploy V1, set realistic state, upgrade to V2, verify reads match.
+
+## Post-Deploy Checklist
+
+After `FullDeploy` runs, verify on-chain that the deployer EOA holds NO roles:
+
+```solidity
+// On Tangle
+assert(!tangle.hasRole(DEFAULT_ADMIN_ROLE, deployer));
+assert(!tangle.hasRole(ADMIN_ROLE, deployer));
+assert(!tangle.hasRole(UPGRADER_ROLE, deployer));
+assert(!tangle.hasRole(PAUSER_ROLE, deployer));
+assert(!tangle.hasRole(SLASH_ADMIN_ROLE, deployer));
+
+// On MultiAssetDelegation (note: NO UPGRADER_ROLE on this contract;
+// upgrades are gated by ADMIN_ROLE).
+assert(!staking.hasRole(DEFAULT_ADMIN_ROLE, deployer));
+assert(!staking.hasRole(ADMIN_ROLE, deployer));
+assert(!staking.hasRole(ASSET_MANAGER_ROLE, deployer));
+
+// On MBSMRegistry
+assert(!mbsmRegistry.hasRole(DEFAULT_ADMIN_ROLE, deployer));
+assert(!mbsmRegistry.hasRole(MANAGER_ROLE, deployer));
+assert(!mbsmRegistry.hasRole(UPGRADER_ROLE, deployer));
+
+// On TangleTimelock
+assert(!timelock.hasRole(DEFAULT_ADMIN_ROLE, deployer));
+```
+
+The deploy script's `_assertGovernanceConfiguration` runs an equivalent check at the end of `FullDeploy.run()`. Re-run the same assertions from a separate verification script before announcing the deployment.
+
+See [`script/sh/deploy-mainnet-base-ethereum.sh`](https://github.com/tangle-network/tnt-core/blob/main/script/sh/deploy-mainnet-base-ethereum.sh) for the production launch wrapper.
+
+## Audit Hooks
+
+Before any production upgrade:
+
+1. External firm reviews the diff.
+2. Storage layout snapshot is committed to the repo, dated and signed.
+3. The proposal calldata is published (e.g. on the governance forum) before voting begins so the community can verify it matches the audited diff.
+4. Forks of mainnet state are upgraded and the full integration test suite runs against them.
+
+## Reference
+
+- Auth surface: [Auth Surface](/developers/auth-surface)
+- Slashing: [Slashing](/developers/slashing)
+- Source: [`tangle-network/tnt-core`](https://github.com/tangle-network/tnt-core)
