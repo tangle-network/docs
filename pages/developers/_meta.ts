@@ -31,6 +31,9 @@ const meta: Meta = {
   endpoints: "Endpoints",
   "protocol-architecture": "Protocol Architecture",
   "system-architecture": "System Architecture",
+  slashing: "Slashing",
+  "auth-surface": "Auth Surface",
+  "upgrade-discipline": "Upgrade Discipline",
   "-- contribute": {
     type: "separator",
     title: "Contribute",

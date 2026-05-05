@@ -1,0 +1,200 @@
+---
+title: Slashing
+description: Lifecycle, dispute economics, and operations runbook for the Tangle slashing system.
+---
+
+# Slashing
+
+When an operator misbehaves, the protocol burns or redistributes a fraction of their stake and, proportionally, their delegators' stake. This page covers the on-chain lifecycle, the authorization surface, dispute economics, and runbooks for operators and the slashing admin.
+
+The slashing path is implemented in:
+
+- [`src/core/Slashing.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) -- propose, dispute, execute, cancel
+- [`src/libraries/SlashingLib.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/libraries/SlashingLib.sol) -- proposal struct, status state machine, executability rules
+- [`src/staking/SlashingManager.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/staking/SlashingManager.sol) -- actual stake reduction (`_slashForBlueprint`, `_slashForService`)
+
+## Lifecycle
+
+```
+                 proposeSlash
+                      |
+                      v
+                 [ Pending ]
+                /     |     \
+     disputeSlash     |      isExecutable && executeSlash
+        |             |              |
+        v             v              v
+   [ Disputed ]   cancelSlash   [ Executed ]
+     |    \           |
+     |     \          v
+     |    cancelSlash (refunds bond)   [ Cancelled ]
+     v
+   isExecutable after disputeDeadline
+   -> auto-fails, executeSlash succeeds, bond forfeit to treasury
+```
+
+Each transition has a single responsible caller and a single state effect.
+
+### `proposeSlash(serviceId, operator, slashBps, evidence)`
+
+Anyone the protocol accepts as a slasher creates a `SlashProposal`. The proposal:
+
+1. Validates `slashBps <= maxSlashBps` and caps it.
+2. Computes the operator's effective exposure for this service from their per-asset commitments.
+3. Increments two counters: `_operatorPendingSlashCount[operator]` (in staking, blocks delegator withdrawals) and `_operatorActiveSlashProposals[operator]` (in Tangle, enforces the per-operator cap).
+4. Sets `executeAfter = block.timestamp + disputeWindow`.
+5. Calls the blueprint manager's `onUnappliedSlash` hook (best effort, capped gas).
+
+If the operator already has `maxPendingSlashesPerOperator` pending, the call reverts. Default cap is 32.
+
+### `disputeSlash(slashId, reason)` `payable`
+
+The operator (or `SLASH_ADMIN_ROLE`) contests the slash within the dispute window.
+
+The operator must post `config.disputeBond` in native asset. `SLASH_ADMIN` posts no bond. The dispute snapshots `config.disputeResolutionDeadline` onto the proposal (`disputeDeadline = block.timestamp + deadline`), so a later admin-driven shrink of the live config cannot retroactively shorten the operator's review window.
+
+### `executeSlash(slashId)` (permissionless)
+
+Anyone calls this. The proposal's `isExecutable` check accepts:
+
+- A `Pending` proposal whose `executeAfter + TIMESTAMP_BUFFER` has elapsed
+- A `Disputed` proposal whose snapshotted `disputeDeadline` has elapsed
+
+Execution routes through `_executeSlashOnStaking`:
+
+- If the operator made explicit per-asset commitments to the service, calls `slashForService` and only burns the committed assets proportionally.
+- Otherwise (legacy services with no commitments) falls back to `slashForBlueprint`.
+
+After execution: pending counters decrement, slash is recorded for metrics, blueprint manager's `onSlash` hook fires (capped gas, best effort), and any dispute bond is forwarded to the treasury.
+
+### `cancelSlash(slashId, reason)` (`SLASH_ADMIN_ROLE`)
+
+The admin agrees with a dispute or otherwise wants to drop a proposal. State transitions complete first, then the bond refund executes. CEI ordering plus `nonReentrant` defends against a malicious disputer contract re-entering on the refund.
+
+## Authorization
+
+| Function | Caller |
+|---|---|
+| `proposeSlash` | Service owner, blueprint owner, or BSM-declared `querySlashingOrigin`. Operator must already be in the service (`OperatorNotInService` revert otherwise). `slashBps` must be in `(0, BPS_DENOMINATOR]` and produce non-zero effective bps after exposure scaling. |
+| `disputeSlash` | The slashed operator (must post bond), or `SLASH_ADMIN_ROLE` (no bond) |
+| `executeSlash` | Anyone, gated by `isExecutable` |
+| `executeSlashBatch` | Anyone. Non-executable ids in the batch are SILENTLY SKIPPED, not reverted. |
+| `cancelSlash` | `SLASH_ADMIN_ROLE` only. Can cancel from `Pending` or `Disputed`. |
+| `setSlashConfig` | `ADMIN_ROLE` (route through `TangleTimelock` in production) |
+
+The BSM-declared slashing origin is queried dynamically on each `proposeSlash` call. Operators MUST audit the BSM's code AND its upgradeability before joining any blueprint that uses one. A BSM whose owner is compromised can grant slashing rights to an attacker. If you do not accept that risk, only join blueprints whose BSM is non-upgradeable.
+
+See [Auth Surface](/developers/auth-surface) for the full role-by-role table across all protocol contracts.
+
+## Configuration Parameters
+
+Set with `setSlashConfig(disputeWindow, instantSlashEnabled, maxSlashBps, disputeResolutionDeadline, disputeBond, maxPendingSlashesPerOperator)`. All parameters are admin-tunable and SHOULD be timelocked in production.
+
+| Parameter | Default | Bounds | Purpose |
+|---|---|---|---|
+| `disputeWindow` | 7 days | [1 hour, 30 days] | How long after `proposeSlash` the operator has to dispute |
+| `instantSlashEnabled` | `false` | bool | Reserved for emergencies. The current public `proposeSlash` hardcodes `instant=false`, so this flag has no effect through the standard API. A future internal entrypoint (or upgrade) would honor it. |
+| `maxSlashBps` | 10000 | (0, 10000] | Hard cap on any single slash proposal |
+| `disputeResolutionDeadline` | 14 days | [1 day, 60 days] | Time `SLASH_ADMIN` has to resolve a dispute before it auto-fails |
+| `disputeBond` | 0 | uint256 | Native-asset bond required from the operator to dispute. Forfeit to treasury on auto-fail or execute, refunded on cancel |
+| `maxPendingSlashesPerOperator` | 32 | (0, uint16.max] | Cap on concurrent pending slashes per operator (anti-spam) |
+
+`disputeBond` defaults to 0 (disabled). On a live network you SHOULD set a bond high enough to deter free self-disputes but low enough that legitimate disputes are not gated by capital. A reasonable starting point is 1% of `minOperatorStake`.
+
+## Operator Runbook
+
+### You Received a Slash Proposal
+
+You will see a `SlashProposed(slashId, serviceId, operator, ...)` event indexed against your operator address. The dispute window has started.
+
+1. **Read the evidence.** The `evidence` field is typically an IPFS CID. Fetch it. Verify whether the alleged misbehavior happened.
+2. **Decide whether to dispute.**
+   - If the slash is correct, do nothing. It will execute after `disputeWindow + TIMESTAMP_BUFFER`. Your delegators' withdrawals are blocked until then.
+   - If the slash is incorrect, dispute before `executeAfter`.
+3. **To dispute**, call `disputeSlash{value: config.disputeBond}(slashId, "concise reason")`. If you do not post exactly `disputeBond`, the call reverts.
+4. **After disputing**, escalate to `SLASH_ADMIN`. Provide your evidence off-chain. The admin has up to `disputeResolutionDeadline` to call `cancelSlash` (refunds your bond) or do nothing (slash auto-executes, bond forfeit).
+5. **Watch your `_operatorPendingSlashCount`.** If it stays elevated long after a dispute resolved, raise a ticket with protocol governance to investigate.
+
+### You Want to Leave the Network
+
+`_startLeaving` requires BOTH zero pending slashes AND zero active services for the operator (the latter is queried from Tangle via `getOperatorTotalActiveServices`). If either count is non-zero you must resolve first.
+
+If you were slashed below `minOperatorStake` and your status flipped to `Inactive`, you can still call `_startLeaving` to exit through the standard delay. The remaining stake is returned at `_completeLeaving` time.
+
+## SLASH_ADMIN Runbook
+
+`SLASH_ADMIN_ROLE` is the protocol's slashing oversight role. It SHOULD be a multisig distinct from `ADMIN_ROLE` and `UPGRADER_ROLE`.
+
+### Reviewing a Dispute
+
+A `SlashDisputed(slashId, disputer, reason)` event fires. You have `disputeResolutionDeadline` (default 14 days) to act.
+
+1. Read the dispute reason and the original evidence.
+2. Off-chain communication with the operator and the slash proposer is expected.
+3. **If the dispute is valid**: `cancelSlash(slashId, "summary")`. Bond refunds to the operator, pending counters decrement.
+4. **If the dispute is spurious**: do nothing. After the deadline passes, anyone can call `executeSlash`, the slash applies, and the bond is forfeit to the treasury.
+5. **To force-resolve early in the spurious case**: call `cancelSlash` only if you mean to drop the proposal entirely. There is no "reject the dispute" path. The auto-execution path is the right answer when the operator is wrong.
+
+### Detecting Stuck State
+
+If `_operatorPendingSlashCount[op]` stays elevated and there is no matching `Pending`/`Disputed` proposal, the counter has drifted. Recovery:
+
+- Investigate whether a slash was cancelled or executed without decrementing the counter (would indicate a protocol bug; file an issue).
+- As a last resort, `SlashingManager.resetPendingSlashCount(operator, count)` corrects the counter. Default implementation reverts; an admin override SHOULD be deployed only when a real drift is observed and only by governance.
+
+## Dispute Economics
+
+The dispute bond is the only economic counter to free DoS by the operator. Without a bond, an operator slashed for misbehavior could:
+
+1. Be slashed
+2. Self-dispute (free)
+3. Lock all their delegators for `disputeResolutionDeadline`
+4. Continue extracting value during the window
+
+With the bond, in the common case:
+
+- A spurious self-dispute costs the operator `disputeBond`, forfeit to treasury when the dispute auto-fails.
+- A legitimate dispute is refunded to the operator on `cancelSlash`.
+
+Edge cases (handled by `_settleDisputeBond`):
+
+- If `_treasury == address(0)` when a forfeit would occur, the bond is RESTORED on the proposal (left claimable) instead of being stranded. Configure the treasury before any forfeit-eligible slash auto-fails.
+- If the recipient call (`disputer.call` or `treasury.call`) reverts, the bond is RESTORED on the proposal symmetrically. The bond is never silently lost.
+- If `proposal.disputer == address(0)` on a refund call (no disputer recorded), the bond falls through to treasury rather than reverting.
+
+Setting `disputeBond` correctly is a governance call. Too low and DoS is cheap. Too high and operators with legitimate disputes cannot afford to defend themselves.
+
+The deadline (`disputeResolutionDeadline`) matters because without auto-resolution, a compromised, lost-key, or forgetful `SLASH_ADMIN` would create a permanent lockup vector. The protocol prefers automatic forward progress over indefinite adjudication.
+
+## Per-Asset Commitment Slashing
+
+When an operator joins a service via `approveServiceWithCommitments`, they declare per-asset exposure (`AssetSecurityCommitment[]`). On slash:
+
+- `_executeSlashOnStaking` reads `_serviceSecurityCommitments[serviceId][operator]`.
+- If commitments exist, it routes to `slashForService(operator, blueprintId, serviceId, commitments, slashBps, evidence)` which only burns the committed assets proportionally to `commitment.exposureBps`.
+- If no commitments exist (legacy services), it falls back to `slashForBlueprint` which burns all enabled assets uniformly.
+
+This differs from prior behavior, which slashed all enabled assets uniformly. An operator who committed `TNT@5000bps` and `USDC@2000bps` to service A but only `TNT@5000bps` to service B will have only TNT slashed for a service-B violation.
+
+## Future Evolution
+
+The `Tangle` contract is UUPS-upgradeable through `TangleTimelock`. The slashing model can evolve without redeployment:
+
+- **Config tunings** (no upgrade): all six `SlashConfig` fields via `setSlashConfig`
+- **Behavior changes** (UUPS upgrade through timelock):
+  - Operator-specific emergency freeze
+  - Slash escrow with redistribution to harmed parties
+  - Migration to UMA optimistic oracle, Kleros, or multi-tier escalation
+  - Per-blueprint `maxSlashBps` overrides
+  - Cumulative slash caps per operator per epoch
+
+Storage gaps are left in `TangleStorage` and `MBSMRegistry` with the discipline documented in [Upgrade Discipline](/developers/upgrade-discipline). Adding fields to `SlashProposal` or `SlashConfig` is non-destructive when appended (the structs are stored in mappings, not packed arrays).
+
+## Reference
+
+- Interface: [`ITangleSlashing`](/developers/api/reference/ITangleSlashing)
+- Source: [`Slashing.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol)
+- Library: [`SlashingLib.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/libraries/SlashingLib.sol)
+- Stake reduction: [`SlashingManager.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/staking/SlashingManager.sol)
+- Auth surface: [Auth Surface](/developers/auth-surface)
+- Upgrade discipline: [Upgrade Discipline](/developers/upgrade-discipline)

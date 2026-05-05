@@ -1,0 +1,264 @@
+---
+title: Auth Surface
+description: Role-by-role permissions across Tangle protocol contracts.
+---
+
+# Auth Surface
+
+This page enumerates every privileged function in the protocol, who can call it, and which production address SHOULD hold the role. If you are setting up a new deployment or auditing an existing one, this is the canonical reference.
+
+For the slashing-specific subset see [Slashing](/developers/slashing).
+
+## Role Registry
+
+Roles are defined in [`Base.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) and granted at initialization. The deploy script ([`script/FullDeploy.s.sol`](https://github.com/tangle-network/tnt-core/blob/main/script/FullDeploy.s.sol)) hands every role to the deployer EOA at first, then transfers them to production multisigs and the timelock through `_applyRoleHandoff`.
+
+Note: each contract defines its own role set. `Tangle` and `MultiAssetDelegation` (MAD) do NOT share role constants; the same name on both contracts is a different keccak slot.
+
+| Role | Where | Suggested holder |
+|---|---|---|
+| `DEFAULT_ADMIN_ROLE` | All AccessControl contracts | `TangleTimelock` |
+| `ADMIN_ROLE` | Tangle, MAD, and most peripherals | `TangleTimelock` |
+| `PAUSER_ROLE` | Tangle only | Operations multisig |
+| `UPGRADER_ROLE` | Tangle, MBSMRegistry, TangleToken, RewardVaults, InflationPool, TangleMetrics, ServiceFeeDistributor, StreamingPaymentManager | `TangleTimelock` |
+| `SLASH_ADMIN_ROLE` | Tangle only | Slashing oversight multisig |
+| `MANAGER_ROLE` | MBSMRegistry only | `TangleTimelock` |
+| `ASSET_MANAGER_ROLE` | MAD only | Operations multisig |
+| `SLASHER_ROLE` | MAD only | Tangle (via `addSlasher`) |
+| `TANGLE_ROLE` | MAD only | Tangle (via `setTangle`) |
+| `MINTER_ROLE` | TangleToken only | `TangleTimelock` |
+
+`MultiAssetDelegation` does NOT define a `UPGRADER_ROLE`. Its `_authorizeUpgrade` is gated on `ADMIN_ROLE`. Its pause/unpause are gated on `ADMIN_ROLE` (no separate `PAUSER_ROLE` on MAD).
+
+## Tangle (`src/Tangle.sol`)
+
+Tangle is the protocol entrypoint, composed of mixins under `src/core/`. Every state-changing path is gated by exactly one of:
+
+- A specific OZ AccessControl role
+- Service or blueprint ownership
+- Permissionless gating (open to any caller)
+
+### Contract Administration
+
+| Function | Caller | Source |
+|---|---|---|
+| `pause()` | `PAUSER_ROLE` | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+| `unpause()` | `PAUSER_ROLE` | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+| `_authorizeUpgrade(newImpl)` | `UPGRADER_ROLE` | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+| `setMBSMRegistry(addr)` | `ADMIN_ROLE` (when not paused) | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+| `setMetricsRecorder(addr)` | `ADMIN_ROLE` | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+| `setOperatorStatusRegistry(addr)` | `ADMIN_ROLE` | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+| `setServiceFeeDistributor(addr)` | `ADMIN_ROLE` | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+| `setPriceOracle(addr)` | `ADMIN_ROLE` | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+| `setTreasury(addr)` | `ADMIN_ROLE` (NOT `whenNotPaused`) | [Payments.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Payments.sol) |
+| `setPaymentSplit(split)` | `ADMIN_ROLE` (NOT `whenNotPaused`) | [Payments.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Payments.sol) |
+| `setTntToken(addr)` | `ADMIN_ROLE` | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+| `setRewardVaults(addr)` | `ADMIN_ROLE` | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+| `setMaxBlueprintsPerOperator(n)` | `ADMIN_ROLE` | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+| `setDefaultTntMinExposureBps(bps)` | `ADMIN_ROLE` | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+| `setTntPaymentDiscountBps(bps)` | `ADMIN_ROLE` | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+| `setMinServiceTtl(seconds)` | `ADMIN_ROLE` | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+| `setMaxServiceTtl(seconds)` | `ADMIN_ROLE` | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+| `setRequestExpiryGracePeriod(seconds)` | `ADMIN_ROLE` | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+| `setMaxQuoteAge(seconds)` | `ADMIN_ROLE` | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol) |
+
+Most admin setters in `Base.sol` are `whenNotPaused`. The two exceptions, both in `Payments.sol`, are `setTreasury` and `setPaymentSplit`. Paused governance can still rewire payment routing; this is intentional so a halted protocol can fix a known-bad treasury before resuming.
+
+### Slashing
+
+| Function | Caller | Source |
+|---|---|---|
+| `proposeSlash(serviceId, op, slashBps, evidence)` | Service owner, blueprint owner, or BSM-declared origin | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
+| `disputeSlash(slashId, reason)` `payable` | Slashed operator (must post bond), or `SLASH_ADMIN_ROLE` | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
+| `executeSlash(slashId)` | Anyone (gated by `isExecutable`) | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
+| `executeSlashBatch(ids)` | Anyone | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
+| `cancelSlash(slashId, reason)` | `SLASH_ADMIN_ROLE` | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
+| `setSlashConfig(...)` | `ADMIN_ROLE` | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
+
+See [Slashing](/developers/slashing) for the full lifecycle and runbooks.
+
+### Blueprints
+
+| Function | Caller | Source |
+|---|---|---|
+| `createBlueprint(def)` | Anyone (when not paused), `nonReentrant` | [BlueprintsCreate.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/BlueprintsCreate.sol) |
+| `updateBlueprint(id, uri, hash)` | Blueprint owner, `nonReentrant` | [BlueprintsManage.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/BlueprintsManage.sol) |
+| `transferBlueprint(id, newOwner)` | Blueprint owner, `nonReentrant` | [BlueprintsManage.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/BlueprintsManage.sol) |
+| `deactivateBlueprint(id)` | Blueprint owner, `nonReentrant` | [BlueprintsManage.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/BlueprintsManage.sol) |
+| `setJobEventRates(id, idxs, rates)` | Blueprint owner, `nonReentrant` | [BlueprintsManage.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/BlueprintsManage.sol) |
+| `setBlueprintResourceRequirements(id, reqs)` | Blueprint owner, `nonReentrant` | [BlueprintsManage.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/BlueprintsManage.sol) |
+
+### Operators
+
+| Function | Caller | Source |
+|---|---|---|
+| `registerOperator(...)` | Anyone with valid stake (when not paused), `nonReentrant` | [Operators.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Operators.sol) |
+| `unregisterOperator(id)` | The operator (no active services), `nonReentrant` | [Operators.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Operators.sol) |
+| `updateOperatorPreferences(id, key, rpc)` | The operator | [Operators.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Operators.sol) |
+
+### Services
+
+| Function | Caller |
+|---|---|
+| `requestService(...)` | Anyone (when not paused) |
+| `approveService(requestId, stakingPercent)` | Operator listed in the request (request not expired) |
+| `approveServiceWithCommitments(...)` | Operator listed in the request |
+| `approveServiceWithBls(requestId, stakingPercent, blsPubkey)` | Operator listed in the request |
+| `approveServiceWithCommitmentsAndBls(...)` | Operator listed in the request |
+| `rejectService(requestId)` | Operator listed in the request |
+| `expireServiceRequest(requestId)` | Anyone, after grace period (when not activated) |
+| `terminateService(serviceId)` | Service owner |
+| `forceRemoveOperator(serviceId, operator)` | Blueprint manager only |
+
+### Payments
+
+| Function | Caller |
+|---|---|
+| `fundService(serviceId, amount)` `payable` | Anyone (re-checks manager policy and TTL) |
+| `withdrawRemainingEscrow(serviceId)` | Service owner, after termination |
+| `billSubscription(serviceId)` | Anyone, gated by interval |
+| `billSubscriptionBatch(ids)` | Anyone |
+| `claimReward(token)` | The reward beneficiary |
+| `claimRewards(tokens)` | The reward beneficiary |
+
+## MultiAssetDelegation (`src/staking/MultiAssetDelegation.sol`)
+
+Staking and delegation are a separate proxy with its own role registry. Functions are split across facets: `StakingAdminFacet`, `StakingAssetsFacet`, `StakingOperatorsFacet`, `StakingSlashingFacet`, `StakingDelegationsFacet`, `StakingDepositsFacet`, `StakingViewsFacet`.
+
+### Upgrade and Global Config (StakingAdminFacet)
+
+| Function | Caller |
+|---|---|
+| `_authorizeUpgrade(newImpl)` | `ADMIN_ROLE` (NOT a separate `UPGRADER_ROLE`; SHOULD be held by `TangleTimelock`) |
+| `pause()` / `unpause()` | `ADMIN_ROLE` (no separate `PAUSER_ROLE` on MAD) |
+| `setTangle(addr)` | `ADMIN_ROLE` -- grants `TANGLE_ROLE` |
+| `setOperatorBondToken(token)` | `ADMIN_ROLE` -- locked once any operator exists |
+| `addSlasher(addr)` / `removeSlasher(addr)` | `ADMIN_ROLE` -- grants/revokes `SLASHER_ROLE` |
+| `setOperatorCommission(bps)` | `ADMIN_ROLE` (queues a 7-day timelocked commission change) |
+| `executeCommissionChange()` / `cancelCommissionChange()` | `ADMIN_ROLE` |
+| `setDelays(...)` | `ADMIN_ROLE` |
+| `setRewardsManager(addr)` / `setServiceFeeDistributor(addr)` | `ADMIN_ROLE` |
+| `rescueTokens(token, to, amount)` | `DEFAULT_ADMIN_ROLE` |
+| `sweepDust(token, to)` | `ADMIN_ROLE` |
+| `resetPendingSlashCount(op, count)` | `ADMIN_ROLE` (recovery only; default reverts unless overridden) |
+
+### Asset Configuration (StakingAssetsFacet)
+
+| Function | Caller |
+|---|---|
+| `enableAsset(asset, config)` | `ASSET_MANAGER_ROLE` |
+| `enableAssetWithAdapter(asset, config, adapter)` | `ASSET_MANAGER_ROLE` |
+| `disableAsset(asset)` | `ASSET_MANAGER_ROLE` |
+| `registerAdapter(token, adapter)` | `ASSET_MANAGER_ROLE` |
+| `removeAdapter(token)` | `ASSET_MANAGER_ROLE` |
+| `setRequireAdapters(bool)` | `ASSET_MANAGER_ROLE` |
+| `startAdapterMigration` / `completeAdapterMigration` / `cancelAdapterMigration` | `ASSET_MANAGER_ROLE` |
+
+### Slashing Entrypoints (StakingSlashingFacet)
+
+| Function | Caller |
+|---|---|
+| `slashForBlueprint(...)` | `SLASHER_ROLE` (Tangle is the canonical slasher) |
+| `slashForService(...)` | `SLASHER_ROLE` -- per-asset commitment slashing |
+| `slash(...)` | `SLASHER_ROLE` -- native consensus slash |
+| `incrementPendingSlash(operator)` | `SLASHER_ROLE` |
+| `decrementPendingSlash(operator)` | `SLASHER_ROLE` |
+
+### Operator Wiring From Tangle (StakingOperatorsFacet)
+
+| Function | Caller |
+|---|---|
+| `addBlueprintForOperator(op, id)` | `TANGLE_ROLE` |
+| `removeBlueprintForOperator(op, id)` | `TANGLE_ROLE` |
+
+## MBSMRegistry (`src/MBSMRegistry.sol`)
+
+| Function | Caller |
+|---|---|
+| `addVersion(mbsm)` | `MANAGER_ROLE`. Rejects EOA *targets* (`mbsmAddress.code.length != 0`); the caller can be any holder of the role. |
+| `pinBlueprint(blueprintId, revision)` | `MANAGER_ROLE` |
+| `unpinBlueprint(blueprintId)` | `MANAGER_ROLE` |
+| `initiateDeprecation(revision)` | `MANAGER_ROLE` |
+| `completeDeprecation(revision)` | `MANAGER_ROLE`, after grace period |
+| `queueEmergencyDeprecation(revision)` | `MANAGER_ROLE` |
+| `executeEmergencyDeprecation(revision)` | `MANAGER_ROLE`, after `EMERGENCY_DEPRECATION_DELAY` (24h) |
+| `cancelEmergencyDeprecation(revision)` | `MANAGER_ROLE` |
+| `setDeprecationGracePeriod(seconds)` | `MANAGER_ROLE` |
+| `_authorizeUpgrade(newImpl)` | `UPGRADER_ROLE` |
+
+`MANAGER_ROLE` SHOULD be the timelock. The 24h emergency deprecation delay is the floor on how fast a single role can disable an MBSM revision; combined with the timelock delay on top, a queued malicious deprecation has at least `timelockDelay + 24h` of observability before it lands.
+
+## Beacon stack
+
+### `ValidatorPodManager`
+
+| Function | Caller |
+|---|---|
+| `createPod()` | Anyone (one pod per address) |
+| `recordBeaconChainEthBalanceUpdate(podOwner, sharesDelta)` | Pod (the contract itself) |
+
+### `L2SlashingReceiver`
+
+| Function | Caller |
+|---|---|
+| `receiveMessage(sourceChainId, sender, payload)` | The configured cross-chain messenger only |
+| `setAuthorizedSender(chainId, sender, authorized)` | Owner; authorization is timelocked (2 days) |
+| `activateAuthorizedSender(chainId, sender)` | Owner, after `SENDER_ACTIVATION_DELAY` |
+| `setMessenger(addr)` | Owner |
+
+### `L2SlashingConnector`
+
+| Function | Caller |
+|---|---|
+| `propagateBeaconSlashing(pod, newFactor)` | `slashingOracle` OR `owner` (the `onlySlashingOracle` modifier accepts both) |
+| `propagateBeaconSlashingToChain(pod, newFactor, destChain)` | `slashingOracle` or `owner` |
+| `batchPropagateBeaconSlashing(...)` | `slashingOracle` or `owner` |
+| `setMessenger(addr)` | Owner |
+| `setSlashingOracle(addr)` | Owner |
+| `setChainConfig(...)` | Owner |
+| `setDefaultDestinationChain(chainId)` | Owner |
+| `registerPodOperator(pod, operator)` | Owner |
+| `batchRegisterPodOperators(...)` | Owner |
+| `transferOwnership(newOwner)` | Owner |
+
+## Governance
+
+### `TangleTimelock`
+
+| Function | Caller |
+|---|---|
+| `schedule(...)` | `PROPOSER_ROLE` (TangleGovernor) |
+| `execute(...)` | `EXECUTOR_ROLE` (TangleGovernor or open) |
+| `cancel(...)` | `CANCELLER_ROLE` |
+| `updateDelay(newDelay)` | The timelock itself only (`onlySelf`), bounded `[1d, 30d]` |
+| `_authorizeUpgrade(newImpl)` | The timelock itself (`onlySelf`) |
+
+### `TangleGovernor`
+
+| Function | Caller |
+|---|---|
+| `propose(...)` | Anyone with voting power above `proposalThreshold` |
+| `castVote(...)` | Token holders with voting power at the snapshotted timestamp |
+| `_authorizeUpgrade(newImpl)` | Through governance proposal only |
+
+### `TangleToken`
+
+| Function | Caller |
+|---|---|
+| `mint(to, amount)` | `MINTER_ROLE` (timelock); subject to `MAX_SUPPLY` |
+| `_authorizeUpgrade(newImpl)` | `UPGRADER_ROLE` |
+| `clock()` | view, returns `block.timestamp` (ERC-6372) |
+
+## Recommended Production Grant Matrix
+
+| Role | Holder | Why |
+|---|---|---|
+| `DEFAULT_ADMIN_ROLE` | TangleTimelock | Role grants and revokes flow through governance |
+| `ADMIN_ROLE` | TangleTimelock | Setters need a delay window for community exit |
+| `UPGRADER_ROLE` | TangleTimelock | Upgrades need a delay window |
+| `PAUSER_ROLE` | Operations multisig | Fast response to active incidents |
+| `SLASH_ADMIN_ROLE` | Slashing oversight multisig | Distinct from operations to prevent conflict of interest |
+| `MANAGER_ROLE` (MBSM) | TangleTimelock | MBSM version changes need a delay |
+| `MINTER_ROLE` (TangleToken) | TangleTimelock | Inflation flows through governance |
+
+The deployer EOA MUST hold zero roles after deployment. Verify with the on-chain audit that `_applyRoleHandoff` produced. See [Upgrade Discipline](/developers/upgrade-discipline) for the post-deploy checklist.
