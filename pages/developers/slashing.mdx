@@ -168,7 +168,7 @@ The deadline (`disputeResolutionDeadline`) matters because without auto-resoluti
 
 ## Per-Asset Commitment Slashing
 
-When an operator joins a service via `approveServiceWithCommitments`, they declare per-asset exposure (`AssetSecurityCommitment[]`). On slash:
+When an operator joins a service via `approveService(ApprovalParams)` with a non-empty `securityCommitments`, they declare per-asset exposure (`AssetSecurityCommitment[]`). On slash:
 
 - `_executeSlashOnStaking` reads `_serviceSecurityCommitments[serviceId][operator]`.
 - If commitments exist, it routes to `slashForService(operator, blueprintId, serviceId, commitments, slashBps, evidence)` which only burns the committed assets proportionally to `commitment.exposureBps`.

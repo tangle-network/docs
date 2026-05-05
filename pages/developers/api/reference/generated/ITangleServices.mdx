@@ -50,36 +50,40 @@ Get resource requirements for a service request
 #### approveService
 
 ```solidity
-function approveService(uint64 requestId, uint8 stakingPercent) external
+function approveService(struct Types.ApprovalParams params) external
 ```
 
-Approve a service request (as operator) - simple version
+Approve a service request as one of its operators.
 
-#### approveServiceWithCommitments
+_Single entrypoint covering every approval mode. Pass empty/zero fields on `ApprovalParams` to opt out of the corresponding capability:_
+
+- `securityCommitments == []` — no per-asset commitment supplied. Only valid when the request has no security requirements OR the only requirement is the protocol-default TNT requirement (auto-filled at min-exposure).
+- `blsPubkey == [0,0,0,0]` — operator does NOT register a BLS pubkey for aggregated job-result signing. BLS is opt-in; the protocol accepts any operator.
+- `teeCommitments == []` — operator does NOT bind to a TEE attestation profile.
+
+#### getTeeCommitmentRoot
 
 ```solidity
-function approveServiceWithCommitments(uint64 requestId, struct Types.AssetSecurityCommitment[] commitments) external
+function getTeeCommitmentRoot(uint64 serviceId, address operator) external view returns (bytes32)
 ```
 
-Approve a service request with multi-asset security commitments
+Returns `keccak256(abi.encode(commitments))` over an operator's `TeeAttestationCommitment[]` for a service, or `bytes32(0)` if none was supplied. The full array was emitted at approval time in `TeeCommitmentsRecorded`; slashing and provisioning oracles supply the array as a witness and verify `keccak256(abi.encode(witness)) == getTeeCommitmentRoot(serviceId, operator)`.
 
-_Commitments must match the security requirements specified in the request_
-
-#### approveServiceWithBls
+#### teeNonceFor
 
 ```solidity
-function approveServiceWithBls(uint64 requestId, uint8 stakingPercent, uint256[4] blsPubkey) external
+function teeNonceFor(uint64 requestId) external view returns (bytes32)
 ```
 
-Approve a service request with BLS public key for aggregated signature verification
+Canonical TEE attestation nonce binding for `requestId` on this contract on this chain. Operators MUST submit this exact value as `nonceBinding` in any `TeeAttestationCommitment` for the request — it eliminates cross-request attestation replay at approval time.
 
-#### approveServiceWithCommitmentsAndBls
+#### blsPopMessage
 
 ```solidity
-function approveServiceWithCommitmentsAndBls(uint64 requestId, struct Types.AssetSecurityCommitment[] commitments, uint256[4] blsPubkey) external
+function blsPopMessage(address operator, uint256[4] blsPubkey) external view returns (bytes)
 ```
 
-Approve a service request with both security commitments and BLS public key
+Build the canonical message an operator must sign with their BLS secret key to register a public key. Bound to chainId, the verifying contract, and operator.
 
 #### rejectService
 
@@ -88,6 +92,16 @@ function rejectService(uint64 requestId) external
 ```
 
 Reject a service request (as operator)
+
+#### expireServiceRequest
+
+```solidity
+function expireServiceRequest(uint64 requestId) external
+```
+
+Permissionlessly expire a stale service request and refund the requester.
+
+_Anyone may call once `block.timestamp > req.createdAt + grace` (grace is `_requestExpiryGracePeriod` or `ProtocolConfig.REQUEST_EXPIRY_GRACE_PERIOD`). Reverts if the request was already rejected, already activated, or still within its grace window._
 
 #### createServiceFromQuotes
 

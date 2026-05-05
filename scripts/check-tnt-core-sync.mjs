@@ -15,7 +15,9 @@ function resolveTntCoreDir() {
   ].filter(Boolean);
 
   for (const candidate of candidates) {
-    if (fs.existsSync(path.join(candidate, "src/interfaces/ITangleServices.sol"))) {
+    if (
+      fs.existsSync(path.join(candidate, "src/interfaces/ITangleServices.sol"))
+    ) {
       return candidate;
     }
   }
@@ -34,7 +36,10 @@ const helperPath = path.join(
 const sourcePath = path.join(tntCoreDir, "src/interfaces/ITangleServices.sol");
 const docsPaths = [
   path.join(repoRoot, "pages/developers/api/reference/ITangleServices.mdx"),
-  path.join(repoRoot, "pages/developers/api/reference/generated/ITangleServices.mdx"),
+  path.join(
+    repoRoot,
+    "pages/developers/api/reference/generated/ITangleServices.mdx",
+  ),
 ];
 
 function readFile(targetPath) {
@@ -57,8 +62,10 @@ const source = readFile(sourcePath).replace(/\s+/g, " ");
 const requiredSourceSnippets = [
   "Types.ConfidentialityPolicy confidentiality",
   "function getServiceRequestResourceRequirements(",
-  "function approveServiceWithBls(",
-  "function approveServiceWithCommitmentsAndBls(",
+  "function approveService(Types.ApprovalParams calldata params)",
+  "function expireServiceRequest(uint64 requestId)",
+  "function getTeeCommitmentRoot(uint64 serviceId, address operator)",
+  "function teeNonceFor(uint64 requestId)",
   "function terminateServiceForNonPayment(",
   "event ServiceTerminatedForNonPayment(",
 ];
@@ -83,8 +90,10 @@ const requiredDocsSnippets = [
   "function requestServiceWithExposure(uint64 blueprintId, address[] operators, uint16[] exposureBps, bytes config, address[] permittedCallers, uint64 ttl, address paymentToken, uint256 paymentAmount, enum Types.ConfidentialityPolicy confidentiality) external payable returns (uint64 requestId)",
   "function requestServiceWithSecurity(uint64 blueprintId, address[] operators, struct Types.AssetSecurityRequirement[] securityRequirements, bytes config, address[] permittedCallers, uint64 ttl, address paymentToken, uint256 paymentAmount, enum Types.ConfidentialityPolicy confidentiality) external payable returns (uint64 requestId)",
   "function getServiceRequestResourceRequirements(uint64 requestId) external view returns (struct Types.ResourceCommitment[])",
-  "function approveServiceWithBls(uint64 requestId, uint8 stakingPercent, uint256[4] blsPubkey) external",
-  "function approveServiceWithCommitmentsAndBls(uint64 requestId, struct Types.AssetSecurityCommitment[] commitments, uint256[4] blsPubkey) external",
+  "function approveService(struct Types.ApprovalParams params) external",
+  "function expireServiceRequest(uint64 requestId) external",
+  "function getTeeCommitmentRoot(uint64 serviceId, address operator) external view returns (bytes32)",
+  "function teeNonceFor(uint64 requestId) external view returns (bytes32)",
   "function terminateServiceForNonPayment(uint64 serviceId) external",
   "event ServiceRequested(uint64 requestId, uint64 blueprintId, address requester, enum Types.ConfidentialityPolicy confidentiality)",
   "event ServiceRequestedWithSecurity(uint64 requestId, uint64 blueprintId, address requester, enum Types.ConfidentialityPolicy confidentiality)",
