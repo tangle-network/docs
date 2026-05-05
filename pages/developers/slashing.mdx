@@ -73,14 +73,14 @@ The admin agrees with a dispute or otherwise wants to drop a proposal. State tra
 
 ## Authorization
 
-| Function | Caller |
-|---|---|
-| `proposeSlash` | Service owner, blueprint owner, or BSM-declared `querySlashingOrigin`. Operator must already be in the service (`OperatorNotInService` revert otherwise). `slashBps` must be in `(0, BPS_DENOMINATOR]` and produce non-zero effective bps after exposure scaling. |
-| `disputeSlash` | The slashed operator (must post bond), or `SLASH_ADMIN_ROLE` (no bond) |
-| `executeSlash` | Anyone, gated by `isExecutable` |
-| `executeSlashBatch` | Anyone. Non-executable ids in the batch are SILENTLY SKIPPED, not reverted. |
-| `cancelSlash` | `SLASH_ADMIN_ROLE` only. Can cancel from `Pending` or `Disputed`. |
-| `setSlashConfig` | `ADMIN_ROLE` (route through `TangleTimelock` in production) |
+| Function            | Caller                                                                                                                                                                                                                                                            |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `proposeSlash`      | Service owner, blueprint owner, or BSM-declared `querySlashingOrigin`. Operator must already be in the service (`OperatorNotInService` revert otherwise). `slashBps` must be in `(0, BPS_DENOMINATOR]` and produce non-zero effective bps after exposure scaling. |
+| `disputeSlash`      | The slashed operator (must post bond), or `SLASH_ADMIN_ROLE` (no bond)                                                                                                                                                                                            |
+| `executeSlash`      | Anyone, gated by `isExecutable`                                                                                                                                                                                                                                   |
+| `executeSlashBatch` | Anyone. Non-executable ids in the batch are SILENTLY SKIPPED, not reverted.                                                                                                                                                                                       |
+| `cancelSlash`       | `SLASH_ADMIN_ROLE` only. Can cancel from `Pending` or `Disputed`.                                                                                                                                                                                                 |
+| `setSlashConfig`    | `ADMIN_ROLE` (route through `TangleTimelock` in production)                                                                                                                                                                                                       |
 
 The BSM-declared slashing origin is queried dynamically on each `proposeSlash` call. Operators MUST audit the BSM's code AND its upgradeability before joining any blueprint that uses one. A BSM whose owner is compromised can grant slashing rights to an attacker. If you do not accept that risk, only join blueprints whose BSM is non-upgradeable.
 
@@ -90,14 +90,14 @@ See [Auth Surface](/developers/auth-surface) for the full role-by-role table acr
 
 Set with `setSlashConfig(disputeWindow, instantSlashEnabled, maxSlashBps, disputeResolutionDeadline, disputeBond, maxPendingSlashesPerOperator)`. All parameters are admin-tunable and SHOULD be timelocked in production.
 
-| Parameter | Default | Bounds | Purpose |
-|---|---|---|---|
-| `disputeWindow` | 7 days | [1 hour, 30 days] | How long after `proposeSlash` the operator has to dispute |
-| `instantSlashEnabled` | `false` | bool | Reserved for emergencies. The current public `proposeSlash` hardcodes `instant=false`, so this flag has no effect through the standard API. A future internal entrypoint (or upgrade) would honor it. |
-| `maxSlashBps` | 10000 | (0, 10000] | Hard cap on any single slash proposal |
-| `disputeResolutionDeadline` | 14 days | [1 day, 60 days] | Time `SLASH_ADMIN` has to resolve a dispute before it auto-fails |
-| `disputeBond` | 0 | uint256 | Native-asset bond required from the operator to dispute. Forfeit to treasury on auto-fail or execute, refunded on cancel |
-| `maxPendingSlashesPerOperator` | 32 | (0, uint16.max] | Cap on concurrent pending slashes per operator (anti-spam) |
+| Parameter                      | Default | Bounds            | Purpose                                                                                                                                                                                               |
+| ------------------------------ | ------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `disputeWindow`                | 7 days  | [1 hour, 30 days] | How long after `proposeSlash` the operator has to dispute                                                                                                                                             |
+| `instantSlashEnabled`          | `false` | bool              | Reserved for emergencies. The current public `proposeSlash` hardcodes `instant=false`, so this flag has no effect through the standard API. A future internal entrypoint (or upgrade) would honor it. |
+| `maxSlashBps`                  | 10000   | (0, 10000]        | Hard cap on any single slash proposal                                                                                                                                                                 |
+| `disputeResolutionDeadline`    | 14 days | [1 day, 60 days]  | Time `SLASH_ADMIN` has to resolve a dispute before it auto-fails                                                                                                                                      |
+| `disputeBond`                  | 0       | uint256           | Native-asset bond required from the operator to dispute. Forfeit to treasury on auto-fail or execute, refunded on cancel                                                                              |
+| `maxPendingSlashesPerOperator` | 32      | (0, uint16.max]   | Cap on concurrent pending slashes per operator (anti-spam)                                                                                                                                            |
 
 `disputeBond` defaults to 0 (disabled). On a live network you SHOULD set a bond high enough to deter free self-disputes but low enough that legitimate disputes are not gated by capital. A reasonable starting point is 1% of `minOperatorStake`.
 

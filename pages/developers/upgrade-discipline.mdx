@@ -9,19 +9,19 @@ Every upgradeable Tangle contract is UUPS. The role that gates `_authorizeUpgrad
 
 ## Upgradeable Contracts
 
-| Contract | Upgrade gate | Source |
-|---|---|---|
-| `Tangle` | `UPGRADER_ROLE` | [`src/Tangle.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/Tangle.sol) |
-| `MultiAssetDelegation` | `ADMIN_ROLE` (no `UPGRADER_ROLE` on this contract) | [`src/staking/MultiAssetDelegation.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/staking/MultiAssetDelegation.sol) |
-| `MBSMRegistry` | `UPGRADER_ROLE` | [`src/MBSMRegistry.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/MBSMRegistry.sol) |
-| `TangleGovernor` | `onlyGovernance` (proposal-driven) | [`src/governance/TangleGovernor.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleGovernor.sol) |
-| `TangleTimelock` | `onlySelf` (the timelock executing its own queued proposal) | [`src/governance/TangleTimelock.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleTimelock.sol) |
-| `TangleToken` | `UPGRADER_ROLE` | [`src/governance/TangleToken.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleToken.sol) |
-| `RewardVaults` | `UPGRADER_ROLE` | [`src/rewards/RewardVaults.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/RewardVaults.sol) |
-| `InflationPool` | `UPGRADER_ROLE` | [`src/rewards/InflationPool.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/InflationPool.sol) |
-| `ServiceFeeDistributor` | `UPGRADER_ROLE` | [`src/rewards/ServiceFeeDistributor.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol) |
-| `StreamingPaymentManager` | `UPGRADER_ROLE` | [`src/rewards/StreamingPaymentManager.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/StreamingPaymentManager.sol) |
-| `TangleMetrics` | `UPGRADER_ROLE` | [`src/rewards/TangleMetrics.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/TangleMetrics.sol) |
+| Contract                  | Upgrade gate                                                | Source                                                                                                                                    |
+| ------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `Tangle`                  | `UPGRADER_ROLE`                                             | [`src/Tangle.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/Tangle.sol)                                                   |
+| `MultiAssetDelegation`    | `ADMIN_ROLE` (no `UPGRADER_ROLE` on this contract)          | [`src/staking/MultiAssetDelegation.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/staking/MultiAssetDelegation.sol)       |
+| `MBSMRegistry`            | `UPGRADER_ROLE`                                             | [`src/MBSMRegistry.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/MBSMRegistry.sol)                                       |
+| `TangleGovernor`          | `onlyGovernance` (proposal-driven)                          | [`src/governance/TangleGovernor.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleGovernor.sol)             |
+| `TangleTimelock`          | `onlySelf` (the timelock executing its own queued proposal) | [`src/governance/TangleTimelock.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleTimelock.sol)             |
+| `TangleToken`             | `UPGRADER_ROLE`                                             | [`src/governance/TangleToken.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleToken.sol)                   |
+| `RewardVaults`            | `UPGRADER_ROLE`                                             | [`src/rewards/RewardVaults.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/RewardVaults.sol)                       |
+| `InflationPool`           | `UPGRADER_ROLE`                                             | [`src/rewards/InflationPool.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/InflationPool.sol)                     |
+| `ServiceFeeDistributor`   | `UPGRADER_ROLE`                                             | [`src/rewards/ServiceFeeDistributor.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol)     |
+| `StreamingPaymentManager` | `UPGRADER_ROLE`                                             | [`src/rewards/StreamingPaymentManager.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/StreamingPaymentManager.sol) |
+| `TangleMetrics`           | `UPGRADER_ROLE`                                             | [`src/rewards/TangleMetrics.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/TangleMetrics.sol)                     |
 
 ## Storage Layout Rules
 
