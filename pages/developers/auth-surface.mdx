@@ -98,17 +98,16 @@ See [Slashing](/developers/slashing) for the full lifecycle and runbooks.
 
 ### Services
 
-| Function                                                      | Caller                                               |
-| ------------------------------------------------------------- | ---------------------------------------------------- |
-| `requestService(...)`                                         | Anyone (when not paused)                             |
-| `approveService(requestId, stakingPercent)`                   | Operator listed in the request (request not expired) |
-| `approveServiceWithCommitments(...)`                          | Operator listed in the request                       |
-| `approveServiceWithBls(requestId, stakingPercent, blsPubkey)` | Operator listed in the request                       |
-| `approveServiceWithCommitmentsAndBls(...)`                    | Operator listed in the request                       |
-| `rejectService(requestId)`                                    | Operator listed in the request                       |
-| `expireServiceRequest(requestId)`                             | Anyone, after grace period (when not activated)      |
-| `terminateService(serviceId)`                                 | Service owner                                        |
-| `forceRemoveOperator(serviceId, operator)`                    | Blueprint manager only                               |
+| Function                                   | Caller                                               |
+| ------------------------------------------ | ---------------------------------------------------- |
+| `requestService(...)`                      | Anyone (when not paused)                             |
+| `approveService(ApprovalParams)`           | Operator listed in the request (request not expired) |
+| `rejectService(requestId)`                 | Operator listed in the request                       |
+| `expireServiceRequest(requestId)`          | Anyone, after grace period (when not activated)      |
+| `terminateService(serviceId)`              | Service owner                                        |
+| `forceRemoveOperator(serviceId, operator)` | Blueprint manager only                               |
+
+`approveService` is a single entrypoint. Optional capabilities are opt-in via empty/zero fields on `ApprovalParams`: empty `securityCommitments`, zero `blsPubkey`, or empty `teeCommitments` each means "skip this capability." See [the slashing doc](/developers/slashing) for the per-asset commitment contract.
 
 ### Payments
 
