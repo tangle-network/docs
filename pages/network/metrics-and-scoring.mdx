@@ -22,7 +22,11 @@ Depending on what is configured on-chain, the protocol can record:
 - **Service activity**: service creation/termination, job calls, job completion success rates.
 - **Payments**: total fees paid by customers.
 - **Operator liveness**: heartbeats for active services.
-- **Slashing**: executed slash events (and the slashed amount).
+- **Slashing**: the full slashing lifecycle is observable via `ITangleSlashing` events:
+  `SlashProposed`, `SlashDisputed`, `SlashExecuted`, `SlashCancelled`, and
+  `SlashConfigUpdated`. `TangleMetrics` records executed slashes (count and slashed amount)
+  for incentive accounting; indexers that need full lifecycle context (proposers,
+  dispute reasons, config history) should subscribe to all five events directly.
 
 ## Staker “Exposure” Scoring
 

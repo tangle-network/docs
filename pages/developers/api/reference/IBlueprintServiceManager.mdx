@@ -186,6 +186,63 @@ _Defines minimum commitment and exit queue timing_
 | exitQueueDuration     | uint64 | Time between scheduling exit and completing it (seconds) |
 | forceExitAllowed      | bool   | Whether service owner can force-exit operators           |
 
+#### getNonPaymentTerminationPolicy
+
+```solidity
+function getNonPaymentTerminationPolicy(uint64 serviceId) external view returns (bool useDefault, uint64 graceIntervals)
+```
+
+Get the non-payment termination policy for subscription services.
+
+Core computes eligibility as
+`lastPaymentAt + subscriptionInterval + (subscriptionInterval * graceIntervals)`.
+`graceIntervals = 0` means termination is eligible immediately at the first missed
+billing tick. Implementations should return `useDefault = true` unless they need
+custom grace behavior. Default implementation in `BlueprintServiceManagerBase` returns
+`(true, 0)`.
+
+##### Parameters
+
+| Name      | Type   | Description    |
+| --------- | ------ | -------------- |
+| serviceId | uint64 | The service ID |
+
+##### Return Values
+
+| Name           | Type   | Description                                                      |
+| -------------- | ------ | ---------------------------------------------------------------- |
+| useDefault     | bool   | True to use the protocol default policy                          |
+| graceIntervals | uint64 | Additional full intervals to wait after the first missed payment |
+
+#### forceRemoveAllowsBelowMin
+
+```solidity
+function forceRemoveAllowsBelowMin(uint64 serviceId) external view returns (bool ok)
+```
+
+Whether `forceRemoveOperator` may drop the service below `minOperators`.
+
+By default the protocol enforces `operatorCount > minOperators` even when a blueprint
+manager calls `forceRemoveOperator`. A blueprint that genuinely needs
+emergency-eviction-below-min must self-document by returning `true`. Reverting or
+unimplemented => the protocol enforces the floor (fail-closed). The default
+implementation in `BlueprintServiceManagerBase` returns `false`; custom managers that
+do **not** inherit `BlueprintServiceManagerBase` MUST implement this hook explicitly
+or `forceRemoveOperator` will revert as soon as the eviction would push the operator
+count below `minOperators`.
+
+##### Parameters
+
+| Name      | Type   | Description    |
+| --------- | ------ | -------------- |
+| serviceId | uint64 | The service ID |
+
+##### Return Values
+
+| Name | Type | Description                                             |
+| ---- | ---- | ------------------------------------------------------- |
+| ok   | bool | True to allow eviction below the minimum operator count |
+
 #### onRequest
 
 ```solidity

@@ -35,7 +35,7 @@ The slashing path is implemented in:
 
 Each transition has a single responsible caller and a single state effect.
 
-### `proposeSlash(serviceId, operator, slashBps, evidence)`
+### `proposeSlash(serviceId, operator, slashBps, evidence)` (`nonReentrant`)
 
 Anyone the protocol accepts as a slasher creates a `SlashProposal`. The proposal:
 
@@ -47,18 +47,29 @@ Anyone the protocol accepts as a slasher creates a `SlashProposal`. The proposal
 
 If the operator already has `maxPendingSlashesPerOperator` pending, the call reverts. Default cap is 32.
 
-### `disputeSlash(slashId, reason)` `payable`
+`evidence` MUST be non-zero. The contract rejects `bytes32(0)` evidence so off-chain monitors keying off
+non-zero evidence never observe silently-zero entries.
+
+### `disputeSlash(slashId, reason)` `payable` (`nonReentrant`)
 
 The operator (or `SLASH_ADMIN_ROLE`) contests the slash within the dispute window.
 
 The operator must post `config.disputeBond` in native asset. `SLASH_ADMIN` posts no bond. The dispute snapshots `config.disputeResolutionDeadline` onto the proposal (`disputeDeadline = block.timestamp + deadline`), so a later admin-driven shrink of the live config cannot retroactively shorten the operator's review window.
+
+A `SLASH_ADMIN_ROLE` holder that is also the `proposer` of a slash CANNOT dispute their own
+proposal. Without this, a single role-holder could propose, immediately self-dispute (no bond),
+and freeze operator stake for the full `disputeResolutionDeadline` window — and (when
+`treasury == admin`) capture the operator's bond on auto-execution. To dispute as
+`SLASH_ADMIN`, route the dispute through a different admin-keyed account or the operator.
 
 ### `executeSlash(slashId)` (permissionless)
 
 Anyone calls this. The proposal's `isExecutable` check accepts:
 
 - A `Pending` proposal whose `executeAfter + TIMESTAMP_BUFFER` has elapsed
-- A `Disputed` proposal whose snapshotted `disputeDeadline` has elapsed
+- A `Disputed` proposal whose `disputeDeadline + TIMESTAMP_BUFFER` has elapsed (symmetric 15s
+  buffer with the dispute window, so a sequencer with timestamp influence cannot sandwich the
+  deadline tick to land an `executeSlash` before the operator's dispute window closes)
 
 Execution routes through `_executeSlashOnStaking`:
 

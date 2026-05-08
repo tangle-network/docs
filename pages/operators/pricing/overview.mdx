@@ -44,6 +44,14 @@ These flows require operators to generate and sign EIP-712 quotes off-chain:
 If the customer requests a specific confidentiality mode for the service, that confidentiality intent is part of the
 service RFQ agreement and should be reflected in your quote and operating cost assumptions.
 
+**Quote requester binding (v0.13.0).** Both `QuoteDetails` (service quotes) and
+`JobQuoteDetails` (per-job quotes) now have `requester` as the FIRST field of the EIP-712
+typed data. The protocol enforces `requester == msg.sender` and rejects wildcard
+`requester == address(0)`. Your quote server MUST sign per-caller quotes with `requester`
+populated to the customer's address, otherwise the customer cannot redeem your quote
+on-chain. This also defeats mempool front-running: another `permittedCaller` (or anyone
+watching the mempool) can no longer lift your signed digest and consume it.
+
 To participate in RFQ, you need:
 
 - a quote serving endpoint (typically the `pricing-engine` gRPC server)
