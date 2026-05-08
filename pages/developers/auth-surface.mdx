@@ -66,14 +66,14 @@ Most admin setters in `Base.sol` are `whenNotPaused`. The two exceptions, both i
 
 ### Slashing
 
-| Function                                          | Caller                                                   | Source                                                                                     |
-| ------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `proposeSlash(serviceId, op, slashBps, evidence)` | Service owner, blueprint owner, or BSM-declared origin   | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
-| `disputeSlash(slashId, reason)` `payable`         | Slashed operator (must post bond), or `SLASH_ADMIN_ROLE` | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
-| `executeSlash(slashId)`                           | Anyone (gated by `isExecutable`)                         | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
-| `executeSlashBatch(ids)`                          | Anyone                                                   | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
-| `cancelSlash(slashId, reason)`                    | `SLASH_ADMIN_ROLE`                                       | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
-| `setSlashConfig(...)`                             | `ADMIN_ROLE`                                             | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
+| Function                                          | Caller                                                                                                  | Source                                                                                     |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `proposeSlash(serviceId, op, slashBps, evidence)` | Service owner, blueprint owner, or BSM-declared origin                                                  | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
+| `disputeSlash(slashId, reason)` `payable`         | Slashed operator (must post bond), or `SLASH_ADMIN_ROLE` (admin cannot self-dispute their own proposal) | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
+| `executeSlash(slashId)`                           | Anyone (gated by `isExecutable`)                                                                        | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
+| `executeSlashBatch(ids)`                          | Anyone                                                                                                  | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
+| `cancelSlash(slashId, reason)`                    | `SLASH_ADMIN_ROLE`                                                                                      | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
+| `setSlashConfig(...)`                             | `ADMIN_ROLE`                                                                                            | [Slashing.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Slashing.sol) |
 
 See [Slashing](/developers/slashing) for the full lifecycle and runbooks.
 
@@ -104,8 +104,8 @@ See [Slashing](/developers/slashing) for the full lifecycle and runbooks.
 | `approveService(ApprovalParams)`           | Operator listed in the request (request not expired) |
 | `rejectService(requestId)`                 | Operator listed in the request                       |
 | `expireServiceRequest(requestId)`          | Anyone, after grace period (when not activated)      |
-| `terminateService(serviceId)`              | Service owner                                        |
-| `forceRemoveOperator(serviceId, operator)` | Blueprint manager only                               |
+| `terminateService(serviceId)`              | Service owner, `nonReentrant`                        |
+| `forceRemoveOperator(serviceId, operator)` | Blueprint manager only, `nonReentrant`               |
 
 `approveService` is a single entrypoint. Optional capabilities are opt-in via empty/zero fields on `ApprovalParams`: empty `securityCommitments`, zero `blsPubkey`, or empty `teeCommitments` each means "skip this capability." See [the slashing doc](/developers/slashing) for the per-asset commitment contract.
 
@@ -175,7 +175,7 @@ Staking and delegation are a separate proxy with its own role registry. Function
 | Function                                | Caller                                                                                                            |
 | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `addVersion(mbsm)`                      | `MANAGER_ROLE`. Rejects EOA _targets_ (`mbsmAddress.code.length != 0`); the caller can be any holder of the role. |
-| `pinBlueprint(blueprintId, revision)`   | `MANAGER_ROLE`                                                                                                    |
+| `pinBlueprint(blueprintId, revision)`   | `MANAGER_ROLE`. Reverts if `revision` is currently in the deprecation grace window.                               |
 | `unpinBlueprint(blueprintId)`           | `MANAGER_ROLE`                                                                                                    |
 | `initiateDeprecation(revision)`         | `MANAGER_ROLE`                                                                                                    |
 | `completeDeprecation(revision)`         | `MANAGER_ROLE`, after grace period                                                                                |
@@ -198,12 +198,38 @@ Staking and delegation are a separate proxy with its own role registry. Function
 
 ### `L2SlashingReceiver`
 
-| Function                                           | Caller                                      |
-| -------------------------------------------------- | ------------------------------------------- |
-| `receiveMessage(sourceChainId, sender, payload)`   | The configured cross-chain messenger only   |
-| `setAuthorizedSender(chainId, sender, authorized)` | Owner; authorization is timelocked (2 days) |
-| `activateAuthorizedSender(chainId, sender)`        | Owner, after `SENDER_ACTIVATION_DELAY`      |
-| `setMessenger(addr)`                               | Owner                                       |
+| Function                                           | Caller                                                                                  |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `receiveMessage(sourceChainId, sender, payload)`   | The configured cross-chain messenger only                                               |
+| `setAuthorizedSender(chainId, sender, authorized)` | Owner. Revocation is immediate; authorization is timelocked (`SENDER_ACTIVATION_DELAY`) |
+| `activateAuthorizedSender(chainId, sender)`        | Owner, after `SENDER_ACTIVATION_DELAY` (2 days)                                         |
+| `setMessenger(addr)`                               | Owner. Bootstrap (current = `address(0)`) is immediate; subsequent swaps are queued     |
+| `activateMessenger()`                              | Owner, after `SENDER_ACTIVATION_DELAY`                                                  |
+| `setSlasher(addr)`                                 | Owner. Bootstrap (current = `address(0)`) is immediate; subsequent swaps are queued     |
+| `activateSlasher()`                                | Owner, after `SENDER_ACTIVATION_DELAY`                                                  |
+
+**Two-step swap (v0.13.0).** `setMessenger` and `setSlasher` no longer take effect on the
+write that calls them. The owner queues the new address and the activation timestamp; after
+`SENDER_ACTIVATION_DELAY` (2 days) elapses, the same owner calls `activateMessenger()` /
+`activateSlasher()` to flip the live pointer. The bootstrap exemption (when the current
+value is `address(0)`) lets deploy scripts wire the bridge without a 2-day deadlock; the
+exemption is consumed the first time the slot is set. A typical rotation in production
+looks like:
+
+```solidity
+// t = 0: queue the new messenger
+receiver.setMessenger(newMessenger);
+// ... 2 days later (`SENDER_ACTIVATION_DELAY` has elapsed)
+receiver.activateMessenger();
+```
+
+**Receiver enforcement (v0.13.0).** `receiveMessage` now reverts if the L2 slasher returns
+`canSlash == false` for the target operator (e.g. paused, unknown operator) or if
+`slashBps == 0`, **before** consuming the bridge nonce. Previously the nonce was marked
+processed first and a transient failure silently dropped the slash. With the new ordering
+the bridge keeps the message available for retry until the slash actually applies. Relayers
+must distinguish "already processed" (revert) from "still pending" (revert with
+`SlashingNotPossible`) and re-deliver the latter.
 
 ### `L2SlashingConnector`
 

@@ -72,6 +72,13 @@ Options depend on the blueprint membership model:
 Blueprint managers can also force-remove operators from a service for emergency response. Blueprint developers should
 treat this as a last-resort tool and design for the possibility that the operator set changes unexpectedly.
 
+By default the protocol enforces `operatorCount > minOperators` even when a blueprint manager calls
+`forceRemoveOperator`. A blueprint that genuinely needs emergency-eviction-below-min must opt in by overriding
+the new `forceRemoveAllowsBelowMin(serviceId)` BSM hook to return `true` (default in
+`BlueprintServiceManagerBase` is `false`). Custom managers that do not inherit `BlueprintServiceManagerBase` MUST
+implement this hook explicitly; an unimplemented or reverting view fails closed and the eviction will revert as soon
+as it would push the service below `minOperators`.
+
 ## What Expiry Means
 
 Expiry is enforced by function-level checks. When a service is expired (`block.timestamp > createdAt + ttl`), critical
@@ -79,6 +86,31 @@ paths like job submission and subscription billing revert.
 
 Expiry does not necessarily mean "terminated" in the protocol's service status. If you need explicit cleanup or refund
 behavior, ensure your operational tooling calls `terminateService(serviceId)` when a service should end.
+
+## Exit Gates (v0.13.0)
+
+The protocol tightened lifecycle gating so a stale operator cannot continue to mutate a service whose
+agreement is already over, and so a request cannot be rescued past its expiry grace window.
+
+- **Active-service gate on every exit entrypoint.** `scheduleExit`, `executeExit`, `forceExit`,
+  `leaveService`, and `forceRemoveOperator` all reject when `service.status != Active`. Previously
+  a stale operator could keep firing exit paths against a `Terminated` service, double-decrementing
+  counts and emitting `OperatorLeftService` for a service that no longer exists.
+- **`terminateService` is `nonReentrant`.** State writes already preceded external calls
+  (CEI), but the entrypoint now matches the rest of the lifecycle on defense-in-depth. The
+  same guard applies to `terminateServiceForNonPayment`.
+- **`approveService` rejects past-grace requests.** Once a request is past
+  `createdAt + requestExpiryGracePeriod`, operators can no longer activate it. This closes the
+  race where an operator could front-run the requester's `expireServiceRequest` cleanup tx and
+  quietly spawn a stale service.
+- **`requestService*` rejects duplicate operators.** Submitting the same operator address more
+  than once now reverts. With duplicates `operatorCount` exceeded the unique approver count,
+  so `approvalCount == operatorCount` was unreachable and the request could only be cleaned up
+  via `expireServiceRequest`.
+- **`forceRemoveOperator` respects `minOperators` by default.** A blueprint manager can no
+  longer evict honest operators below `minOperators` unless the BSM explicitly opts in via
+  the new `forceRemoveAllowsBelowMin(serviceId)` hook (default: `false`). Blueprints that
+  genuinely need emergency-eviction-below-min must override that hook to return `true`.
 
 ## Safety Recommendations For Stateful Or Custodial Blueprints
 
