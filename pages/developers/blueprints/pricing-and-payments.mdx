@@ -76,14 +76,49 @@ Use Job RFQ when the price should be negotiated per request (LLM model selection
 High-level flow:
 
 1. User requests a per-job quote from one or more operators (off-chain).
-2. Operators respond with an EIP-712 signed `JobQuoteDetails { serviceId, jobIndex, price, timestamp, expiry }`.
+2. Operators respond with an EIP-712 signed
+   `JobQuoteDetails { requester, serviceId, jobIndex, price, timestamp, expiry, confidentiality }`.
 3. User submits the job on-chain with the signed quote(s) via `submitJobFromQuote`.
 
 Key properties:
 
+- **Quote binding (v0.13.0).** `requester` is the FIRST field of `JobQuoteDetails` and is part
+  of the EIP-712 typehash. The contract enforces `requester == msg.sender` and rejects
+  wildcard `requester == address(0)`. Operators MUST sign per-caller quotes and populate
+  `requester` with the address they expect to consume the quote; an attacker who lifts a
+  signed digest off the wire cannot redirect it to themselves. The new typehash string is:
+  `JobQuoteDetails(address requester,uint64 serviceId,uint8 jobIndex,uint256 price,uint64 timestamp,uint64 expiry,uint8 confidentiality)`.
 - `msg.value` must equal `sum(quote.price)` across quotes.
 - Quotes are replay-protected and expire (protocol also enforces `maxQuoteAge`).
 - Only quoted operators can submit results for RFQ jobs.
+
+A minimal Solidity-side struct literal an off-chain signer should hash:
+
+```solidity
+Types.JobQuoteDetails({
+    requester: 0xCAFE...,        // MUST match the on-chain msg.sender
+    serviceId: 42,
+    jobIndex: 0,
+    price: 1_000_000 gwei,
+    timestamp: uint64(block.timestamp),
+    expiry: uint64(block.timestamp + 5 minutes),
+    confidentiality: 0           // 0=Any, 1=Required, 2=Preferred
+});
+```
+
+The equivalent EIP-712 typed-data payload (`message`):
+
+```json
+{
+  "requester": "0xCAFE000000000000000000000000000000000000",
+  "serviceId": "42",
+  "jobIndex": 0,
+  "price": "1000000000000000",
+  "timestamp": "1746700000",
+  "expiry": "1746700300",
+  "confidentiality": 0
+}
+```
 
 ## Off-Chain Settlement (x402, optional)
 
@@ -104,11 +139,24 @@ operator-run gateway. See:
 Service RFQ lets a user create a service instantly using operator quotes:
 
 1. User requests service quotes from operators for `(blueprintId, ttlBlocks, confidentiality, security requirements)`.
-2. Operators sign EIP-712 `QuoteDetails { blueprintId, ttlBlocks, totalCost, timestamp, expiry, confidentiality, ... }`.
+2. Operators sign EIP-712
+   `QuoteDetails { requester, blueprintId, ttlBlocks, totalCost, timestamp, expiry, confidentiality, securityCommitments[], resourceCommitments[] }`.
 3. User calls `createServiceFromQuotes(...)` (or `extendServiceFromQuotes(...)`) with quotes and payment.
 
 All quotes for a single RFQ service creation or extension must agree on confidentiality. Changing confidentiality mode is
 treated as a new service agreement, not an in-place extension.
+
+**Quote binding (v0.12.0+).** `requester` is the FIRST field of `QuoteDetails` and is part of the
+EIP-712 typehash. The contract enforces `requester == msg.sender` on
+`createServiceFromQuotes` / `extendServiceFromQuotes`, and rejects wildcard
+`requester == address(0)`. Off-chain signers MUST populate `requester` with the address they
+expect to redeem the quote; previously the field existed on the struct but was excluded from
+the typehash, so a mempool observer could rewrite `details.requester` and the operator's
+signature still recovered. The new typehash string is:
+`QuoteDetails(address requester,uint64 blueprintId,uint64 ttlBlocks,uint256 totalCost,uint64 timestamp,uint64 expiry,uint8 confidentiality,AssetSecurityCommitment[] securityCommitments,ResourceCommitment[] resourceCommitments)`.
+
+Pre-fix signatures (without `requester` in the typehash) are invalid against the new
+typehash and will fail signature recovery.
 
 This is separate from the request and approval service lifecycle flow that the CLI exposes under `cargo tangle blueprint service`.
 

@@ -96,6 +96,10 @@ Important consequences:
 - All quotes in a single RFQ service creation or extension must agree on confidentiality.
 - Service extensions preserve the active service's confidentiality mode. If you need to switch modes, create a new
   service.
+- RFQ quotes are bound to a specific consumer via the `requester` field of `QuoteDetails`
+  (and `JobQuoteDetails` for per-job quotes). The contract enforces
+  `requester == msg.sender` and rejects wildcard `requester == address(0)`, so confidential
+  service quotes cannot be lifted from the mempool and redeemed by a different caller.
 
 ## Tooling Status
 

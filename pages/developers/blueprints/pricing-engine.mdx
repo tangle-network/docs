@@ -88,6 +88,13 @@ Important environment variables:
 
 - `GetPrice` uses proof-of-work to rate-limit RPC abuse.
 - Quotes include TTL + expiry and are signed with the operator ECDSA key to prevent replay.
+- **Quote requester binding (v0.13.0).** Both service quotes (`QuoteDetails`) and per-job
+  quotes (`JobQuoteDetails`) include `requester` as the FIRST field of the EIP-712 typed
+  data. The contract enforces `requester == msg.sender` and rejects wildcard
+  `requester == address(0)`. Operator software MUST populate `requester` with the address
+  the customer intends to redeem the quote with; signing wildcard quotes (or omitting the
+  field from the typehash) makes the quote unusable on-chain and exposes operators to
+  mempool front-running of the signed digest.
 
 ## x402 Settlement Options (Optional)
 
@@ -113,3 +120,7 @@ gRPC server to return x402 settlement options, you need to construct the pricing
 6. Keep quote details intact. Never modify quote payloads after they are signed.
 7. Generate fresh proof-of-work per request if your deployment uses PoW gating.
 8. Expect price variation across operators.
+9. **Always populate `requester` with the on-chain caller you intend to redeem the quote
+   with.** The contract enforces `requester == msg.sender` and rejects `address(0)`. If
+   the redeemer is a smart contract (paymaster, multisig), `requester` MUST be that
+   contract's address.
