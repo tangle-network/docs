@@ -36,7 +36,13 @@ If you operate a production environment, keep these items in your internal runbo
 - the `FULL_DEPLOY_CONFIG` JSON you used (and any env var overrides)
 - the manifest output path and the produced manifest JSON
 - role handoff targets (timelock, multisig, treasury) and whether bootstrap roles were revoked
-- any cross-chain slashing wiring (Hyperlane or LayerZero) and the connector and receiver manifests
+- any cross-chain slashing wiring (Hyperlane or LayerZero) and the connector and receiver manifests. On
+  `L2SlashingReceiver`, the bootstrap `setMessenger` / `setSlasher` calls (when the current value is
+  `address(0)`) take effect immediately. **Subsequent rotations are timelocked**: the owner queues the new
+  address with `setMessenger` / `setSlasher`, then calls `activateMessenger()` /
+  `activateSlasher()` after `SENDER_ACTIVATION_DELAY` (2 days) elapses. Document the queue/activate
+  pair as two transactions in your runbook so operators know to schedule the activation tx before the
+  delay window closes.
 
 ## Related Docs
 
