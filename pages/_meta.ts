@@ -68,6 +68,10 @@ const meta: Meta = {
     title: "Protocol",
     type: "page",
   },
+  "release-notes": {
+    title: "Release Notes",
+    type: "page",
+  },
 };
 
 export default meta;
