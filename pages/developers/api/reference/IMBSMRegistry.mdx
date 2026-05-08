@@ -89,7 +89,13 @@ Get the latest revision number registered in the registry
 function pinBlueprint(uint64 blueprintId, uint32 revision) external
 ```
 
-Pin a blueprint to a specific revision (0 disallowed)
+Pin a blueprint to a specific revision (0 disallowed).
+
+Reverts if `revision` is currently inside the deprecation grace window. Pinning a blueprint
+to a revision that is itself deprecated would defeat the deprecation flow: `getMBSM` would
+return `address(0)` the moment `completeDeprecation` ran, breaking every BSM call for the
+pinned blueprint. Choose a revision that is not scheduled for deprecation, or wait until
+the deprecation has fully completed before pinning to a different revision.
 
 #### unpinBlueprint
 

@@ -11,12 +11,15 @@ Source: https://github.com/tangle-network/tnt-core/blob/main/src/interfaces/ITan
 
 Slashing interface for Tangle protocol
 
+The event declarations on this interface mirror what the protocol actually emits from `SlashingLib`.
+Off-chain consumers (Rust bindings, indexers) MUST decode against the shapes documented below.
+
 #### Functions
 
 #### proposeSlash
 
 ```solidity
-function proposeSlash(uint64 serviceId, address operator, uint256 amount, bytes32 evidence) external returns (uint64 slashId)
+function proposeSlash(uint64 serviceId, address operator, uint16 slashBps, bytes32 evidence) external returns (uint64 slashId)
 ```
 
 Propose a slash against an operator
@@ -27,8 +30,8 @@ Propose a slash against an operator
 | --------- | ------- | ------------------------------------ |
 | serviceId | uint64  | The service where violation occurred |
 | operator  | address | The operator to slash                |
-| amount    | uint256 | Amount to slash                      |
-| evidence  | bytes32 | Evidence hash                        |
+| slashBps  | uint16  | Slash percentage in basis points     |
+| evidence  | bytes32 | Evidence hash (must be non-zero)     |
 
 ##### Return Values
 
@@ -39,10 +42,14 @@ Propose a slash against an operator
 #### disputeSlash
 
 ```solidity
-function disputeSlash(uint64 slashId, string reason) external
+function disputeSlash(uint64 slashId, string reason) external payable
 ```
 
-Dispute a slash proposal
+Dispute a slash proposal.
+
+`payable` because the implementation requires `msg.value == config.disputeBond` when the bond
+is non-zero (and zero otherwise). Typed callers MUST use a payable reference so
+`disputeSlash{value: bond}(...)` compiles.
 
 #### executeSlash
 
@@ -79,10 +86,21 @@ Cancel a slash proposal
 #### setSlashConfig
 
 ```solidity
-function setSlashConfig(uint64 disputeWindow, bool instantSlashEnabled, uint16 maxSlashBps) external
+function setSlashConfig(uint64 disputeWindow, bool instantSlashEnabled, uint16 maxSlashBps, uint64 disputeResolutionDeadline, uint256 disputeBond, uint16 maxPendingSlashesPerOperator) external
 ```
 
 Update slashing configuration
+
+##### Parameters
+
+| Name                         | Type    | Description                                                      |
+| ---------------------------- | ------- | ---------------------------------------------------------------- |
+| disputeWindow                | uint64  | Time after `proposeSlash` during which the operator can dispute  |
+| instantSlashEnabled          | bool    | Reserved emergency toggle (no effect through the standard API)   |
+| maxSlashBps                  | uint16  | Hard cap on any single slash proposal                            |
+| disputeResolutionDeadline    | uint64  | Time `SLASH_ADMIN` has to resolve a dispute before it auto-fails |
+| disputeBond                  | uint256 | Native asset bond required to dispute (0 = disabled)             |
+| maxPendingSlashesPerOperator | uint16  | Cap on concurrent pending slashes per operator (anti-spam)       |
 
 #### getSlashProposal
 
@@ -92,16 +110,93 @@ function getSlashProposal(uint64 slashId) external view returns (struct Slashing
 
 Get slash proposal details
 
+#### getSlashConfig
+
+```solidity
+function getSlashConfig() external view returns (struct SlashingLib.SlashConfig)
+```
+
+Get the current slashing configuration. Returns the live `SlashConfig` tuple containing
+`disputeWindow`, `instantSlashEnabled`, `maxSlashBps`, `disputeResolutionDeadline`,
+`disputeBond`, and `maxPendingSlashesPerOperator`.
+
 #### Events
 
 #### SlashProposed
 
 ```solidity
-event SlashProposed(uint64 serviceId, address operator, uint256 amount, bytes32 evidence)
+event SlashProposed(uint64 indexed slashId, uint64 indexed serviceId, address indexed operator, address proposer, uint16 slashBps, uint16 effectiveSlashBps, bytes32 evidence, uint64 executeAfter)
 ```
+
+Emitted when a new slash proposal is created.
+
+##### Parameters
+
+| Name              | Type    | Description                                                             |
+| ----------------- | ------- | ----------------------------------------------------------------------- |
+| slashId           | uint64  | The new slash ID (indexed)                                              |
+| serviceId         | uint64  | The service where the violation occurred (indexed)                      |
+| operator          | address | The slashed operator (indexed)                                          |
+| proposer          | address | The address that called `proposeSlash`                                  |
+| slashBps          | uint16  | Requested slash percentage in basis points                              |
+| effectiveSlashBps | uint16  | Slash percentage after exposure scaling (what will actually be applied) |
+| evidence          | bytes32 | Evidence hash (non-zero, enforced by `proposeSlash`)                    |
+| executeAfter      | uint64  | Earliest UNIX timestamp at which the slash can be executed              |
+
+#### SlashDisputed
+
+```solidity
+event SlashDisputed(uint64 indexed slashId, address indexed disputer, string reason)
+```
+
+Emitted when a slash proposal is disputed by the operator or by `SLASH_ADMIN_ROLE`.
+
+##### Parameters
+
+| Name     | Type    | Description                                |
+| -------- | ------- | ------------------------------------------ |
+| slashId  | uint64  | The disputed slash ID (indexed)            |
+| disputer | address | The address that called `disputeSlash`     |
+| reason   | string  | Human-readable rationale (free-form input) |
 
 #### SlashExecuted
 
 ```solidity
-event SlashExecuted(uint64 serviceId, address operator, uint256 amount)
+event SlashExecuted(uint64 indexed slashId, uint64 indexed serviceId, address indexed operator, uint256 actualSlashed)
 ```
+
+Emitted when a slash is executed.
+
+##### Parameters
+
+| Name          | Type    | Description                                        |
+| ------------- | ------- | -------------------------------------------------- |
+| slashId       | uint64  | The executed slash ID (indexed)                    |
+| serviceId     | uint64  | The service the slash was applied to (indexed)     |
+| operator      | address | The slashed operator (indexed)                     |
+| actualSlashed | uint256 | Total stake actually burned in the underlying call |
+
+#### SlashCancelled
+
+```solidity
+event SlashCancelled(uint64 indexed slashId, address indexed canceller, string reason)
+```
+
+Emitted when a slash proposal is cancelled by `SLASH_ADMIN_ROLE`.
+
+##### Parameters
+
+| Name      | Type    | Description                                 |
+| --------- | ------- | ------------------------------------------- |
+| slashId   | uint64  | The cancelled slash ID (indexed)            |
+| canceller | address | Address that called `cancelSlash` (indexed) |
+| reason    | string  | Human-readable rationale (free-form input)  |
+
+#### SlashConfigUpdated
+
+```solidity
+event SlashConfigUpdated(uint64 disputeWindow, bool instantSlashEnabled, uint16 maxSlashBps, uint64 disputeResolutionDeadline, uint256 disputeBond, uint16 maxPendingSlashesPerOperator)
+```
+
+Emitted when `setSlashConfig` updates the slashing configuration. The full new
+configuration is included in the event.
