@@ -11,14 +11,14 @@ Tangle’s incentives come from two sources:
     alt="Incentives flow for service fees and TNT budgets"
   />
 <figcaption>
-  Service fees split through Payments.sol; TNT budgets flow through InflationPool,
-  RewardVaults, and ServiceFeeDistributor.
+  Service fees split through PaymentsDistribution.sol; TNT budgets flow through
+  InflationPool, RewardVaults, and ServiceFeeDistributor.
 </figcaption>
 </figure>
 
 Claim paths: staker fees + staker inflation via `ServiceFeeDistributor`, TNT staking incentives via `RewardVaults`, and operator/customer/developer TNT via `InflationPool`.
 
-Code references: [Payments.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Payments.sol), [ServiceFeeDistributor.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol), [InflationPool.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/InflationPool.sol), [RewardVaults.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/RewardVaults.sol), [TangleMetrics.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/TangleMetrics.sol)
+Code references: [PaymentsDistribution.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/PaymentsDistribution.sol), [PaymentsRewards.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/PaymentsRewards.sol), [ServiceFeeDistributor.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol), [InflationPool.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/InflationPool.sol), [RewardVaults.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/RewardVaults.sol), [TangleMetrics.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/TangleMetrics.sol)
 
 ## Service Fees
 
@@ -60,7 +60,8 @@ The protocol can optionally record activity into a metrics contract (`TangleMetr
 
 ## Source Contracts (GitHub)
 
-- [`Payments.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/core/Payments.sol)
+- [`PaymentsDistribution.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/core/PaymentsDistribution.sol)
+- [`PaymentsRewards.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/core/PaymentsRewards.sol)
 - [`ServiceFeeDistributor.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol)
 - [`InflationPool.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/InflationPool.sol)
 - [`RewardVaults.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/RewardVaults.sol)

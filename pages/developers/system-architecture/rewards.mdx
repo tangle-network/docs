@@ -15,18 +15,18 @@ Tangle separates **service fees** (paid by customers) from **incentives** (TNT b
     alt="Incentives flow for service fees and TNT budgets"
   />
 <figcaption>
-  Service fees split through Payments.sol; TNT budgets flow through InflationPool,
-  RewardVaults, and ServiceFeeDistributor.
+  Service fees split through PaymentsDistribution.sol; TNT budgets flow through
+  InflationPool, RewardVaults, and ServiceFeeDistributor.
 </figcaption>
 </figure>
 
 Claim paths: staker fees + staker inflation via `ServiceFeeDistributor`, TNT staking incentives via `RewardVaults`, and operator/customer/developer TNT via `InflationPool`.
 
-Code references: [Payments.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Payments.sol), [ServiceFeeDistributor.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol), [InflationPool.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/InflationPool.sol), [RewardVaults.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/RewardVaults.sol), [TangleMetrics.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/TangleMetrics.sol)
+Code references: [PaymentsDistribution.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/PaymentsDistribution.sol), [PaymentsRewards.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/PaymentsRewards.sol), [ServiceFeeDistributor.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol), [InflationPool.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/InflationPool.sol), [RewardVaults.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/RewardVaults.sol), [TangleMetrics.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/TangleMetrics.sol)
 
 ## Service Fee Split (Developer / Protocol / Operator / Stakers)
 
-When a service pays a fee, `Payments.sol` calculates and routes the split:
+When a service pays a fee, `PaymentsDistribution.sol` calculates and routes the split:
 
 - Developer payment (blueprint owner or manager override)
 - Protocol payment (treasury)
@@ -34,10 +34,10 @@ When a service pays a fee, `Payments.sol` calculates and routes the split:
 - Staker share (via `ServiceFeeDistributor`, when configured)
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/tnt-core/blob/main/src/core/Payments.sol"
-  fromLine={259}
-  toLine={403}
-  title="Payments: fee distribution + staker routing via ServiceFeeDistributor"
+  url="https://github.com/tangle-network/tnt-core/blob/main/src/core/PaymentsDistribution.sol"
+  fromLine={253}
+  toLine={324}
+  title="PaymentsDistribution: fee distribution + staker routing via ServiceFeeDistributor"
 />
 
 ## Staker Distribution (USD-weighted)
