@@ -11,23 +11,27 @@ Tangle is launching as a protocol stack on EVM: a coordination layer for agents 
 ## What Launch Means Today
 
 - **Protocol core is deployed** as a set of EVM contracts (TNT, Blueprints, operators, payments).
-- **Migration tooling is live** for Substrate → EVM claims and direct EVM allocations.
+- **Migration tooling is live** for Substrate-to-EVM claims. The direct EVM path exists, but the current normalized distribution has 0 TNT in that bucket.
 - **Incentives and credits are optional** modules that can be enabled by governance.
 
 Protocol contracts (GitHub): https://github.com/tangle-network/tnt-core/tree/main/src
 
 ## Token Distribution and Lockups
 
-The protocol supports two distribution paths:
+Mainnet genesis is normalized to exactly 100,000,000 TNT:
 
-- **Substrate → EVM migration** via the SP1-based claim system.
-- **Direct EVM distributions** via batched transfers with configurable lockups.
+- **Substrate migration claims**: 49,322,182.8359 TNT.
+- **EVM allocations**: 0 TNT in the current normalized distribution.
+- **Foundation**: 15,040,809.8267 TNT.
+- **Treasury**: 35,637,007.3373 TNT.
 
-Both paths support a split between unlocked and vested allocations. See the claims guide for default parameters.
+Substrate claims use the SP1-based claim system. Treasury is the balancing bucket that brings the distribution down from the raw 109.26M snapshot to the 100M cap. See [Token Allocation](/network/tokenomics/allocation).
 
 ## Governance Status
 
-Governance contracts exist, but production activation depends on the rollout plan and multisig handoff. The protocol is designed to move from admin-controlled deployment to community governance as it matures.
+The Base-mainnet launch config pins governance parameters: 1-day voting delay, 7-day voting period, 100,000 TNT proposal threshold, 4% quorum, and a 4-day timelock delay. Production activation still requires the real Safe and Timelock addresses to be filled in before launch.
+
+See [Governance](/network/governance) for the full parameter table.
 
 ## Operator Onboarding
 

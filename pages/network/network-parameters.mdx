@@ -1,6 +1,6 @@
 # Protocol Parameters
 
-This page summarizes protocol-level defaults for the Tangle Network EVM deployment. Values are configured per environment and may change via governance or admin controls. For live values, read the contracts on the target network.
+This page summarizes the current Tangle Protocol launch configuration. Mainnet values are taken from the Base-mainnet deploy config until mainnet contracts are live. Testnet addresses are from the latest Base Sepolia manifest.
 
 ## TNT Core Values
 
@@ -9,9 +9,24 @@ This page summarizes protocol-level defaults for the Tangle Network EVM deployme
 | Name                  | Tangle Network Token              |
 | Symbol                | TNT                               |
 | Decimals              | 18                                |
-| Max supply (hard cap) | 109,255,636.91921292788561091 TNT |
+| Max supply (hard cap) | 100,000,000 TNT                   |
+| Voting standard       | ERC-20 Votes with timestamp clock |
 
 Source: https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleToken.sol
+
+## Genesis Distribution
+
+| Bucket                     | Amount (TNT)       | Share      | Launch treatment                                        |
+| -------------------------- | ------------------ | ---------- | ------------------------------------------------------- |
+| Substrate migration claims | 49,322,182.8359    | 49.322183% | 10% unlocked at claim; 12m cliff + 24m linear vesting   |
+| EVM allocations            | 0                  | 0%         | No active EVM claims in the normalized distribution     |
+| Foundation                 | 15,040,809.8267    | 15.040810% | 30% unlocked; 6m cliff + 30m linear vesting on the rest |
+| Treasury                   | 35,637,007.3373    | 35.637007% | 0% unlocked; 6m cliff + 30m linear vesting              |
+| **Total**                  | **100,000,000.00** | **100%**   | Equals `TangleToken.MAX_SUPPLY`                         |
+
+The raw snapshot total was 109,255,636.9192 TNT. The live distribution drops expired claims and reduces only the treasury bucket to land at 100,000,000 TNT. Active claimant buckets are not cut.
+
+Source: https://github.com/tangle-network/tnt-core/blob/main/deploy/distributions/normalized-100m.json
 
 ## TNT Contract Addresses
 
@@ -35,40 +50,72 @@ Testnet source: https://github.com/tangle-network/tnt-core/blob/main/deployments
 | `InflationPool`          | `TBD`   | `0xe620f87540724a0cebdee9796dd8580e02dd4911` | `TBD` |
 | `Credits`                | `TBD`   | `0x758226e04478541fcdac605e1f235e2956259a10` | `TBD` |
 
-## Protocol Defaults (v2)
+## Base-Mainnet Launch Parameters
 
-Defaults are defined in `TangleStorage` and `ProtocolConfig` and can be overridden by governance/admin roles.
+These values are defined in `deploy/config/base-mainnet.json`. They can change after launch through governance.
 
-### Fee and Security Defaults
+### Governance
 
-| Parameter                   | Value                                                      |
-| --------------------------- | ---------------------------------------------------------- |
-| Service fee split (default) | 20% developer / 20% protocol / 40% operators / 20% stakers |
-| Default TNT min exposure    | 10% (1000 bps)                                             |
-| TNT payment discount        | 0 bps                                                      |
-| Aggregation threshold       | 67% (6700 bps)                                             |
+| Parameter           | Value                          |
+| ------------------- | ------------------------------ |
+| Voting delay        | 1 day (`86400` seconds)        |
+| Voting period       | 7 days (`604800` seconds)      |
+| Proposal threshold  | 100,000 TNT                    |
+| Quorum              | 4% of past total supply        |
+| Quorum at 100M cap  | 4,000,000 votes                |
+| Timelock delay      | 4 days (`345600` seconds)      |
+| Timelock bounds     | 1 day minimum, 30 days maximum |
+| Proposal action cap | 10 actions                     |
+| Native value cap    | 10,000 ETH per action          |
 
-### Timing Defaults
+Source: https://github.com/tangle-network/tnt-core/blob/main/deploy/config/base-mainnet.json
 
-| Parameter               | Value                |
-| ----------------------- | -------------------- |
-| Round duration          | 6 hours              |
-| Rounds per epoch        | 28 (7 days)          |
-| Delegator unstake delay | 28 rounds (7 days)   |
-| Operator exit delay     | 56 rounds (14 days)  |
-| Dispute window          | 14 rounds (3.5 days) |
-| Reward grace period     | 4 rounds (24 hours)  |
-| Min service commitment  | 1 day                |
-| Exit queue duration     | 7 days               |
-| Min service TTL         | 1 hour               |
-| Max service TTL         | 365 days             |
-| Request expiry grace    | 1 hour               |
-| Max quote age           | 1 hour               |
+### Payment Split
+
+| Parameter         | Value              |
+| ----------------- | ------------------ |
+| Developer         | 20% (`2000` bps)   |
+| Protocol treasury | 19.5% (`1950` bps) |
+| Operators         | 40% (`4000` bps)   |
+| Stakers           | 20% (`2000` bps)   |
+| Keeper            | 0.5% (`50` bps)    |
+
+The keeper share pays permissionless billing callers. It is carved from the protocol bucket.
+
+### Incentive Budget
+
+| Parameter                 | Value                           |
+| ------------------------- | ------------------------------- |
+| Year-one TNT budget       | 1,000,000 TNT                   |
+| Supply impact             | Treasury-funded; no new minting |
+| Epoch length              | 7 days (`604800` seconds)       |
+| Staking vault budget      | 55% (`5500` bps)                |
+| Operator budget           | 25% (`2500` bps)                |
+| Customer budget           | 10% (`1000` bps)                |
+| Developer budget          | 10% (`1000` bps)                |
+| Staker exposure budget    | 0% at genesis                   |
+| Vault operator commission | 15% (`1500` bps)                |
+
+### Staking and Slashing
+
+| Parameter                        | Value                       |
+| -------------------------------- | --------------------------- |
+| TNT operator bond floor          | 1,000 TNT                   |
+| Minimum delegation               | 0.2 TNT                     |
+| Operator commission              | 10% (`1000` bps)            |
+| Default TNT min exposure         | 10% (`1000` bps)            |
+| TNT payment discount             | 0 bps                       |
+| Max slash per proposal           | 50% (`5000` bps)            |
+| Slash dispute window             | 7 days (`604800` seconds)   |
+| Instant slash                    | Disabled at launch          |
+| Slash dispute bond               | 0.02 ETH                    |
+| Slash resolution deadline        | 21 days (`1814400` seconds) |
+| Max pending slashes per operator | 8                           |
 
 Sources:
 
-- https://github.com/tangle-network/tnt-core/blob/main/src/TangleStorage.sol
-- https://github.com/tangle-network/tnt-core/blob/main/src/config/ProtocolConfig.sol
+- https://github.com/tangle-network/tnt-core/blob/main/deploy/config/base-mainnet.json
+- https://github.com/tangle-network/tnt-core/blob/main/deploy/MAINNET-PARAMETERS.md
 
 ## Host Chain Parameters
 

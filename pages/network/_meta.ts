@@ -7,6 +7,7 @@ const meta: Meta = {
   },
   overview: "Protocol Foundation",
   "network-parameters": "Protocol Parameters",
+  governance: "Governance",
   "metrics-and-scoring": "Metrics and Scoring",
   "-- economics": {
     type: "separator",

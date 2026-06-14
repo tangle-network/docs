@@ -1,0 +1,57 @@
+# Governance
+
+Tangle governance uses TNT voting power, a Governor contract, and a Timelock. The Governor decides whether a proposal passes. The Timelock waits before executing the approved calls.
+
+Mainnet governance is configured from `deploy/config/base-mainnet.json`. The role addresses are still launch inputs until the Base-mainnet deployment is finalized.
+
+## Voting Parameters
+
+| Parameter          | Base-mainnet launch value      |
+| ------------------ | ------------------------------ |
+| Voting token       | TNT (`TangleToken`)            |
+| Clock              | Timestamp-based ERC-6372 clock |
+| Voting delay       | 1 day (`86400` seconds)        |
+| Voting period      | 7 days (`604800` seconds)      |
+| Proposal threshold | 100,000 TNT                    |
+| Quorum             | 4% of `getPastTotalSupply()`   |
+| Quorum at 100M cap | 4,000,000 votes                |
+| Vote choices       | Against / For / Abstain        |
+
+Quorum is measured against past total supply. At launch, the cap is 100,000,000 TNT, but much of that supply is locked or undelegated. The low initial quorum is intentional; it keeps governance usable while float is thin. Quorum can be raised later by governance.
+
+## Execution Parameters
+
+| Parameter                 | Base-mainnet launch value                              |
+| ------------------------- | ------------------------------------------------------ |
+| Timelock delay            | 4 days (`345600` seconds)                              |
+| Timelock minimum delay    | 1 day                                                  |
+| Timelock maximum delay    | 30 days                                                |
+| Max actions per proposal  | 10                                                     |
+| Max native value per call | 10,000 ETH                                             |
+| Proposer role             | `TangleGovernor`                                       |
+| Executor role             | `TangleGovernor`                                       |
+| Canceller role            | `TangleGovernor`; guardian Safe recommended for launch |
+
+The timelock is expected to hold admin and upgrade roles on protocol contracts after deployment. That means upgrades, parameter changes, and treasury actions should become delayed governance actions instead of direct deployer actions.
+
+## What Governance Controls
+
+Governance can change protocol parameters, fund incentive pools, manage treasury actions, and upgrade UUPS contracts whose upgrade role is held by the timelock. Examples include:
+
+- payment split updates
+- slashing config updates
+- incentive budget funding
+- staking asset enablement
+- protocol contract upgrades
+
+## Launch Caveat
+
+Do not treat placeholder addresses in `base-mainnet.json` as live governance addresses. Production launch still needs real Safe and Timelock addresses filled into `roles.admin`, `roles.treasury`, `roles.timelock`, and `roles.multisig`.
+
+## Sources
+
+- Governance config: https://github.com/tangle-network/tnt-core/blob/main/deploy/config/base-mainnet.json
+- Decision record: https://github.com/tangle-network/tnt-core/blob/main/deploy/MAINNET-PARAMETERS.md
+- Governor: https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleGovernor.sol
+- Timelock: https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleTimelock.sol
+- Token: https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleToken.sol

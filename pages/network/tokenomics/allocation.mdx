@@ -9,43 +9,45 @@ import { Callout } from "nextra/components";
 
 # Token Allocation
 
-This page summarizes TNT allocation and vesting for Tangle Protocol. The authoritative source is the on-chain
-distribution contracts and migration snapshot files; the table below is a readable summary derived from those sources.
+TNT genesis is normalized to exactly 100,000,000 TNT. That number is the hard cap in `TangleToken`.
 
 <Callout emoji="🧭">
-  Amounts are derived from the migration snapshot and carveout files. See the source links in this page for
-  exact values (wei) and the full Merkle tree.
+  The source of truth is `deploy/distributions/normalized-100m.json`. The raw 109.26M snapshot is kept for provenance, but it is not the live distribution.
 </Callout>
 
 ## Allocation Summary
 
-| Category                   | Purpose                              | Amount (TNT)     | Share  | Vesting                              |
-| -------------------------- | ------------------------------------ | ---------------- | ------ | ------------------------------------ |
-| Substrate migration claims | SS58 snapshot claims via Merkle tree | 51,244,581.8122  | 46.90% | 2% unlocked + 12m cliff + 24m linear |
-| EVM allocations            | Direct EVM recipient list            | 1,125,776.5192   | 1.03%  | 2% unlocked + 12m cliff + 24m linear |
-| Treasury carveout          | Non-claimable module balances        | 36,844,468.7611  | 33.72% | Liquid at deployment                 |
-| Foundation carveout        | Foundation allocation                | 15,040,809.8267  | 13.77% | Liquid at deployment                 |
-| Liquidity ops carveout     | Liquidity operations budget          | 5,000,000        | 4.58%  | Liquid at deployment                 |
-| **Total (MAX_SUPPLY)**     | Hard cap from `TangleToken`          | 109,255,636.9192 | 100%   | -                                    |
+| Category                   | Purpose                                | Amount (TNT)       | Share      | Launch treatment                                        |
+| -------------------------- | -------------------------------------- | ------------------ | ---------- | ------------------------------------------------------- |
+| Substrate migration claims | SS58 snapshot claims via Merkle tree   | 49,322,182.8359    | 49.322183% | 10% unlocked at claim; 12m cliff + 24m linear vesting   |
+| EVM allocations            | Direct EVM recipient list              | 0                  | 0%         | No active EVM claims in the normalized distribution     |
+| Foundation                 | Foundation allocation                  | 15,040,809.8267    | 15.040810% | 30% unlocked; 6m cliff + 30m linear vesting on the rest |
+| Treasury                   | Protocol treasury and incentive budget | 35,637,007.3373    | 35.637007% | 0% unlocked; 6m cliff + 30m linear vesting              |
+| **Total**                  | `TangleToken.MAX_SUPPLY`               | **100,000,000.00** | **100%**   | True fixed supply                                       |
 
-## Vesting and Lockups
+## How the 100M Number Is Derived
 
-Allocations can mix unlocked and vested balances. Each allocation defines:
+| Step                     | Amount (TNT)       | Effect                                      |
+| ------------------------ | ------------------ | ------------------------------------------- |
+| Raw snapshot grand total | 109,255,636.9192   | Historical input, not the live cap          |
+| Expired claims dropped   | 3,190,747.2196     | One-year Substrate claim window had expired |
+| Treasury reduction       | 6,064,889.6996     | Treasury absorbs the normalize-down         |
+| **Total reduction**      | **9,255,636.9192** | 109.2556M becomes exactly 100M              |
 
-- **Unlock percentage** at claim or distribution time.
-- **Cliff duration** before vesting starts.
-- **Linear vesting period** once the cliff ends.
+No active claimant bucket is reduced. Treasury is the balancing bucket.
 
-For legacy allocations and migration details, see [TNT Migration and Claims](/network/claim-airdrop).
+## Incentive Budget
+
+The year-one incentive budget is 1,000,000 TNT, or 1% of the 100M cap. It is funded from treasury into `InflationPool`; it is not new minting.
 
 ## Source of Truth (GitHub)
 
+- Live distribution: https://github.com/tangle-network/tnt-core/blob/main/deploy/distributions/normalized-100m.json
+- Raw snapshot provenance: https://github.com/tangle-network/tnt-core/blob/main/deploy/distributions/raw-snapshot.json
+- Reconcile script: https://github.com/tangle-network/tnt-core/blob/main/deploy/distributions/reconcile.py
 - Token cap: https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleToken.sol
-- Substrate Merkle snapshot: https://github.com/tangle-network/tnt-core/blob/main/packages/migration-claim/merkle-tree.json
-- EVM recipient list: https://github.com/tangle-network/tnt-core/blob/main/packages/migration-claim/evm-claims.json
-- Treasury carveout: https://github.com/tangle-network/tnt-core/blob/main/packages/migration-claim/treasury-carveout.json
-- Foundation carveout: https://github.com/tangle-network/tnt-core/blob/main/packages/migration-claim/foundation-carveout.json
-- Liquidity ops carveout: https://github.com/tangle-network/tnt-core/blob/main/packages/migration-claim/liquidity-ops-carveout.json
+- Mainnet deploy config: https://github.com/tangle-network/tnt-core/blob/main/deploy/config/base-mainnet.json
+- Migration contract: https://github.com/tangle-network/tnt-core/blob/main/packages/migration-claim/src/TangleMigration.sol
 
 ## Verification Sources
 
