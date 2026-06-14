@@ -1,15 +1,26 @@
 # TNT Supply and Incentives
 
+## Fixed Supply
+
+TNT is capped at 100,000,000 tokens. Genesis mints the full cap across the migration, foundation, and treasury buckets. After that, incentive programs are funded from existing treasury supply.
+
 ## No Automatic Inflation
 
-Tangle does **not** mint TNT continuously for block rewards or staking. Incentives are **budgeted and pre-funded** by governance, which means there is no automatic inflation at the protocol level.
+Tangle does not mint TNT continuously for block rewards or staking. Incentives are budgeted and pre-funded by governance, which means there is no automatic monetary inflation at the protocol level.
 
-## Budgeted Incentives (Pre-Funded)
+## Base-Mainnet Year-One Budget
+
+The Base-mainnet launch config sets `year1FundTnt` to 1,000,000 TNT, exactly 1% of the 100M cap. Treasury funds this amount into `InflationPool` after deploy.
 
 If governance allocates TNT to incentives, funds are deposited into `InflationPool` and distributed by epoch:
 
-- **Stakers**: TNT incentives can be paid via `RewardVaults` (per asset) and optional staker exposure budgets.
-- **Operators / Developers / Customers**: TNT rewards can be allocated based on activity metrics.
+| Budget rail            | Launch share  |
+| ---------------------- | ------------- |
+| Staking vaults         | 55%           |
+| Operators              | 25%           |
+| Customers              | 10%           |
+| Developers             | 10%           |
+| Staker exposure budget | 0% at genesis |
 
 See [Incentives](/network/incentives-overview) and [Metrics and Scoring](/network/metrics-and-scoring) for the full model.
 
@@ -18,10 +29,14 @@ Source contracts:
 - https://github.com/tangle-network/tnt-core/blob/main/src/rewards/InflationPool.sol
 - https://github.com/tangle-network/tnt-core/blob/main/src/rewards/RewardVaults.sol
 
+Source config:
+
+- https://github.com/tangle-network/tnt-core/blob/main/deploy/config/base-mainnet.json
+
 ## Service Fees Are Separate
 
 Service fees are paid by customers in the payment token (native or ERC-20) and are **not** inflation. Fees are split across developers, the protocol, operators, and stakers.
 
 ## Governance Control
 
-If the protocol ever enables minting or changes the supply policy, this page will be updated to reflect the new model.
+Governance can change incentive budgets and weights by funding or configuring the incentive contracts. Changing the 100M supply cap would require a token upgrade.

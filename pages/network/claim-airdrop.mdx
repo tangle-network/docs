@@ -2,7 +2,7 @@ import { Callout } from "nextra/components";
 
 # TNT Migration and Claims
 
-TNT migration moves balances from the legacy Substrate system and direct EVM allocations into the canonical TNT token on EVM. Claims are verified using a Merkle tree and an SP1 zero-knowledge proof, then distributed with a vesting schedule.
+TNT migration moves eligible legacy Substrate balances into the canonical TNT token on EVM. Claims are verified using a Merkle tree and an SP1 zero-knowledge proof, then distributed with a vesting schedule.
 
 <Callout emoji="⚠️">
   The claim window and unlock parameters are defined by the on-chain migration contract. The claims portal shows the current deadline and vesting configuration.
@@ -16,15 +16,17 @@ Contract sources (GitHub):
 ## Who Can Claim
 
 - **Substrate holders**: Submit a claim using your SR25519 public key and choose an EVM recipient.
-- **EVM recipients**: If you are included in the EVM list, you can claim directly to your wallet.
+- **EVM recipients**: The current normalized distribution has no active EVM allocation. If a future EVM list is added, it will be published in the distribution source files.
 
 ## Vesting Schedule (Default)
 
-- **2% unlocked** immediately at claim time.
-- **98% vested** through a linear vesting contract.
+- **10% unlocked** immediately at claim time.
+- **90% vested** through a linear vesting contract.
 - **12-month cliff + 24-month linear vesting** (36 months total).
 
 Vesting parameters can be updated before the first claim if governance changes them. Always confirm the live settings in the claims portal.
+
+The treasury and foundation buckets use separate launch schedules. See [Token Allocation](/network/tokenomics/allocation).
 
 ## Step 1: Access the Claims UI
 

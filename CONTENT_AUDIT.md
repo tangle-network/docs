@@ -7,13 +7,13 @@ Last updated: 2026-01-19
 | Area | File | Status | Notes / Needed Inputs |
 | ---- | ---- | ------ | --------------------- |
 | Network parameters | `pages/network/network-parameters.mdx` | Updated (testnet + sources) | Mainnet/local addresses still needed. |
-| Token allocation | `pages/network/tokenomics/allocation.mdx` | Updated (tnt-core values) | Need distribution contract addresses by environment. |
-| Inflation model | `pages/network/tokenomics/inflation.mdx` | Updated | Reflects v2 budgeted incentives; verify against current policy. |
+| Token allocation | `pages/network/tokenomics/allocation.mdx` | Updated (100M normalized distribution) | Need distribution contract addresses by environment. |
+| Inflation model | `pages/network/tokenomics/inflation.mdx` | Updated | Reflects 1M TNT year-one treasury-funded budget from Base-mainnet config. |
 | Operator incentives | `pages/network/incentives-operators.mdx` | Updated | Confirm default fee split and operator commission rules. |
 | Developer incentives | `pages/network/incentives-developers.mdx` | Updated | Confirm metric weights and eligibility rules. |
 | Participation credits | `pages/network/points-mechanics.mdx` | Updated (testnet) | Mainnet/local addresses still needed. |
 | Launch page | `pages/network/launch.mdx` | Needs investigation | Reported runtime error; content updated with v2 links. |
-| Governance docs | `pages/network/governance.mdx` | Removed | Replace with new governance system when ready. |
+| Governance docs | `pages/network/governance.mdx` | Added | Reflects Base-mainnet launch params; role addresses still pending. |
 | Differences doc | `pages/network/overview.mdx` | Updated | Content merged; old doc removed. |
 | Use cases | `pages/vision/use-cases.mdx` | Updated | Review for AI alignment and add any missing product references. |
 

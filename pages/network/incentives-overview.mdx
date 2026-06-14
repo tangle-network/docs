@@ -1,6 +1,6 @@
 # Incentives
 
-Tangle’s incentives come from two sources:
+Tangle's incentives come from two sources:
 
 1. **Service fees** paid by customers when they create and run blueprint services.
 2. **TNT incentive budgets** funded to the protocol (no automatic minting).
@@ -22,14 +22,14 @@ Code references: [PaymentsDistribution.sol](https://github.com/tangle-network/tn
 
 ## Service Fees
 
-Customers pay for blueprint services using the chain’s native token or an ERC-20 payment token (including TNT). Fees are split between:
+Customers pay for blueprint services using the chain's native token or an ERC-20 payment token (including TNT). Fees are split between:
 
-- **Developer** (blueprint owner, or a payout address returned by the blueprint’s service manager)
+- **Developer** (blueprint owner, or a payout address returned by the blueprint's service manager)
 - **Protocol treasury**
-- **Operators** (weighted by that service’s per-operator exposure)
+- **Operators** (weighted by that service's per-operator exposure)
 - **Stakers** (delegators who staked with the chosen operators)
 
-The default split is **20% developer / 20% protocol / 40% operators / 20% stakers**, and can be updated by governance.
+The Base-mainnet launch split is **20% developer / 19.5% protocol / 40% operators / 20% stakers / 0.5% keeper**, and can be updated by governance.
 
 Staker shares are routed per-operator to the on-chain `ServiceFeeDistributor`, which distributes fees to delegators based on:
 
@@ -45,6 +45,8 @@ TNT incentives are distributed from a pre-funded on-chain pool:
 - The staking portion funds `RewardVaults`, which pays TNT incentives for delegated assets (with a deposit cap per asset).
 - Other portions become claimable TNT balances for operators, customers, and developers.
 - If `stakersBps > 0`, a staker TNT budget is distributed by service exposure and routed through `ServiceFeeDistributor`.
+
+The Base-mainnet year-one budget is 1,000,000 TNT. It is treasury-funded, not minted.
 
 ## Metrics and Scoring
 
