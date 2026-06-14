@@ -1,46 +1,76 @@
 ---
 title: AI Trading Dapp and Indexer
-description: Arena metadata, iframe policy, and indexed state for the AI Trading blueprint.
+description: Arena routing, operator discovery, and indexed state for AI Trading.
 ---
 
-# Dapp and Indexer
+# AI Trading Dapp and Indexer
 
-The dapp should resolve the AI Trading blueprint from first-party metadata and render the Arena app through the trusted iframe path.
+The Arena is the product app for AI Trading. Tangle Cloud should launch it from trusted metadata and preserve the protocol fallback route for raw service state.
 
-## Metadata Contract
+## Metadata the dapp should use
 
-| Field                             | Value                                           |
+| Field                             | Current value in repo metadata                  |
 | --------------------------------- | ----------------------------------------------- |
 | `blueprintUi.displayName`         | `AI Trading Desk`                               |
 | `blueprintUi.requestedSlug`       | `ai-trading`                                    |
 | `blueprintUi.publisher.namespace` | `tangle`                                        |
-| `resources.serviceNoun`           | `trading instance`                              |
-| `resources.resourceNoun`          | `bot`                                           |
-| `externalApp.url`                 | `https://trading-arena.blueprint.tangle.tools/` |
 | `externalApp.mode`                | `iframe`                                        |
+| `externalApp.url`                 | `https://trading-arena.blueprint.tangle.tools/` |
 
-The metadata includes overview cards for the risk gate, venue capabilities, and protocol adapters. It also declares actions for bot activation and pausing.
+The metadata also declares cloud, instance, and TEE modes. The Arena should use those mode records instead of hard-coding a single blueprint ID.
 
-## Dapp Behavior
+## Indexed state
 
-| Surface           | Behavior                                                                                  |
-| ----------------- | ----------------------------------------------------------------------------------------- |
-| Blueprint route   | Claim metadata with `requestedSlug = "ai-trading"` under the `tangle` namespace.          |
-| External app      | Render the Arena iframe only after host and iframe policy checks pass.                    |
-| Chain switching   | Allow only the chain IDs declared in iframe policy.                                       |
-| Protocol fallback | Keep the generic blueprint detail route available for raw on-chain service-instance data. |
+| State                               | Why the dapp needs it                                             |
+| ----------------------------------- | ----------------------------------------------------------------- |
+| Blueprint registration and metadata | Find the current trading blueprint and app policy.                |
+| Operator registration               | Discover operator endpoints and capacity.                         |
+| Service requests and instances      | Link a user request to the running bot service.                   |
+| Job events                          | Show provision/config/start/stop style commands where applicable. |
+| Pricing pointers                    | Show quote or subscription information when available.            |
+| Heartbeats                          | Distinguish dead operators from missing data.                     |
 
-## Indexed State
+The indexer should make operator discovery reliable. It should not be treated as proof that a bot is healthy or that a trade was safe.
 
-The Arena and Tangle Cloud need:
+## Live operator reads
 
-| State                                  | Why it matters                                                           |
-| -------------------------------------- | ------------------------------------------------------------------------ |
-| Blueprint and source updates           | Finds current binaries and metadata.                                     |
-| Operator registration and endpoint URL | Discovers live operators and their APIs.                                 |
-| Service instances                      | Shows bot fleets and dedicated trading instances.                        |
-| Job events                             | Tracks provision, configure, start, stop, status, and workflow activity. |
-| Pricing state                          | Shows operator quote surfaces and service-instance cost.                 |
-| QoS heartbeats                         | Ranks and filters operators by liveness.                                 |
+The Arena still needs operator APIs for:
 
-Because operator endpoint URLs are self-reported at registration time, the dapp should treat the indexer as discovery, not proof that an endpoint is honest or healthy.
+- bot roster
+- bot detail
+- provisions
+- vault state
+- paper/live state
+- strategy config
+- trade history
+- terminal or sidecar logs
+- health
+
+If an operator endpoint is unreachable, say that. Do not replace it with stale indexed state unless the UI labels it as stale.
+
+## User-facing states
+
+| State                | Meaning                                                                           |
+| -------------------- | --------------------------------------------------------------------------------- |
+| No operator          | The blueprint exists, but nobody is serving it on the selected network.           |
+| Operator unreachable | The registration exists, but the public endpoint is failing.                      |
+| Provision pending    | The service exists, but no bot is ready yet.                                      |
+| Paper                | The bot is using live data and simulated fills.                                   |
+| Live                 | The bot can submit real execution through its configured venues and vault policy. |
+| Policy blocked       | The bot generated an intent that the policy or validator path rejected.           |
+
+These states should be visible in the app. "Loading" is not enough.
+
+## Iframe policy
+
+Trading is iframe-first under `trading-arena.blueprint.tangle.tools`.
+
+The parent dapp should:
+
+1. restrict the iframe to the trusted host
+2. pass parent origin and chain context
+3. keep wallet approvals in the parent
+4. expose the service instance link
+5. keep the raw protocol fallback route available
+
+The Arena owns product workflow. Tangle Cloud owns the shell, wallet safety, and route policy.

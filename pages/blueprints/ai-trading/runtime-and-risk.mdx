@@ -1,48 +1,96 @@
 ---
 title: AI Trading Runtime and Risk
-description: Runtime backend, safety, and AI cost model for AI Trading operators.
+description: Runtime backend, paper/live mode, model keys, and risk boundaries for AI Trading.
 ---
 
-# Runtime and Risk
+# AI Trading Runtime and Risk
 
-Trading service instances use sandboxed bots, explicit runtime backends, paper-first defaults, and validation modes that control when capital can move.
+Trading docs should start from risk, not from agents.
 
-## Runtime Backend Selection
+The bot can reason with an AI harness, but capital moves only when the runtime, validator path, and vault policy allow it. If those boundaries are unclear, the operator should stay in paper mode.
 
-Trading provision requests use `strategy_config_json.runtime_backend`.
+## Runtime backend
 
-| Value         | Behavior                                                                              |
-| ------------- | ------------------------------------------------------------------------------------- |
-| `docker`      | Standard bot sandbox path.                                                            |
-| `firecracker` | Maps to sandbox runtime metadata; current provider wiring must be enabled before use. |
-| `tee`         | Confidential runtime selection; TEE instance blueprints pin this by default.          |
+Provision requests can set:
 
-## Safety Knobs
+```json
+{
+  "strategy_config_json": {
+    "runtime_backend": "docker"
+  }
+}
+```
 
-| Setting                            | Default                            | Why it matters                                                       |
-| ---------------------------------- | ---------------------------------- | -------------------------------------------------------------------- |
-| `TRADING_REQUESTER_ACCESS_MODE`    | `allowlist`                        | Keeps bot creation limited to allowed addresses.                     |
-| `TRADING_REQUESTER_ALLOWLIST`      | Operator plus configured addresses | Defines who can request bots in allowlist mode.                      |
-| `OPERATOR_MAX_CAPACITY`            | `10` in installer templates        | Caps concurrent bots. Unset or `0` means unlimited.                  |
-| `DEFAULT_PAPER_TRADE`              | `true` in templates                | New bots use live data and simulated fills, with no on-chain trades. |
-| `TRADING_ENABLE_DIRECT_BOT_CREATE` | `false`                            | Prevents unauthenticated direct bot creation.                        |
+Supported values:
 
-## AI Spend
+| Value         | Meaning                                                                                                            |
+| ------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `docker`      | Default sandbox sidecar path.                                                                                      |
+| `firecracker` | Intended microVM path. Current trading docs note this returns a validation error until provider wiring is enabled. |
+| `tee`         | Confidential runtime selection. TEE instance blueprints pin this mode.                                             |
 
-Deterministic strategy ticks can run without model credentials. Agentic activation and chat require provider credentials. If an operator sets model keys, inference is billed to that operator's account.
+Runtime choice is separate from trust mode. A TEE bot can still have bad policy, and a Docker bot can still be paper-only.
 
-The repo supports credentials such as `ZAI_API_KEY`, `ANTHROPIC_API_KEY`, and `TANGLE_API_KEY`. Treat these as provider secrets for the selected bot harness, not as the product integration boundary.
+## Paper mode
 
-There is no built-in per-bot, per-day, or total LLM spend cap. Operators should enforce spend limits at the provider account, admission allowlist, and capacity levels.
+Paper mode is the safe default in the operator install path. It uses live market data and simulated fills. The operator repo has done work to model fees, impact, and gas so paper PnL is less fantasy than a frictionless simulator.
 
-The trading product boundary is a bot with strategy config, vault policy, risk limits, paper/live mode, and performance history. Agent harnesses are runtime backends for agentic work; deterministic ticks and risk checks continue without a model key.
+Paper mode should still be treated as real production behavior:
 
-## Validation Trust
+1. The bot consumes CPU, disk, and model budget.
+2. Strategy bugs still matter.
+3. The same config may later be promoted to live execution.
+4. The Arena should label paper/live state clearly.
 
-| Mode           | Behavior                                                               | Latency             |
-| -------------- | ---------------------------------------------------------------------- | ------------------- |
-| `PerTrade`     | Validator EIP-712 signatures required per trade.                       | About 5-30 seconds. |
-| `Envelope`     | Depositor-approved bounds allow instant execution inside the envelope. | Near-zero.          |
-| `SelfOperated` | Local policy only; envelope still enforced.                            | Near-zero.          |
+## Validation trust
 
-On-chain guards enforce token allowlists, position caps, leverage limits, rate limits, and replay protection through the policy and validator contracts.
+| Mode           | Who checks trades                                     | Latency profile                | Use when                                                                  |
+| -------------- | ----------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------- |
+| `PerTrade`     | Validator committee signs each trade intent.          | 5 to 30 seconds.               | The operator is untrusted or the vault needs external approval per trade. |
+| `Envelope`     | A depositor-approved envelope bounds what can happen. | Immediate inside the envelope. | The user accepts bounded autonomy.                                        |
+| `SelfOperated` | Local operator policy, still inside envelope limits.  | Immediate.                     | The operator and depositor are the same trust domain.                     |
+
+The envelope covers assets, position size, borrowed exposure, total exposure, drawdown, and stop-loss distance. Cancels can be instant.
+
+## Model keys
+
+Trading bots can run deterministic ticks without model provider keys. Agentic activation and chat require keys.
+
+Current repo examples include:
+
+| Key                 | Used for                                                                 |
+| ------------------- | ------------------------------------------------------------------------ |
+| `ZAI_API_KEY`       | Z.ai based agentic flows.                                                |
+| `ANTHROPIC_API_KEY` | Anthropic model access.                                                  |
+| `TANGLE_API_KEY`    | Tangle-hosted/Router-backed model or telemetry paths depending on setup. |
+| `OPENCODE_MODEL_*`  | opencode provider/model routing inside the sidecar.                      |
+
+If an operator sets keys, the operator pays unless another billing path is wired. There is no default per-bot LLM budget guard. Use allowlists, capacity caps, and provider billing limits.
+
+## What the dapp must not imply
+
+Do not show "AI approved" as if that is a safety property. The useful safety facts are:
+
+- paper or live
+- trust mode
+- envelope present and not expired
+- validators reachable when required
+- vault policy loaded
+- trade blocked or signed
+- operator health
+- model spend source
+
+Those are the states a user can act on.
+
+## Runtime evidence
+
+Before calling a trading operator production-ready, capture:
+
+1. build and contract tests
+2. operator health
+3. bot roster fetch
+4. one provisioned bot
+5. paper tick output
+6. policy or validator state
+7. service ID and operator address
+8. Arena route that resolves the bot from operator data

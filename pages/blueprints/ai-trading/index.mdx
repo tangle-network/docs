@@ -1,54 +1,67 @@
 ---
 title: AI Trading Blueprint
-description: First-party Tangle blueprint for autonomous trading agents.
+description: First-party Tangle blueprint for operator-run trading bots.
 ---
 
 # AI Trading Blueprint
 
-The AI Trading blueprint defines the template for autonomous trading service instances with strategy workers, vault policy, and decentralized risk validation. Operators host bot sandboxes and trading APIs. Users create and monitor trading service instances through the Arena app.
+AI Trading lets a user create a trading bot as a Tangle service instance.
+
+The blueprint defines the bot lifecycle, vault contracts, risk policy, metadata, and operator runtime. Operators run the bot sandboxes and APIs. The Arena app is the user surface for creating bots, watching paper/live execution, managing vaults, and inspecting risk state.
 
 Source repo: https://github.com/tangle-network/ai-trading-blueprint
 
-## Product Shape
+## What happens when a user activates a bot
 
-| Area              | Source-backed behavior                                           |
-| ----------------- | ---------------------------------------------------------------- |
-| Cloud fleet       | Multi-bot operator process for shared capacity.                  |
-| Instance          | One dedicated bot per service instance.                          |
-| TEE instance      | Single bot with confidential runtime selection.                  |
-| Hosted app        | `https://trading-arena.blueprint.tangle.tools/`                  |
-| Metadata identity | `publisher.namespace = "tangle"`, `requestedSlug = "ai-trading"` |
+1. The user chooses a blueprint mode and creates a service request.
+2. The selected operator approves the request.
+3. The operator provisions a bot sandbox and records bot state.
+4. The bot starts in paper mode by default in the operator install path.
+5. The Arena reads operator APIs for bot roster, provisions, vault state, logs, and execution history.
+6. Risk policy decides whether a trade can move from signal to execution.
 
-## Protocol Coverage
+The chain is the service and settlement spine. The operator API is the live product API.
 
-| Category   | Supported adapters             |
-| ---------- | ------------------------------ |
-| Perpetuals | Hyperliquid, GMX v2, Vertex    |
-| DEX        | Uniswap V3, Aerodrome          |
-| Lending    | Aave V3, Morpho                |
-| Prediction | Polymarket                     |
-| Execution  | TWAP and statistical arbitrage |
+## Modes
 
-## Strategy Packs
+| Mode               | Blueprint ID in current Base Sepolia notes | Service shape                                      |
+| ------------------ | ------------------------------------------ | -------------------------------------------------- |
+| Cloud fleet        | `13`                                       | One operator process can host many bots.           |
+| Dedicated instance | `14`                                       | One bot per service instance.                      |
+| TEE instance       | `15`                                       | Dedicated bot with confidential runtime selection. |
 
-| Pack         | Default cadence | Max turns |
-| ------------ | --------------- | --------- |
-| `prediction` | 15 minutes      | 20        |
-| `dex`        | 5 minutes       | 12        |
-| `yield`      | 15 minutes      | 10        |
-| `perp`       | 2 minutes       | 15        |
-| `volatility` | 10 minutes      | 12        |
-| `mm`         | 1 minute        | 15        |
-| `multi`      | 5 minutes       | 20        |
+Do not copy these IDs blindly to another network. Read the deployed manifest or metadata for the target chain.
 
-## Read Next
+## What the bot controls
 
-| Page                                                                  | Use it for                                                     |
-| --------------------------------------------------------------------- | -------------------------------------------------------------- |
-| [Operator Requirements](/blueprints/ai-trading/operator-requirements) | VPS sizing, ports, install flow, service IDs, env vars.        |
-| [Runtime and Risk](/blueprints/ai-trading/runtime-and-risk)           | Runtime backends, paper mode, AI cost, validation trust modes. |
-| [Dapp and Indexer](/blueprints/ai-trading/dapp-and-indexer)           | Arena metadata, iframe policy, indexed service state.          |
+| Area            | Examples                                                                                                |
+| --------------- | ------------------------------------------------------------------------------------------------------- |
+| Strategy        | Prompt, strategy pack, runtime config, tick cadence, learning state.                                    |
+| Venues          | Hyperliquid, Uniswap, Aave, GMX, Morpho, Vertex, Polymarket, Aerodrome, and execution helpers.          |
+| Vault policy    | Allowed assets, position size, borrowed-exposure cap, total exposure, drawdown, and stop-loss distance. |
+| Trust mode      | Per-trade validation, envelope validation, or self-operated mode.                                       |
+| Execution state | Paper fills, live fills, open positions, fees, impact, gas, and PnL.                                    |
 
-## Source Material
+The same strategy config is meant to drive backtesting, paper trading, and live execution. Treat that as a safety requirement, not a marketing line.
 
-This page is based on the blueprint repo's `README.md`, `OPERATORS.md`, `docs/runbook.md`, `metadata/blueprint-metadata.json`, `settings.env.example`, and trading runtime contract/risk code.
+## Validation trust
+
+| Trust level    | What happens                                                                                             |
+| -------------- | -------------------------------------------------------------------------------------------------------- |
+| `PerTrade`     | Each trade needs validator EIP-712 signatures before execution. Higher latency, stronger external check. |
+| `Envelope`     | A depositor pre-approves a policy envelope. Trades inside that envelope execute immediately.             |
+| `SelfOperated` | A trusted/self-hosted operator uses local policy. The envelope still bounds execution.                   |
+
+On-chain guards live in contracts such as `PolicyEngine`, `TradeValidator`, vault contracts, and fee distribution. Operator-side checks are not a substitute for the vault policy.
+
+## What to read next
+
+| Page                                                                  | Use it for                                                                       |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [Operator Requirements](/blueprints/ai-trading/operator-requirements) | VPS sizing, install flow, service IDs, ports, env, admission, and upgrade rules. |
+| [Runtime and Risk](/blueprints/ai-trading/runtime-and-risk)           | Paper mode, agent keys, runtime backend, risk gates, and validation trust.       |
+| [Dapp and Indexer](/blueprints/ai-trading/dapp-and-indexer)           | Arena iframe metadata, operator discovery, and indexed service state.            |
+
+## Sources used
+
+This page is grounded in the repo `README.md`, `OPERATORS.md`, `docs/runbook.md`, `metadata/blueprint-metadata.json`, `settings.env.example`, Arena operator discovery code, and the trading runtime/risk contract docs.

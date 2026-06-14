@@ -1,66 +1,102 @@
 ---
-title: Blueprint Dapp Integration
-description: How first-party blueprint apps, Tangle Cloud routing, indexer state, and local release gates fit together.
+title: Dapp Integration
+description: How Tangle Cloud should route blueprint apps, use indexed state, and prove local staking flows.
 ---
 
-# Blueprint Dapp Integration
+# Dapp Integration
 
-Tangle Cloud should treat first-party blueprint apps as product surfaces backed by protocol state, not as hand-written one-off pages.
+Tangle Cloud should not hand-code a separate product page every time a first-party blueprint ships.
 
-## Routing Contract
+The app already has the right inputs: blueprint metadata, operator registrations, service instances, first-party app policy, and the generic protocol fallback route. The job is to route users to the right product surface without hiding the underlying service instance.
 
-| Field                             | Purpose                                                                                                   |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `blueprintUi.publisher.namespace` | Identifies the publisher namespace. First-party entries use `tangle`.                                     |
-| `blueprintUi.requestedSlug`       | Stable app slug such as `ai-agent-sandbox`, `ai-trading`, or `surplus`.                                   |
-| `blueprintUi.externalApp`         | Declares whether the app renders as a trusted iframe or a trusted link-out.                               |
-| Curated registry entry            | Temporary or first-party override when on-chain metadata is incomplete or needs a hardened iframe policy. |
-| Protocol fallback route           | Raw indexed blueprint and service-instance view for debugging, operators, and auditors.                   |
+## Routing rule
 
-Sandbox and Trading are iframe-first apps under `*.blueprint.tangle.tools`. Surplus is currently a trusted link-out to `surplus-market.pages.dev` until it publishes equivalent rich `blueprintUi` metadata and iframe hosting.
+Use the hosted product app when the blueprint publishes trusted app metadata. Keep the generic protocol route available for debugging, operators, and auditors.
 
-## Current First-Party App Surfaces
+| Field or route                    | Why it matters                                                                                |
+| --------------------------------- | --------------------------------------------------------------------------------------------- |
+| `blueprintUi.publisher.namespace` | Identifies first-party entries. Tangle-owned entries use `tangle`.                            |
+| `blueprintUi.requestedSlug`       | Gives the dapp a stable product route such as `ai-agent-sandbox`, `ai-trading`, or `surplus`. |
+| `blueprintUi.externalApp`         | Tells the dapp whether to iframe the app or link out.                                         |
+| Mode records                      | Map one product to several blueprint IDs, such as cloud, instance, and TEE modes.             |
+| Generic protocol route            | Shows raw blueprint, operator, service, and job state when the product app cannot.            |
 
-| App              | Slug               | Surface mode   | Why                                                                                              |
+Sandbox and Trading are iframe-first apps under `*.blueprint.tangle.tools`. Surplus is currently a trusted link-out to `surplus-market.pages.dev`; it should move to the same rich metadata and iframe policy when that hosting path is ready.
+
+## Current app policy
+
+| Product          | Slug               | Mode           | Why                                                                                              |
 | ---------------- | ------------------ | -------------- | ------------------------------------------------------------------------------------------------ |
-| AI Agent Sandbox | `ai-agent-sandbox` | Trusted iframe | The hosted sandbox app owns workflow, terminal, file, port, and secret UX.                       |
-| AI Trading       | `ai-trading`       | Trusted iframe | The Arena owns bot creation, monitoring, risk settings, and operator API controls.               |
-| Surplus Market   | `surplus`          | Trusted link   | The market app is live at `surplus-market.pages.dev`; rich iframe metadata is not yet published. |
+| AI Agent Sandbox | `ai-agent-sandbox` | Trusted iframe | The hosted app owns workflow, terminal, file, port, and secret UX.                               |
+| AI Trading       | `ai-trading`       | Trusted iframe | The Arena owns bot creation, monitoring, vaults, risk settings, and operator controls.           |
+| Surplus Market   | `surplus`          | Trusted link   | The market app is live, but rich `blueprintUi` metadata and iframe hosting are not complete yet. |
 
-## Indexer Coverage
+Do not build around one agent harness, one venue, or one operator URL. Route from metadata and then verify the live endpoint.
 
-The dapp needs indexed protocol state for discovery and routing:
+## State the dapp should show
 
-| State                                                 | Required for                                                                         |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Blueprint creation and metadata updates               | Catalog, product cards, app slug resolution, and fallback pages.                     |
-| Source acknowledgement                                | Showing which runnable artifact an operator accepted.                                |
-| Operator registration and endpoint metadata           | Operator selection, endpoint routing, and reliability screens.                       |
-| Service request, approval, extension, and termination | Service-instance lifecycle and customer history.                                     |
-| Job events                                            | Provision, configure, start, stop, status, workflow, and settlement-trigger history. |
-| Pricing and payment events                            | Operator quote surfaces, service cost, and fee reconciliation.                       |
-| Quality-of-service heartbeats                         | Liveness filtering, operator rankings, and incident investigation.                   |
+| State                         | Source                                                                                                     |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Blueprint exists              | Indexer over blueprint creation and metadata updates.                                                      |
+| Operator can serve it         | Operator registration and endpoint metadata.                                                               |
+| Service instance exists       | Service request, approval, and activation events.                                                          |
+| Job was submitted             | Indexed job events.                                                                                        |
+| Product is healthy            | Operator API, app-level probe, or blueprint-specific proof path.                                           |
+| Product result is trustworthy | Contract state, attestation, settlement receipt, SP1 proof, signed report, or product-specific validation. |
 
-The indexer does not prove endpoint honesty. It tells the app what the protocol saw. The app still needs operator API probes, settlement evidence, TEE verification, or blueprint-specific checks before making stronger claims.
+The indexer is discovery infrastructure. It tells the dapp what the protocol saw. It does not replace runtime health checks.
 
-## Local Release Gates
+## Failure states worth showing
 
-Before shipping dapp changes that touch staking, blueprint routing, iframe policy, or local deployment wiring, run the local gates against an Anvil testnet:
+Users need to know which layer failed.
 
-| Gate                                  | What it proves                                                                                                                  |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `yarn test:staking:local`             | Contract path for deposit, delegate, rewards distribution, claim, unstake, and withdraw works against local protocol contracts. |
-| `yarn test:wallet-flows:staking:gate` | Browser wallet-flow reports contain the required staking flows with no blocker partials.                                        |
-| `yarn test:staking:local-release`     | Runs the contract-path gate and the browser-flow release gate together.                                                         |
+| State                | Meaning                                                                                |
+| -------------------- | -------------------------------------------------------------------------------------- |
+| No blueprint         | The selected network does not have the blueprint registered.                           |
+| No operators         | The blueprint exists, but no operator registered for it.                               |
+| Pending service      | The request exists, but operators have not approved or provisioned it yet.             |
+| Operator unreachable | The operator registered an endpoint, but the dapp cannot reach it.                     |
+| Runtime unhealthy    | The operator API answers, but the product-specific health check fails.                 |
+| Proof missing        | The product result exists, but the expected attestation, receipt, or proof is missing. |
 
-These gates are local proof, not deployment proof. A production release still needs the hosted dapp URL, docs URL, and indexer endpoint verified after deploy.
+Do not collapse these into "not available." That hides the next action.
 
-## Integration Rules
+## Local release gates
 
-| Rule                                                               | Reason                                                                                           |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| Prefer metadata and iframe policy over bespoke React modules.      | Keeps every blueprint on the same host contract.                                                 |
-| Keep protocol fallback pages available.                            | Operators and auditors need raw state even when a hosted app is down.                            |
-| Keep link-out mode for apps without a trusted iframe host.         | Prevents widening iframe permissions before the publisher app is ready.                          |
-| Show unavailable, pending, failed, and healthy as distinct states. | Users need to know whether the chain, indexer, operator API, or hosted app is the failing layer. |
-| Treat local release gates as required for staking changes.         | Staking regressions are expensive to discover through a deployed browser app.                    |
+Before shipping dapp changes that touch staking, blueprint routing, iframe policy, or local deployment wiring, run the local gates against Anvil.
+
+```bash
+yarn build:tangle-dapp
+yarn build:tangle-cloud
+yarn nx test tangle-cloud --run
+yarn nx run dapp-config:build
+yarn test:staking:local
+```
+
+For browser coverage, run:
+
+```bash
+yarn test:staking:local-ui
+```
+
+The direct local staking gate must exercise real contract calls for:
+
+1. deposit
+2. delegate
+3. claim rewards
+4. schedule undelegate
+5. execute undelegate
+6. schedule withdraw
+7. execute withdraw
+
+The browser gate should prove the same actions through the UI. If local GraphQL/indexer noise blocks the browser run, say that plainly and keep the direct contract gate as the hard proof. Do not claim the browser gate passed unless it did.
+
+## Implementation rules
+
+| Rule                                                          | Reason                                                                          |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Prefer metadata and iframe policy over bespoke React modules. | New first-party apps should not require a dapp redeploy for every route change. |
+| Keep the generic protocol route.                              | Operators and auditors need raw chain/indexer state.                            |
+| Use operator APIs for live product state.                     | The indexer cannot tell whether a bot, sandbox, or venue is healthy right now.  |
+| Keep jobs for commands, not reads.                            | Job history should mean work was requested.                                     |
+| Show unavailable, pending, failed, and healthy separately.    | Each state has a different fix.                                                 |
