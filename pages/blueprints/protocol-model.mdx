@@ -1,0 +1,65 @@
+---
+title: Blueprint Protocol Model
+description: How Tangle blueprints, operators, service instances, jobs, apps, and indexers fit together.
+---
+
+# Blueprint Protocol Model
+
+A Tangle blueprint is a reusable capability definition. It does not run user workloads by itself. Operators register for a blueprint, users request service instances from registered operators, and those service instances execute the concrete workload.
+
+## Core Terms
+
+| Term                  | Plain meaning                                                                                                                                        |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Blueprint             | The template: metadata, binaries, job definitions, pricing rules, and optional blueprint-specific contracts.                                         |
+| Operator registration | An operator's on-chain statement that it can serve a blueprint, usually with endpoint metadata, pricing, capacity, and source acknowledgement.       |
+| Service request       | A user asks one or more registered operators to instantiate the blueprint for a concrete purpose.                                                    |
+| Service instance      | The live unit created from a service request. It has selected operators, service state, jobs, and runtime-specific resources.                        |
+| Job                   | A command sent to a service instance. Jobs change state or ask operators to perform work. They are not the read path for normal app queries.         |
+| Operator API          | The off-chain HTTP or RPC surface exposed by an operator runtime. Apps use it for live product state, controls, files, books, terminals, and quotes. |
+| Indexer               | The service that reads chain events and contract state, then turns them into queryable app state. It discovers state; it does not prove honesty.     |
+| Hosted app            | The product UI for users. It is not the blueprint itself, even when it is first-party and launched from Tangle Cloud.                                |
+| BSM                   | Blueprint Service Manager contract logic. When present, it handles blueprint-specific on-chain rules such as validation, payment, or slashing hooks. |
+
+## Lifecycle
+
+| Step | What happens                                                                                       | Who cares most                                     |
+| ---- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `1`  | A developer publishes a blueprint definition, binaries, metadata, and optional BSM contracts.      | Developers and auditors.                           |
+| `2`  | Operators register for the blueprint and expose their runtime endpoint, capacity, and pricing.     | Operators, dapps, and indexers.                    |
+| `3`  | A user requests a service instance and selects the registered operators that should serve it.      | Users and operators.                               |
+| `4`  | Operators run the runtime for that service instance and submit acknowledgements, results, or jobs. | Operators, users, and dispute or settlement logic. |
+| `5`  | Apps read indexed chain state plus operator APIs to present the product experience.                | Users, support teams, and product surfaces.        |
+
+## Audience Map
+
+| Audience      | What they need to know                                                                                                                                       |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Consumer      | They request a concrete service instance and use the app or API output. They should not need to understand operator internals.                               |
+| Developer     | They define the blueprint, job schema, metadata, app policy, contracts, and any BSM or settlement logic.                                                     |
+| Operator      | They register for the blueprint, keep the runtime online, expose the right endpoint, manage keys and provider credentials, and meet the resource profile.    |
+| App builder   | They use indexed protocol state for discovery and operator APIs for live product behavior. They should keep protocol fallback pages available for raw state. |
+| Indexer owner | They must preserve enough event and state history to distinguish unavailable data, pending provisioning, operator failure, and normal service termination.   |
+
+## Jobs And Reads
+
+Jobs are for service-instance commands: create a sandbox, trigger a workflow, list an instrument, start a trading bot, or report status. Reads should use the cheapest accurate source:
+
+| Need                         | Preferred read path                                                                                     |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Blueprint and operator lists | Indexer over blueprint creation, source updates, operator registration, pricing, and endpoint metadata. |
+| Current contract state       | Direct contract call or indexed state, depending on latency and UX needs.                               |
+| Live runtime state           | Operator API, because terminals, files, books, quotes, and bot status are off-chain runtime state.      |
+| Settlement evidence          | Blueprint-specific settlement contracts, attestation records, proofs, or venue APIs.                    |
+
+The indexer is a discovery layer. It can show which operators registered, which endpoints they published, which jobs were emitted, and which heartbeats landed. Endpoint health, response quality, model behavior, trade execution, and inference redemption still need runtime checks, app-level validation, or blueprint-specific proof paths.
+
+## Layer Boundaries
+
+| Do not conflate               | Correct distinction                                                                                      |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Blueprint vs service instance | The blueprint is the template. The service instance is the live runtime unit created from that template. |
+| Operator vs hosted app        | Operators run the runtime for selected service instances. The hosted app is the user's UI.               |
+| Indexer vs proof              | The indexer reports protocol-visible state. It does not prove an endpoint is honest or healthy.          |
+| Job vs query                  | A job requests work or state change. A query reads state from contracts, the indexer, or operator APIs.  |
+| Sidecar vs BSM                | A sidecar is runtime software. A BSM is contract-side service-management logic.                          |

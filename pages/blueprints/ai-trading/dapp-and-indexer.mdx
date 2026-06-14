@@ -1,0 +1,46 @@
+---
+title: AI Trading Dapp and Indexer
+description: Arena metadata, iframe policy, and indexed state for the AI Trading blueprint.
+---
+
+# Dapp and Indexer
+
+The dapp should resolve the AI Trading blueprint from first-party metadata and render the Arena app through the trusted iframe path.
+
+## Metadata Contract
+
+| Field                             | Value                                           |
+| --------------------------------- | ----------------------------------------------- |
+| `blueprintUi.displayName`         | `AI Trading Desk`                               |
+| `blueprintUi.requestedSlug`       | `ai-trading`                                    |
+| `blueprintUi.publisher.namespace` | `tangle`                                        |
+| `resources.serviceNoun`           | `trading instance`                              |
+| `resources.resourceNoun`          | `bot`                                           |
+| `externalApp.url`                 | `https://trading-arena.blueprint.tangle.tools/` |
+| `externalApp.mode`                | `iframe`                                        |
+
+The metadata includes overview cards for the risk gate, venue capabilities, and protocol adapters. It also declares actions for bot activation and pausing.
+
+## Dapp Behavior
+
+| Surface           | Behavior                                                                                  |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| Blueprint route   | Claim metadata with `requestedSlug = "ai-trading"` under the `tangle` namespace.          |
+| External app      | Render the Arena iframe only after host and iframe policy checks pass.                    |
+| Chain switching   | Allow only the chain IDs declared in iframe policy.                                       |
+| Protocol fallback | Keep the generic blueprint detail route available for raw on-chain service-instance data. |
+
+## Indexed State
+
+The Arena and Tangle Cloud need:
+
+| State                                  | Why it matters                                                           |
+| -------------------------------------- | ------------------------------------------------------------------------ |
+| Blueprint and source updates           | Finds current binaries and metadata.                                     |
+| Operator registration and endpoint URL | Discovers live operators and their APIs.                                 |
+| Service instances                      | Shows bot fleets and dedicated trading instances.                        |
+| Job events                             | Tracks provision, configure, start, stop, status, and workflow activity. |
+| Pricing state                          | Shows operator quote surfaces and service-instance cost.                 |
+| QoS heartbeats                         | Ranks and filters operators by liveness.                                 |
+
+Because operator endpoint URLs are self-reported at registration time, the dapp should treat the indexer as discovery, not proof that an endpoint is honest or healthy.

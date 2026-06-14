@@ -1,0 +1,52 @@
+---
+title: Surplus Market Operator Requirements
+description: Host and configuration requirements for Surplus Market operators.
+---
+
+# Operator Requirements
+
+Surplus operators run a market venue and, when bonded as issuers, must back credit lots with real inference capacity.
+
+## Required Runtime
+
+| Requirement         | Notes                                                               |
+| ------------------- | ------------------------------------------------------------------- |
+| `surplus-operator`  | Full Tangle runner built with the `blueprint` feature.              |
+| HTTP venue          | Default port `9100`.                                                |
+| Settlement contract | `SURPLUS_SETTLEMENT_ADDR` and chain RPC.                            |
+| Operator key        | Signs RFQ quotes and batch attestations.                            |
+| Submitter key       | Pays gas and submits settlement transactions.                       |
+| Persistent state    | Order book, settlement outbox, fills, lots, and redemption records. |
+
+## Environment
+
+| Variable                  | Purpose                                                           |
+| ------------------------- | ----------------------------------------------------------------- |
+| `SURPLUS_CHAIN_ID`        | EIP-712 settlement chain ID.                                      |
+| `SURPLUS_SETTLEMENT_ADDR` | `SurplusSettlement` contract address.                             |
+| `SURPLUS_RPC_URL`         | RPC endpoint for settlement submission.                           |
+| `SURPLUS_OPERATOR_KEY`    | Attester or issuer signing key.                                   |
+| `SURPLUS_SUBMITTER_KEY`   | Hot transaction key.                                              |
+| `SURPLUS_SIDECAR_URL`     | Market-maker sidecar URL; default `http://127.0.0.1:9110`.        |
+| `SURPLUS_INSTRUMENT`      | Boot market, defaulting to an Anthropic output-credit instrument. |
+| `SURPLUS_MM_SIZE`         | Quote size; minimum `1000`, default `50000`.                      |
+
+## Shared Books and Privacy
+
+| Mode          | Variables                                                               |
+| ------------- | ----------------------------------------------------------------------- |
+| Shared CLOB   | `SURPLUS_CLOB_OPERATORS`, `SURPLUS_CLOB_BOOK`, `SURPLUS_CLOB_THRESHOLD` |
+| Attester-only | `SURPLUS_ATTESTER_ONLY=1`                                               |
+| Tor privacy   | `PRIVACY_MODE=tor`, `SURPLUS_TOR_SOCKS`, `SURPLUS_ONION_FILE`           |
+
+The privacy layer uses Arti/Tor for outbound calls and `.onion` operator services. It is not custom cryptography.
+
+## App Environment
+
+The hosted app needs:
+
+| Variable                        | Purpose                                                  |
+| ------------------------------- | -------------------------------------------------------- |
+| `VITE_SURPLUS_VENUE_URL`        | Default venue URL.                                       |
+| `VITE_TANGLE_ROUTER_URL`        | Tangle Router endpoint.                                  |
+| `VITE_WALLETCONNECT_PROJECT_ID` | WalletConnect project ID; do not ship a shared fallback. |

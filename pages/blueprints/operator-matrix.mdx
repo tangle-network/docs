@@ -1,0 +1,52 @@
+---
+title: Blueprint Operator Matrix
+description: Cross-blueprint host, AI, runtime, and proof requirements for Tangle blueprint operators.
+---
+
+# Blueprint Operator Matrix
+
+Use this page to compare the first-party blueprint products before sizing hosts, buying GPUs or inference credits, or publishing an operator endpoint.
+
+## Product Comparison
+
+| Blueprint        | Operator job                                                                     | Customer-facing resource                                               | Default app                            | Runtime isolation                                                             |
+| ---------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------- |
+| AI Agent Sandbox | Run isolated agent sandboxes and authenticated sidecar APIs.                     | Sandbox, workflow, terminal, files, ports, secrets, and snapshots.     | `agent-sandbox.blueprint.tangle.tools` | Docker, Firecracker microVM, or TEE instance.                                 |
+| AI Trading       | Run trading bots, strategy workers, risk checks, and trading APIs.               | Bot, vault policy, strategy config, trade log, and operator report.    | `trading-arena.blueprint.tangle.tools` | Docker sidecar by default; instance and TEE variants available.               |
+| Surplus Market   | Run an inference-credit venue, quote market, serve redemption, and settle fills. | Credit lot, order book, RFQ, redemption receipt, and settlement batch. | `surplus-market.pages.dev`             | Operator HTTP service plus controlled inference backend; settlement on-chain. |
+
+## Minimum Host Plan
+
+| Blueprint        | Minimum                                                                           | Recommended                                                                                                | Ports                                                                                        | Notes                                                                                     |
+| ---------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| AI Agent Sandbox | Docker host with Rust 1.88+, Foundry, Node 22+/pnpm for UI work.                  | Separate persistent state volume, TLS ingress, explicit public host, pre-pulled all-harness sidecar image. | Operator API defaults around `9100`; sidecar HTTP and SSH are container-internal by default. | Firecracker hosts also need kernel, rootfs, TAP/vsock support, and guest metadata daemon. |
+| AI Trading       | 2 vCPU, 4 GB RAM, 40 GB SSD, Docker 24+, public IPv4.                             | 4 vCPU, 8 GB RAM, 80 GB SSD, TLS on 443, low-latency RPC.                                                  | Operator API `9200`, trading API `9100`, public TLS on `443`.                                | The sidecar image is multi-GB and each bot accumulates state.                             |
+| Surplus Market   | Rust operator, chain RPC, persistent book/outbox state, settlement submitter key. | Dedicated venue host, supervised process, private settlement key handling, real inference backend.         | HTTP venue default `9100`; sidecar default `9110` for market-making.                         | Bonded issuers must back lots with inference they run or control.                         |
+
+## AI And Secret Requirements
+
+| Blueprint        | Can run without model keys?                             | When model keys are needed                                                                                                                   | Secrets operators must protect                                                                               |
+| ---------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| AI Agent Sandbox | Yes for sandbox lifecycle and non-model commands.       | Prompt, task, and workflow execution need the selected harness or model provider secret.                                                     | `SESSION_AUTH_SECRET`, sidecar auth tokens, provider keys, sandbox secrets, TEE provider credentials.        |
+| AI Trading       | Yes for deterministic strategy ticks and paper trading. | Agentic activation, chat, and model-driven strategy work need provider keys such as `ZAI_API_KEY`, `ANTHROPIC_API_KEY`, or `TANGLE_API_KEY`. | Operator key, bot secrets, provider keys, vault and trading contract config, admission allowlist.            |
+| Surplus Market   | Yes for the order book and dry-run venue.               | Bonded credit redemption needs an inference backend: managed vLLM, external OpenAI-compatible API, or controlled provider capacity.          | Operator attester key, submitter key, inference API key, router or ShieldedCredits credentials, venue state. |
+
+## Harness Reality
+
+Model harnesses as runtime capabilities, not as the product boundary.
+
+The sandbox product advertises runtime capabilities through `GET /api/capabilities`. Its current all-harness sidecar path includes Claude Code, Codex, OpenCode, Kimi, and Gemini. Operators should treat that endpoint as the live contract because the harness list can grow without changing the blueprint ABI.
+
+AI Trading uses the same sidecar direction for agentic work, but the trading product boundary is the bot, vault policy, strategy config, and risk gate. A harness is one execution backend for the bot's agentic mode, not the product itself.
+
+Surplus can run deterministic market-making through `@surplus/mm-loop`. Agentic quoting is a sidecar mode that uses the same risk gate before quotes reach the venue.
+
+## Proof Requirements
+
+| Blueprint        | What the indexer can prove                                                                                     | What still needs runtime or settlement proof                                                                          |
+| ---------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| AI Agent Sandbox | Blueprint, operator, service, job, source, and heartbeat state.                                                | Endpoint health, sandbox readiness, prompt output, secret handling, and TEE quote validity.                           |
+| AI Trading       | Blueprint registration, service instances, operator endpoint metadata, jobs, pricing pointers, and heartbeats. | Bot health, market execution, paper/live mode, model spend, and trade policy enforcement.                             |
+| Surplus Market   | Blueprint, operator, service, job, endpoint, and heartbeat state.                                              | Order-book correctness, fill settlement, credit redemption, attester quorum, SP1 batch proof, and inference delivery. |
+
+The indexer is discovery infrastructure. Product surfaces should still use operator APIs, contract reads, attestation records, settlement receipts, or proof systems for claims that are not visible in Tangle protocol events.

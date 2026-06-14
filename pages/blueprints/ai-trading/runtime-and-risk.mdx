@@ -1,0 +1,48 @@
+---
+title: AI Trading Runtime and Risk
+description: Runtime backend, safety, and AI cost model for AI Trading operators.
+---
+
+# Runtime and Risk
+
+Trading service instances use sandboxed bots, explicit runtime backends, paper-first defaults, and validation modes that control when capital can move.
+
+## Runtime Backend Selection
+
+Trading provision requests use `strategy_config_json.runtime_backend`.
+
+| Value         | Behavior                                                                              |
+| ------------- | ------------------------------------------------------------------------------------- |
+| `docker`      | Standard bot sandbox path.                                                            |
+| `firecracker` | Maps to sandbox runtime metadata; current provider wiring must be enabled before use. |
+| `tee`         | Confidential runtime selection; TEE instance blueprints pin this by default.          |
+
+## Safety Knobs
+
+| Setting                            | Default                            | Why it matters                                                       |
+| ---------------------------------- | ---------------------------------- | -------------------------------------------------------------------- |
+| `TRADING_REQUESTER_ACCESS_MODE`    | `allowlist`                        | Keeps bot creation limited to allowed addresses.                     |
+| `TRADING_REQUESTER_ALLOWLIST`      | Operator plus configured addresses | Defines who can request bots in allowlist mode.                      |
+| `OPERATOR_MAX_CAPACITY`            | `10` in installer templates        | Caps concurrent bots. Unset or `0` means unlimited.                  |
+| `DEFAULT_PAPER_TRADE`              | `true` in templates                | New bots use live data and simulated fills, with no on-chain trades. |
+| `TRADING_ENABLE_DIRECT_BOT_CREATE` | `false`                            | Prevents unauthenticated direct bot creation.                        |
+
+## AI Spend
+
+Deterministic strategy ticks can run without model credentials. Agentic activation and chat require provider credentials. If an operator sets model keys, inference is billed to that operator's account.
+
+The repo supports credentials such as `ZAI_API_KEY`, `ANTHROPIC_API_KEY`, and `TANGLE_API_KEY`. Treat these as provider secrets for the selected bot harness, not as the product integration boundary.
+
+There is no built-in per-bot, per-day, or total LLM spend cap. Operators should enforce spend limits at the provider account, admission allowlist, and capacity levels.
+
+The trading product boundary is a bot with strategy config, vault policy, risk limits, paper/live mode, and performance history. Agent harnesses are runtime backends for agentic work; deterministic ticks and risk checks continue without a model key.
+
+## Validation Trust
+
+| Mode           | Behavior                                                               | Latency             |
+| -------------- | ---------------------------------------------------------------------- | ------------------- |
+| `PerTrade`     | Validator EIP-712 signatures required per trade.                       | About 5-30 seconds. |
+| `Envelope`     | Depositor-approved bounds allow instant execution inside the envelope. | Near-zero.          |
+| `SelfOperated` | Local policy only; envelope still enforced.                            | Near-zero.          |
+
+On-chain guards enforce token allowlists, position caps, leverage limits, rate limits, and replay protection through the policy and validator contracts.
