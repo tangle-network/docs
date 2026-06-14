@@ -1,0 +1,52 @@
+---
+title: AI Trading Operator Requirements
+description: Host and configuration requirements for AI Trading blueprint operators.
+---
+
+# Operator Requirements
+
+Trading operators run one of three binaries and expose an operator API that the Arena discovers from on-chain registration.
+
+## Operator Shapes
+
+| Blueprint ID | Binary                           | Shape                                         |
+| ------------ | -------------------------------- | --------------------------------------------- |
+| `13`         | `trading-blueprint`              | Cloud fleet; many bots per operator instance. |
+| `14`         | `trading-instance-blueprint`     | One bot per service instance.                 |
+| `15`         | `trading-tee-instance-blueprint` | TEE instance; requires TEE hardware.          |
+
+## Host Requirements
+
+| Resource | Minimum                         | Recommended                              |
+| -------- | ------------------------------- | ---------------------------------------- |
+| CPU      | 2 vCPU                          | 4 vCPU                                   |
+| RAM      | 4 GB                            | 8 GB                                     |
+| Disk     | 40 GB SSD                       | 80 GB SSD                                |
+| OS       | Ubuntu 22.04 or 24.04           | Ubuntu 24.04                             |
+| Arch     | x86_64                          | x86_64                                   |
+| Runtime  | Docker 24+                      | Docker 24+ with sidecar image pre-pulled |
+| Network  | Public IPv4, inbound 22 and 443 | Public IPv4, TLS, low-latency RPC        |
+
+The public sidecar image is multi-GB and bots accumulate state, so disk sizing should include image cache, bot workspaces, logs, and chain metadata.
+
+## Required Service Configuration
+
+| Variable                                                                                      | Purpose                                               |
+| --------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `SERVICE_ID`                                                                                  | Existing service instance. The binary exits if unset. |
+| `BLUEPRINT_ID`                                                                                | Blueprint variant being served.                       |
+| `CHAIN_ID`                                                                                    | Base Sepolia is `84532`.                              |
+| `HTTP_RPC_URL`, `WS_RPC_URL`                                                                  | Chain reads, writes, and event watching.              |
+| `BLUEPRINT_STATE_DIR`                                                                         | Persistent operator state.                            |
+| `OPERATOR_PRIVATE_KEY`                                                                        | Operator signer.                                      |
+| `VAULT_FACTORY`, `TRADE_VALIDATOR`, `POLICY_ENGINE`, `FEE_DISTRIBUTOR`, `ASSET_TOKEN_ADDRESS` | Trading contract addresses.                           |
+
+## Ports and Discovery
+
+| Port   | Purpose                                      |
+| ------ | -------------------------------------------- |
+| `9200` | Operator API default.                        |
+| `9100` | Trading API default.                         |
+| `443`  | TLS public endpoint used by Arena discovery. |
+
+Operators register their public API URL on-chain. The Arena reads that registration and calls the operator API for bot state, pricing, and service-instance controls.

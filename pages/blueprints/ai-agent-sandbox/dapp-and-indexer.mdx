@@ -1,0 +1,41 @@
+---
+title: AI Agent Sandbox Dapp and Indexer
+description: Dapp metadata, iframe policy, and indexer requirements for the AI Agent Sandbox blueprint.
+---
+
+# Dapp and Indexer
+
+The dapp should resolve the sandbox blueprint from first-party metadata, then render the hosted sandbox app through the trusted iframe path.
+
+## Metadata Contract
+
+| Field                             | Value                                           |
+| --------------------------------- | ----------------------------------------------- |
+| `blueprintUi.displayName`         | `AI Agent Sandbox`                              |
+| `blueprintUi.requestedSlug`       | `ai-agent-sandbox`                              |
+| `blueprintUi.publisher.namespace` | `tangle`                                        |
+| `resources.serviceNoun`           | `sandbox fleet`                                 |
+| `resources.resourceNoun`          | `agent`                                         |
+| `externalApp.url`                 | `https://agent-sandbox.blueprint.tangle.tools/` |
+| `externalApp.mode`                | `iframe`                                        |
+
+The metadata defines three modes: cloud, dedicated instance, and TEE instance. The dapp can use those mode records to keep the app surface stable while routing service creation to the right blueprint ID.
+
+## Iframe Policy
+
+The sandbox app requests read account access, chain switching, and message/contract permissions for local and Base Sepolia deployments. Popups are disabled. The dapp should still enforce the host allowlist and iframe app policy before rendering.
+
+## Indexed State
+
+The dapp needs indexed state for:
+
+| State                          | Why it matters                                           |
+| ------------------------------ | -------------------------------------------------------- |
+| Blueprint creation and updates | Finds the sandbox blueprint and reads current metadata.  |
+| Operator registration          | Shows available operators and capacity choices.          |
+| Service creation and approval  | Identifies active sandbox fleets or dedicated instances. |
+| Source acknowledgement         | Confirms the operator accepted the runnable artifact.    |
+| Job events                     | Shows sandbox create/delete and workflow activity.       |
+| Quality-of-service heartbeats  | Shows liveness and operator reliability.                 |
+
+The indexer should preserve enough service-instance and operator history for the app to distinguish "not provisioned yet" from "operator failed to report readiness." Live sandbox health still comes from the operator API and runtime checks.

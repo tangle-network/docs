@@ -1,0 +1,45 @@
+---
+title: Surplus Market Settlement and Inference
+description: Settlement, inference backend, and redemption model for the Surplus Market blueprint.
+---
+
+# Settlement and Inference
+
+Surplus is a market for inference credits, so the operator must prove two things: fills settle correctly and credits redeem against real inference capacity.
+
+## Inference Backend Selection
+
+The operator uses an OpenAI-compatible chat-completions interface. Backend selection is environment-driven.
+
+| Priority | Backend                | Variables                                                                        |
+| -------- | ---------------------- | -------------------------------------------------------------------------------- |
+| 1        | Managed vLLM           | `SURPLUS_VLLM_MODEL`, optional `SURPLUS_VLLM_PORT`, optional `SURPLUS_VLLM_ARGS` |
+| 2        | External inference API | `SURPLUS_INFERENCE_URL`, optional `SURPLUS_INFERENCE_API_KEY`                    |
+| 3        | Router fallback        | `SURPLUS_ROUTER_URL`, `SURPLUS_ROUTER_API_KEY`                                   |
+
+Router fallback is for non-bonded testing. A bonded issuer must not use router mode; the operator fails closed because a lot must be backed by inference it runs or controls.
+
+## Settlement Spine
+
+| Component           | Purpose                                                                         |
+| ------------------- | ------------------------------------------------------------------------------- |
+| `SurplusSettlement` | Clears signed fills atomically and mints collateral-backed credit lots.         |
+| Attester quorum     | Compresses batch verification through operator signatures.                      |
+| SP1 proof           | Optional proof path for batch verification when volume warrants it.             |
+| Redemption receipt  | Lets holders prove delivery or trigger collateral default.                      |
+| `SurplusBSM`        | Connects redemption defaults to Tangle slashing on top of settlement penalties. |
+
+## Verified Paths
+
+The testnet release docs require these checks before and after deploy:
+
+| Check                              | What it proves                                                                              |
+| ---------------------------------- | ------------------------------------------------------------------------------------------- |
+| `scripts/settlement-e2e.sh`        | Atomic fill, receipt redemption, collateral default, attested batch, proven batch.          |
+| `scripts/spend-e2e.sh`             | API-key mint, OpenAI-compatible calls, streaming, on-chain billing, forged voucher refusal. |
+| `scripts/prove-batch.sh execute`   | SP1 guest public values match host recomputation.                                           |
+| `forge test` and Rust parity tests | Contract invariants and digest parity.                                                      |
+
+## Market-Making Loop
+
+The market-making sidecar can run deterministic Avellaneda-Stoikov quoting or a sandboxed agent strategy. The risk desk is fail-closed and validates quote size, inventory, deviation, spread, and drawdown before the operator places quotes.

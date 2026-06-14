@@ -1,0 +1,44 @@
+---
+title: Surplus Market Dapp and Indexer
+description: Dapp routing and indexer requirements for the Surplus Market blueprint.
+---
+
+# Dapp and Indexer
+
+Surplus currently has a hosted market app at `https://surplus-market.pages.dev/`. Tangle Cloud should expose it as a first-party link-out app until a dedicated `blueprint.tangle.tools` iframe host and iframe policy are deployed.
+
+## Metadata Contract
+
+The deployed metadata currently declares:
+
+| Field             | Value                                       |
+| ----------------- | ------------------------------------------- |
+| `name`            | `surplus`                                   |
+| `category`        | `inference-market`                          |
+| `author`          | `Tangle`                                    |
+| `code_repository` | `https://github.com/tangle-network/surplus` |
+
+Unlike Sandbox and Trading, this metadata does not yet carry a rich `blueprintUi` object. The dapp should keep the first-party registry entry for `surplus` until the repo publishes equivalent metadata on-chain.
+
+## Dapp Behavior
+
+| Surface            | Behavior                                                                                              |
+| ------------------ | ----------------------------------------------------------------------------------------------------- |
+| Tangle Cloud route | Reserve the `surplus` slug and match first-party Surplus metadata.                                    |
+| Hosted app         | Open `https://surplus-market.pages.dev/` as a trusted link, not an iframe.                            |
+| Protocol fallback  | Preserve the raw indexed blueprint and service-instance route for operator and settlement inspection. |
+
+## Indexed State
+
+The indexer should expose:
+
+| State                                 | Why it matters                                           |
+| ------------------------------------- | -------------------------------------------------------- |
+| Blueprint creation and source updates | Finds the Surplus operator binary and metadata.          |
+| Operator registration                 | Discovers venues and issuer/attester operators.          |
+| Service creation                      | Distinguishes independent books from shared CLOB books.  |
+| Job events                            | Tracks `list_instrument`, `status`, and `workflow_tick`. |
+| Operator endpoint metadata            | Lets the app discover venue endpoints.                   |
+| QoS heartbeats                        | Shows venue liveness and reliability.                    |
+
+Settlement-specific fills, lots, redemption receipts, and attestation state live in Surplus settlement contracts and venue APIs. The Tangle indexer should at least preserve pointers so product surfaces can reconcile protocol service instances with market state. Endpoint liveness and venue honesty still need venue checks, settlement evidence, or proof paths.

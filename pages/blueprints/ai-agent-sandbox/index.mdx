@@ -1,0 +1,44 @@
+---
+title: AI Agent Sandbox Blueprint
+description: First-party Tangle blueprint for managed AI agent sandboxes.
+---
+
+# AI Agent Sandbox Blueprint
+
+The AI Agent Sandbox blueprint defines the template for isolated agent sandbox service instances on Tangle. Operators run the sandbox runtime and sidecar containers. Users create sandboxes, trigger workflows, attach terminals, inject secrets, and inspect execution through the hosted app.
+
+Source repo: https://github.com/tangle-network/ai-agent-sandbox-blueprint
+
+## Product Shape
+
+| Area              | Source-backed behavior                                                                                    |
+| ----------------- | --------------------------------------------------------------------------------------------------------- |
+| Cloud mode        | Multi-tenant fleet; callers create and delete sandboxes on demand through on-chain jobs.                  |
+| Instance mode     | One sandbox per service instance; the operator auto-provisions on startup and reports lifecycle directly. |
+| TEE instance mode | Dedicated instance with TEE attestation and sealed secrets.                                               |
+| Hosted app        | `https://agent-sandbox.blueprint.tangle.tools/`                                                           |
+| Metadata identity | `publisher.namespace = "tangle"`, `requestedSlug = "ai-agent-sandbox"`                                    |
+
+## On-Chain Jobs
+
+| ID  | Job                | Mode               | What it does                                                 |
+| --- | ------------------ | ------------------ | ------------------------------------------------------------ |
+| `0` | `SANDBOX_CREATE`   | Cloud              | Creates a sandbox container, microVM, or TEE-backed sandbox. |
+| `1` | `SANDBOX_DELETE`   | Cloud              | Deletes the sandbox and releases runtime resources.          |
+| `2` | `WORKFLOW_CREATE`  | Cloud and instance | Registers a workflow template.                               |
+| `3` | `WORKFLOW_TRIGGER` | Cloud and instance | Starts a registered workflow.                                |
+| `4` | `WORKFLOW_CANCEL`  | Cloud and instance | Cancels active workflow execution.                           |
+
+`JOB_WORKFLOW_TICK` is internal cron-driven workflow progress. It is not a public on-chain job.
+
+## Read Next
+
+| Page                                                                        | Use it for                                                              |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| [Operator Requirements](/blueprints/ai-agent-sandbox/operator-requirements) | Host sizing, env vars, Docker, Firecracker, TEE, ports.                 |
+| [Runtime and Harnesses](/blueprints/ai-agent-sandbox/runtime-and-harnesses) | Sidecar capabilities, harness discovery, secrets, auth, runtime safety. |
+| [Dapp and Indexer](/blueprints/ai-agent-sandbox/dapp-and-indexer)           | Metadata, iframe policy, indexed events, service state.                 |
+
+## Source Material
+
+This page is based on the blueprint repo's `README.md`, `docs/runbook.md`, `metadata/blueprint-metadata.json`, `ai-agent-sandbox-blueprint-lib/src/lib.rs`, `sandbox-runtime/src/operator_api.rs`, and `TEE-GUIDE.md`.

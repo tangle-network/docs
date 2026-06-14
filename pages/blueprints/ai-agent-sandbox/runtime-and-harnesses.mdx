@@ -1,0 +1,54 @@
+---
+title: AI Agent Sandbox Runtime and Harnesses
+description: Sidecar capability and harness model for the AI Agent Sandbox blueprint.
+---
+
+# Runtime and Harnesses
+
+The sandbox blueprint is not one agent integration. The product contract is a sidecar-compatible sandbox plus runtime capabilities advertised by the operator.
+
+## Runtime Backends
+
+Sandbox creation selects a backend through `metadata_json.runtime_backend`.
+
+| Backend       | Behavior                                                                                      |
+| ------------- | --------------------------------------------------------------------------------------------- |
+| `docker`      | Default managed sidecar container path.                                                       |
+| `firecracker` | MicroVM path; installs per-VM networking, rootfs, env injection, and sidecar token injection. |
+| `tee`         | Forces TEE provisioning and `tee_required=true`.                                              |
+
+Firecracker and TEE are separate choices in the current release. Selecting `firecracker` forces `tee_required=false`.
+
+## Sidecar Capabilities
+
+Provisioning accepts `capabilities_json`, a JSON-encoded string array. Accepted values are injected into the sandbox as `SIDECAR_CAPABILITIES`.
+
+| Capability     | Behavior                                                                                                 |
+| -------------- | -------------------------------------------------------------------------------------------------------- |
+| `computer_use` | Starts browser/computer-use sidecar services for mouse, keyboard, screenshots, and related MCP surfaces. |
+| `all_harness`  | Requests the multi-harness sidecar image path.                                                           |
+
+The exact harness matrix comes from `GET /api/capabilities`. The current default all-harness image advertises multiple CLI agent harnesses. Operators should rely on capability discovery instead of treating any one harness as the integration.
+
+The current all-harness path is source-backed for Claude Code, Codex, OpenCode, Kimi, and Gemini. That is a sidecar runtime capability, not the blueprint's product identity. The blueprint identity is the sandbox service instance plus its operator API, lifecycle jobs, workflow state, and runtime isolation.
+
+## Operator API
+
+All data endpoints use EIP-191 challenge-response auth that issues PASETO v4.local session tokens.
+
+| Endpoint group       | Examples                                                                                     |
+| -------------------- | -------------------------------------------------------------------------------------------- |
+| Auth                 | `POST /api/auth/challenge`, `POST /api/auth/session`, `DELETE /api/auth/session`             |
+| Sandbox operations   | `exec`, `prompt`, `task`, `stop`, `resume`, `snapshot`, `ssh`, `secrets`, port proxy         |
+| Instance operations  | Same control plane under `/api/sandbox/...` for singleton service instances                  |
+| Health and discovery | `GET /health`, `GET /readyz`, `GET /metrics`, `GET /api/provisions`, `GET /api/capabilities` |
+
+## Secrets and Model Credentials
+
+Sandbox creation can succeed without model credentials. Agent prompts, tasks, and workflow steps fail only when the selected harness or model provider lacks its required secret.
+
+Operators should inject provider credentials as sandbox secrets or environment variables scoped to the service instance. The blueprint ABI stays stable as new sidecar images and sandbox SDK harnesses add support for more providers.
+
+## Runtime Safety
+
+The runtime enforces challenge-response auth, encrypted stored secrets, container hardening, rate limits, circuit breakers, session caps, and snapshot destination validation. Container hardening includes dropped capabilities, `no-new-privileges`, PID limits, localhost-bound ports, and restricted writable state.

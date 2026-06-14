@@ -26,6 +26,10 @@ const meta: Meta = {
     title: "Runtime",
     type: "page",
   },
+  blueprints: {
+    title: "Blueprints",
+    type: "page",
+  },
   protocol: {
     type: "menu",
     title: "Protocol",
