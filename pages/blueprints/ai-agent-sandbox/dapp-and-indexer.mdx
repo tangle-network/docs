@@ -1,41 +1,69 @@
 ---
 title: AI Agent Sandbox Dapp and Indexer
-description: Dapp metadata, iframe policy, and indexer requirements for the AI Agent Sandbox blueprint.
+description: Dapp metadata, iframe policy, indexed state, and live health boundaries for AI Agent Sandbox.
 ---
 
-# Dapp and Indexer
+# AI Agent Sandbox Dapp and Indexer
 
-The dapp should resolve the sandbox blueprint from first-party metadata, then render the hosted sandbox app through the trusted iframe path.
+Tangle Cloud should launch the hosted sandbox app from metadata, then keep the raw protocol page one click away.
 
-## Metadata Contract
+The hosted app owns the sandbox UX. The protocol page owns raw state inspection.
 
-| Field                             | Value                                           |
+## Metadata the dapp should use
+
+| Field                             | Current value in repo metadata                  |
 | --------------------------------- | ----------------------------------------------- |
 | `blueprintUi.displayName`         | `AI Agent Sandbox`                              |
 | `blueprintUi.requestedSlug`       | `ai-agent-sandbox`                              |
 | `blueprintUi.publisher.namespace` | `tangle`                                        |
-| `resources.serviceNoun`           | `sandbox fleet`                                 |
-| `resources.resourceNoun`          | `agent`                                         |
-| `externalApp.url`                 | `https://agent-sandbox.blueprint.tangle.tools/` |
 | `externalApp.mode`                | `iframe`                                        |
+| `externalApp.url`                 | `https://agent-sandbox.blueprint.tangle.tools/` |
 
-The metadata defines three modes: cloud, dedicated instance, and TEE instance. The dapp can use those mode records to keep the app surface stable while routing service creation to the right blueprint ID.
+The metadata also declares cloud, dedicated instance, and TEE instance modes. Use those records to route service creation to the right blueprint ID for the selected network.
 
-## Iframe Policy
+## Indexed state
 
-The sandbox app requests read account access, chain switching, and message/contract permissions for local and Base Sepolia deployments. Popups are disabled. The dapp should still enforce the host allowlist and iframe app policy before rendering.
+| State                                   | Why the dapp needs it                                       |
+| --------------------------------------- | ----------------------------------------------------------- |
+| Blueprint creation and metadata updates | Find the sandbox blueprint and app policy.                  |
+| Operator registration                   | Show available operators and capacity choices.              |
+| Service requests and approvals          | Show provisioning progress.                                 |
+| Service instances                       | Link the hosted app to the selected instance.               |
+| Source acknowledgement                  | Show which runnable artifact an operator accepted.          |
+| Jobs                                    | Show lifecycle and workflow commands.                       |
+| Heartbeats                              | Separate "not ready yet" from "operator stopped reporting." |
 
-## Indexed State
+The indexer should preserve enough history to distinguish pending provisioning from operator failure. The hosted app should not have to guess.
 
-The dapp needs indexed state for:
+## Live checks
 
-| State                          | Why it matters                                           |
-| ------------------------------ | -------------------------------------------------------- |
-| Blueprint creation and updates | Finds the sandbox blueprint and reads current metadata.  |
-| Operator registration          | Shows available operators and capacity choices.          |
-| Service creation and approval  | Identifies active sandbox fleets or dedicated instances. |
-| Source acknowledgement         | Confirms the operator accepted the runnable artifact.    |
-| Job events                     | Shows sandbox create/delete and workflow activity.       |
-| Quality-of-service heartbeats  | Shows liveness and operator reliability.                 |
+Indexed state is not enough to open a terminal or inject a secret. Before showing a sandbox as usable, the app should check:
 
-The indexer should preserve enough service-instance and operator history for the app to distinguish "not provisioned yet" from "operator failed to report readiness." Live sandbox health still comes from the operator API and runtime checks.
+1. operator API reachability
+2. session auth challenge/session flow
+3. `/readyz` or `/health`
+4. `/api/capabilities`
+5. one product operation when the page needs it, such as listing sandboxes or reading instance state
+
+For TEE mode, the app should also expose attestation status and avoid presenting confidential execution as verified when attestation is missing.
+
+## Iframe policy
+
+The sandbox app is iframe-first. The parent dapp should:
+
+| Rule                                                            | Reason                                                                      |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Restrict iframe hosts to trusted suffixes and manifest entries. | Prevent arbitrary operator metadata from embedding a hostile app.           |
+| Pass parent origin and chain context explicitly.                | Lets the child app request wallet operations through the parent.            |
+| Keep wallet approval in the parent.                             | Users should see the same wallet confirmation model across Tangle Cloud.    |
+| Keep a link to raw protocol state.                              | Operators and support need chain/indexer state when the hosted app is down. |
+
+## Bad copy to avoid
+
+Do not name the product after one harness. The sandbox may run opencode, Codex, Claude Code, Kimi, Gemini, or another advertised runtime, but the product is the sandbox service instance and operator API.
+
+Use capability language instead:
+
+- "This operator advertises `all_harness` support."
+- "This sidecar currently lists Claude Code, Codex, opencode, Kimi Code, and Gemini CLI."
+- "The exact harness list comes from `/api/capabilities`."

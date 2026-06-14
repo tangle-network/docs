@@ -1,50 +1,93 @@
 ---
 title: AI Agent Sandbox Operator Requirements
-description: Host, runtime, and environment requirements for AI Agent Sandbox operators.
+description: Host, runtime, state, and secret requirements for AI Agent Sandbox operators.
 ---
 
-# Operator Requirements
+# AI Agent Sandbox Operator Requirements
 
-Operators run one of three binaries: sandbox cloud, dedicated instance, or TEE instance. All variants need a keystore, chain RPC, persistent state, and an authenticated operator API.
+An AI Agent Sandbox operator is running untrusted compute for other people. Start from that fact.
 
-## Common Environment
+The operator needs a chain identity, persistent state, a supervised runtime, and an authenticated API. If the operator exposes TEE mode or Firecracker mode, it also needs the host-level pieces those runtimes require.
 
-| Variable                                          | Purpose                                                            |
-| ------------------------------------------------- | ------------------------------------------------------------------ |
-| `KEYSTORE_URI`                                    | Operator keystore path or URI.                                     |
-| `HTTP_RPC_ENDPOINT` or `RPC_URL`                  | Tangle EVM HTTP RPC endpoint.                                      |
-| `TANGLE_WS_URL`                                   | WebSocket endpoint for event subscriptions.                        |
-| `BLUEPRINT_STATE_DIR`                             | Persistent state for sandbox records, sessions, and metadata.      |
-| `SESSION_AUTH_SECRET`                             | 32+ byte secret for PASETO sessions and at-rest secret encryption. |
-| `SANDBOX_UI_AUTH_MODE`, `SANDBOX_UI_BEARER_TOKEN` | Browser-facing UI ingress auth.                                    |
+## Common requirements
 
-## Sandbox Mode
+| Requirement            | Why                                                                                |
+| ---------------------- | ---------------------------------------------------------------------------------- |
+| Operator keystore      | Signs protocol actions and identifies the operator.                                |
+| HTTP and WebSocket RPC | Reads chain state and subscribes to events.                                        |
+| `BLUEPRINT_STATE_DIR`  | Stores sandbox records, sessions, workflow state, and local runtime state.         |
+| `SESSION_AUTH_SECRET`  | Derives PASETO session tokens and at-rest encryption keys. Required in production. |
+| UI/API ingress auth    | Prevents the public internet from directly controlling sandboxes.                  |
+| Supervised process     | The operator must restart cleanly after crashes.                                   |
 
-| Requirement         | Notes                                                                          |
-| ------------------- | ------------------------------------------------------------------------------ |
-| Docker              | Required for standard sidecar containers.                                      |
-| `SIDECAR_IMAGE`     | Defaults to a sidecar-compatible all-harness image.                            |
-| `OPERATOR_API_PORT` | Default `9100`.                                                                |
-| `PUBLIC_HOST`       | Set explicitly behind NAT or VPN; auto-detect is available for Tailscale IPv4. |
+## Binary variants
 
-## Firecracker Mode
+| Variant            | Binary                                | Shape                                                   |
+| ------------------ | ------------------------------------- | ------------------------------------------------------- |
+| Cloud sandbox      | `ai-agent-sandbox-blueprint-bin`      | Fleet mode. Users create/delete sandboxes.              |
+| Dedicated instance | `ai-agent-instance-blueprint-bin`     | One sandbox per service instance.                       |
+| TEE instance       | `ai-agent-tee-instance-blueprint-bin` | Dedicated instance plus attestation and sealed secrets. |
 
-Firecracker runs through the in-process `microvm-runtime` driver. The operator binary is the Firecracker host; there is no separate host-agent service.
+## Docker mode
 
-| Variable                         | Purpose                    |
-| -------------------------------- | -------------------------- |
-| `MICROVM_FIRECRACKER_BIN`        | Firecracker binary path.   |
-| `MICROVM_FIRECRACKER_KERNEL`     | Linux kernel image.        |
-| `MICROVM_FIRECRACKER_ROOTFS`     | Rootfs ext4 image.         |
-| `MICROVM_FIRECRACKER_SOCKET_DIR` | Per-VM API socket parent.  |
-| `MICROVM_FIRECRACKER_STATE_DIR`  | Per-VM state directory.    |
-| `MICROVM_FIRECRACKER_VCPU`       | Default vCPU count per VM. |
-| `MICROVM_FIRECRACKER_MEM_MIB`    | Default memory per VM.     |
+Docker is the simplest path.
 
-The Firecracker path allocates TAP, vsock, per-VM rootfs clones, and host port forwarding. Operators must bake the guest metadata daemon into the rootfs so environment and sidecar auth tokens can be injected over vsock.
+| Variable                               | Purpose                                                                        |
+| -------------------------------------- | ------------------------------------------------------------------------------ |
+| `SIDECAR_IMAGE`                        | Sidecar image, usually `ghcr.io/tangle-network/blueprint-sidecar:all-harness`. |
+| `SIDECAR_PUBLIC_HOST` or `PUBLIC_HOST` | Public hostname used when returning sidecar or proxy URLs.                     |
+| `SIDECAR_PULL_IMAGE`                   | Whether to pull the image on first create.                                     |
+| `OPERATOR_API_PORT`                    | Operator API port. Sandbox mode defaults around `9100`.                        |
 
-## TEE Mode
+Keep raw sidecar ports private unless the operator intentionally proxies them.
 
-TEE instance mode supports provider-backed confidential runtimes such as Phala, AWS Nitro, GCP Confidential Space, Azure SKR, or direct operator-managed hardware. Configure the provider-specific credentials and set `TEE_BACKEND`.
+## Firecracker mode
 
-Current TEE verification should be treated as structural unless the deployment also pins quote-signature verification, expected sidecar measurements, and fresh client nonces.
+Firecracker mode runs through the operator process and `microvm-runtime`.
+
+| Variable                         | Purpose                                             |
+| -------------------------------- | --------------------------------------------------- |
+| `MICROVM_FIRECRACKER_BIN`        | Firecracker binary path.                            |
+| `MICROVM_FIRECRACKER_KERNEL`     | Linux kernel image used for guests.                 |
+| `MICROVM_FIRECRACKER_ROOTFS`     | Default ext4 rootfs.                                |
+| `MICROVM_FIRECRACKER_SOCKET_DIR` | Per-VM API socket parent directory.                 |
+| `MICROVM_FIRECRACKER_STATE_DIR`  | Per-VM state directory.                             |
+| `MICROVM_FIRECRACKER_VCPU`       | Default vCPU count.                                 |
+| `MICROVM_FIRECRACKER_MEM_MIB`    | Default memory in MiB.                              |
+| `MICROVM_GUEST_METADATA_PORT`    | vsock port for per-VM env and auth token injection. |
+
+The rootfs must include the guest metadata daemon. Without it, the operator cannot inject per-VM env vars and sidecar auth tokens over vsock.
+
+## TEE mode
+
+Set `TEE_BACKEND` to one of:
+
+| Backend          | Required setup                                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `phala`          | `PHALA_API_KEY`; optional endpoint override.                                                                                    |
+| `nitro` or `aws` | AWS region, AMI, subnet, security group, instance type, and optional KMS/profile config.                                        |
+| `gcp`            | GCP project, zone, image, machine type, and optional service account/KMS config.                                                |
+| `azure`          | Subscription, resource group, location, VM image/size, subnet, tenant/client secret, and optional Key Vault/attestation config. |
+| `direct`         | TDX, SEV-SNP, or Nitro-capable hardware and the matching device node.                                                           |
+
+TEE instance contracts enforce non-empty attestation when `teeRequired=true`. The operator API also exposes attestation and sealed-secret endpoints.
+
+## Local proof
+
+The repo's local runbook uses:
+
+```bash
+SKIP_BUILD=1 ./scripts/deploy-local.sh
+./scripts/test-e2e.sh
+```
+
+The smoke should prove:
+
+1. local Anvil and contracts are up
+2. blueprints are registered
+3. operator APIs start
+4. auth works
+5. lifecycle reporting reaches the chain
+6. runtime/operator API actions hit a real sidecar path where enabled
+
+Do not replace this with mocked API tests when deploy scripts, service registration, or auth changed.

@@ -1,52 +1,92 @@
 ---
 title: Surplus Market Operator Requirements
-description: Host and configuration requirements for Surplus Market operators.
+description: Host, key, inference, CLOB, settlement, and privacy requirements for Surplus operators.
 ---
 
-# Operator Requirements
+# Surplus Market Operator Requirements
 
-Surplus operators run a market venue and, when bonded as issuers, must back credit lots with real inference capacity.
+A Surplus operator can be a venue, an attester, a market maker, a bonded issuer, or some combination of those roles. The obligations are different.
 
-## Required Runtime
+Do not run as a bonded issuer unless you can redeem the credits you sell.
 
-| Requirement         | Notes                                                               |
-| ------------------- | ------------------------------------------------------------------- |
-| `surplus-operator`  | Full Tangle runner built with the `blueprint` feature.              |
-| HTTP venue          | Default port `9100`.                                                |
-| Settlement contract | `SURPLUS_SETTLEMENT_ADDR` and chain RPC.                            |
-| Operator key        | Signs RFQ quotes and batch attestations.                            |
-| Submitter key       | Pays gas and submits settlement transactions.                       |
-| Persistent state    | Order book, settlement outbox, fills, lots, and redemption records. |
+## Base host
 
-## Environment
+| Requirement            | Why                                                                    |
+| ---------------------- | ---------------------------------------------------------------------- |
+| Rust operator build    | Runs `surplus-operator-lite` or `surplus-operator`.                    |
+| Persistent venue state | Keeps books, outbox, inventory, settlement state, and operator config. |
+| Chain RPC              | Reads contracts and submits settlement when chain mode is enabled.     |
+| Supervised process     | The venue should restart without losing book/accounting state.         |
+| HTTP endpoint          | Serves the market API used by the app and other clients.               |
+| Private key storage    | Protects issuer, attester, and submitter keys.                         |
 
-| Variable                  | Purpose                                                           |
-| ------------------------- | ----------------------------------------------------------------- |
-| `SURPLUS_CHAIN_ID`        | EIP-712 settlement chain ID.                                      |
-| `SURPLUS_SETTLEMENT_ADDR` | `SurplusSettlement` contract address.                             |
-| `SURPLUS_RPC_URL`         | RPC endpoint for settlement submission.                           |
-| `SURPLUS_OPERATOR_KEY`    | Attester or issuer signing key.                                   |
-| `SURPLUS_SUBMITTER_KEY`   | Hot transaction key.                                              |
-| `SURPLUS_SIDECAR_URL`     | Market-maker sidecar URL; default `http://127.0.0.1:9110`.        |
-| `SURPLUS_INSTRUMENT`      | Boot market, defaulting to an Anthropic output-credit instrument. |
-| `SURPLUS_MM_SIZE`         | Quote size; minimum `1000`, default `50000`.                      |
+Key separation matters. The operator key signs issuer/attester actions. The submitter key can be a separate gas/nonce key.
 
-## Shared Books and Privacy
+## Inference backend
 
-| Mode          | Variables                                                               |
-| ------------- | ----------------------------------------------------------------------- |
-| Shared CLOB   | `SURPLUS_CLOB_OPERATORS`, `SURPLUS_CLOB_BOOK`, `SURPLUS_CLOB_THRESHOLD` |
-| Attester-only | `SURPLUS_ATTESTER_ONLY=1`                                               |
-| Tor privacy   | `PRIVACY_MODE=tor`, `SURPLUS_TOR_SOCKS`, `SURPLUS_ONION_FILE`           |
+Bonded issuance needs real inference capacity.
 
-The privacy layer uses Arti/Tor for outbound calls and `.onion` operator services. It is not custom cryptography.
+| Setting                     | Use                                   |
+| --------------------------- | ------------------------------------- |
+| `SURPLUS_VLLM_MODEL`        | Managed vLLM model backend.           |
+| `SURPLUS_INFERENCE_URL`     | OpenAI-compatible inference endpoint. |
+| `SURPLUS_INFERENCE_API_KEY` | Credential for that endpoint.         |
 
-## App Environment
+Router-proxy mode is useful for tests and non-bonded flows. A bonded issuer must not rely on router fallback because the credit lot must be backed by capacity the issuer runs or controls.
 
-The hosted app needs:
+## Settlement keys and config
 
-| Variable                        | Purpose                                                  |
-| ------------------------------- | -------------------------------------------------------- |
-| `VITE_SURPLUS_VENUE_URL`        | Default venue URL.                                       |
-| `VITE_TANGLE_ROUTER_URL`        | Tangle Router endpoint.                                  |
-| `VITE_WALLETCONNECT_PROJECT_ID` | WalletConnect project ID; do not ship a shared fallback. |
+| Setting                   | Use                                            |
+| ------------------------- | ---------------------------------------------- |
+| `SURPLUS_CHAIN_ID`        | Chain ID used in EIP-712 and settlement calls. |
+| `SURPLUS_SETTLEMENT_ADDR` | Settlement contract address.                   |
+| `SURPLUS_RPC_URL`         | RPC endpoint for settlement submissions.       |
+| `SURPLUS_OPERATOR_KEY`    | Issuer or attester key.                        |
+| `SURPLUS_SUBMITTER_KEY`   | Optional separate transaction key.             |
+
+Do not put these in frontend env. They are operator secrets.
+
+## Shared CLOB and attesters
+
+For shared books, configure:
+
+| Setting                   | Use                                                   |
+| ------------------------- | ----------------------------------------------------- |
+| `SURPLUS_CLOB_OPERATORS`  | Peer operator list.                                   |
+| `SURPLUS_CLOB_BOOK`       | Book identifier.                                      |
+| `SURPLUS_CLOB_THRESHOLD`  | Attestation threshold.                                |
+| `SURPLUS_ATTESTER_ONLY=1` | Runs a quorum member that attests but does not issue. |
+
+The CLOB path depends on operator signatures. Peers must prove their operator address by signature recovery before joining the transport.
+
+## Privacy mode
+
+Surplus can publish and use onion endpoints through Arti, the Rust Tor implementation.
+
+| Setting              | Use                                                  |
+| -------------------- | ---------------------------------------------------- |
+| `SURPLUS_ONION_URL`  | Fixed onion endpoint.                                |
+| `SURPLUS_ONION_FILE` | Path where Arti writes the generated onion hostname. |
+| `PRIVACY_MODE=tor`   | Route outbound operator calls through Tor.           |
+
+This is Tor, not custom cryptography. The privacy goal is to avoid concentrating a seller's redemptions on the same identifiable operator endpoint.
+
+## Operator preflight
+
+Run the repo proof paths before claiming a venue is ready:
+
+```bash
+pnpm -r test
+cargo test --workspace
+cd contracts && forge test
+```
+
+For settlement and spend paths, the repo uses:
+
+```bash
+bash scripts/settlement-e2e.sh
+bash scripts/spend-e2e.sh
+bash scripts/prove-batch.sh execute
+```
+
+Those prove more than "the server boots." They exercise atomic fill settlement, redemption, collateral default, attested batch settlement, spend billing, and circuit parity.

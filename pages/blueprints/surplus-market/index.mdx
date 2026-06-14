@@ -5,51 +5,72 @@ description: First-party Tangle blueprint for an AI inference credit market.
 
 # Surplus Market Blueprint
 
-The Surplus Market blueprint defines the template for a prepaid AI inference credit market. Buyers acquire discounted inference capacity through service instances. Operators make markets in credit lots, serve or back redemption, and settle fills on-chain.
+Surplus is a market for prepaid inference credits.
 
-Source repo: https://github.com/tangle-network/surplus
+Buyers acquire discounted credits. Operators sell or make markets in those credits. Settlement happens on-chain, while the order book and quoting run off-chain inside the operator venue. When an operator is bonded as an issuer, it must back credit lots with inference it runs or controls.
 
-## Product Shape
+Source repo: internal Tangle repository. The public surface is the hosted app and these docs until the repo is public.
 
-| Area               | Source-backed behavior                                                                                |
-| ------------------ | ----------------------------------------------------------------------------------------------------- |
-| Operator binary    | `surplus-operator` for the full Tangle runner; `surplus-operator-lite` for HTTP-only local operation. |
-| Blueprint category | `inference-market`                                                                                    |
-| Default port       | `9100`                                                                                                |
-| Hosted app         | `https://surplus-market.pages.dev/`                                                                   |
-| Settlement         | `SurplusSettlement` with attested quorum or SP1 proof boundary.                                       |
+## What happens in the product
+
+1. An operator runs a venue.
+2. Buyers and sellers place orders or request firm quotes.
+3. The venue matches orders and emits settlement intents.
+4. Signed fills settle on-chain.
+5. Credit lots redeem against inference capacity.
+6. If an issuer defaults, settlement and slashing paths decide the remedy.
+
+The order book is only the entry point. The hard part is making a credit redeemable.
+
+## Operator shapes
+
+| Binary                  | Use                                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------------ |
+| `surplus-operator-lite` | HTTP venue only. Good for local and venue API work.                                        |
+| `surplus-operator`      | Full Tangle runner, built with the `blueprint` feature. Runs as a real blueprint operator. |
+
+The full operator runs the venue inside a Tangle `BlueprintRunner`. The venue starts as a background service, and jobs can drive actions such as listing an instrument, status checks, and workflow ticks.
+
+## Venue API
+
+| Route                    | Purpose                                                                   |
+| ------------------------ | ------------------------------------------------------------------------- |
+| `POST /order`            | Place a limit order and produce fills or settlement intents.              |
+| `POST /cancel`           | Cancel a resting order.                                                   |
+| `POST /book`             | Read depth, reference price, and operator inventory.                      |
+| `POST /mm-tick`          | Pull risk-gated quotes from the market-making sidecar and replace quotes. |
+| `POST /ref`              | Push a reference price.                                                   |
+| `POST /order-signed`     | Place an EIP-712 signed firm order.                                       |
+| `POST /rfq`              | Request a signed short-TTL quote.                                         |
+| `POST /rfq/fill`         | Cross a firm quote with a countersigned taker order.                      |
+| `GET /settlement/outbox` | Read fills waiting for settlement.                                        |
+| `POST /settlement/flush` | Submit the outbox through the chain path when enabled.                    |
+
+The operator is the venue. The mm-sidecar suggests quotes. The risk gate decides whether those quotes can be placed.
 
 ## Jobs
 
-| ID   | Job               | Status                                  |
-| ---- | ----------------- | --------------------------------------- |
-| `0`  | `list_instrument` | Implemented.                            |
-| `1`  | `configure`       | Reserved placeholder.                   |
-| `2`  | `start_making`    | Reserved placeholder.                   |
-| `3`  | `stop_making`     | Reserved placeholder.                   |
-| `4`  | `status`          | Implemented.                            |
-| `30` | `workflow_tick`   | Implemented; drives market-maker ticks. |
+The blueprint manifest defines:
 
-## Operator API
+| Job               | Current status                                                                   |
+| ----------------- | -------------------------------------------------------------------------------- |
+| `list_instrument` | Implemented.                                                                     |
+| `configure`       | Reserved placeholder in the current compact definition.                          |
+| `start_making`    | Reserved placeholder in the current compact definition.                          |
+| `stop_making`     | Reserved placeholder in the current compact definition.                          |
+| `status`          | Implemented.                                                                     |
+| `workflow_tick`   | Implemented. Pulls reference price, sidecar quotes, and updates operator quotes. |
 
-| Route                            | Purpose                                             |
-| -------------------------------- | --------------------------------------------------- |
-| `POST /order`                    | Place limit orders and emit settlement intents.     |
-| `POST /cancel`                   | Cancel a resting order.                             |
-| `POST /book`                     | Read depth, reference price, and inventory.         |
-| `POST /mm-tick`                  | Pull risk-gated quotes and replace operator quotes. |
-| `POST /rfq` and `POST /rfq/fill` | Quote and fill signed firm RFQs.                    |
-| `GET /settlement/outbox`         | Read settleable fills.                              |
-| `POST /settlement/flush`         | Submit fills when chain settlement is enabled.      |
+The placeholders preserve compact job index compatibility. Do not remove them without changing the runtime assumptions.
 
-## Read Next
+## What to read next
 
-| Page                                                                            | Use it for                                                    |
-| ------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| [Operator Requirements](/blueprints/surplus-market/operator-requirements)       | Env vars, CLOB setup, privacy mode, app env.                  |
-| [Settlement and Inference](/blueprints/surplus-market/settlement-and-inference) | Real inference backend, credit lots, redemption, quorum, SP1. |
-| [Dapp and Indexer](/blueprints/surplus-market/dapp-and-indexer)                 | Dapp link-out, metadata gaps, indexed market state.           |
+| Page                                                                            | Use it for                                                                        |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [Operator Requirements](/blueprints/surplus-market/operator-requirements)       | Venue host, settlement keys, inference backend, CLOB, and privacy mode.           |
+| [Settlement and Inference](/blueprints/surplus-market/settlement-and-inference) | Credit lots, redemption, attester quorum, SP1 path, and inference proof boundary. |
+| [Dapp and Indexer](/blueprints/surplus-market/dapp-and-indexer)                 | Current link-out app, metadata gap, and indexed market state.                     |
 
-## Source Material
+## Sources used
 
-This page is based on the Surplus repo's `README.md`, `BLUEPRINT.md`, `blueprint.toml`, `deploy/blueprint-definition.toml`, `deploy/blueprint-metadata.json`, `docs/testnet-release.md`, `operator/src/config.rs`, and `operator/src/inference.rs`.
+This page is grounded in the repo `README.md`, `BLUEPRINT.md`, `blueprint.toml`, `deploy/blueprint-definition.toml`, `deploy/blueprint-metadata.json`, `docs/testnet-release.md`, `operator/src/bin/blueprint.rs`, and `operator/src/http.rs`.

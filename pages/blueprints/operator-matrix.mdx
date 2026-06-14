@@ -1,52 +1,81 @@
 ---
-title: Blueprint Operator Matrix
-description: Cross-blueprint host, AI, runtime, and proof requirements for Tangle blueprint operators.
+title: Operator Matrix
+description: Host, AI, runtime, and proof requirements for first-party Tangle blueprint operators.
 ---
 
-# Blueprint Operator Matrix
+# Operator Matrix
 
-Use this page to compare the first-party blueprint products before sizing hosts, buying GPUs or inference credits, or publishing an operator endpoint.
+Use this page before you buy a VPS, expose an operator endpoint, or set model provider keys.
 
-## Product Comparison
+The three first-party blueprints do not fail the same way. A sandbox operator runs isolated compute. A trading operator runs bots and protects capital. A Surplus operator runs a market venue and backs inference credits. Treat those as different businesses.
 
-| Blueprint        | Operator job                                                                     | Customer-facing resource                                               | Default app                            | Runtime isolation                                                             |
-| ---------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------- |
-| AI Agent Sandbox | Run isolated agent sandboxes and authenticated sidecar APIs.                     | Sandbox, workflow, terminal, files, ports, secrets, and snapshots.     | `agent-sandbox.blueprint.tangle.tools` | Docker, Firecracker microVM, or TEE instance.                                 |
-| AI Trading       | Run trading bots, strategy workers, risk checks, and trading APIs.               | Bot, vault policy, strategy config, trade log, and operator report.    | `trading-arena.blueprint.tangle.tools` | Docker sidecar by default; instance and TEE variants available.               |
-| Surplus Market   | Run an inference-credit venue, quote market, serve redemption, and settle fills. | Credit lot, order book, RFQ, redemption receipt, and settlement batch. | `surplus-market.pages.dev`             | Operator HTTP service plus controlled inference backend; settlement on-chain. |
+## What each operator is responsible for
 
-## Minimum Host Plan
+| Blueprint        | Operator responsibility                                                                                                 | Main failure to avoid                                                   |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| AI Agent Sandbox | Start sandboxes, keep sidecars reachable, protect session tokens and secrets, and report lifecycle state.               | Exposing a sandbox or secret outside the service instance that owns it. |
+| AI Trading       | Run bot sandboxes, preserve bot state, enforce paper/live policy, expose the operator API, and keep risk checks online. | Letting a bot spend capital outside its envelope or provider budget.    |
+| Surplus Market   | Operate a venue, quote or match inference credits, settle fills, and redeem credits against real capacity when bonded.  | Selling a credit lot that cannot be served, redeemed, or settled.       |
 
-| Blueprint        | Minimum                                                                           | Recommended                                                                                                | Ports                                                                                        | Notes                                                                                     |
-| ---------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| AI Agent Sandbox | Docker host with Rust 1.88+, Foundry, Node 22+/pnpm for UI work.                  | Separate persistent state volume, TLS ingress, explicit public host, pre-pulled all-harness sidecar image. | Operator API defaults around `9100`; sidecar HTTP and SSH are container-internal by default. | Firecracker hosts also need kernel, rootfs, TAP/vsock support, and guest metadata daemon. |
-| AI Trading       | 2 vCPU, 4 GB RAM, 40 GB SSD, Docker 24+, public IPv4.                             | 4 vCPU, 8 GB RAM, 80 GB SSD, TLS on 443, low-latency RPC.                                                  | Operator API `9200`, trading API `9100`, public TLS on `443`.                                | The sidecar image is multi-GB and each bot accumulates state.                             |
-| Surplus Market   | Rust operator, chain RPC, persistent book/outbox state, settlement submitter key. | Dedicated venue host, supervised process, private settlement key handling, real inference backend.         | HTTP venue default `9100`; sidecar default `9110` for market-making.                         | Bonded issuers must back lots with inference they run or control.                         |
+## Host shape
 
-## AI And Secret Requirements
+| Blueprint        | Minimum host                                                                | Recommended host                                                                          | Notes                                                                               |
+| ---------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| AI Agent Sandbox | Docker host, Rust 1.88+, Foundry, Node 22+/pnpm for UI work.                | Dedicated state volume, TLS ingress, public host, pre-pulled sidecar image.               | Firecracker needs kernel, rootfs, TAP/vsock support, and the guest metadata daemon. |
+| AI Trading       | Ubuntu 22.04/24.04, x86_64, Docker 24+, 2 vCPU, 4 GB RAM, 40 GB SSD.        | 4 vCPU, 8 GB RAM, 80 GB SSD, public IPv4, ports 22 and 443 open.                          | Releases currently target x86_64. Build from source on other arches.                |
+| Surplus Market   | Rust operator, chain RPC, persistent venue state, settlement submitter key. | Dedicated venue host, supervised process, private key separation, real inference backend. | Bonded issuers must back lots with inference they run or control.                   |
 
-| Blueprint        | Can run without model keys?                             | When model keys are needed                                                                                                                   | Secrets operators must protect                                                                               |
-| ---------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| AI Agent Sandbox | Yes for sandbox lifecycle and non-model commands.       | Prompt, task, and workflow execution need the selected harness or model provider secret.                                                     | `SESSION_AUTH_SECRET`, sidecar auth tokens, provider keys, sandbox secrets, TEE provider credentials.        |
-| AI Trading       | Yes for deterministic strategy ticks and paper trading. | Agentic activation, chat, and model-driven strategy work need provider keys such as `ZAI_API_KEY`, `ANTHROPIC_API_KEY`, or `TANGLE_API_KEY`. | Operator key, bot secrets, provider keys, vault and trading contract config, admission allowlist.            |
-| Surplus Market   | Yes for the order book and dry-run venue.               | Bonded credit redemption needs an inference backend: managed vLLM, external OpenAI-compatible API, or controlled provider capacity.          | Operator attester key, submitter key, inference API key, router or ShieldedCredits credentials, venue state. |
+## Public ports
 
-## Harness Reality
+| Blueprint        | Public surface                                                                                     | Keep private                                                                     |
+| ---------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| AI Agent Sandbox | TLS ingress to the operator API when intentionally exposed. Default operator API is around `9100`. | Sidecar HTTP and SSH ports should stay internal unless explicitly proxied.       |
+| AI Trading       | Caddy or equivalent TLS on 443 to the operator API.                                                | Raw trading API ports such as `9100` and `9200` should not be exposed directly.  |
+| Surplus Market   | Venue HTTP endpoint, optionally an onion endpoint for privacy mode.                                | Settlement keys, submitter keys, mm-sidecar, and inference provider credentials. |
 
-Model harnesses as runtime capabilities, not as the product boundary.
+## AI and inference credentials
 
-The sandbox product advertises runtime capabilities through `GET /api/capabilities`. Its current all-harness sidecar path includes Claude Code, Codex, OpenCode, Kimi, and Gemini. Operators should treat that endpoint as the live contract because the harness list can grow without changing the blueprint ABI.
+| Blueprint        | Can boot without model keys?                                                                               | Keys needed for                                                                                                                                                       | Budget risk                                                                                                                                    |
+| ---------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| AI Agent Sandbox | Yes. Lifecycle, terminals, files, ports, snapshots, and non-model commands can work without provider keys. | Prompt, task, and workflow execution through a selected harness or model provider.                                                                                    | Provider spend belongs to whoever injects the key into the service instance.                                                                   |
+| AI Trading       | Yes. Deterministic strategy ticks and paper bots can run without model keys.                               | Agentic activation, chat, and model-driven strategy work. Current examples include `ZAI_API_KEY`, `ANTHROPIC_API_KEY`, `TANGLE_API_KEY`, and opencode model env vars. | The operator pays unless the product adds a separate customer billing rail. Default operator docs warn there is no built-in per-bot spend cap. |
+| Surplus Market   | The order book and dry-run venue can run without inference.                                                | Bonded credit redemption needs a real backend such as managed vLLM or an OpenAI-compatible API the operator controls.                                                 | A bonded issuer is financially exposed if it sells credits it cannot redeem. Router fallback is not acceptable for bonded issuance.            |
 
-AI Trading uses the same sidecar direction for agentic work, but the trading product boundary is the bot, vault policy, strategy config, and risk gate. A harness is one execution backend for the bot's agentic mode, not the product itself.
+## Harnesses are not the product boundary
 
-Surplus can run deterministic market-making through `@surplus/mm-loop`. Agentic quoting is a sidecar mode that uses the same risk gate before quotes reach the venue.
+The sandbox product is the sandbox service instance plus its operator API. The current all-harness sidecar in the sandbox blueprint advertises Claude Code, Codex, opencode, Kimi Code, and Gemini CLI through `GET /api/capabilities`.
 
-## Proof Requirements
+That endpoint is the contract the app should read. Do not make docs or UI copy pretend OpenCode, Codex, or any one harness is the integration. Harness support can change by publishing a new sidecar image without changing the blueprint ABI.
 
-| Blueprint        | What the indexer can prove                                                                                     | What still needs runtime or settlement proof                                                                          |
-| ---------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| AI Agent Sandbox | Blueprint, operator, service, job, source, and heartbeat state.                                                | Endpoint health, sandbox readiness, prompt output, secret handling, and TEE quote validity.                           |
-| AI Trading       | Blueprint registration, service instances, operator endpoint metadata, jobs, pricing pointers, and heartbeats. | Bot health, market execution, paper/live mode, model spend, and trade policy enforcement.                             |
-| Surplus Market   | Blueprint, operator, service, job, endpoint, and heartbeat state.                                              | Order-book correctness, fill settlement, credit redemption, attester quorum, SP1 batch proof, and inference delivery. |
+AI Trading uses the same sidecar direction for agentic work, but the trading product is the bot, vault policy, risk gate, paper/live state, and execution history. The agent harness is one backend for a bot.
 
-The indexer is discovery infrastructure. Product surfaces should still use operator APIs, contract reads, attestation records, settlement receipts, or proof systems for claims that are not visible in Tangle protocol events.
+## Runtime isolation
+
+| Blueprint        | Runtime modes                                                                               | Operator decision                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| AI Agent Sandbox | Docker, Firecracker, TEE instance.                                                          | Docker is the simple path. Firecracker adds VM isolation and host setup. TEE mode adds provider credentials and attestation handling.   |
+| AI Trading       | Docker sidecar by default, dedicated instance mode, TEE instance mode.                      | Start with paper mode and allowlist admission. Use TEE only when strategy confidentiality is worth the hardware or provider complexity. |
+| Surplus Market   | Operator HTTP venue plus optional mm-sidecar, shared CLOB, Tor onion, settlement submitter. | Decide whether you are a dry-run venue, an attester, or a bonded issuer. Bonded issuers need real inference and settlement discipline.  |
+
+## Proof boundary
+
+| Blueprint        | Indexer can show                                                                                       | Product must still prove                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| AI Agent Sandbox | Blueprint registration, operator registration, service requests, jobs, source updates, and heartbeats. | Endpoint health, sandbox readiness, secret handling, TEE attestation, and sidecar capability support.                |
+| AI Trading       | Blueprint registration, service instances, operator endpoints, jobs, pricing pointers, and heartbeats. | Bot health, paper/live mode, model spend, vault policy, trade execution, and validator status.                       |
+| Surplus Market   | Blueprint registration, operator registration, service instances, jobs, endpoints, and heartbeats.     | Order-book correctness, fill settlement, credit redemption, attester quorum, SP1 proof path, and inference delivery. |
+
+## Operator preflight
+
+Before advertising capacity:
+
+1. Build the operator binary and run the repo's local smoke.
+2. Set persistent state, keystore, RPC, and public endpoint values.
+3. Register on the restaking layer if the blueprint requires stake.
+4. Register for the specific blueprint ID.
+5. Request or join a service instance.
+6. Hit the operator health endpoint from outside the host.
+7. Submit one real job or product action through the local or testnet path.
+8. Keep the command output, IDs, and transaction hashes in the PR or runbook.
+
+"It builds" is not enough for an operator. A blueprint operator is real only after it can register, serve a service instance, and prove one non-mocked path.

@@ -1,44 +1,72 @@
 ---
 title: Surplus Market Dapp and Indexer
-description: Dapp routing and indexer requirements for the Surplus Market blueprint.
+description: Dapp routing, metadata gaps, and indexer requirements for the Surplus Market blueprint.
 ---
 
-# Dapp and Indexer
+# Surplus Market Dapp and Indexer
 
-Surplus currently has a hosted market app at `https://surplus-market.pages.dev/`. Tangle Cloud should expose it as a first-party link-out app until a dedicated `blueprint.tangle.tools` iframe host and iframe policy are deployed.
+Surplus is live as a hosted app at `https://surplus-market.pages.dev/`.
 
-## Metadata Contract
+Tangle Cloud should treat it as a first-party link-out until the repo publishes rich `blueprintUi` metadata and a `*.blueprint.tangle.tools` iframe host. Do not pretend it has the same iframe contract as Sandbox and Trading yet.
 
-The deployed metadata currently declares:
+## Current metadata
 
-| Field             | Value                                       |
-| ----------------- | ------------------------------------------- |
-| `name`            | `surplus`                                   |
-| `category`        | `inference-market`                          |
-| `author`          | `Tangle`                                    |
-| `code_repository` | `https://github.com/tangle-network/surplus` |
+The current deployed metadata is minimal:
 
-Unlike Sandbox and Trading, this metadata does not yet carry a rich `blueprintUi` object. The dapp should keep the first-party registry entry for `surplus` until the repo publishes equivalent metadata on-chain.
+| Field             | Current value                   |
+| ----------------- | ------------------------------- |
+| `name`            | `surplus`                       |
+| `category`        | `inference-market`              |
+| `code_repository` | Internal Surplus repository URL |
 
-## Dapp Behavior
+It does not yet include the rich `blueprintUi` object used by Sandbox and Trading. The dapp should keep a first-party registry entry for `surplus` until that changes.
 
-| Surface            | Behavior                                                                                              |
-| ------------------ | ----------------------------------------------------------------------------------------------------- |
-| Tangle Cloud route | Reserve the `surplus` slug and match first-party Surplus metadata.                                    |
-| Hosted app         | Open `https://surplus-market.pages.dev/` as a trusted link, not an iframe.                            |
-| Protocol fallback  | Preserve the raw indexed blueprint and service-instance route for operator and settlement inspection. |
+## Routing rule
 
-## Indexed State
+| Route             | Behavior                                                       |
+| ----------------- | -------------------------------------------------------------- |
+| Product app       | Link to `https://surplus-market.pages.dev/`.                   |
+| Protocol fallback | Preserve the raw indexed blueprint and service-instance route. |
+| Future iframe     | Use only after a trusted host and iframe policy are published. |
 
-The indexer should expose:
+The product app owns market UX. The protocol fallback owns chain and service inspection.
 
-| State                                 | Why it matters                                           |
-| ------------------------------------- | -------------------------------------------------------- |
-| Blueprint creation and source updates | Finds the Surplus operator binary and metadata.          |
-| Operator registration                 | Discovers venues and issuer/attester operators.          |
-| Service creation                      | Distinguishes independent books from shared CLOB books.  |
-| Job events                            | Tracks `list_instrument`, `status`, and `workflow_tick`. |
-| Operator endpoint metadata            | Lets the app discover venue endpoints.                   |
-| QoS heartbeats                        | Shows venue liveness and reliability.                    |
+## Indexed state
 
-Settlement-specific fills, lots, redemption receipts, and attestation state live in Surplus settlement contracts and venue APIs. The Tangle indexer should at least preserve pointers so product surfaces can reconcile protocol service instances with market state. Endpoint liveness and venue honesty still need venue checks, settlement evidence, or proof paths.
+| State                                 | Why the dapp needs it                                           |
+| ------------------------------------- | --------------------------------------------------------------- |
+| Blueprint creation and source updates | Find the Surplus operator artifact and metadata.                |
+| Operator registration                 | Discover venues, issuers, and attesters.                        |
+| Service requests and instances        | Show which operators are serving a market instance.             |
+| Jobs                                  | Show `list_instrument`, `status`, and `workflow_tick` activity. |
+| Endpoint metadata                     | Route app checks and operator inspection.                       |
+| Heartbeats                            | Distinguish dead venues from quiet books.                       |
+
+## Product state that does not belong only in the indexer
+
+The app needs live product checks for:
+
+- order book depth
+- reference price
+- operator inventory
+- RFQ response
+- settlement outbox
+- fill settlement
+- credit redemption
+- attester quorum
+- inference backend health
+
+The indexer can show that a job happened. It cannot prove that a credit lot was redeemed or that a model request was served honestly. Use settlement receipts, spend vouchers, attester signatures, SP1 proofs, or operator API responses for those claims.
+
+## User-facing states
+
+| State                   | Meaning                                                            |
+| ----------------------- | ------------------------------------------------------------------ |
+| No venue                | No operator endpoint is available for the selected market.         |
+| Venue unreachable       | The endpoint is registered, but the app cannot call it.            |
+| Quote rejected          | The risk gate blocked the sidecar quote.                           |
+| Fill pending settlement | The order matched, but the fill is still in the outbox.            |
+| Credit redeemable       | A lot exists and can be spent against a live backend.              |
+| Credit defaulted        | Redemption failed and the settlement/default path must resolve it. |
+
+Those states are the product. Hide them and users cannot reason about the market.

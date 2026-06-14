@@ -1,42 +1,53 @@
 ---
 title: Production Blueprints
-description: First-party Tangle blueprints available to operators and app builders.
+description: First-party Tangle blueprints, written for users, operators, and app builders.
 ---
 
 # Production Blueprints
 
-These blueprints are first-party capability templates built on the Tangle protocol and runtime stack. Each one defines software operators can run, on-chain service-instance state the dapp can index, and an application surface users can open from Tangle Cloud.
+A Tangle blueprint is a product template that operators can run. It is not the live service by itself.
 
-Start with the [protocol model](/blueprints/protocol-model) if you are mapping the moving parts. A blueprint defines the template, operators register to serve it, users request service instances, and apps combine indexed protocol state with operator APIs.
+The live unit is a service instance. A user requests it, picks registered operators, and then sends jobs to that instance. Tangle Cloud should make that lifecycle obvious: template first, operator capacity second, service instance third.
 
-An indexer is the service that reads contract events and turns them into queryable app state. These blueprints expect the indexer to track blueprint creation, operator registration, service-instance creation, service extension, source acknowledgement, job activity, pricing, and quality-of-service heartbeats.
+## Start here
 
-Use the [operator matrix](/blueprints/operator-matrix) for host sizing, AI credential planning, runtime isolation, and proof boundaries across all three products. Use [dapp integration](/blueprints/dapp-integration) for Tangle Cloud routing, iframe/link mode, indexer state, and local release gates.
+If you only remember one model, use this:
 
-## Blueprint Catalog
+| Layer                 | Plain meaning                                                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------------- |
+| Blueprint             | The recipe: jobs, metadata, binaries, contracts, and app policy.                               |
+| Operator registration | An operator says, on-chain, "I can run this recipe."                                           |
+| Service request       | A user chooses parameters and the operators that should serve them.                            |
+| Service instance      | The running service created from that request.                                                 |
+| Job                   | A command against one service instance. Jobs change state or ask operators to do work.         |
+| Query                 | A read from contracts, the indexer, or an operator API. Queries should not be modeled as jobs. |
 
-| Blueprint                                        | Capability template                                                                  | Runtime model                                             | App surface                            |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------ | --------------------------------------------------------- | -------------------------------------- |
-| [AI Agent Sandbox](/blueprints/ai-agent-sandbox) | Service instances for agent sessions, workflow runs, terminals, files, and tool use  | Docker, Firecracker microVM, or TEE-backed instance       | `agent-sandbox.blueprint.tangle.tools` |
-| [AI Trading](/blueprints/ai-trading)             | Service instances for trading bots, risk checks, vault policy, and strategy workers  | Cloud fleet, per-service instance, or TEE-backed instance | `trading-arena.blueprint.tangle.tools` |
-| [Surplus Market](/blueprints/surplus-market)     | Service instances for inference credit markets, order books, settlement, and serving | Operator HTTP service plus real inference backend         | `surplus-market.pages.dev`             |
+The indexer turns protocol events into app state. It can tell the dapp which blueprints exist, which operators registered, which service instances were created, which jobs landed, and which endpoints operators advertised. It does not prove that an endpoint is healthy, honest, or serving the right model. Product pages still need operator API checks, contract reads, attestations, settlement receipts, or proof systems.
 
-## Operator Planning
+## First-party blueprint products
 
-| Question                             | Where to decide                                                                                               |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| What machine size do I need?         | Start with [operator sizing](/operators/manager/sizing), then use the blueprint-specific resource tables.     |
-| Which isolation mode should I run?   | Use [sandboxing and safety](/infrastructure/sandboxing) for runtime policy, then follow the blueprint page.   |
-| Which secrets are required?          | Each blueprint page lists the required chain keys, provider credentials, inference backends, and app secrets. |
-| How does the dapp route users?       | The dapp uses indexed blueprint metadata plus first-party registry entries for curated app routes.            |
-| What state should be on-chain?       | Use jobs for service-instance commands and contract/indexer/operator APIs for reads.                          |
-| How do I compare blueprint products? | Use the [operator matrix](/blueprints/operator-matrix) for side-by-side host, AI, and proof requirements.     |
-| How do I prove the dapp still works? | Use [dapp integration](/blueprints/dapp-integration) for local release gates and routing rules.               |
+| Product                                          | What users get                                                                           | What operators run                                                          | App surface                            |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | -------------------------------------- |
+| [AI Agent Sandbox](/blueprints/ai-agent-sandbox) | Sandboxes for agent sessions, workflows, terminals, files, ports, and secrets.           | Docker, Firecracker, or TEE-backed sandbox runtimes.                        | `agent-sandbox.blueprint.tangle.tools` |
+| [AI Trading](/blueprints/ai-trading)             | Trading bots with vault policy, strategy config, paper/live mode, and execution history. | Cloud fleet, dedicated instance, or TEE instance operator.                  | `trading-arena.blueprint.tangle.tools` |
+| [Surplus Market](/blueprints/surplus-market)     | A market for prepaid inference credits, RFQs, fills, redemption, and settlement.         | A venue operator, settlement keys, and real inference capacity when bonded. | `surplus-market.pages.dev`             |
 
-## Source Repositories
+## Which page should I read?
 
-| Blueprint        | Repository                                                   |
-| ---------------- | ------------------------------------------------------------ |
-| AI Agent Sandbox | https://github.com/tangle-network/ai-agent-sandbox-blueprint |
-| AI Trading       | https://github.com/tangle-network/ai-trading-blueprint       |
-| Surplus Market   | https://github.com/tangle-network/surplus                    |
+| Question                                                              | Page                                                                           |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| "How does the protocol lifecycle work?"                               | [Protocol model](/blueprints/protocol-model)                                   |
+| "What size machine do I need?"                                        | [Operator matrix](/blueprints/operator-matrix) plus the product operator page. |
+| "Which AI keys or model backends are required?"                       | [Operator matrix](/blueprints/operator-matrix) and the product runtime page.   |
+| "How should Tangle Cloud route these apps?"                           | [Dapp integration](/blueprints/dapp-integration)                               |
+| "How do I prove staking and blueprint UI changes still work locally?" | [Dapp integration](/blueprints/dapp-integration#local-release-gates)           |
+
+## Source repos
+
+| Product          | Source                                                               |
+| ---------------- | -------------------------------------------------------------------- |
+| AI Agent Sandbox | https://github.com/tangle-network/ai-agent-sandbox-blueprint         |
+| AI Trading       | https://github.com/tangle-network/ai-trading-blueprint               |
+| Surplus Market   | Internal Tangle repository; public app at `surplus-market.pages.dev` |
+
+These docs describe the current repo contracts and the public app integration shape. If a repo says a path is not live yet, the docs should say the same thing.

@@ -40,27 +40,27 @@ Tangle is the protocol entrypoint, composed of mixins under `src/core/`. Every s
 
 ### Contract Administration
 
-| Function                               | Caller                             | Source                                                                                     |
-| -------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------ |
-| `pause()`                              | `PAUSER_ROLE`                      | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
-| `unpause()`                            | `PAUSER_ROLE`                      | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
-| `_authorizeUpgrade(newImpl)`           | `UPGRADER_ROLE`                    | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
-| `setMBSMRegistry(addr)`                | `ADMIN_ROLE` (when not paused)     | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
-| `setMetricsRecorder(addr)`             | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
-| `setOperatorStatusRegistry(addr)`      | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
-| `setServiceFeeDistributor(addr)`       | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
-| `setPriceOracle(addr)`                 | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
-| `setTreasury(addr)`                    | `ADMIN_ROLE` (NOT `whenNotPaused`) | [Payments.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Payments.sol) |
-| `setPaymentSplit(split)`               | `ADMIN_ROLE` (NOT `whenNotPaused`) | [Payments.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Payments.sol) |
-| `setTntToken(addr)`                    | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
-| `setRewardVaults(addr)`                | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
-| `setMaxBlueprintsPerOperator(n)`       | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
-| `setDefaultTntMinExposureBps(bps)`     | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
-| `setTntPaymentDiscountBps(bps)`        | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
-| `setMinServiceTtl(seconds)`            | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
-| `setMaxServiceTtl(seconds)`            | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
-| `setRequestExpiryGracePeriod(seconds)` | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
-| `setMaxQuoteAge(seconds)`              | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)         |
+| Function                               | Caller                             | Source                                                                                                   |
+| -------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `pause()`                              | `PAUSER_ROLE`                      | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `unpause()`                            | `PAUSER_ROLE`                      | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `_authorizeUpgrade(newImpl)`           | `UPGRADER_ROLE`                    | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `setMBSMRegistry(addr)`                | `ADMIN_ROLE` (when not paused)     | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `setMetricsRecorder(addr)`             | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `setOperatorStatusRegistry(addr)`      | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `setServiceFeeDistributor(addr)`       | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `setPriceOracle(addr)`                 | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `setTreasury(addr)`                    | `ADMIN_ROLE` (NOT `whenNotPaused`) | [PaymentsRewards.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/PaymentsRewards.sol) |
+| `setPaymentSplit(split)`               | `ADMIN_ROLE` (NOT `whenNotPaused`) | [PaymentsRewards.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/PaymentsRewards.sol) |
+| `setTntToken(addr)`                    | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `setRewardVaults(addr)`                | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `setMaxBlueprintsPerOperator(n)`       | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `setDefaultTntMinExposureBps(bps)`     | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `setTntPaymentDiscountBps(bps)`        | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `setMinServiceTtl(seconds)`            | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `setMaxServiceTtl(seconds)`            | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `setRequestExpiryGracePeriod(seconds)` | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `setMaxQuoteAge(seconds)`              | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
 
 Most admin setters in `Base.sol` are `whenNotPaused`. The two exceptions, both in `Payments.sol`, are `setTreasury` and `setPaymentSplit`. Paused governance can still rewire payment routing; this is intentional so a halted protocol can fix a known-bad treasury before resuming.
 

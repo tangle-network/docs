@@ -1,44 +1,71 @@
 ---
 title: AI Agent Sandbox Blueprint
-description: First-party Tangle blueprint for managed AI agent sandboxes.
+description: First-party Tangle blueprint for isolated AI agent sandboxes.
 ---
 
 # AI Agent Sandbox Blueprint
 
-The AI Agent Sandbox blueprint defines the template for isolated agent sandbox service instances on Tangle. Operators run the sandbox runtime and sidecar containers. Users create sandboxes, trigger workflows, attach terminals, inject secrets, and inspect execution through the hosted app.
+AI Agent Sandbox lets a user create an isolated agent workspace through Tangle.
+
+The blueprint defines the jobs, metadata, contracts, and runtime rules. Operators run the actual sandboxes: Docker containers, Firecracker microVMs, or TEE-backed instances. The hosted app gives users terminals, workflows, files, port proxies, secrets, snapshots, and prompt/task execution.
 
 Source repo: https://github.com/tangle-network/ai-agent-sandbox-blueprint
 
-## Product Shape
+## What happens when a user creates a sandbox
 
-| Area              | Source-backed behavior                                                                                    |
-| ----------------- | --------------------------------------------------------------------------------------------------------- |
-| Cloud mode        | Multi-tenant fleet; callers create and delete sandboxes on demand through on-chain jobs.                  |
-| Instance mode     | One sandbox per service instance; the operator auto-provisions on startup and reports lifecycle directly. |
-| TEE instance mode | Dedicated instance with TEE attestation and sealed secrets.                                               |
-| Hosted app        | `https://agent-sandbox.blueprint.tangle.tools/`                                                           |
-| Metadata identity | `publisher.namespace = "tangle"`, `requestedSlug = "ai-agent-sandbox"`                                    |
+1. The user chooses a sandbox mode and requests a service instance.
+2. The selected operator approves the request.
+3. The operator starts the runtime and reports provisioning state.
+4. The app authenticates to the operator API with EIP-191 challenge signing and a PASETO session token.
+5. The user works through the hosted app: terminal, files, workflows, prompts, tasks, ports, SSH, secrets, and snapshots.
 
-## On-Chain Jobs
+The on-chain path records lifecycle and workflow commands. The operator API handles live I/O. That split is intentional: terminal output and file lists should not be blockchain jobs.
 
-| ID  | Job                | Mode               | What it does                                                 |
-| --- | ------------------ | ------------------ | ------------------------------------------------------------ |
-| `0` | `SANDBOX_CREATE`   | Cloud              | Creates a sandbox container, microVM, or TEE-backed sandbox. |
-| `1` | `SANDBOX_DELETE`   | Cloud              | Deletes the sandbox and releases runtime resources.          |
-| `2` | `WORKFLOW_CREATE`  | Cloud and instance | Registers a workflow template.                               |
-| `3` | `WORKFLOW_TRIGGER` | Cloud and instance | Starts a registered workflow.                                |
-| `4` | `WORKFLOW_CANCEL`  | Cloud and instance | Cancels active workflow execution.                           |
+## Modes
 
-`JOB_WORKFLOW_TICK` is internal cron-driven workflow progress. It is not a public on-chain job.
+| Mode               | Blueprint ID in current metadata | Service shape                                                                 |
+| ------------------ | -------------------------------- | ----------------------------------------------------------------------------- |
+| Cloud              | `10`                             | A fleet-style sandbox service. Users create and delete sandboxes on demand.   |
+| Dedicated instance | `11`                             | One sandbox per service instance. The operator auto-provisions it on startup. |
+| TEE instance       | `12`                             | Dedicated instance with TEE attestation and sealed-secret support.            |
 
-## Read Next
+Mode IDs come from the repo metadata. Treat them as network-specific config, not hard-coded truth for every chain.
 
-| Page                                                                        | Use it for                                                              |
-| --------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| [Operator Requirements](/blueprints/ai-agent-sandbox/operator-requirements) | Host sizing, env vars, Docker, Firecracker, TEE, ports.                 |
-| [Runtime and Harnesses](/blueprints/ai-agent-sandbox/runtime-and-harnesses) | Sidecar capabilities, harness discovery, secrets, auth, runtime safety. |
-| [Dapp and Indexer](/blueprints/ai-agent-sandbox/dapp-and-indexer)           | Metadata, iframe policy, indexed events, service state.                 |
+## Jobs
 
-## Source Material
+| Job                | Mode               | Purpose                                              |
+| ------------------ | ------------------ | ---------------------------------------------------- |
+| `SANDBOX_CREATE`   | Cloud              | Create a sandbox container or runtime instance.      |
+| `SANDBOX_DELETE`   | Cloud              | Delete the sandbox and clean up runtime attachments. |
+| `WORKFLOW_CREATE`  | Cloud and instance | Register a workflow template.                        |
+| `WORKFLOW_TRIGGER` | Cloud and instance | Trigger a workflow against the service instance.     |
+| `WORKFLOW_CANCEL`  | Cloud and instance | Cancel an active workflow.                           |
 
-This page is based on the blueprint repo's `README.md`, `docs/runbook.md`, `metadata/blueprint-metadata.json`, `ai-agent-sandbox-blueprint-lib/src/lib.rs`, `sandbox-runtime/src/operator_api.rs`, and `TEE-GUIDE.md`.
+The internal workflow tick is scheduler-driven and should not be treated as a public on-chain job.
+
+## Read and control surface
+
+The operator API owns the live product state:
+
+| API area           | Examples                                            |
+| ------------------ | --------------------------------------------------- |
+| Auth               | challenge, session, revoke                          |
+| Sandbox operations | list, exec, prompt, task, stop, resume, snapshot    |
+| Access             | SSH key provision/revoke, port proxy                |
+| Secrets            | inject and wipe sandbox-scoped secrets              |
+| Health             | `/health`, `/readyz`, `/metrics`                    |
+| Capabilities       | `/api/capabilities` for runtime and harness support |
+
+Every data endpoint requires a signed wallet session. Production operators must set `SESSION_AUTH_SECRET`; otherwise sessions and encrypted secrets re-key on restart.
+
+## What to read next
+
+| Page                                                                        | Use it for                                                          |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| [Operator Requirements](/blueprints/ai-agent-sandbox/operator-requirements) | Host setup, ports, Docker, Firecracker, TEE, state, and secrets.    |
+| [Runtime and Harnesses](/blueprints/ai-agent-sandbox/runtime-and-harnesses) | Runtime backends, capability discovery, harnesses, and AI keys.     |
+| [Dapp and Indexer](/blueprints/ai-agent-sandbox/dapp-and-indexer)           | Metadata, iframe policy, indexed state, and live health boundaries. |
+
+## Sources used
+
+This page is grounded in the repo `README.md`, `docs/runbook.md`, `TEE-GUIDE.md`, `metadata/blueprint-metadata.json`, `sandbox-runtime/src/operator_api.rs`, and the sidecar image docs.

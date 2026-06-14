@@ -1,45 +1,90 @@
 ---
 title: Surplus Market Settlement and Inference
-description: Settlement, inference backend, and redemption model for the Surplus Market blueprint.
+description: Settlement, credit redemption, inference backend, attester quorum, and SP1 proof boundaries for Surplus.
 ---
 
-# Settlement and Inference
+# Surplus Market Settlement and Inference
 
-Surplus is a market for inference credits, so the operator must prove two things: fills settle correctly and credits redeem against real inference capacity.
+Surplus only works if a bought credit can be redeemed.
 
-## Inference Backend Selection
+The order book can be off-chain. The quote brain can be a sidecar. But the settlement and redemption guarantees have to survive operator mistakes, missing receipts, and issuer default.
 
-The operator uses an OpenAI-compatible chat-completions interface. Backend selection is environment-driven.
+## Settlement model
 
-| Priority | Backend                | Variables                                                                        |
-| -------- | ---------------------- | -------------------------------------------------------------------------------- |
-| 1        | Managed vLLM           | `SURPLUS_VLLM_MODEL`, optional `SURPLUS_VLLM_PORT`, optional `SURPLUS_VLLM_ARGS` |
-| 2        | External inference API | `SURPLUS_INFERENCE_URL`, optional `SURPLUS_INFERENCE_API_KEY`                    |
-| 3        | Router fallback        | `SURPLUS_ROUTER_URL`, `SURPLUS_ROUTER_API_KEY`                                   |
+The settlement contract clears signed fills atomically:
 
-Router fallback is for non-bonded testing. A bonded issuer must not use router mode; the operator fails closed because a lot must be backed by inference it runs or controls.
+1. debit buyer escrow
+2. pay seller
+3. mint or update a collateral-backed credit lot
+4. enforce redemption/default rules
+5. slash or penalize when configured conditions fail
 
-## Settlement Spine
+The repo supports three rails in the blueprint manifest:
 
-| Component           | Purpose                                                                         |
-| ------------------- | ------------------------------------------------------------------------------- |
-| `SurplusSettlement` | Clears signed fills atomically and mints collateral-backed credit lots.         |
-| Attester quorum     | Compresses batch verification through operator signatures.                      |
-| SP1 proof           | Optional proof path for batch verification when volume warrants it.             |
-| Redemption receipt  | Lets holders prove delivery or trigger collateral default.                      |
-| `SurplusBSM`        | Connects redemption defaults to Tangle slashing on top of settlement penalties. |
+| Rail             | Meaning                                                  |
+| ---------------- | -------------------------------------------------------- |
+| `router-credits` | Router credit balance path.                              |
+| `shielded`       | ShieldedCredits path.                                    |
+| `firm`           | EIP-712 signed orders settled through SurplusSettlement. |
 
-## Verified Paths
+The firm rail is the main settlement spine for signed fills.
 
-The testnet release docs require these checks before and after deploy:
+## Attested and proven batches
 
-| Check                              | What it proves                                                                              |
-| ---------------------------------- | ------------------------------------------------------------------------------------------- |
-| `scripts/settlement-e2e.sh`        | Atomic fill, receipt redemption, collateral default, attested batch, proven batch.          |
-| `scripts/spend-e2e.sh`             | API-key mint, OpenAI-compatible calls, streaming, on-chain billing, forged voucher refusal. |
-| `scripts/prove-batch.sh execute`   | SP1 guest public values match host recomputation.                                           |
-| `forge test` and Rust parity tests | Contract invariants and digest parity.                                                      |
+| Path                  | What it verifies                                                               |
+| --------------------- | ------------------------------------------------------------------------------ |
+| `settleBatchAttested` | A configured attester quorum signs the batch.                                  |
+| `settleBatchProven`   | An SP1 proof verifies the delegated signature check over the batch commitment. |
 
-## Market-Making Loop
+The SP1 program currently proves the delegated signature check and commits to `abi.encode(domainSeparator, fillsHash)`. Matching logic and account rules remain contract-enforced unless a future state-root rollup extends the proof.
 
-The market-making sidecar can run deterministic Avellaneda-Stoikov quoting or a sandboxed agent strategy. The risk desk is fail-closed and validates quote size, inventory, deviation, spread, and drawdown before the operator places quotes.
+## Inference backend
+
+Bonded credit issuance requires an inference backend the operator runs or controls.
+
+| Backend shape         | Use                                                                |
+| --------------------- | ------------------------------------------------------------------ |
+| Managed vLLM          | Operator-controlled model service.                                 |
+| OpenAI-compatible API | External or internal API with compatible chat-completions surface. |
+| Router fallback       | Testing or non-bonded operation only.                              |
+
+If a lot is bonded, router fallback should fail closed. A credit sold as backed capacity must be redeemable against backed capacity.
+
+## Market-making loop
+
+The operator can use a market-making sidecar. The sidecar can run a deterministic Avellaneda-Stoikov quoter or an agentic strategy. Both pass through the same risk gate.
+
+The risk gate is the safety boundary:
+
+| Check       | Why                                               |
+| ----------- | ------------------------------------------------- |
+| quote size  | Prevents oversized exposure.                      |
+| inventory   | Keeps the operator from selling beyond capacity.  |
+| deviation   | Rejects quotes too far from reference price.      |
+| spread      | Avoids broken or inverted markets.                |
+| drawdown    | Pulls quotes when the session is losing too much. |
+| kill switch | Stops quoting when hard limits are crossed.       |
+
+The operator places quotes only after the risk verdict allows them.
+
+## What is proven locally
+
+The repo's release checklist names these proof paths:
+
+| Proof                | Command                               |
+| -------------------- | ------------------------------------- |
+| Trader path          | `bash scripts/settlement-e2e.sh`      |
+| Developer spend path | `bash scripts/spend-e2e.sh`           |
+| Circuit parity       | `bash scripts/prove-batch.sh execute` |
+
+Those checks cover atomic fill, receipt redemption, collateral default, attested batch settlement, proven batch path, streaming and buffered spend calls, on-chain billing, and forged voucher refusal.
+
+## What is still a deployment decision
+
+| Decision                       | Why it matters                                                           |
+| ------------------------------ | ------------------------------------------------------------------------ |
+| 1-of-1 vs M-of-N books         | Changes quorum and peer requirements.                                    |
+| Attester set                   | Decides who can sign settlement batches.                                 |
+| SP1 verifier and vkey          | Enables or disables the proven path on that deployment.                  |
+| Inference backend              | Determines whether bonded credits can actually redeem.                   |
+| Timelock/Gnosis Safe ownership | Controls owner actions such as registering books and rotating attesters. |

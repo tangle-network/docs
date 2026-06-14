@@ -1,54 +1,94 @@
 ---
 title: AI Agent Sandbox Runtime and Harnesses
-description: Sidecar capability and harness model for the AI Agent Sandbox blueprint.
+description: Runtime backends, capability discovery, harnesses, and AI credentials for the AI Agent Sandbox blueprint.
 ---
 
-# Runtime and Harnesses
+# AI Agent Sandbox Runtime and Harnesses
 
-The sandbox blueprint is not one agent integration. The product contract is a sidecar-compatible sandbox plus runtime capabilities advertised by the operator.
+The sandbox is the product. Harnesses are tools inside the sandbox.
 
-## Runtime Backends
+Do not describe this blueprint as an OpenCode integration, a Codex integration, or a Claude integration. A service instance asks the operator for runtime capabilities. The operator answers through `GET /api/capabilities`.
 
-Sandbox creation selects a backend through `metadata_json.runtime_backend`.
+## Runtime backends
 
-| Backend       | Behavior                                                                                      |
-| ------------- | --------------------------------------------------------------------------------------------- |
-| `docker`      | Default managed sidecar container path.                                                       |
-| `firecracker` | MicroVM path; installs per-VM networking, rootfs, env injection, and sidecar token injection. |
-| `tee`         | Forces TEE provisioning and `tee_required=true`.                                              |
+Sandbox creation accepts `metadata_json.runtime_backend`:
 
-Firecracker and TEE are separate choices in the current release. Selecting `firecracker` forces `tee_required=false`.
+| Value         | Meaning                                                                                      |
+| ------------- | -------------------------------------------------------------------------------------------- |
+| `docker`      | Default path. The operator starts a sidecar container.                                       |
+| `firecracker` | MicroVM path through the in-process `microvm-runtime` driver.                                |
+| `tee`         | Confidential runtime path. TEE instance mode requires attestation before service activation. |
 
-## Sidecar Capabilities
+Firecracker is driven by the operator binary. There is no separate host-agent service. Operators must provide the Firecracker binary, kernel, rootfs, socket/state paths, TAP/vsock support, and a guest metadata daemon inside the rootfs.
 
-Provisioning accepts `capabilities_json`, a JSON-encoded string array. Accepted values are injected into the sandbox as `SIDECAR_CAPABILITIES`.
+TEE mode needs a provider backend such as Phala, AWS Nitro, GCP Confidential Space, Azure SKR, or direct operator-managed hardware. Direct TDX currently does not give nonce-bound remote DCAP quotes in this runtime; use SEV-SNP, Nitro, Phala, GCP, or Azure when clients need nonce-bound verification.
 
-| Capability     | Behavior                                                                                                 |
-| -------------- | -------------------------------------------------------------------------------------------------------- |
-| `computer_use` | Starts browser/computer-use sidecar services for mouse, keyboard, screenshots, and related MCP surfaces. |
-| `all_harness`  | Requests the multi-harness sidecar image path.                                                           |
+## Capability discovery
 
-The exact harness matrix comes from `GET /api/capabilities`. The current default all-harness image advertises multiple CLI agent harnesses. Operators should rely on capability discovery instead of treating any one harness as the integration.
+The current operator API returns two categories:
 
-The current all-harness path is source-backed for Claude Code, Codex, OpenCode, Kimi, and Gemini. That is a sidecar runtime capability, not the blueprint's product identity. The blueprint identity is the sandbox service instance plus its operator API, lifecycle jobs, workflow state, and runtime isolation.
+| Capability     | Meaning                                        |
+| -------------- | ---------------------------------------------- |
+| `computer_use` | Enables browser/computer-use sidecar services. |
+| `all_harness`  | Requests the all-harness sidecar runtime.      |
 
-## Operator API
+The current all-harness sidecar in this repo installs:
 
-All data endpoints use EIP-191 challenge-response auth that issues PASETO v4.local session tokens.
+| Harness     | ID            |
+| ----------- | ------------- |
+| Claude Code | `claude-code` |
+| Codex       | `codex`       |
+| opencode    | `opencode`    |
+| Kimi Code   | `kimi-code`   |
+| Gemini CLI  | `gemini`      |
 
-| Endpoint group       | Examples                                                                                     |
-| -------------------- | -------------------------------------------------------------------------------------------- |
-| Auth                 | `POST /api/auth/challenge`, `POST /api/auth/session`, `DELETE /api/auth/session`             |
-| Sandbox operations   | `exec`, `prompt`, `task`, `stop`, `resume`, `snapshot`, `ssh`, `secrets`, port proxy         |
-| Instance operations  | Same control plane under `/api/sandbox/...` for singleton service instances                  |
-| Health and discovery | `GET /health`, `GET /readyz`, `GET /metrics`, `GET /api/provisions`, `GET /api/capabilities` |
+This list is not the blueprint ABI. It is the operator's advertised capability set. A new sidecar image can add or remove harnesses while the blueprint jobs stay the same.
 
-## Secrets and Model Credentials
+## Sidecar image
 
-Sandbox creation can succeed without model credentials. Agent prompts, tasks, and workflow steps fail only when the selected harness or model provider lacks its required secret.
+The public all-harness image is built from the blueprint repo:
 
-Operators should inject provider credentials as sandbox secrets or environment variables scoped to the service instance. The blueprint ABI stays stable as new sidecar images and sandbox SDK harnesses add support for more providers.
+```bash
+docker build -f sidecar/Dockerfile.all-harness \
+  -t ghcr.io/tangle-network/blueprint-sidecar:all-harness .
+```
 
-## Runtime Safety
+Operators can verify the installed harness binaries:
 
-The runtime enforces challenge-response auth, encrypted stored secrets, container hardening, rate limits, circuit breakers, session caps, and snapshot destination validation. Container hardening includes dropped capabilities, `no-new-privileges`, PID limits, localhost-bound ports, and restricted writable state.
+```bash
+docker run --rm --entrypoint blueprint-verify-harnesses \
+  ghcr.io/tangle-network/blueprint-sidecar:all-harness
+```
+
+For smaller images, build with `BLUEPRINT_HARNESSES=codex,gemini` or another subset. The app should still read `/api/capabilities`; it should not infer support from the image tag alone.
+
+## AI credentials
+
+Sandbox lifecycle can work without model keys. Agent prompts, tasks, and workflow steps need whatever secret the selected harness or provider expects.
+
+Operators should scope provider keys to the service instance. The blueprint ABI should not change when a new provider or harness is added.
+
+Common credential locations remain harness-specific:
+
+| Harness family | Typical config                                                         |
+| -------------- | ---------------------------------------------------------------------- |
+| Claude Code    | `/root/.claude` or `ANTHROPIC_API_KEY` style provider config.          |
+| Codex          | `/root/.codex` or OpenAI provider config.                              |
+| opencode       | `/root/.config/opencode`, `/root/.opencode`, or opencode provider env. |
+| Kimi           | `/root/.kimi` or `/root/.config/kimi`.                                 |
+| Gemini         | `/root/.gemini` or Google provider config.                             |
+
+The operator protects the session token, sidecar auth token, provider keys, and sandbox secrets. Losing one of those is a product incident, not a docs footnote.
+
+## Runtime health
+
+Use these probes before routing users into a sandbox:
+
+| Endpoint                | What it proves                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------- |
+| `/health`               | Runtime and state-store health. Returns degraded when a subsystem fails.        |
+| `/readyz`               | Strict readiness. Returns `503` unless all required subsystems are healthy.     |
+| `/api/capabilities`     | The runtime and harness features the operator says are available.               |
+| Product operation probe | A real exec, prompt, terminal, port, or workflow call through the operator API. |
+
+The indexer can tell the app that a service exists. It cannot tell the app that a sidecar is usable right now.
