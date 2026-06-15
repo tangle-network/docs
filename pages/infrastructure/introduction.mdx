@@ -1,7 +1,11 @@
 # Sandbox Runtime
 
 The sandbox runtime is the execution layer for autonomous work. It provisions isolated environments, manages session execution, and streams events so workflows can run safely at scale.
-Today, workloads are triggered through the workbench and managed platform services. External runtime APIs are not yet public.
+
+There are two paths:
+
+- **Hosted sandbox infrastructure**: apps use the Sandbox SDK/API against Tangle-managed orchestration when they have an API key and product access.
+- **Protocol-backed sandbox services**: operators run sandbox blueprints as service instances, and apps verify chain/indexer state plus live operator health before routing users in.
 
 ## What It Provides
 
@@ -23,4 +27,4 @@ Today, workloads are triggered through the workbench and managed platform servic
 - **Platform engineers**: Review [architecture](/infrastructure/architecture) and [orchestration](/infrastructure/orchestration).
 - **Security teams**: Start with [sandboxing and safety](/infrastructure/sandboxing).
 
-The runtime is available via partnership or early access.
+Hosted runtime access is gated by product/API-key access. Protocol-backed runtime access depends on a registered blueprint service instance and reachable operator endpoint.

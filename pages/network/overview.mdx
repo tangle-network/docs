@@ -4,23 +4,23 @@ import ExpandableImage from "../../components/ExpandableImage";
 
 # Protocol Foundation
 
-Tangle is the shared operating layer for autonomous work. The protocol coordinates operator-run services and routes payments. Developers publish Blueprints, users instantiate them on demand, and operators run them for a fee.
+Tangle coordinates services that outside operators can run for users. Developers publish Blueprints, users request service instances, operators accept work, and protocol contracts track stake, lifecycle state, and payment terms.
 
 ## Today vs Future
 
-Today the protocol ships with managed onboarding and a curated operator set. Over time it evolves into an open marketplace where operators host runtime services and earn based on reliability and usage.
+Today the network uses managed onboarding and a curated operator set. The protocol path is still the same one a larger market needs: register operators, request service instances, record commitments, and settle fees.
 
 ## Build Composable Services
 
-Blueprints are composable services that can be instantiated by users. They are built using the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main) and can integrate with external security providers when needed.
+Blueprints package jobs, metadata, binaries, pricing, and optional service-manager logic. Developers build them with the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main), then users instantiate live service instances from registered operators.
 
 ## Earn as a Service Operator
 
-Operators can earn rewards by operating Blueprint instances requested by users. Operators register for Blueprints and maintain control over the services they run, selecting the resources they want to expose for securing the Blueprint.
+Operators earn service fees by running requested instances. They choose which Blueprints to register for, which endpoints to expose, and which resources or isolation modes they are willing to commit.
 
 ## Maximize Resource Utilization
 
-Tangle enables shared security across Blueprints, allowing operators to secure multiple Blueprints with a single pool of resources and participants to earn rewards proportional to the value secured.
+Operators can reuse one stake and operations stack across multiple Blueprints. That gives users a consistent way to select operators while each Blueprint keeps its own jobs, pricing, and runtime requirements.
 
 ## Who This Is For
 
@@ -32,11 +32,11 @@ Tangle enables shared security across Blueprints, allowing operators to secure m
 
 <ExpandableImage src="/images/ServiceInstanceFlow.png" alt="Service Instance Flow" allowZoom={true} />
 
-Tangle Network employs a modular architecture to enable the creation and deployment of reusable services called Blueprints:
+Tangle uses a modular service model:
 
 #### Blueprints
 
-A Blueprint is a specification that defines a service. Blueprints themselves are not live service instances. Developers create Blueprints by specifying a service binary (artifact), the jobs involved, a set of smart contracts for registration and requesting instances, and additional metadata. Users instantiate services by configuring the operator set and paying the necessary fees. [Read more about Blueprints](/developers/blueprints/introduction)
+A Blueprint is a service template, not a live service. It defines the runnable artifact, jobs, metadata, pricing hooks, and registration/request logic. Users create service instances by selecting operators and accepting the payment terms. [Read more about Blueprints](/developers/blueprints/introduction)
 
 #### Economic Security on Blueprints
 
@@ -44,32 +44,30 @@ Economic security backs operators who run services based on Blueprints. Operator
 
 #### Requesting Service Instances
 
-Users deploy live service instances using a Blueprint's request functionality. The requester specifies criteria like the number of operators or other operator attributes. A specific subset of qualified operators is then selected to run that service instance.
-
-We aim to support fine-grained controls over requesting instances, such as specifying the number of operators, the operator set, and other operator attributes. This allows users to customize their service instances based on their requirements.
+Users create live service instances through a Blueprint request. The request names the operator set, payment terms, and service parameters the Blueprint supports.
 
 #### Incentives
 
 Operators earn **service fees** for running Blueprint instances and may earn optional **TNT incentives** if governance funds them. Developers earn a share of service fees and can also receive optional TNT incentives based on activity metrics.
 
-This separation into Blueprints and instances allows services to be defined once but instantiated multiple times by different users with varying operator requirements. Blueprint developers benefit from their work being utilized widely across ecosystems and applications.
+This separation lets one Blueprint support many service instances with different operators, prices, endpoints, and runtime requirements.
 
 ## Use Cases
 
-Tangle is a protocol for reusable cryptographic and AI services. It supports complex workloads that need verifiable execution and reliable operator incentives. Key service areas include:
+Tangle is a protocol for reusable cryptographic, AI, and runtime services. The protocol handles operator commitments and payments; each Blueprint defines the actual workload. Common service areas include:
 
-- **Privacy Infrastructure**: Tangle provides a foundation for enabling privacy-preserving solutions through technologies like multi-party computation (MPC) and zero-knowledge proofs.
+- **Privacy infrastructure**: MPC and zero-knowledge services where operators run key generation, signing, proving, or verification jobs.
 
-- **Oracles**: Build decentralized oracle services that can securely feed off-chain data to blockchains using Tangle's threshold signatures and MPC primitives.
+- **Oracles**: data services that use threshold signatures, MPC, or attestation before posting off-chain information onchain.
 
-- **AI/ML**: Offer secure and scalable AI inference, fine-tuning, and evaluation services through operator-hosted runtimes.
+- **AI/ML**: inference, fine-tuning, evaluation, and sandboxed agent work through operator-hosted runtimes.
 
-- **Custody Solutions**: Leverage Tangle's cryptographic services to create distributed custody solutions with robust security guarantees.
+- **Custody**: distributed signing and policy checks using threshold cryptography.
 
-- **Bridges**: Develop cross-chain bridges and asset movement solutions using Tangle's MPC co-processors and private bridging capabilities.
+- **Bridges**: cross-chain message, verification, and asset-movement services backed by operator commitments.
 
-- **Zero-Knowledge Services**: Implement applications leveraging zero-knowledge proofs, such as zero-knowledge machine learning (ZKML) projects, using Tangle's proof generation services.
+- **Zero-knowledge services**: proof generation, proof aggregation, and verification jobs.
 
-- **Novel Cryptographic Applications**: Tangle's modular architecture and rich cryptographic library enable developers to build innovative applications requiring advanced cryptographic primitives.
+- **Custom cryptographic services**: any service that can be expressed as jobs, operator requirements, and settlement rules.
 
-The core vision of Tangle is to provide infrastructure for developers to create and monetize a wide array of services with reliable execution and clear incentives. Developers are rewarded for valuable Blueprints, and operators are rewarded for dependable service delivery.
+The point is simple: developers package services once, users instantiate them when needed, and operators get paid for work they can prove they accepted and served.

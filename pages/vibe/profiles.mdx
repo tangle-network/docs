@@ -1,9 +1,10 @@
 # Profiles and Policies
 
-Profiles define how an agent behaves end to end. They package model choice, tool access, permissions, and guardrails into a reusable sidecar agent profile that the runtime enforces. This is how the workbench configures the OpenCode execution layer without hard-coding behavior into every task.
+Profiles define how an agent behaves end to end. They package model choice, tool access, permissions, guardrails, and harness selection into a reusable sidecar profile that the runtime enforces. This is how the workbench configures agent execution without hard-coding behavior into every task.
 
 ## What A Profile Controls
 
+- **Harness selection**: OpenCode, Claude Code, Codex, AMP, Factory Droids, Kimi Code, OpenClaw, NanoClaw, Hermes, or CLI base when the product exposes them.
 - **Model selection**: primary and small model routing per profile.
 - **Per-agent tuning**: distinct configs for plan/build/explore (prompt, temperature, max steps).
 - **Tool access**: enable or disable individual tools.
@@ -65,4 +66,4 @@ Under the hood, profiles can extend a base profile. The runtime merges overrides
 }
 ```
 
-For a field-by-field reference, see [Profile Schema](/vibe/profile-schema). The schema currently targets OpenCode, with additional backends planned.
+For a field-by-field reference, see [Profile Schema](/vibe/profile-schema). The schema is harness-aware; each backend maps the shared profile fields to its own config surface.
