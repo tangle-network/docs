@@ -1,0 +1,229 @@
+file,area,kind,audience,overall,voice,clarity,structure,actionability,completeness,sourceGrounding,boundaryClarity,freshness,examples,audienceFit,words,headings,highFindings,mediumFindings,lowFindings,issueSummary
+pages/ai/index.mdx,ai,general,general,8.2,9,8.2,8.8,7,8.7,7.6,9,8.7,5.7,7.6,340,6,0,0,0,few executable examples
+pages/blueprints/ai-agent-sandbox/dapp-and-indexer.mdx,blueprints,blueprint,app developer,8.6,9,8.4,8.8,10,9.3,6.2,9,8.7,8.5,7.6,545,6,0,0,0,none obvious from rubric
+pages/blueprints/ai-agent-sandbox/index.mdx,blueprints,blueprint,developer/operator,8.6,9,8.3,8.8,9.1,9.3,6.9,9,8.7,8.5,7.6,452,7,0,0,0,none obvious from rubric
+pages/blueprints/ai-agent-sandbox/operator-requirements.mdx,blueprints,blueprint,operator,8.6,9,8.3,8.8,10,9.3,6.5,9,8.7,8.5,7.6,490,7,0,0,0,none obvious from rubric
+pages/blueprints/ai-agent-sandbox/runtime-and-harnesses.mdx,blueprints,blueprint,developer/operator,8.7,9,8.4,8.8,10,9.3,6.7,9,8.7,8.5,7.6,560,6,0,0,0,none obvious from rubric
+pages/blueprints/ai-trading/dapp-and-indexer.mdx,blueprints,blueprint,app developer,8.6,9,8.3,8.8,10,9.3,6.2,9,8.7,8.5,7.6,449,6,0,0,0,none obvious from rubric
+pages/blueprints/ai-trading/index.mdx,blueprints,blueprint,developer/operator,8.6,9,8.3,8.8,9.5,9.3,6.9,9,8.7,8.5,7.6,467,7,0,0,0,none obvious from rubric
+pages/blueprints/ai-trading/operator-requirements.mdx,blueprints,blueprint,operator,8.7,9,8.4,8.8,10,9.3,6.7,9,8.7,8.5,7.6,572,8,0,0,0,none obvious from rubric
+pages/blueprints/ai-trading/runtime-and-risk.mdx,blueprints,blueprint,developer/operator,8.6,9,8.4,8.8,9.9,9.3,6.5,9,8.7,8.4,7.6,511,7,0,0,0,none obvious from rubric
+pages/blueprints/dapp-integration.mdx,blueprints,blueprint,app developer,8.7,9,8.4,8.8,10,9.3,6.7,9,8.7,8.5,7.6,693,7,0,0,0,none obvious from rubric
+pages/blueprints/index.mdx,blueprints,blueprint,developer/operator,8.8,9,8.1,8.8,10,9.3,8,9,8.7,8.5,7.6,462,5,0,0,0,none obvious from rubric
+pages/blueprints/operator-matrix.mdx,blueprints,blueprint,developer/operator,8.6,9,8.3,8.8,10,9.3,6.2,9,8.7,8.5,7.6,988,9,0,0,0,none obvious from rubric
+pages/blueprints/protocol-model.mdx,blueprints,blueprint,developer/operator,8.6,9,8.4,8.8,10,9.3,6.2,9,8.7,8.5,7.6,719,7,0,0,0,none obvious from rubric
+pages/blueprints/surplus-market/dapp-and-indexer.mdx,blueprints,blueprint,app developer,8.5,9,8.3,8.8,9.5,9.3,6.2,9,8.7,8.5,7.6,440,6,0,0,0,none obvious from rubric
+pages/blueprints/surplus-market/index.mdx,blueprints,blueprint,developer/operator,8.6,9,8.3,8.8,9.4,9.3,6.9,9,8.7,8.5,7.6,478,7,0,0,0,none obvious from rubric
+pages/blueprints/surplus-market/operator-requirements.mdx,blueprints,blueprint,operator,8.7,9,8.3,8.8,10,9.3,6.7,9,8.7,8.5,7.6,434,7,0,0,0,none obvious from rubric
+pages/blueprints/surplus-market/settlement-and-inference.mdx,blueprints,blueprint,developer/operator,8.4,9,8.3,8.8,8.2,9.3,6.2,9,8.7,8.5,7.6,470,7,0,0,0,none obvious from rubric
+pages/developers/api/reference/BlueprintHookBase.mdx,developers,api-reference,developer,8.7,9,8.1,8.4,10,7.5,9.4,8.6,8.7,8.5,7.6,47,24,0,0,0,thin page
+pages/developers/api/reference/IBlueprintHook.mdx,developers,api-reference,developer,8.9,9,8.2,8.4,10,9.3,9.4,8.6,8.7,8.5,7.6,289,24,0,0,0,none obvious from rubric
+pages/developers/api/reference/IBlueprintServiceManager.mdx,developers,api-reference,developer,8.9,9,8.5,8.4,10,9.3,9.4,8.6,8.7,8.5,7.6,1651,37,0,0,0,none obvious from rubric
+pages/developers/api/reference/IERC7540.mdx,developers,api-reference,developer,7.8,9,8.6,8.8,5.9,6.4,7.4,8.6,8.7,6,7.6,29,2,0,0,0,thin page
+pages/developers/api/reference/IERC7540Deposit.mdx,developers,api-reference,developer,8.5,9,8.1,8.8,9,8.9,8.3,8.6,8.7,8.5,7.6,138,8,0,0,0,thin page
+pages/developers/api/reference/IERC7540Operator.mdx,developers,api-reference,developer,8.3,9,8.1,8.8,8.2,8.2,8.1,8.6,8.7,8.5,7.6,93,7,0,0,0,thin page
+pages/developers/api/reference/IERC7540Redeem.mdx,developers,api-reference,developer,8.5,9,8.1,8.8,9,8.9,8.3,8.6,8.7,8.5,7.6,138,8,0,0,0,thin page
+pages/developers/api/reference/IFacetSelectors.mdx,developers,api-reference,developer,7.9,9,8.6,8.8,6.5,6.6,7.7,8.6,8.7,6.8,7.6,29,4,0,0,0,thin page
+pages/developers/api/reference/IMBSMRegistry.mdx,developers,api-reference,developer,8.8,9,8.1,8.8,10,9.3,9,8.6,8.7,8.5,7.6,207,10,0,0,0,none obvious from rubric
+pages/developers/api/reference/IMasterBlueprintServiceManager.mdx,developers,api-reference,developer,8.1,9,8.1,8.8,8.1,7.1,7.7,8.6,8.7,8.5,7.6,53,4,0,0,0,thin page
+pages/developers/api/reference/IMetricsRecorder.mdx,developers,api-reference,developer,8.9,9,8.2,8.8,10,9.3,9.4,8.6,8.7,8.5,7.6,353,15,0,0,0,none obvious from rubric
+pages/developers/api/reference/IMultiAssetDelegation.mdx,developers,api-reference,developer,8.9,9,8.1,8.4,10,9.3,9.4,8.6,8.7,8.5,7.6,252,121,0,0,0,none obvious from rubric
+pages/developers/api/reference/IPaymentAdapterRegistry.mdx,developers,api-reference,developer,8.8,9,8.1,8.8,10,9.2,9,8.6,8.7,8.5,7.6,153,10,0,0,0,thin page
+pages/developers/api/reference/IRestaking.mdx,developers,api-reference,developer,9,9,8.4,8.8,10,9.3,9.4,8.6,8.7,8.5,7.6,588,18,0,0,0,none obvious from rubric
+pages/developers/api/reference/IRestakingAdmin.mdx,developers,api-reference,developer,8.2,9,8.1,8.8,8,7.5,8.1,8.6,8.7,8.5,7.6,67,6,0,0,0,thin page
+pages/developers/api/reference/IRewardsManager.mdx,developers,api-reference,developer,8.6,9,8.1,8.8,9,9.3,8.3,8.6,8.7,8.5,7.6,169,7,0,0,0,thin page
+pages/developers/api/reference/ISablierAdapter.mdx,developers,api-reference,developer,8.9,9,8.1,8.8,10,9.3,9.2,8.6,8.7,8.5,7.6,238,12,0,0,0,none obvious from rubric
+pages/developers/api/reference/IServiceFeeDistributor.mdx,developers,api-reference,developer,8.9,8.8,8.1,8.4,10,9.3,9.4,8.6,8.7,8.5,7.6,216,20,0,0,1,none obvious from rubric
+pages/developers/api/reference/IStreamingPaymentAdapter.mdx,developers,api-reference,developer,8.9,9,8.4,8.4,10,9.3,9.4,8.6,8.7,8.5,7.6,519,22,0,0,0,none obvious from rubric
+pages/developers/api/reference/IStreamingPaymentManager.mdx,developers,api-reference,developer,8.7,9,8.1,8.8,10,7.9,9.2,8.6,8.7,8.5,7.6,75,11,0,0,0,thin page
+pages/developers/api/reference/ISuperfluidAdapter.mdx,developers,api-reference,developer,8.8,9,8.1,8.8,10,9.3,8.8,8.6,8.7,8.5,7.6,205,9,0,0,0,none obvious from rubric
+pages/developers/api/reference/ITangle.mdx,developers,api-reference,developer,7.7,9,8.1,8.8,5.9,6.5,7.4,8.6,8.7,6,7.6,33,2,0,0,0,thin page
+pages/developers/api/reference/ITangleAdmin.mdx,developers,api-reference,developer,8.9,9,8.1,8.4,10,9.3,9.4,8.6,8.7,8.5,7.6,197,30,0,0,0,none obvious from rubric
+pages/developers/api/reference/ITangleBlueprints.mdx,developers,api-reference,developer,8.8,9,8.1,8.4,10,8.7,9.4,8.6,8.7,8.5,7.6,121,21,0,0,0,thin page
+pages/developers/api/reference/ITangleFull.mdx,developers,api-reference,developer,7.8,9,8.6,8.8,5.9,6.3,7.4,8.6,8.7,6,7.6,21,2,0,0,0,thin page
+pages/developers/api/reference/ITangleGovernance.mdx,developers,api-reference,developer,8.9,9,8.3,8.4,10,9.3,9.4,8.6,8.7,8.5,7.6,408,22,0,0,0,none obvious from rubric
+pages/developers/api/reference/ITangleJobs.mdx,developers,api-reference,developer,8.8,9,8.1,8.8,10,8.9,9.2,8.6,8.7,8.5,7.6,138,12,0,0,0,thin page
+pages/developers/api/reference/ITangleOperators.mdx,developers,api-reference,developer,8.9,9,8.2,8.8,10,9.3,9.4,8.6,8.7,8.5,7.6,308,16,0,0,0,none obvious from rubric
+pages/developers/api/reference/ITanglePaymentsInternal.mdx,developers,api-reference,developer,8.1,9,8.6,8.8,7.1,6.5,7.9,8.6,8.7,7.6,7.6,17,5,0,0,0,thin page
+pages/developers/api/reference/ITangleRewards.mdx,developers,api-reference,developer,8.7,9,8.1,8.8,10,8.1,9.2,8.6,8.7,8.5,7.6,85,12,0,0,0,thin page
+pages/developers/api/reference/ITangleSecurityView.mdx,developers,api-reference,developer,8.4,9,8.6,8.8,8.8,6.9,8.5,8.6,8.7,8.5,7.6,30,8,0,0,0,thin page
+pages/developers/api/reference/ITangleServices.mdx,developers,api-reference,developer,8.8,8.3,7.9,8.4,10,9.3,9.4,8.6,8.7,8.5,7.6,666,59,0,4,0,none obvious from rubric
+pages/developers/api/reference/ITangleSlashing.mdx,developers,api-reference,developer,8.9,8.6,8.3,8.8,10,9.3,9.4,8.6,8.7,8.5,7.6,472,18,0,0,3,none obvious from rubric
+pages/developers/api/reference/ITangleToken.mdx,developers,api-reference,developer,8.7,9,8.1,8.8,10,7.9,9.4,8.6,8.7,8.5,7.6,75,14,0,0,0,thin page
+pages/developers/api/reference/generated/BlueprintHookBase.mdx,developers,api-reference,developer,8.7,9,8.1,8.4,10,7.5,9.4,8.6,8.7,8.5,7.6,47,24,0,0,0,thin page
+pages/developers/api/reference/generated/IBlueprintHook.mdx,developers,api-reference,developer,8.9,9,8.2,8.4,10,9.3,9.4,8.6,8.7,8.5,7.6,289,24,0,0,0,none obvious from rubric
+pages/developers/api/reference/generated/IBlueprintServiceManager.mdx,developers,api-reference,developer,8.9,9,8.5,8.4,10,9.3,9.4,8.6,8.7,8.5,7.6,1651,37,0,0,0,none obvious from rubric
+pages/developers/api/reference/generated/IERC7540.mdx,developers,api-reference,developer,7.8,9,8.6,8.8,5.9,6.4,7.4,8.6,8.7,6,7.6,29,2,0,0,0,thin page
+pages/developers/api/reference/generated/IERC7540Deposit.mdx,developers,api-reference,developer,8.5,9,8.1,8.8,9,8.9,8.3,8.6,8.7,8.5,7.6,138,8,0,0,0,thin page
+pages/developers/api/reference/generated/IERC7540Operator.mdx,developers,api-reference,developer,8.3,9,8.1,8.8,8.2,8.2,8.1,8.6,8.7,8.5,7.6,93,7,0,0,0,thin page
+pages/developers/api/reference/generated/IERC7540Redeem.mdx,developers,api-reference,developer,8.5,9,8.1,8.8,9,8.9,8.3,8.6,8.7,8.5,7.6,138,8,0,0,0,thin page
+pages/developers/api/reference/generated/IFacetSelectors.mdx,developers,api-reference,developer,7.9,9,8.6,8.8,6.5,6.6,7.7,8.6,8.7,6.8,7.6,29,4,0,0,0,thin page
+pages/developers/api/reference/generated/IMBSMRegistry.mdx,developers,api-reference,developer,8.8,9,8.1,8.8,10,9.3,9,8.6,8.7,8.5,7.6,207,10,0,0,0,none obvious from rubric
+pages/developers/api/reference/generated/IMasterBlueprintServiceManager.mdx,developers,api-reference,developer,8.1,9,8.1,8.8,8.1,7.1,7.7,8.6,8.7,8.5,7.6,53,4,0,0,0,thin page
+pages/developers/api/reference/generated/IMetricsRecorder.mdx,developers,api-reference,developer,8.9,9,8.2,8.8,10,9.3,9.4,8.6,8.7,8.5,7.6,353,15,0,0,0,none obvious from rubric
+pages/developers/api/reference/generated/IMultiAssetDelegation.mdx,developers,api-reference,developer,8.9,9,8.1,8.4,10,9.3,9.4,8.6,8.7,8.5,7.6,252,121,0,0,0,none obvious from rubric
+pages/developers/api/reference/generated/IPaymentAdapterRegistry.mdx,developers,api-reference,developer,8.8,9,8.1,8.8,10,9.2,9,8.6,8.7,8.5,7.6,153,10,0,0,0,thin page
+pages/developers/api/reference/generated/IRestaking.mdx,developers,api-reference,developer,9,9,8.4,8.8,10,9.3,9.4,8.6,8.7,8.5,7.6,588,18,0,0,0,none obvious from rubric
+pages/developers/api/reference/generated/IRestakingAdmin.mdx,developers,api-reference,developer,8.2,9,8.1,8.8,8,7.5,8.1,8.6,8.7,8.5,7.6,67,6,0,0,0,thin page
+pages/developers/api/reference/generated/IRewardsManager.mdx,developers,api-reference,developer,8.6,9,8.1,8.8,9,9.3,8.3,8.6,8.7,8.5,7.6,169,7,0,0,0,thin page
+pages/developers/api/reference/generated/ISablierAdapter.mdx,developers,api-reference,developer,8.9,9,8.1,8.8,10,9.3,9.2,8.6,8.7,8.5,7.6,238,12,0,0,0,none obvious from rubric
+pages/developers/api/reference/generated/IServiceFeeDistributor.mdx,developers,api-reference,developer,8.9,8.8,8.1,8.4,10,9.3,9.4,8.6,8.7,8.5,7.6,216,20,0,0,1,none obvious from rubric
+pages/developers/api/reference/generated/IStreamingPaymentAdapter.mdx,developers,api-reference,developer,8.9,9,8.4,8.4,10,9.3,9.4,8.6,8.7,8.5,7.6,519,22,0,0,0,none obvious from rubric
+pages/developers/api/reference/generated/IStreamingPaymentManager.mdx,developers,api-reference,developer,8.7,9,8.1,8.8,10,7.9,9.2,8.6,8.7,8.5,7.6,75,11,0,0,0,thin page
+pages/developers/api/reference/generated/ISuperfluidAdapter.mdx,developers,api-reference,developer,8.8,9,8.1,8.8,10,9.3,8.8,8.6,8.7,8.5,7.6,205,9,0,0,0,none obvious from rubric
+pages/developers/api/reference/generated/ITangle.mdx,developers,api-reference,developer,7.7,9,8.1,8.8,5.9,6.5,7.4,8.6,8.7,6,7.6,33,2,0,0,0,thin page
+pages/developers/api/reference/generated/ITangleAdmin.mdx,developers,api-reference,developer,8.9,9,8.1,8.4,10,9.3,9.4,8.6,8.7,8.5,7.6,197,30,0,0,0,none obvious from rubric
+pages/developers/api/reference/generated/ITangleBlueprints.mdx,developers,api-reference,developer,8.8,9,8.1,8.4,10,8.7,9.4,8.6,8.7,8.5,7.6,121,21,0,0,0,thin page
+pages/developers/api/reference/generated/ITangleFull.mdx,developers,api-reference,developer,7.8,9,8.6,8.8,5.9,6.3,7.4,8.6,8.7,6,7.6,21,2,0,0,0,thin page
+pages/developers/api/reference/generated/ITangleGovernance.mdx,developers,api-reference,developer,8.9,9,8.3,8.4,10,9.3,9.4,8.6,8.7,8.5,7.6,408,22,0,0,0,none obvious from rubric
+pages/developers/api/reference/generated/ITangleJobs.mdx,developers,api-reference,developer,8.8,9,8.1,8.8,10,8.9,9.2,8.6,8.7,8.5,7.6,138,12,0,0,0,thin page
+pages/developers/api/reference/generated/ITangleOperators.mdx,developers,api-reference,developer,8.9,9,8.2,8.8,10,9.3,9.4,8.6,8.7,8.5,7.6,308,16,0,0,0,none obvious from rubric
+pages/developers/api/reference/generated/ITanglePaymentsInternal.mdx,developers,api-reference,developer,8.1,9,8.6,8.8,7.1,6.5,7.9,8.6,8.7,7.6,7.6,17,5,0,0,0,thin page
+pages/developers/api/reference/generated/ITangleRewards.mdx,developers,api-reference,developer,8.7,9,8.1,8.8,10,8.1,9.2,8.6,8.7,8.5,7.6,85,12,0,0,0,thin page
+pages/developers/api/reference/generated/ITangleSecurityView.mdx,developers,api-reference,developer,8.4,9,8.6,8.8,8.8,6.9,8.5,8.6,8.7,8.5,7.6,30,8,0,0,0,thin page
+pages/developers/api/reference/generated/ITangleServices.mdx,developers,api-reference,developer,8.8,8.3,7.9,8.4,10,9.3,9.4,8.6,8.7,8.5,7.6,666,59,0,4,0,none obvious from rubric
+pages/developers/api/reference/generated/ITangleSlashing.mdx,developers,api-reference,developer,8.9,8.6,8.3,8.8,10,9.3,9.4,8.6,8.7,8.5,7.6,472,18,0,0,3,none obvious from rubric
+pages/developers/api/reference/generated/ITangleToken.mdx,developers,api-reference,developer,8.7,9,8.1,8.8,10,7.9,9.4,8.6,8.7,8.5,7.6,75,14,0,0,0,thin page
+pages/developers/auth-surface.mdx,developers,developer,developer,8.8,8.9,8.5,8.4,10,9.3,8.2,8.6,8.7,8.5,8.3,1690,24,0,0,1,none obvious from rubric
+pages/developers/blueprint-auth.mdx,developers,developer,developer,8.7,8.8,8.4,8.8,10,9.2,6.9,9,8.7,8.5,8.3,658,10,0,0,2,none obvious from rubric
+pages/developers/blueprint-contexts/evm-provider-context.mdx,developers,developer,developer,7.8,9,8.1,8.8,7.4,6.7,6.5,8.6,8.7,6.1,7.5,77,5,0,0,0,thin page
+pages/developers/blueprint-contexts/introduction.mdx,developers,developer,developer,7.6,7.8,7.5,7.6,7.5,7.7,6.5,8.6,8.7,5.5,8.3,267,2,0,1,1,1 slop phrases
+pages/developers/blueprint-contexts/keystore-context.mdx,developers,developer,developer,7.9,9,8.1,8.8,8.3,7,6.2,8.6,8.7,6.4,7.5,124,5,0,0,0,thin page
+pages/developers/blueprint-contexts/tangle-client-context.mdx,developers,developer,developer,7.9,9,8.1,8.8,8.2,6.9,6.2,8.6,8.7,6.4,7.5,112,5,0,0,0,thin page
+pages/developers/blueprint-qos.mdx,developers,developer,developer,8.7,8.5,8.1,8.4,10,9.3,8.2,8.6,8.7,8.5,8.3,1264,24,0,3,0,none obvious from rubric
+pages/developers/blueprint-runner/background-services.mdx,developers,developer,developer,8.6,7.8,8,8.8,10,9.3,8,8.6,8.7,7.7,8.3,483,11,0,1,2,2 slop phrases
+pages/developers/blueprint-runner/building.mdx,developers,developer,developer,8.8,8.3,8.1,8.8,10,9.3,8.2,9,8.7,8.5,8.3,683,15,0,1,2,1 slop phrases
+pages/developers/blueprint-runner/consumers.mdx,developers,developer,developer,8.7,8.2,7.8,8.8,10,8.9,8.2,9,8.7,8.5,8.3,358,10,0,1,1,1 slop phrases
+pages/developers/blueprint-runner/introduction.mdx,developers,developer,developer,8.7,9,7.9,8.8,10,8.9,8.2,9,8.7,7.7,8.3,356,10,0,0,0,none obvious from rubric
+pages/developers/blueprint-runner/job-triggers.mdx,developers,developer,developer,8.5,8.8,8.3,8.8,10,8.9,6.2,9,8.7,7.6,8.3,401,8,0,0,1,none obvious from rubric
+pages/developers/blueprint-runner/jobs.mdx,developers,developer,developer,8.8,8.3,8,8.8,10,9.3,8.2,9,8.7,8.5,8.3,476,10,0,1,1,1 slop phrases
+pages/developers/blueprint-runner/producers.mdx,developers,developer,developer,8.6,8.2,7.8,8.8,10,8.9,7.8,9,8.7,8.5,8.3,361,12,0,1,1,1 slop phrases
+pages/developers/blueprint-runner/routers.mdx,developers,developer,developer,8.7,8.4,7.9,8.8,10,9.2,7.8,9,8.7,8.5,8.3,402,8,0,1,0,1 slop phrases
+pages/developers/blueprint-runner/webhooks.mdx,developers,developer,developer,8.6,9,8.3,8.8,10,8.7,6.5,9,8.7,8.5,8.3,380,7,0,0,0,none obvious from rubric
+pages/developers/blueprint-runner/x402.mdx,developers,developer,developer,8.8,8.9,8.4,8.8,10,9.3,7.1,9,8.7,8.5,8.3,739,12,0,0,1,none obvious from rubric
+pages/developers/blueprint-sdk.mdx,developers,developer,developer,8.5,9,8.1,8.8,10,7.6,7.8,9,8.7,7.7,8.3,186,4,0,0,0,none obvious from rubric
+pages/developers/blueprints/execution-confidentiality.mdx,developers,blueprint,developer/operator,8.8,9,8.4,8.8,10,9.2,7.6,9,8.7,8.5,7.6,568,8,0,0,0,none obvious from rubric
+pages/developers/blueprints/introduction.mdx,developers,blueprint,developer/operator,8.7,9,8.5,8.8,10,9.3,6.5,9,8.7,8.2,7.6,899,12,0,0,0,none obvious from rubric
+pages/developers/blueprints/manager.mdx,developers,blueprint,developer/operator,8,9,8.2,7.6,7.6,7.9,6.5,9,8.7,6.6,7.6,305,2,0,0,0,none obvious from rubric
+pages/developers/blueprints/pricing-and-payments.mdx,developers,blueprint,developer/operator,8.7,8.9,8.5,8.8,10,9.1,6.7,9,8.7,8.5,7.6,864,9,0,0,1,none obvious from rubric
+pages/developers/blueprints/pricing-engine.mdx,developers,blueprint,developer/operator,8.6,8.9,8.4,8.8,10,9.1,6.5,9,8.7,8.5,7.6,518,9,0,0,1,none obvious from rubric
+pages/developers/blueprints/service-lifecycle.mdx,developers,blueprint,developer/operator,8.6,8.9,8.5,8.8,10,9.3,6.5,8.6,8.7,8.5,7.6,1067,11,0,0,1,none obvious from rubric
+pages/developers/blueprints/use-cases.mdx,developers,blueprint,developer/operator,8.1,9,8.1,8.8,10,6.7,5.8,8.6,8.7,8.5,6.8,47,8,0,0,0,thin page
+pages/developers/cli/debugging.mdx,developers,developer,developer,8.3,9,8.1,7.6,10,8,8.2,6.8,8.7,8.5,8.3,266,4,0,0,0,protocol/hosted boundary needs sharper wording
+pages/developers/cli/installation.mdx,developers,developer,developer,8.1,9,8.1,8.8,9,6.3,6.9,8.6,8.7,8.2,7.5,52,2,0,0,0,thin page
+pages/developers/cli/keys.mdx,developers,developer,developer,8.7,9,7.8,8.4,10,9.3,7.8,8.6,8.7,8.5,7.9,496,19,2,0,0,2 high scanner findings
+pages/developers/cli/quickstart.mdx,developers,developer,developer,8.2,9,8.1,8.8,9.1,6.9,7.6,8.6,8.7,8,7.5,89,4,0,0,0,thin page
+pages/developers/cli/tangle.mdx,developers,developer,developer,8.7,9,8.1,8.8,10,8.1,8.2,9,8.7,8.5,8.3,252,8,0,0,0,none obvious from rubric
+pages/developers/code-merge-process.mdx,developers,developer,developer,8.9,9,8.3,8.8,10,9.3,8.2,9,8.7,8.5,8.3,467,11,0,0,0,none obvious from rubric
+pages/developers/contribute.mdx,developers,developer,developer,8,9,8.3,8.8,7.1,8.8,6.2,8.6,8.7,5.5,8.3,401,6,0,0,0,none obvious from rubric
+pages/developers/deployment/introduction.mdx,developers,developer,developer,8.4,8.8,8.1,8.8,10,7.1,7.3,8.6,8.7,8.5,7.5,125,4,0,0,1,thin page
+pages/developers/deployment/sources/container.mdx,developers,developer,developer,8.3,9,8.1,8.8,10,6.9,7.1,8.6,8.7,8.5,6.8,132,3,0,0,0,thin page
+pages/developers/deployment/sources/introduction.mdx,developers,developer,developer,8.3,9,8.1,8.8,10,6.9,6.7,8.6,8.7,8.5,7.5,154,1,0,0,0,thin page
+pages/developers/deployment/sources/native.mdx,developers,developer,developer,8.1,9,8.1,8.8,10,7.1,6.9,6.8,8.3,8.5,7.5,168,3,0,0,0,protocol/hosted boundary needs sharper wording; thin page
+pages/developers/deployment/sources/testing.mdx,developers,developer,developer,8.3,9,8.1,8.8,10,6.8,7.1,8.6,8.7,8.5,6.8,119,3,0,0,0,thin page
+pages/developers/deployment/sources/wasm.mdx,developers,developer,developer,8,9,8.1,8.8,10,6.7,6.9,6.8,8.3,8.5,7.5,102,3,0,0,0,protocol/hosted boundary needs sharper wording; thin page
+pages/developers/endpoints.mdx,developers,developer,developer,7.4,9,8.6,8.8,5.6,5.9,5.8,8.6,8.7,4.9,6.8,1,1,0,0,0,thin page; few executable examples
+pages/developers/key-contacts.mdx,developers,developer,developer,7.8,8.8,8,8.8,8.1,6.6,6.2,8.6,8.7,6.9,6.8,70,2,0,1,0,thin page
+pages/developers/p2p-networking/extensions/round-based.mdx,developers,developer,developer,7.5,9,8.1,8.8,6.1,6.1,6.5,8.6,8.7,5.2,7.5,34,1,0,0,0,thin page
+pages/developers/p2p-networking/overview.mdx,developers,developer,developer,7.8,9,8.1,8.8,7.9,6.3,6.5,8.6,8.7,6.4,7.5,48,2,0,0,0,thin page
+pages/developers/p2p-networking/testing.mdx,developers,developer,developer,7.8,9,8.1,8.8,7.3,6.6,6.5,8.6,8.7,6.8,7.5,84,3,0,0,0,thin page
+pages/developers/p2p-networking/usage.mdx,developers,developer,developer,8.3,9,8.1,8.8,10,7,6.9,8.6,8.7,8.5,7.5,135,4,0,0,0,thin page
+pages/developers/protocol-architecture.mdx,developers,developer,developer,7.9,9,8.1,8.8,7.2,7.4,7.3,8.6,8.7,5.2,7.5,175,4,0,0,0,thin page
+pages/developers/slashing.mdx,developers,developer,developer,8.8,8.7,8.4,8.8,10,9.3,8.2,8.6,8.7,8.5,8.3,1709,18,0,1,1,none obvious from rubric
+pages/developers/system-architecture/overview.mdx,developers,developer,developer,8.6,9,8.3,8.8,10,8.9,6.9,9,8.7,7.7,8.3,363,7,0,0,0,none obvious from rubric
+pages/developers/system-architecture/rewards.mdx,developers,developer,developer,8.7,9,8.3,8.8,10,9.1,8,8.6,8.7,7,8.3,380,8,0,0,0,none obvious from rubric
+pages/developers/testing-with-tangle.mdx,developers,developer,developer,8.4,9,8.1,8.8,10,7.5,7.3,8.6,8.7,8.5,7.5,174,6,0,0,0,thin page
+pages/developers/troubleshooting.mdx,developers,developer,developer,8,9,8.1,8.8,9.3,6.4,6,8.6,8.7,8.3,6.8,64,3,0,0,0,thin page
+pages/developers/upgrade-discipline.mdx,developers,developer,developer,8.8,9,8.3,8.8,10,9.3,8.2,8.6,8.7,8.5,8.3,915,13,0,0,0,none obvious from rubric
+pages/gateway/api-chat.mdx,gateway,gateway,customer/developer,8.4,9,8.1,8.8,9.5,7.7,6.7,9,8.7,8.5,7.4,160,8,0,0,0,thin page
+pages/gateway/api-compliance.mdx,gateway,gateway,customer/developer,8.1,9,8.1,8.8,9.3,6.4,6.5,8.6,8.7,8.5,7.4,62,3,0,0,0,thin page
+pages/gateway/api-credits.mdx,gateway,gateway,customer/developer,7.8,9,8.1,8.8,8.1,6.3,6.2,8.6,8.7,7.9,6.8,34,3,0,0,0,thin page
+pages/gateway/api-generation.mdx,gateway,gateway,customer/developer,7.9,8.6,7.9,8.8,8.3,6.7,6.2,8.6,8.7,8.2,6.8,62,5,0,2,0,thin page
+pages/gateway/authentication.mdx,gateway,gateway,customer/developer,8.4,8.8,8,8.8,10,7.3,7.3,8.6,8.7,8.5,7.4,147,6,0,1,0,thin page
+pages/gateway/byok.mdx,gateway,gateway,customer/developer,8.3,8.5,7.7,8.8,9.8,7.7,6.9,8.6,8.7,8.5,8.2,192,7,0,3,0,none obvious from rubric
+pages/gateway/caching.mdx,gateway,gateway,customer/developer,8.3,9,8.1,8.8,10,7.2,6.9,8.6,8.7,8.5,7.4,157,4,0,0,0,thin page
+pages/gateway/enterprise-zdr.mdx,gateway,gateway,customer/developer,8.6,8.8,8,8.8,10,8.4,7.6,8.6,8.7,8.5,8.2,284,9,0,1,0,none obvious from rubric
+pages/gateway/fallbacks.mdx,gateway,gateway,customer/developer,8.1,8.5,7.7,8.8,9,7.3,6.7,8.6,8.7,8.1,7.4,169,5,0,3,0,thin page
+pages/gateway/feature-flags.mdx,gateway,gateway,customer/developer,7.9,9,8.1,8.8,7.2,7.4,6,8.6,8.7,7.1,8.2,180,4,0,0,0,none obvious from rubric
+pages/gateway/free-tier.mdx,gateway,gateway,customer/developer,8.1,8.8,8.1,8.8,8.6,7.5,6.2,8.6,8.7,8.5,7.4,160,5,0,0,1,thin page
+pages/gateway/generation-lookup.mdx,gateway,gateway,customer/developer,8.3,9,8.1,8.8,10,7.3,6.5,8.6,8.7,8.5,7.4,137,5,0,0,0,thin page
+pages/gateway/getting-started.mdx,gateway,gateway,customer/developer,8.4,8.3,7.6,8.8,10,7.5,8,8.6,8.7,8.5,7.4,134,9,0,4,0,thin page
+pages/gateway/guardrails.mdx,gateway,gateway,customer/developer,8.1,9,8.1,8.8,8.2,7.8,6.5,8.6,8.7,8.5,7.4,172,8,0,0,0,thin page
+pages/gateway/how-routing-works.mdx,gateway,gateway,customer/developer,8.4,9,8.2,8.8,9.2,8.8,8.2,6.8,8.7,8.5,8.2,337,7,0,0,0,protocol/hosted boundary needs sharper wording
+pages/gateway/index.mdx,gateway,gateway,customer/developer,8.1,7.9,6.6,8.8,8.9,8.5,7.5,9,8.7,8,7.7,285,6,3,6,0,3 high scanner findings
+pages/gateway/migrate-openai.mdx,gateway,gateway,customer/developer,8.3,9,8.1,8.8,10,7.1,7.1,8.6,8.7,8.5,7.4,127,6,0,0,0,thin page
+pages/gateway/migrate-vercel.mdx,gateway,gateway,customer/developer,8,8.5,6.9,8.8,10,8.2,6,8.6,7.2,8.5,7.7,236,7,3,3,0,3 high scanner findings; 1 future-tense/staleness terms
+pages/gateway/models.mdx,gateway,gateway,customer/developer,8.3,8.8,7.8,8.8,10,8.5,7.3,6.8,8.7,8.5,8,296,5,1,1,0,1 high scanner findings; protocol/hosted boundary needs sharper wording
+pages/gateway/no-train.mdx,gateway,gateway,customer/developer,7.8,9,8.1,8.8,6.7,7.3,6.5,8.6,8.7,6.8,7.4,151,5,0,0,0,thin page
+pages/gateway/operator-routing.mdx,gateway,gateway,customer/developer,8.6,8.5,7.3,8.8,10,9,8,9,8.7,8.5,8,373,10,1,3,0,1 high scanner findings
+pages/gateway/pricing.mdx,gateway,gateway,customer/developer,8.4,8.6,8,8.8,10,7.3,7.6,8.6,8.7,8.5,7.4,140,5,0,1,1,thin page
+pages/gateway/provider-options.mdx,gateway,gateway,customer/developer,8,7.9,7.4,8.8,8,7.4,7.8,8.6,8.7,8.2,7.4,119,4,0,6,0,thin page
+pages/gateway/rate-limiting.mdx,gateway,gateway,customer/developer,7.9,9,8.1,8.8,7.8,6.8,6.2,8.6,8.7,7.9,7.4,81,4,0,0,0,thin page
+pages/gateway/response-headers.mdx,gateway,gateway,customer/developer,7.8,9,8.1,8.8,6.9,7.6,5.8,8.6,8.7,7.6,7.4,154,4,0,0,0,thin page; few executable examples
+pages/gateway/routing-trace.mdx,gateway,gateway,customer/developer,7.9,8.6,7.9,8.8,7.7,7,6.9,8.6,8.7,7.3,7.4,127,4,0,2,0,thin page
+pages/gateway/smart-routing.mdx,gateway,gateway,customer/developer,7.8,8.5,7.7,8.8,8.5,7.6,6.5,6.8,8.7,7.7,8.2,205,5,0,3,0,protocol/hosted boundary needs sharper wording
+pages/gateway/spend-auth.mdx,gateway,gateway,customer/developer,8.2,9,8.1,8.8,8.4,7.7,6.9,9,8.7,7.1,8.2,217,6,0,0,0,none obvious from rubric
+pages/gateway/timeouts.mdx,gateway,gateway,customer/developer,7.9,8.8,8,8.8,7.6,7.2,6.7,8.6,8.7,7.3,7.4,138,6,0,1,0,thin page
+pages/gateway/zdr.mdx,gateway,gateway,customer/developer,8.6,8.8,8.3,8.8,8.9,9.1,8.2,8.6,8.7,8.5,8.2,381,7,0,0,1,none obvious from rubric
+pages/index.mdx,index.mdx,home,general,7.4,9,8.6,7.6,5.6,5.9,5.8,9,8.7,5.7,6.8,14,0,0,0,0,thin page; few executable examples
+pages/infrastructure/architecture.mdx,infrastructure,runtime-infra,general,7.6,9,8.1,8.8,6.5,7,6.2,8.6,8.7,5.7,6.8,150,3,0,0,0,thin page; few executable examples
+pages/infrastructure/harnesses.mdx,infrastructure,runtime-infra,general,8.6,9,8.4,8.8,10,9.2,6.2,9,8.7,8.5,7.6,516,4,0,0,0,none obvious from rubric
+pages/infrastructure/introduction.mdx,infrastructure,runtime-infra,general,8,9,8.1,8.8,7.2,7.7,7.3,9,8.7,6,7.6,209,4,0,0,0,none obvious from rubric
+pages/infrastructure/orchestration.mdx,infrastructure,runtime-infra,general,7.6,9,8.1,8.8,6.5,6.9,5.8,9,8.7,5.7,6.8,143,3,0,0,0,thin page; few executable examples
+pages/infrastructure/protocol-deployment.mdx,infrastructure,runtime-infra,general,7.9,9,8.1,8.8,7.5,7.5,6.2,8.6,8.7,6.6,7.6,215,4,0,0,0,none obvious from rubric
+pages/infrastructure/sandboxing.mdx,infrastructure,runtime-infra,general,7.6,9,8.1,8.8,6.5,7.8,6.2,6.8,8.7,5.7,7.6,262,5,0,0,0,protocol/hosted boundary needs sharper wording; few executable examples
+pages/network/claim-airdrop.mdx,network,network,staker/governance,8.2,8.3,8.1,8.8,8.8,8.4,6.7,8.6,8.7,6.9,7.6,316,7,0,1,0,1 slop phrases
+pages/network/governance.mdx,network,network,staker/governance,8.4,9,8.2,8.8,9.7,8.7,6.2,8.6,8.7,8.5,7.6,329,6,0,0,0,none obvious from rubric
+pages/network/incentives-developers.mdx,network,network,staker/governance,8.1,9,7.8,8.8,8.6,7.6,6.5,8.6,8.7,7.2,7.4,219,5,1,0,0,1 high scanner findings
+pages/network/incentives-operators.mdx,network,network,staker/governance,8.1,9,8.1,8.8,8.7,7.5,6.7,8.6,8.7,6.9,7.6,205,5,0,0,0,none obvious from rubric
+pages/network/incentives-overview.mdx,network,network,staker/governance,8.8,9,8.3,8.8,10,9.3,8.2,8.6,8.7,8.5,7.6,430,6,0,0,0,none obvious from rubric
+pages/network/incentives-stakers.mdx,network,network,staker/governance,8.6,9,8,8.8,10,9.1,6.9,8.6,8.7,8.4,7.4,410,8,1,0,0,1 high scanner findings
+pages/network/launch.mdx,network,network,staker/governance,7.9,9,8.1,8.8,6.7,8,6.7,8.6,8.7,6,7.6,259,5,0,0,0,none obvious from rubric
+pages/network/metrics-and-scoring.mdx,network,network,staker/governance,8.6,9,8.3,8.8,9.8,9,7.1,8.6,8.7,7.5,7.6,393,7,0,0,0,none obvious from rubric
+pages/network/network-parameters.mdx,network,network,staker/governance,7.9,9,8.4,8.8,10,9.3,6.7,8.6,0.6,8.5,7.6,564,12,0,0,0,18 future-tense/staleness terms
+pages/network/overview.mdx,network,network,staker/governance,8.3,9,8.4,8.8,6.9,9.3,7.6,9,8.7,6,7.6,528,12,0,0,0,none obvious from rubric
+pages/network/points-mechanics.mdx,network,network,staker/governance,7.7,9,7.5,8.8,7.8,7.8,6,8.6,6.9,7,7.2,229,5,2,0,0,2 high scanner findings; 4 future-tense/staleness terms
+pages/network/tokenomics/allocation.mdx,network,network,staker/governance,8.2,9,8.2,8.8,10,8.6,6.2,8.6,6,8.5,7.6,313,6,0,0,0,6 future-tense/staleness terms
+pages/network/tokenomics/inflation.mdx,network,network,staker/governance,8,9,8.1,8.8,7.6,7.8,6.7,8.6,8.7,7.2,7.6,216,6,0,0,0,none obvious from rubric
+pages/network/tokenomics/usage.mdx,network,network,staker/governance,7.7,9,8.1,8.8,6.1,7.3,6.7,8.6,8.7,6,6.8,151,6,0,0,0,thin page
+pages/operators/benchmarking.mdx,operators,operator,operator,8.5,9,8,8.8,10,9.3,7.8,6.8,8.7,8.5,8.5,643,11,0,0,0,protocol/hosted boundary needs sharper wording
+pages/operators/introduction.mdx,operators,operator,operator,8.3,9,8.1,8.8,7.7,8.2,8,9,8.7,6.4,8.5,244,7,0,0,0,none obvious from rubric
+pages/operators/manager/confidential-compute.mdx,operators,operator,operator,8.7,9,8.2,8.8,10,8.7,7.8,9,8.7,8.5,8.5,333,8,0,0,0,none obvious from rubric
+pages/operators/manager/introduction.mdx,operators,operator,operator,8,9,8.1,8.8,7.4,6.9,7.6,9,8.7,6.3,7.7,121,1,0,0,0,thin page
+pages/operators/manager/requirements.mdx,operators,operator,operator,8.5,8.6,7.9,8.8,10,8.3,7.3,9,8.7,8.5,8.3,289,6,1,0,2,1 high scanner findings
+pages/operators/manager/security.mdx,operators,operator,operator,8.6,9,8.2,8.8,10,8.5,7.1,9,8.7,8.5,8.5,332,7,0,0,0,none obvious from rubric
+pages/operators/manager/setup.mdx,operators,operator,operator,8.6,9,8.1,8.8,10,8,7.6,9,8.7,8.5,8.5,261,6,0,0,0,none obvious from rubric
+pages/operators/manager/sizing.mdx,operators,operator,operator,8.2,9,8.1,8.8,8.5,7.5,6.5,9,8.7,7.3,8.5,186,5,0,0,0,none obvious from rubric
+pages/operators/operator/join_operator/join.mdx,operators,operator,operator,8.5,9,8.1,7.6,10,7.8,7.8,9,8.7,8.5,8.5,219,6,0,0,0,none obvious from rubric
+pages/operators/operator/join_operator/leave.mdx,operators,operator,operator,8.1,9,8.1,7.6,10,6.8,6.9,8.6,8.7,7.8,6.8,98,5,0,0,0,thin page
+pages/operators/operator/join_operator/stake.mdx,operators,operator,operator,8.2,9,8.1,7.6,10,7.2,7.1,8.6,8.7,7.8,7.7,133,7,0,0,0,thin page
+pages/operators/pricing/overview.mdx,operators,operator,operator,8.5,8.9,8.3,8.8,10,9,6.2,9,8.7,7.8,7.6,456,7,0,0,1,none obvious from rubric
+pages/operators/quality-of-service.mdx,operators,operator,operator,8.7,8.8,8.3,8.8,10,9.3,7.6,8.6,8.7,8.5,8.5,574,14,0,1,0,none obvious from rubric
+pages/operators/runbook.mdx,operators,operator,operator,8,9,8.1,8.8,7.6,7.9,6.7,8.6,8.7,5.7,8.5,230,7,0,0,0,few executable examples
+pages/release-notes/0.13.0.mdx,release-notes,release,general,8.6,7.6,7.7,8.8,10,9.3,8.2,8.6,8.7,8.5,7.6,1165,15,0,7,1,none obvious from rubric
+pages/staking/how-staking-works.mdx,staking,staking,staker/governance,7.6,9,7.5,8.8,7,7.6,5.6,8.6,8.7,6,7.2,231,4,2,0,0,2 high scanner findings
+pages/staking/how_to_stake/how_to_stake_tangle/delegate.mdx,staking,staking,staker/governance,7.9,9,7.8,7.6,7.5,8.3,6.7,8.6,8.7,6.3,7.6,331,4,0,0,0,none obvious from rubric
+pages/staking/how_to_stake/how_to_stake_tangle/deposit.mdx,staking,staking,staker/governance,7.7,8.8,7.6,7.6,7,7.7,6.7,8.6,8.7,6,7.6,237,4,0,0,1,none obvious from rubric
+pages/staking/how_to_stake/how_to_stake_tangle/unstake.mdx,staking,staking,staker/governance,7.9,8.5,7.4,7.6,6.9,9.1,7.3,8.6,8.7,6,7.6,433,6,0,0,3,none obvious from rubric
+pages/staking/how_to_stake/how_to_stake_tangle/withdraw.mdx,staking,staking,staker/governance,7.9,8.4,7.5,7.6,7,9.2,7.3,8.6,8.7,6,7.6,438,7,0,0,4,none obvious from rubric
+pages/staking/incentives/claiming.mdx,staking,staking,staker/governance,8.4,9,8,8.8,9.8,9.1,6.2,8.6,8.7,6,7.6,413,9,0,0,0,none obvious from rubric
+pages/staking/incentives/configs.mdx,staking,staking,staker/governance,7.9,9,8.1,8.8,7.9,7.1,6.2,8.6,8.7,6.3,6.8,152,5,0,0,0,thin page
+pages/staking/incentives/how_rewards_work.mdx,staking,staking,staker/governance,8.5,9,8.4,8.8,10,9,6.5,8.6,8.7,7.2,7.6,558,7,0,0,0,none obvious from rubric
+pages/staking/incentives/vaults.mdx,staking,staking,staker/governance,7.7,9,8.1,8.8,7.1,7.2,5.8,8.6,8.7,6,7.6,185,3,0,0,0,none obvious from rubric
+pages/staking/introduction.mdx,staking,staking,staker/governance,7.4,9,8.1,8.8,5.7,6.7,5.8,8.6,8.7,5.7,6.8,106,3,0,0,0,thin page; few executable examples
+pages/staking/liquid-staking/factory-and-discovery.mdx,staking,staking,staker/governance,7.7,9,8.1,8.8,7.3,6.9,6.2,8.6,8.7,6.3,6.8,129,4,0,0,0,thin page
+pages/staking/liquid-staking/introduction.mdx,staking,staking,staker/governance,8.6,9,7.9,8.8,10,8.5,8,8.6,8.7,8.4,7.4,293,7,1,0,0,1 high scanner findings
+pages/staking/liquid-staking/risks-and-limitations.mdx,staking,staking,staker/governance,7.7,9,8.1,8.8,6.1,7.6,6.5,8.6,8.7,6,7.6,182,8,0,0,0,none obvious from rubric
+pages/staking/liquid-staking/staking-flow.mdx,staking,staking,staker/governance,8.5,9,8.3,8.8,9.1,9.2,6.7,8.6,8.7,7.5,7.6,431,8,0,0,0,none obvious from rubric
+pages/staking/liquid-staking/vaults-and-shares.mdx,staking,staking,staker/governance,7.8,9,8.1,8.8,7,7.2,6.2,8.6,8.7,6,7.6,182,4,0,0,0,none obvious from rubric
+pages/staking/staking-concepts.mdx,staking,staking,staker/governance,8,9,8.1,8.8,7.5,7.7,6.7,8.6,8.7,6.3,7.6,220,6,0,0,0,none obvious from rubric
+pages/vibe/integrations.mdx,vibe,workbench,customer/developer,7.6,9,8.1,8.8,6,7,6.2,8.6,8.7,5.7,6.8,137,4,0,0,0,thin page; few executable examples
+pages/vibe/introduction.mdx,vibe,workbench,customer/developer,8.1,9,8.1,8.8,7.2,8.1,7.3,9,8.7,6,7.6,256,6,0,0,0,none obvious from rubric
+pages/vibe/profile-schema.mdx,vibe,workbench,customer/developer,8.6,9,8.3,8.8,10,9.2,6.2,9,8.7,7.7,7.6,487,10,0,0,0,none obvious from rubric
+pages/vibe/profiles.mdx,vibe,workbench,customer/developer,8.4,9,8.2,8.8,9.3,8.4,6.5,9,8.7,7.7,7.6,346,5,0,0,0,none obvious from rubric
+pages/vibe/simulations.mdx,vibe,workbench,customer/developer,7.6,9,7.6,8.8,6.4,7.4,5.8,8.6,8.7,5.7,7.6,190,5,0,0,0,few executable examples
+pages/vibe/workflows.mdx,vibe,workbench,customer/developer,7.7,9,8.1,8.8,6.6,7.6,5.8,8.6,8.7,5.7,7.6,234,5,0,0,0,few executable examples
+pages/vision/architecture.mdx,vision,vision,general,8.1,8.8,7.7,8.8,7.3,9.2,6.5,9,8.7,7.7,7.2,412,6,2,0,1,2 high scanner findings
+pages/vision/core-concepts.mdx,vision,vision,general,7.7,9,8.1,8.8,6.2,7.7,5.8,9,8.7,5.7,7.6,213,1,0,0,0,few executable examples
+pages/vision/introduction.mdx,vision,vision,general,8.2,9,8,8.8,6.7,9.3,7.6,9,8.7,6.3,7.4,389,9,1,0,0,1 high scanner findings
+pages/vision/use-cases.mdx,vision,vision,general,7.9,9,7.9,8.8,6,9,6.5,9,8.7,6.3,7.4,291,7,1,0,0,1 high scanner findings

@@ -5,7 +5,7 @@ const ROOTS = ["pages", "components"];
 const EXTENSIONS = new Set([".md", ".mdx", ".ts", ".tsx", ".js", ".jsx"]);
 const OPENCODE_RE = /\b(open\s*code|opencode|OPENCODE|OpenCode)\b/;
 const PEER_RE =
-  /\b(Claude Code|Codex|AMP|Factory Droids|Kimi Code|Pi|Forge|ACP|Cursor|OpenClaw|NanoClaw|Hermes|CLI base|Gemini CLI|\/infrastructure\/harnesses|\/api\/capabilities|supported harnesses|peer harnesses|other supported harnesses)\b/;
+  /\b(Claude Code|Codex|AMP|Factory Droids|Kimi Code|Pi|Forge|ACP|Cursor|Hermes|CLI base|Gemini CLI|\/infrastructure\/harnesses|\/api\/capabilities|supported harnesses|peer harnesses|other supported harnesses)\b/;
 
 function extension(path) {
   const dot = path.lastIndexOf(".");
