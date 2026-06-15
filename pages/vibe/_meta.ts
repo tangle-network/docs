@@ -9,7 +9,7 @@ const meta: Meta = {
     type: "separator",
     title: "Profile Schema",
   },
-  "profile-schema": "OpenCode Profile Schema",
+  "profile-schema": "Profile Schema",
   integrations: "Integrations",
 };
 

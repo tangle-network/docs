@@ -1,17 +1,21 @@
 # Profile Schema
 
-This page documents the profile schema used to configure sidecar agents. Today, the schema maps to OpenCode. Over time, additional backends will share the same profile surface where possible.
+This page documents the profile schema used to configure sidecar agents. The schema is shared across harnesses; each harness maps the fields it supports to its own config files, environment, and runtime flags.
 
 ## Current Support
 
-- **OpenCode**: Full profile support (models, permissions, tools, tool servers, plugins).
-- **Future backends**: We will document compatibility notes as new runtimes are added.
+- **Router-backed harnesses**: OpenCode, OpenClaw, NanoClaw, Hermes, AMP, and Factory Droids can accept broad model/provider routing when product policy allows it.
+- **Vendor-native harnesses**: Claude Code, Codex, and Kimi Code map best to their native provider families.
+- **CLI base**: no agent harness; shell and workflow tools only.
+
+Products can expose a subset of this list. Read runtime capabilities from the sandbox or blueprint instance instead of assuming every harness is enabled.
 
 ## Top-Level Fields
 
 - **name**: Human-friendly identifier.
 - **description**: Optional detail about what the profile is for.
 - **extends**: Name of a base profile to inherit from.
+- **harness**: Optional agent backend to request when the product allows harness selection.
 - **model**: Primary model to use, in `provider/model-id` format.
 - **small_model**: Optional secondary model for lighter tasks.
 - **agent**: Map of per-agent overrides (plan, build, explore, or custom).
