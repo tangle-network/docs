@@ -5,7 +5,7 @@ description: See exactly which providers were tried for every request.
 
 # Routing Trace
 
-Every response includes an `X-Tangle-Routing-Trace` header showing the routing path — which providers were tried, whether they succeeded, and how long each took.
+Every response includes an `X-Tangle-Routing-Trace` header showing the routing path - which providers were tried, whether they succeeded, and how long each took.
 
 ## Header format
 
@@ -29,7 +29,7 @@ The trace header is sanitized for safety:
 - Error messages are not included (only status codes)
 - Internal URLs and hostnames are never leaked
 
-For the full unredacted trace including error messages, use the [generation lookup API](/gateway/generation-lookup) — the `routing_trace` field in the response contains the complete history.
+For the full unredacted trace including error messages, use the [generation lookup API](/gateway/generation-lookup) - the `routing_trace` field in the response contains the complete history.
 
 ## Disabling
 

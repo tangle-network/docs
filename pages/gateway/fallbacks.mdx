@@ -35,9 +35,9 @@ The response comes from the first model that succeeds.
 
 For each model in the list, the gateway runs the full routing chain:
 
-1. **Operators** — try operators serving this model (if available)
-2. **LiteLLM** — try the proxy with built-in retries
-3. **Direct provider** — call the provider API directly
+1. **Operators** - try operators serving this model (if available)
+2. **LiteLLM** - try the proxy with built-in retries
+3. **Direct provider** - call the provider API directly
 
 If all tiers fail for a model, the gateway moves to the next model in the list.
 

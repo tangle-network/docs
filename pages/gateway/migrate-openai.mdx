@@ -20,7 +20,7 @@ Tangle Gateway is OpenAI-compatible. Change two lines and you're done.
 
   response = client.chat.completions.create(
 -     model="gpt-4o",
-+     model="openai/gpt-4o",  # or just "gpt-4o" — auto-resolved
++     model="openai/gpt-4o",  # or just "gpt-4o" - auto-resolved
       messages=[{"role": "user", "content": "Hello"}]
   )
 ```

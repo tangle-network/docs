@@ -58,7 +58,7 @@ The operator must post `config.disputeBond` in native asset. `SLASH_ADMIN` posts
 
 A `SLASH_ADMIN_ROLE` holder that is also the `proposer` of a slash CANNOT dispute their own
 proposal. Without this, a single role-holder could propose, immediately self-dispute (no bond),
-and freeze operator stake for the full `disputeResolutionDeadline` window — and (when
+and freeze operator stake for the full `disputeResolutionDeadline` window - and (when
 `treasury == admin`) capture the operator's bond on auto-execution. To dispute as
 `SLASH_ADMIN`, route the dispute through a different admin-keyed account or the operator.
 

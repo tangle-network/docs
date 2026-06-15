@@ -5,7 +5,7 @@ import { Callout } from "nextra/components";
 TNT migration moves eligible legacy Substrate balances into the canonical TNT token on EVM. Claims are verified using a Merkle tree and an SP1 zero-knowledge proof, then distributed with a vesting schedule.
 
 <Callout emoji="⚠️">
-  The claim window and unlock parameters are defined by the on-chain migration contract. The claims portal shows the current deadline and vesting configuration.
+  The on-chain migration contract defines when eligible balances can migrate and how tokens are released. The portal shows the current deadline, immediately available amount, and release schedule.
 </Callout>
 
 Contract sources (GitHub):

@@ -2,6 +2,15 @@
 
 The runtime is split into an orchestrator and execution sidecars so workloads stay isolated while coordination stays flexible.
 
+The runtime has two operating modes:
+
+| Mode                    | Source of truth                                                                                    |
+| ----------------------- | -------------------------------------------------------------------------------------------------- |
+| Tangle-managed API mode | Product access, profiles, API keys, and hosted orchestration state.                                |
+| Onchain service mode    | Blueprint registration, service instances, operator commitments, and payment settlement on Tangle. |
+
+Both modes isolate work, stream events, and keep execution reviewable. The app should show which mode a user is entering before it asks them to trust an operator endpoint.
+
 ## Core Components
 
 - **Orchestrator**: Accepts run requests, validates policy, selects hosts, and manages sidecar lifecycle.
@@ -19,3 +28,13 @@ This architecture keeps workloads portable while maintaining consistent safety g
 - **Capacity-aware placement**: Allocate based on host health and resource limits.
 - **Resilient streams**: Event buffering and replay support intermittent connections.
 - **Policy-first execution**: Every task is validated before it runs.
+
+## Readiness Checks
+
+Before routing a user into a runtime, the app should verify:
+
+1. The session API is reachable from the client or server path that will use it.
+2. The selected host has capacity for the requested CPU, memory, disk, and timeout.
+3. The profile allows the requested tools, domains, files, secrets, and model provider.
+4. The runtime emits events for start, tool calls, file changes, completion, and failure.
+5. For protocol-backed services, the service instance and operator endpoint match the chain state the app is displaying.

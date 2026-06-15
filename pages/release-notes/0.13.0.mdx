@@ -41,7 +41,7 @@ typehash level.
 
 - Add `requester` to the `QuoteDetails` typed-data hash as the first member.
 - Add `requester` to the `JobQuoteDetails` typed-data hash as the first member.
-- Sign per-caller quotes; do **not** emit wildcard quotes — they are rejected on-chain.
+- Sign per-caller quotes; do **not** emit wildcard quotes - they are rejected on-chain.
 - Pre-fix signatures fail signature recovery against the new typehash and must be regenerated.
 
 See [pricing & payments](/developers/blueprints/pricing-and-payments) for the updated
@@ -62,8 +62,8 @@ any slash event because the interface declared smaller, legacy shapes.
 
 | Event                | Old fields     | New fields                                                                                                      |
 | -------------------- | -------------- | --------------------------------------------------------------------------------------------------------------- |
-| `SlashProposed`      | 4              | 8 — `slashId`, `serviceId`, `operator`, `proposer`, `slashBps`, `effectiveSlashBps`, `evidence`, `executeAfter` |
-| `SlashExecuted`      | 3              | 4 — `slashId`, `serviceId`, `operator`, `actualSlashed`                                                         |
+| `SlashProposed`      | 4              | 8 - `slashId`, `serviceId`, `operator`, `proposer`, `slashBps`, `effectiveSlashBps`, `evidence`, `executeAfter` |
+| `SlashExecuted`      | 3              | 4 - `slashId`, `serviceId`, `operator`, `actualSlashed`                                                         |
 | `SlashDisputed`      | (not declared) | `slashId`, `disputer`, `reason`                                                                                 |
 | `SlashCancelled`     | (not declared) | `slashId`, `canceller`, `reason`                                                                                |
 | `SlashConfigUpdated` | (not declared) | full `SlashConfig` tuple (6 fields)                                                                             |
@@ -86,7 +86,7 @@ See [`ITangleSlashing`](/developers/api/reference/ITangleSlashing) and
 function forceRemoveAllowsBelowMin(uint64 serviceId) external view returns (bool ok);
 ```
 
-Default in `BlueprintServiceManagerBase` is `false` — the protocol enforces
+Default in `BlueprintServiceManagerBase` is `false` - the protocol enforces
 `operatorCount > minOperators` on `forceRemoveOperator`. Custom BSMs that do **not**
 inherit `BlueprintServiceManagerBase` MUST implement this hook explicitly; an
 unimplemented or reverting view fails closed and the eviction reverts as soon as it
@@ -146,8 +146,8 @@ the configured floor and bias the operator set toward sybils.
 little-endian byte-swap on SSZ-packed `uint64` fields. EigenPod-CLI fixtures decode
 correctly out of the box; hand-rolled proof builders that pack values into the low 8
 bytes of the chunk (or use big-endian) will be rejected. Real EigenPod proofs would
-silently mis-account every `uint64` field — every effective balance, exit epoch, and
-validator balance — under the previous code.
+silently mis-account every `uint64` field - every effective balance, exit epoch, and
+validator balance - under the previous code.
 
 If you maintain a proof builder, regenerate fixtures with the canonical SSZ packing
 and pin the 32-ETH leaf regression test that ships with v0.13.0.
@@ -178,7 +178,7 @@ and pin the 32-ETH leaf regression test that ships with v0.13.0.
    `forceRemoveAllowsBelowMin(uint64) -> bool` (return `false` unless you genuinely need
    emergency-eviction-below-min).
 4. **MBSM operators**: do not pin a blueprint to a revision that is in the deprecation
-   grace window — `pinBlueprint` will revert. Wait until the deprecation completes or
+   grace window - `pinBlueprint` will revert. Wait until the deprecation completes or
    pick a different revision.
 5. **L2 slashing receiver operators**: budget for two-step rotations of `messenger`
    and `slasher`. Queue with `setMessenger` / `setSlasher`, then schedule

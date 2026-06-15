@@ -30,7 +30,7 @@ Tangle ties together three layers most platforms separate: the workbench where w
 Sandboxed runtimes with isolation, resource limits, and audit logs. This is where tasks actually run.
 
 **2) Inference Layer**  
-The [Gateway](/gateway) routes inference requests across centralized providers and decentralized operators. It handles model selection, compliance filtering ([ZDR](/gateway/zdr), [no-train](/gateway/no-train)), [BYOK](/gateway/byok) credential management, and billing.
+The [Gateway](/gateway) routes inference requests across provider APIs and registered operators. It handles model selection, compliance filtering ([ZDR](/gateway/zdr), [no-train](/gateway/no-train)), [BYOK](/gateway/byok) credential management, and billing.
 
 **3) Protocol Layer**  
 The coordination plane. It handles operator discovery, payment routing, and incentive enforcement.
@@ -66,7 +66,7 @@ Autonomous work only scales when delegation is safe. Tangle enforces policy gate
 ## Design Pillars
 
 - **Isolation first**: Every workload runs inside a sandbox with explicit permissions.
-- **Verifiable outcomes**: Logs, metadata, and evaluations make results auditable.
+- **Reviewable outcomes**: Logs, metadata, and evaluations give reviewers evidence about what ran and how it performed.
 - **Composable services**: Blueprints define reusable services that can be instantiated on demand.
 - **Economic alignment**: Operators and developers earn based on usage and reliability.
 - **Developer speed**: Workflows are testable, repeatable, and easy to ship.

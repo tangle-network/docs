@@ -10,6 +10,8 @@ Orchestration turns workbench intent into sandboxed execution. It coordinates si
 4. Events stream to clients with buffering and replay support.
 5. Completion, failure, or cancellation updates metrics and metadata.
 
+The orchestrator should fail before allocation when policy or capacity is invalid. Once a sidecar starts, failures should be visible as session events and metrics, not hidden as missing output.
+
 ## What Orchestration Covers
 
 - **Placement and capacity**: Host health, resource-aware limits, and pool membership.
@@ -19,3 +21,15 @@ Orchestration turns workbench intent into sandboxed execution. It coordinates si
 - **Observability hooks**: Health endpoints and metrics for fleet visibility.
 
 This is how the workbench and protocol workloads remain predictable even when the compute layer is distributed.
+
+## Operator Preflight
+
+For a hosted pool or protocol-backed operator endpoint, check these before accepting traffic:
+
+| Check                                              | Why it matters                                                          |
+| -------------------------------------------------- | ----------------------------------------------------------------------- |
+| `/health` or equivalent host probe returns healthy | The process and required dependencies are up.                           |
+| A new session can be created and cancelled         | Lifecycle control works before customer work starts.                    |
+| A short command or prompt emits events             | Streaming and execution are wired through the same path users will hit. |
+| Capacity counters move after the run               | Placement decisions are using live resource state.                      |
+| Failure events include a reason                    | Operators can debug without guessing which subsystem failed.            |

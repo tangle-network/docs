@@ -165,7 +165,7 @@ let result = BlueprintRunner::builder(tangle_config, env)
 
 The `run` method starts the Blueprint Runner and returns a result indicating whether it ran successfully or encountered an error.
 
-With this, the Blueprint Runner, the centerpoint of your Blueprint is ready to be used!
+With this, the Blueprint Runner can start and serve the components you attached to the builder.
 
 ## Next Steps
 
@@ -175,6 +175,6 @@ After building your Blueprint Runner, you might want to explore:
 - [Producer Patterns](/developers/blueprint-runner/producers#producer-patterns)
 - [Consumer Patterns](/developers/blueprint-runner/consumers#consumer-patterns)
 
-## Conclusion
+## Before You Ship
 
-Building a Blueprint Runner involves setting up various components that work together to execute your Tangle Blueprint. By following this guide and adhering to best practices, you can create a robust and efficient Blueprint Runner for your blueprint service on the Tangle Network.
+Run the runner against a local node or testnet, submit one real job, and keep the transaction hash plus runner logs. A runner is ready for operators only after it can start, receive a job, execute the handler, and return the expected result.

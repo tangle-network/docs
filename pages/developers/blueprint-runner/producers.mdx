@@ -97,6 +97,6 @@ Now that you understand producers, learn about:
 - [Consumers](/developers/blueprint-runner/consumers) - How to handle job results
 - [Building a Blueprint Runner](/developers/blueprint-runner/building) - Step-by-step guide to building your own Blueprint Runner
 
-## Conclusion
+## Before You Ship
 
-Producers are essential components that capture and prepare events for processing in your Blueprint Runner. By implementing robust and efficient producers, you can ensure that your Blueprint reliably processes desired events.
+Run the producer against the real event source or a recorded fixture. It should emit the same `JobCall` shape the router expects, preserve ordering where the service requires it, and stop cleanly when the runner shuts down.

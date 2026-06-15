@@ -11,7 +11,7 @@ There are three related surfaces:
 
 | Surface                            | Source of truth                             | Current harness set                                                                                                                                                                                                 |
 | ---------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Published Sandbox SDK              | `@tangle-network/sandbox` `BackendType`     | OpenCode, Claude Code, Kimi Code, Codex, AMP, Factory Droids, Pi, Hermes, Forge, OpenClaw, ACP, Cursor, and CLI base.                                                                                               |
+| Published Sandbox SDK              | `@tangle-network/sandbox` `BackendType`     | OpenCode, Claude Code, Kimi Code, Codex, AMP, Factory Droids, Pi, Hermes, Forge, OpenClaw, NanoClaw, ACP, Cursor, and CLI base.                                                                                     |
 | Current Sandbox UI picker          | `sandbox-ui` harness picker                 | OpenCode, Claude Code, Codex, AMP, Factory Droids, Kimi Code, OpenClaw, NanoClaw, Hermes, and CLI base. The picker defers SDK backends such as Pi, Forge, ACP, and Cursor until copy and compatibility policy land. |
 | AI Agent Sandbox blueprint sidecar | The operator's `/api/capabilities` response | Claude Code, Codex, OpenCode, Kimi Code, and Gemini CLI in the current `ghcr.io/tangle-network/blueprint-sidecar:all-harness` image.                                                                                |
 
@@ -35,11 +35,12 @@ The published SDK accepts these backend types:
 | Hermes         | Hermes coding harness.                                           |
 | Forge          | SDK backend type; not surfaced in the current Sandbox UI picker. |
 | OpenClaw       | Dispatcher path for Claude, Codex, and Gemini CLIs.              |
+| NanoClaw       | Local socket-bridge agent backend.                               |
 | ACP            | Agent Client Protocol bridge for ACP-compliant agent binaries.   |
 | Cursor         | Cursor Agent SDK backend.                                        |
 | CLI base       | Shell and workflow tools without a coding harness.               |
 
-The current Sandbox UI picker also surfaces NanoClaw, a local socket-bridge agent backend, while deferring Pi, Forge, ACP, and Cursor. Product docs should say which surface they mean.
+The current Sandbox UI picker exposes OpenClaw and NanoClaw while deferring Pi, Forge, ACP, and Cursor. Product docs should say which surface they mean and should prefer `/api/capabilities` for live operator surfaces.
 
 These are execution harnesses, not routing categories. Every coding harness runs inside the sandbox. Unless a profile, user setting, or operator config points elsewhere, model calls go through Tangle Router. Do not describe routing as a property of one harness.
 
@@ -60,7 +61,7 @@ Read `GET /api/capabilities` before rendering a harness choice. The image tag is
 
 Any public copy that names OpenCode must name the peer harnesses or link to this page. The correct framing is:
 
-> The sandbox supports multiple harnesses. OpenCode is one adapter beside Claude Code, Kimi Code, Codex, AMP, Factory Droids, Pi, Hermes, Forge, OpenClaw, ACP, Cursor, CLI base, and blueprint sidecar images that may advertise a smaller set through `/api/capabilities`.
+> The sandbox supports multiple harnesses. OpenCode is one adapter beside Claude Code, Kimi Code, Codex, AMP, Factory Droids, Pi, Hermes, Forge, OpenClaw, NanoClaw, ACP, Cursor, CLI base, and blueprint sidecar images that may advertise a smaller set through `/api/capabilities`.
 
 The wrong framing is:
 

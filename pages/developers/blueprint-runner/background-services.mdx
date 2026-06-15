@@ -86,6 +86,6 @@ Now that you understand background services, it might be helpful to take a look 
 - [Consumers](/developers/blueprint-runner/consumers) - How to handle job results
 - [Building a Blueprint Runner](/developers/blueprint-runner/building) - Step-by-step guide to building your own Blueprint Runner
 
-## Conclusion
+## Before You Ship
 
-Background services are powerful components that enhance the capabilities of your Blueprint Runner by providing continuous support operations. By implementing well-designed background services, you can build more robust, efficient, and feature-rich Blueprints.
+Verify that each background service starts, reports failure, and shuts down cleanly. If the service owns a connection, lock, or local process, its shutdown handler should release that resource before the runner exits.
