@@ -1,14 +1,14 @@
 # Profile Schema
 
-This page documents the profile schema used to configure sidecar agents. The schema is shared across harnesses; each harness maps the fields it supports to its own config files, environment, and runtime flags.
+This page documents the profile schema used to configure sidecar agents. The schema is shared across sandbox harnesses; each harness maps the fields it supports to its own config files, environment, and runtime flags.
 
 ## Current Support
 
-- **Router-backed harnesses**: OpenCode, OpenClaw, NanoClaw, Hermes, AMP, and Factory Droids can accept broad model/provider routing when product policy allows it.
-- **Vendor-native harnesses**: Claude Code, Codex, and Kimi Code map best to their native provider families.
-- **CLI base**: no agent harness; shell and workflow tools only.
+- **Sandbox SDK backends**: OpenCode, Claude Code, Kimi Code, Codex, AMP, Factory Droids, Pi, Hermes, Forge, OpenClaw, ACP, Cursor, and CLI base.
+- **Sandbox UI picker**: the current picker exposes OpenCode, Claude Code, Codex, AMP, Factory Droids, Kimi Code, OpenClaw, NanoClaw, Hermes, and CLI base while deferring Pi, Forge, ACP, and Cursor.
+- **Blueprint sidecar**: the AI Agent Sandbox blueprint's current all-harness sidecar advertises Claude Code, Codex, OpenCode, Kimi Code, and Gemini CLI through `/api/capabilities`.
 
-Products can expose a subset of this list. Read runtime capabilities from the sandbox or blueprint instance instead of assuming every harness is enabled.
+Products can expose a subset of these lists. Read runtime capabilities from the sandbox or blueprint service instance instead of assuming every harness is enabled. See [Sandbox Harnesses](/infrastructure/harnesses).
 
 ## Top-Level Fields
 
@@ -75,7 +75,7 @@ The `mcp` field defines allowlisted tool servers. Each entry is either:
   - `enabled`: optional boolean
   - `timeout`: optional milliseconds
 
-Local tool servers are typically restricted by policy in production environments.
+Production policy can block local tool servers.
 
 ## Plugins
 

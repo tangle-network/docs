@@ -14,14 +14,15 @@ const getStartedCards = [
   },
   {
     icon: <GrNodes />,
-    title: "Run work in secure sandboxes",
+    title: "Run work in isolated sandboxes",
     description: "Work executes in isolated runtimes with policies and limits.",
     link: "/infrastructure/introduction",
   },
   {
     icon: <GiToken />,
     title: "Operate the runtime",
-    description: "Host secure sandboxes and get paid through the protocol.",
+    description:
+      "Host protocol-backed runtimes and get paid through the protocol.",
     link: "/operators/introduction",
   },
   {
@@ -51,9 +52,10 @@ const LandingPage = () => {
             </h1>
             <p className="text-lg font-bold text-gray-700 md:font-normal lg:text-lg dark:text-gray-400">
               Teams and agents collaborate in shared workbenches or separate
-              ones, work runs in secure sandboxes, and the protocol pays the
-              operators who host the runtime. Workflows improve through agent
-              and task evaluations collected from each run.
+              ones, work runs in isolated sandboxes with explicit limits, and
+              the protocol pays operators who host protocol-backed services.
+              Workflows improve through agent and task evaluations collected
+              from each run.
             </p>
           </div>
 
@@ -79,8 +81,8 @@ const LandingPage = () => {
           </h2>
           <p className="mb-6 text-base text-gray-700 dark:text-gray-400">
             Teams and agents collaborate in shared workbenches or separate ones,
-            work runs in secure sandboxes, and the protocol pays the operators
-            who host the runtime.
+            work runs in isolated sandboxes with explicit limits, and the
+            protocol pays operators who host protocol-backed services.
           </p>
           <figure className="w-full">
             <div className="relative w-full min-h-[280px]">
