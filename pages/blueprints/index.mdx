@@ -13,16 +13,16 @@ The live unit is a service instance. A user requests it, picks registered operat
 
 If you only remember one model, use this:
 
-| Layer                 | Plain meaning                                                                                  |
-| --------------------- | ---------------------------------------------------------------------------------------------- |
-| Blueprint             | The recipe: jobs, metadata, binaries, contracts, and app policy.                               |
-| Operator registration | An operator says, on-chain, "I can run this recipe."                                           |
-| Service request       | A user chooses parameters and the operators that should serve them.                            |
-| Service instance      | The running service created from that request.                                                 |
-| Job                   | A command against one service instance. Jobs change state or ask operators to do work.         |
-| Query                 | A read from contracts, the indexer, or an operator API. Queries should not be modeled as jobs. |
+| Layer                 | Plain meaning                                                                                                               |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Blueprint             | The recipe: jobs, metadata, binaries, contracts, and app policy.                                                            |
+| Operator registration | An operator says, on-chain, "I can run this recipe."                                                                        |
+| Service request       | A user chooses parameters and the operators that should serve them.                                                         |
+| Service instance      | The running service created from that request.                                                                              |
+| Job                   | A command against one service instance. Jobs change state or ask operators to do work.                                      |
+| Query                 | A read from contracts, a shared protocol indexer when available, or an operator API. Queries should not be modeled as jobs. |
 
-The indexer turns protocol events into app state. It can tell the dapp which blueprints exist, which operators registered, which service instances were created, which jobs landed, and which endpoints operators advertised. It does not prove that an endpoint is healthy, honest, or serving the right model. Product pages still need operator API checks, contract reads, attestations, settlement receipts, or proof systems.
+A shared protocol indexer can turn protocol events into app state. It can tell the dapp which blueprints exist, which operators registered, which service instances were created, which jobs landed, and which endpoints operators advertised. It is not part of the three product blueprint repos documented here, and it does not prove that an endpoint is healthy, honest, or serving the right model. Product pages still need operator API checks, contract reads, attestations, settlement receipts, or proof systems.
 
 ## First-party blueprint products
 

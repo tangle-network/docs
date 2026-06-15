@@ -1,13 +1,15 @@
 ---
-title: AI Agent Sandbox Dapp and Indexer
-description: Dapp metadata, iframe policy, indexed state, and live health boundaries for AI Agent Sandbox.
+title: AI Agent Sandbox Dapp Integration
+description: Dapp metadata, iframe policy, protocol state, and live health boundaries for AI Agent Sandbox.
 ---
 
-# AI Agent Sandbox Dapp and Indexer
+# AI Agent Sandbox Dapp Integration
 
 Tangle Cloud should launch the hosted sandbox app from metadata, then keep the raw protocol page one click away.
 
 The hosted app owns the sandbox UX. The protocol page owns raw state inspection.
+
+The AI Agent Sandbox repo does not ship a dedicated indexer today. Treat protocol state as data the dapp can read from contracts or a shared protocol indexing layer when one is available. Do not make an indexer part of the blueprint operator path.
 
 ## Metadata the dapp should use
 
@@ -21,7 +23,7 @@ The hosted app owns the sandbox UX. The protocol page owns raw state inspection.
 
 The metadata also declares cloud, dedicated instance, and TEE instance modes. Use those records to route service creation to the right blueprint ID for the selected network.
 
-## Indexed state
+## Protocol state
 
 | State                                   | Why the dapp needs it                                       |
 | --------------------------------------- | ----------------------------------------------------------- |
@@ -33,11 +35,11 @@ The metadata also declares cloud, dedicated instance, and TEE instance modes. Us
 | Jobs                                    | Show lifecycle and workflow commands.                       |
 | Heartbeats                              | Separate "not ready yet" from "operator stopped reporting." |
 
-The indexer should preserve enough history to distinguish pending provisioning from operator failure. The hosted app should not have to guess.
+The dapp should preserve enough protocol history to distinguish pending provisioning from operator failure. That history can come from direct chain reads, a shared protocol indexer, or another canonical protocol-state service. It is not a separate component shipped by this blueprint.
 
 ## Live checks
 
-Indexed state is not enough to open a terminal or inject a secret. Before showing a sandbox as usable, the app should check:
+Protocol state is not enough to open a terminal or inject a secret. Before showing a sandbox as usable, the app should check:
 
 1. operator API reachability
 2. session auth challenge/session flow
@@ -51,12 +53,12 @@ For TEE mode, the app should also expose attestation status and avoid presenting
 
 The sandbox app is iframe-first. The parent dapp should:
 
-| Rule                                                            | Reason                                                                      |
-| --------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Restrict iframe hosts to trusted suffixes and manifest entries. | Prevent arbitrary operator metadata from embedding a hostile app.           |
-| Pass parent origin and chain context explicitly.                | Lets the child app request wallet operations through the parent.            |
-| Keep wallet approval in the parent.                             | Users should see the same wallet confirmation model across Tangle Cloud.    |
-| Keep a link to raw protocol state.                              | Operators and support need chain/indexer state when the hosted app is down. |
+| Rule                                                            | Reason                                                                                   |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Restrict iframe hosts to trusted suffixes and manifest entries. | Prevent arbitrary operator metadata from embedding a hostile app.                        |
+| Pass parent origin and chain context explicitly.                | Lets the child app request wallet operations through the parent.                         |
+| Keep wallet approval in the parent.                             | Users should see the same wallet confirmation model across Tangle Cloud.                 |
+| Keep a link to raw protocol state.                              | Operators and support need chain and service-instance state when the hosted app is down. |
 
 ## Bad copy to avoid
 

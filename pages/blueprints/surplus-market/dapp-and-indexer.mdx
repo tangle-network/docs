@@ -1,13 +1,15 @@
 ---
-title: Surplus Market Dapp and Indexer
-description: Dapp routing, metadata gaps, and indexer requirements for the Surplus Market blueprint.
+title: Surplus Market Dapp Integration
+description: Dapp routing, metadata gaps, protocol state, and live venue checks for the Surplus Market blueprint.
 ---
 
-# Surplus Market Dapp and Indexer
+# Surplus Market Dapp Integration
 
 Surplus is live as a hosted app at `https://surplus-market.pages.dev/`.
 
 Tangle Cloud should treat it as a first-party link-out until the repo publishes rich `blueprintUi` metadata and a `*.blueprint.tangle.tools` iframe host. Do not pretend it has the same iframe contract as Sandbox and Trading yet.
+
+The Surplus repo does not ship a dedicated indexer today. The product app can read protocol state from contracts or a shared protocol indexing layer when one exists, but the venue, order book, settlement outbox, and inference redemption state live in the product/operator path.
 
 ## Current metadata
 
@@ -26,12 +28,12 @@ It does not yet include the rich `blueprintUi` object used by Sandbox and Tradin
 | Route             | Behavior                                                       |
 | ----------------- | -------------------------------------------------------------- |
 | Product app       | Link to `https://surplus-market.pages.dev/`.                   |
-| Protocol fallback | Preserve the raw indexed blueprint and service-instance route. |
+| Protocol fallback | Preserve the raw blueprint and service-instance route.         |
 | Future iframe     | Use only after a trusted host and iframe policy are published. |
 
 The product app owns market UX. The protocol fallback owns chain and service inspection.
 
-## Indexed state
+## Protocol state
 
 | State                                 | Why the dapp needs it                                           |
 | ------------------------------------- | --------------------------------------------------------------- |
@@ -42,7 +44,7 @@ The product app owns market UX. The protocol fallback owns chain and service ins
 | Endpoint metadata                     | Route app checks and operator inspection.                       |
 | Heartbeats                            | Distinguish dead venues from quiet books.                       |
 
-## Product state that does not belong only in the indexer
+## Product state that is not protocol state
 
 The app needs live product checks for:
 
@@ -56,7 +58,7 @@ The app needs live product checks for:
 - attester quorum
 - inference backend health
 
-The indexer can show that a job happened. It cannot prove that a credit lot was redeemed or that a model request was served honestly. Use settlement receipts, spend vouchers, attester signatures, SP1 proofs, or operator API responses for those claims.
+Protocol state can show that a job happened. It cannot prove that a credit lot was redeemed or that a model request was served honestly. Use settlement receipts, spend vouchers, attester signatures, SP1 proofs, or operator API responses for those claims.
 
 ## User-facing states
 

@@ -1,6 +1,6 @@
 ---
 title: Dapp Integration
-description: How Tangle Cloud should route blueprint apps, use indexed state, and prove local staking flows.
+description: How the dapp should route blueprint apps, show service state, and prove local staking flows.
 ---
 
 # Dapp Integration
@@ -37,14 +37,14 @@ Do not build around one agent harness, one venue, or one operator URL. Route fro
 
 | State                         | Source                                                                                                     |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Blueprint exists              | Indexer over blueprint creation and metadata updates.                                                      |
+| Blueprint exists              | Contract reads or shared protocol indexing over blueprint creation and metadata updates.                   |
 | Operator can serve it         | Operator registration and endpoint metadata.                                                               |
 | Service instance exists       | Service request, approval, and activation events.                                                          |
-| Job was submitted             | Indexed job events.                                                                                        |
+| Job was submitted             | Protocol job events.                                                                                       |
 | Product is healthy            | Operator API, app-level probe, or blueprint-specific proof path.                                           |
 | Product result is trustworthy | Contract state, attestation, settlement receipt, SP1 proof, signed report, or product-specific validation. |
 
-The indexer is discovery infrastructure. It tells the dapp what the protocol saw. It does not replace runtime health checks.
+Shared protocol indexing is discovery infrastructure when it exists. It tells the dapp what the protocol saw. It is not shipped by these product blueprint repos, and it does not replace runtime health checks.
 
 ## Failure states worth showing
 
@@ -89,14 +89,14 @@ The direct local staking gate must exercise real contract calls for:
 6. schedule withdraw
 7. execute withdraw
 
-The browser gate should prove the same actions through the UI. If local GraphQL/indexer noise blocks the browser run, say that plainly and keep the direct contract gate as the hard proof. Do not claim the browser gate passed unless it did.
+The browser gate should prove the same actions through the UI. If local GraphQL or protocol-state noise blocks the browser run, say that plainly and keep the direct contract gate as the hard proof. Do not claim the browser gate passed unless it did.
 
 ## Implementation rules
 
-| Rule                                                          | Reason                                                                          |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Prefer metadata and iframe policy over bespoke React modules. | New first-party apps should not require a dapp redeploy for every route change. |
-| Keep the generic protocol route.                              | Operators and auditors need raw chain/indexer state.                            |
-| Use operator APIs for live product state.                     | The indexer cannot tell whether a bot, sandbox, or venue is healthy right now.  |
-| Keep jobs for commands, not reads.                            | Job history should mean work was requested.                                     |
-| Show unavailable, pending, failed, and healthy separately.    | Each state has a different fix.                                                 |
+| Rule                                                          | Reason                                                                            |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Prefer metadata and iframe policy over bespoke React modules. | New first-party apps should not require a dapp redeploy for every route change.   |
+| Keep the generic protocol route.                              | Operators and auditors need raw chain and service-instance state.                 |
+| Use operator APIs for live product state.                     | Protocol state cannot tell whether a bot, sandbox, or venue is healthy right now. |
+| Keep jobs for commands, not reads.                            | Job history should mean work was requested.                                       |
+| Show unavailable, pending, failed, and healthy separately.    | Each state has a different fix.                                                   |
