@@ -58,12 +58,12 @@ Trading bots can run deterministic ticks without model provider keys. Agentic ac
 
 Current repo examples include:
 
-| Key                 | Used for                                                                 |
-| ------------------- | ------------------------------------------------------------------------ |
-| `ZAI_API_KEY`       | Z.ai based agentic flows.                                                |
-| `ANTHROPIC_API_KEY` | Anthropic model access.                                                  |
-| `TANGLE_API_KEY`    | Tangle-hosted/Router-backed model or telemetry paths depending on setup. |
-| `OPENCODE_MODEL_*`  | opencode provider/model routing inside the sidecar.                      |
+| Key                 | Used for                                                                                           |
+| ------------------- | -------------------------------------------------------------------------------------------------- |
+| `ZAI_API_KEY`       | Z.ai based agentic flows.                                                                          |
+| `ANTHROPIC_API_KEY` | Anthropic model access.                                                                            |
+| `TANGLE_API_KEY`    | Tangle Router model calls or Tangle-hosted telemetry paths depending on setup.                     |
+| `OPENCODE_MODEL_*`  | OpenCode model settings when the sidecar advertises OpenCode beside the other supported harnesses. |
 
 If an operator sets keys, the operator pays unless another billing path is wired. There is no default per-bot LLM budget guard. Use allowlists, capacity caps, and provider billing limits.
 

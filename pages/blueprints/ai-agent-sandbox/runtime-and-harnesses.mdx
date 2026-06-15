@@ -7,7 +7,7 @@ description: Runtime backends, capability discovery, harnesses, and AI credentia
 
 The sandbox is the product. Harnesses are tools inside the sandbox.
 
-Do not describe this blueprint as an OpenCode integration, a Codex integration, or a Claude integration. A service instance asks the operator for runtime capabilities. The operator answers through `GET /api/capabilities`.
+Do not describe this blueprint as an OpenCode integration, a Codex integration, or a Claude integration. The Sandbox SDK supports OpenCode plus 12 peer backend types: Claude Code, Kimi Code, Codex, AMP, Factory Droids, Pi, Hermes, Forge, OpenClaw, ACP, Cursor, and CLI base. A blueprint service instance asks its operator for the live runtime set through `GET /api/capabilities`.
 
 ## Runtime backends
 
@@ -32,17 +32,17 @@ The current operator API returns two categories:
 | `computer_use` | Enables browser/computer-use sidecar services. |
 | `all_harness`  | Requests the all-harness sidecar runtime.      |
 
-The current all-harness sidecar in this repo installs:
+The current AI Agent Sandbox blueprint all-harness sidecar in this repo installs:
 
 | Harness     | ID            |
 | ----------- | ------------- |
 | Claude Code | `claude-code` |
 | Codex       | `codex`       |
-| opencode    | `opencode`    |
+| OpenCode    | `opencode`    |
 | Kimi Code   | `kimi-code`   |
 | Gemini CLI  | `gemini`      |
 
-This list is not the blueprint ABI. It is the operator's advertised capability set. A new sidecar image can add or remove harnesses while the blueprint jobs stay the same.
+This list is not the blueprint ABI, and it is smaller than the centralized sandbox picker. It is the operator's advertised capability set. A new sidecar image can add or remove harnesses while the blueprint jobs stay the same.
 
 ## Sidecar image
 
@@ -70,13 +70,13 @@ Operators should scope provider keys to the service instance. The blueprint ABI 
 
 Common credential locations remain harness-specific:
 
-| Harness family | Typical config                                                         |
-| -------------- | ---------------------------------------------------------------------- |
-| Claude Code    | `/root/.claude` or `ANTHROPIC_API_KEY` style provider config.          |
-| Codex          | `/root/.codex` or OpenAI provider config.                              |
-| opencode       | `/root/.config/opencode`, `/root/.opencode`, or opencode provider env. |
-| Kimi           | `/root/.kimi` or `/root/.config/kimi`.                                 |
-| Gemini         | `/root/.gemini` or Google provider config.                             |
+| Harness family | Typical config                                                               |
+| -------------- | ---------------------------------------------------------------------------- |
+| Claude Code    | `/root/.claude` or `ANTHROPIC_API_KEY` style provider config.                |
+| Codex          | `/root/.codex` or OpenAI provider config.                                    |
+| OpenCode       | `/root/.config/opencode`, `/root/.opencode`, or OpenCode model/env settings. |
+| Kimi           | `/root/.kimi` or `/root/.config/kimi`.                                       |
+| Gemini         | `/root/.gemini` or Google provider config.                                   |
 
 The operator protects the session token, sidecar auth token, provider keys, and sandbox secrets. Losing one of those is a product incident, not a docs footnote.
 

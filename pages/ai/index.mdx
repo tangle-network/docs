@@ -1,11 +1,11 @@
 ---
 title: AI
-description: The shared operating layer for autonomous work, unifying the agentic workbench, secure sandboxes, and operator payments.
+description: The shared operating layer for autonomous work, unifying the agentic workbench, isolated sandboxes, and operator payments.
 ---
 
 # AI
 
-Tangle is the shared operating layer for autonomous work. Teams and agents collaborate in shared workbenches or separate ones, work runs in secure sandboxes, and the protocol pays the operators who host the runtime. Workflows improve through agent and task evaluations collected from each run.
+Tangle is the shared operating layer for autonomous work. Teams and agents collaborate in shared workbenches or separate ones, work runs in isolated sandboxes with explicit policies and resource limits, and the protocol pays the operators who host protocol-backed services. Workflows improve through agent and task evaluations collected from each run.
 
 <figure>
   <img
@@ -30,9 +30,9 @@ Key traits:
 - **Simulations** for evaluating workflows across many tasks.
 - **Integrations** for connecting internal tools and data.
 
-## Secure Sandbox Runtime
+## Sandbox Runtime
 
-Work executes inside isolated sandboxes so tasks are contained and repeatable. The runtime is built to host autonomous work safely at scale.
+Work executes inside isolated sandboxes so tasks are contained and repeatable. The runtime separates lifecycle control from execution through an orchestrator and sidecar, then applies policy and resource limits before the task runs.
 
 Core capabilities:
 
@@ -46,18 +46,18 @@ Each run produces task and agent evaluations. That data feeds back into the work
 
 ## Inference Gateway
 
-The [Tangle Gateway](/gateway) is the inference routing layer. Agents and applications call a single API to access hundreds of models across centralized providers and decentralized operators. The gateway handles model selection, compliance routing, billing, and payment settlement.
+The [Tangle Gateway](/gateway) is the hosted inference routing layer. Agents and applications call one API, and the gateway applies provider policy, model selection, compliance filters, billing, and settlement rules before forwarding the request.
 
 Key capabilities:
 
 - **One API, any model.** OpenAI, Anthropic, Google, Groq, and 20+ providers.
-- **Decentralized operators.** Route to operators on the Tangle network who compete on price and latency.
+- **Operator routing.** Route to registered operators when a request pins an operator path or uses SpendAuth.
 - **Compliance.** [Zero Data Retention](/gateway/zdr) and [no-train](/gateway/no-train) routing with verified provider agreements.
-- **On-chain payments.** [SpendAuth](/gateway/spend-auth) — pay operators directly without a credit card.
+- **On-chain payments.** [SpendAuth](/gateway/spend-auth) lets users pay operators directly without a credit card.
 
 ## Learn More
 
-- [Gateway — Getting Started](/gateway/getting-started)
+- [Gateway: Getting Started](/gateway/getting-started)
 - [Workbench details](/vibe/introduction)
 - [Runtime and sandboxing](/infrastructure/introduction)
 - [Operator onboarding](/operators/introduction)
