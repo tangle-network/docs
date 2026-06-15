@@ -17,23 +17,23 @@ A blueprint is the template. It defines what can be run: jobs, metadata, binarie
 4. Operators approve or join the request.
 5. The service instance becomes active.
 6. The user submits jobs to that service instance.
-7. Apps read chain state, indexed state, and operator APIs to show what happened.
+7. Apps read chain state, shared indexed protocol state when available, and operator APIs to show what happened.
 
 The service instance is the boundary for state, auth, and billing. If a page says the template itself is live, read that as a wording bug. The service instance is live.
 
 ## Names that should not drift
 
-| Term                  | Use it for                                                                            |
-| --------------------- | ------------------------------------------------------------------------------------- |
-| Blueprint             | The abstract capability definition.                                                   |
-| Operator registration | An operator's on-chain opt-in for a blueprint.                                        |
-| Service request       | The user's request to instantiate the blueprint with chosen operators and parameters. |
-| Service instance      | The live unit created from a request.                                                 |
-| Job                   | A state-changing command against a service instance.                                  |
-| Query                 | A read through `eth_call`, the indexer, or an operator API.                           |
-| Operator API          | The off-chain API an operator exposes for live product state and controls.            |
-| Hosted app            | The product UI. It may be first-party, but it is not the blueprint.                   |
-| BSM                   | Blueprint Service Manager contract logic for blueprint-specific rules.                |
+| Term                  | Use it for                                                                               |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| Blueprint             | The abstract capability definition.                                                      |
+| Operator registration | An operator's on-chain opt-in for a blueprint.                                           |
+| Service request       | The user's request to instantiate the blueprint with chosen operators and parameters.    |
+| Service instance      | The live unit created from a request.                                                    |
+| Job                   | A state-changing command against a service instance.                                     |
+| Query                 | A read through `eth_call`, a shared protocol indexer when available, or an operator API. |
+| Operator API          | The off-chain API an operator exposes for live product state and controls.               |
+| Hosted app            | The product UI. It may be first-party, but it is not the blueprint.                      |
+| BSM                   | Blueprint Service Manager contract logic for blueprint-specific rules.                   |
 
 ## Jobs are not reads
 
@@ -59,20 +59,20 @@ Use jobs for:
 
 This split matters. If reads become jobs, the app gets slow, operators pay more gas than needed, and the protocol history stops meaning "work was requested."
 
-## What the indexer can prove
+## What protocol state can prove
 
-The indexer can show what the chain observed:
+A shared protocol indexer can show what the chain observed. These product blueprint repos do not ship dedicated indexers, so treat indexing as shared dapp/protocol infrastructure, not as part of the blueprint operator runtime.
 
-| Indexed state                         | Useful for                                                                |
+| Protocol state                        | Useful for                                                                |
 | ------------------------------------- | ------------------------------------------------------------------------- |
 | Blueprint creation and source updates | Catalogs, audits, and app routing.                                        |
 | Operator registration                 | Discovery, capacity lists, and endpoint metadata.                         |
 | Service requests and approvals        | Provisioning status and operator participation.                           |
 | Service instances                     | Instance pages, ownership, selected operators, and lifecycle.             |
 | Jobs                                  | User-visible commands, support traces, and billing or settlement context. |
-| Heartbeats or status events           | Liveness history and incident timelines.                                  |
+| Heartbeats or status events           | Liveness history and incident timelines when the protocol emits them.     |
 
-The indexer cannot prove endpoint honesty, model output quality, exchange execution, or credit redemption. Those need product-specific evidence: operator API probes, contract state, attestations, settlement receipts, SP1 proofs, or signed reports.
+Protocol state cannot prove endpoint honesty, model output quality, exchange execution, or credit redemption. Those need product-specific evidence: operator API probes, contract state, attestations, settlement receipts, SP1 proofs, or signed reports.
 
 ## Reader map
 
@@ -90,6 +90,6 @@ The indexer cannot prove endpoint honesty, model output quality, exchange execut
 | --------------------------------------------- | ---------------------------------------------------------------------------- |
 | "Deploy the blueprint for a user."            | "Request a service instance from a blueprint."                               |
 | "The operator provisions the blueprint."      | "The operator provisions the service instance."                              |
-| "The dapp reads the blueprint for bot state." | "The dapp reads indexed service state and the operator API for bot state."   |
-| "Submit a job for a normal read."             | "Read from the contract, indexer, or operator API."                          |
+| "The dapp reads the blueprint for bot state." | "The dapp reads protocol service state and the operator API for bot state."  |
+| "Submit a job for a normal read."             | "Read from the contract, shared protocol indexer, or operator API."          |
 | "The hosted app is the blueprint."            | "The hosted app is the UI for service instances created from the blueprint." |

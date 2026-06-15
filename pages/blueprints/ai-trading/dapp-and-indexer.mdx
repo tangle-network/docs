@@ -1,11 +1,13 @@
 ---
-title: AI Trading Dapp and Indexer
-description: Arena routing, operator discovery, and indexed state for AI Trading.
+title: AI Trading Dapp Integration
+description: Arena routing, operator discovery, protocol state, and live operator reads for AI Trading.
 ---
 
-# AI Trading Dapp and Indexer
+# AI Trading Dapp Integration
 
 The Arena is the product app for AI Trading. Tangle Cloud should launch it from trusted metadata and preserve the protocol fallback route for raw service state.
+
+The AI Trading repo does not ship a dedicated indexer today. Its own improvement notes list vault event indexing as future work. Treat protocol state as data the Arena can read from contracts or a shared protocol indexing layer when one exists, not as a blueprint operator requirement.
 
 ## Metadata the dapp should use
 
@@ -19,7 +21,7 @@ The Arena is the product app for AI Trading. Tangle Cloud should launch it from 
 
 The metadata also declares cloud, instance, and TEE modes. The Arena should use those mode records instead of hard-coding a single blueprint ID.
 
-## Indexed state
+## Protocol state
 
 | State                               | Why the dapp needs it                                             |
 | ----------------------------------- | ----------------------------------------------------------------- |
@@ -30,7 +32,7 @@ The metadata also declares cloud, instance, and TEE modes. The Arena should use 
 | Pricing pointers                    | Show quote or subscription information when available.            |
 | Heartbeats                          | Distinguish dead operators from missing data.                     |
 
-The indexer should make operator discovery reliable. It should not be treated as proof that a bot is healthy or that a trade was safe.
+Protocol state should make operator discovery reliable. It should not be treated as proof that a bot is healthy or that a trade was safe.
 
 ## Live operator reads
 
@@ -46,7 +48,7 @@ The Arena still needs operator APIs for:
 - terminal or sidecar logs
 - health
 
-If an operator endpoint is unreachable, say that. Do not replace it with stale indexed state unless the UI labels it as stale.
+If an operator endpoint is unreachable, say that. Do not replace it with stale protocol state unless the UI labels it as stale.
 
 ## User-facing states
 
