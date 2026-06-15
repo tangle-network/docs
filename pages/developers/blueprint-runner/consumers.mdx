@@ -99,6 +99,6 @@ Now that you understand consumers, learn about:
 - [Producers](/developers/blueprint-runner/producers) - How to capture and process events
 - [Building a Blueprint Runner](/developers/blueprint-runner/building) - Step-by-step guide to building your own Blueprint Runner
 
-## Conclusion
+## Before You Ship
 
-Consumers are essential components that translate job results into meaningful actions in your Blueprint Runner. By implementing robust and efficient consumers, you can ensure that your Blueprint operates reliably and effectively.
+Check the consumer path with a successful result and a failed result. The runner should record the outcome, retry only when the action is safe to repeat, and surface enough context for an operator to debug the failure.

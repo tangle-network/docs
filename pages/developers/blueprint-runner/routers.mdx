@@ -74,6 +74,6 @@ Now that you understand routers, check out:
 - [Consumers](/developers/blueprint-runner/consumers) - How to handle job results
 - [Building a Blueprint Runner](/developers/blueprint-runner/building) - Step-by-step guide to building your own Blueprint Runner
 
-## Conclusion
+## Before You Ship
 
-Routers are a fundamental component of Blueprint Runners, enabling efficient job execution and management. By properly configuring and utilizing routers, you can build robust and performant Blueprints.
+Submit at least one job per route and one unknown job ID. The router should dispatch known calls to the intended handler, reject unknown calls clearly, and preserve the error shape your consumers expect.

@@ -27,7 +27,7 @@ The Context pattern offers several significant benefits in software design and d
 
 1. **Decoupling**: By passing dependencies through a Context, we decouple the job implementation from the specific implementations of its dependencies. This makes the code more modular and easier to maintain.
 
-2. **Testability**: With a Context, it's easier to mock or stub dependencies during unit testing, allowing for more comprehensive and isolated tests.
+2. **Testability**: With a Context, tests can replace RPC clients, keystores, or service clients with mocks and fixtures.
 
 3. **Flexibility**: Contexts allow for easy swapping of implementations, which is particularly useful when adapting to different environments (e.g., development, staging, production).
 

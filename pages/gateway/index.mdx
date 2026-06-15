@@ -5,15 +5,15 @@ description: Unified API for hundreds of AI models with built-in routing, compli
 
 # Tangle Gateway
 
-Tangle Gateway is a unified inference API. One endpoint, hundreds of models, automatic routing across centralized providers and decentralized operators.
+Tangle Gateway is a unified inference API. One endpoint, hundreds of models, and routing across provider APIs and registered Tangle operators.
 
 ## What it does
 
 - **One key, any model.** Access OpenAI, Anthropic, Google, Groq, Mistral, and 20+ providers through a single API key.
-- **Operator network.** Route to decentralized operators running [Blueprints](/developers/blueprints/introduction) on the Tangle network who compete on price, latency, and reputation.
+- **Operator network.** Route to operators registered for [Blueprints](/developers/blueprints/introduction); the gateway selects from their advertised endpoint, model support, price, latency, and reputation data.
 - **Compliance routing.** Zero Data Retention and no-train filtering with verified provider agreements.
 - **BYOK.** Bring your own provider keys for zero-markup access.
-- **On-chain payments.** Pay operators directly via SpendAuth — no credit card required.
+- **On-chain payments.** Pay operators directly via SpendAuth - no credit card required.
 
 ## Quick example
 
@@ -34,13 +34,13 @@ Works with any OpenAI-compatible SDK. Change the base URL and you're done.
 
 The gateway routes through three tiers, in order:
 
-| Tier          | What                                                       | When                                                           |
-| ------------- | ---------------------------------------------------------- | -------------------------------------------------------------- |
-| **Operators** | Decentralized inference providers on Tangle                | Default for operator-pinned requests and SpendAuth             |
-| **LiteLLM**   | Proxy with 100+ provider integrations and built-in retries | Default for standard requests                                  |
-| **Direct**    | Straight to provider API (OpenAI, Anthropic, etc.)         | Fallback when LiteLLM unavailable, or when compliance required |
+| Tier          | What                                                            | When                                                           |
+| ------------- | --------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Operators** | Tangle-registered inference operators with advertised endpoints | Default for operator-pinned requests and SpendAuth             |
+| **LiteLLM**   | Proxy with 100+ provider integrations and built-in retries      | Default for standard requests                                  |
+| **Direct**    | Straight to provider API (OpenAI, Anthropic, etc.)              | Fallback when LiteLLM unavailable, or when compliance required |
 
-When [Zero Data Retention](/gateway/zdr) or [no-train](/gateway/no-train) is requested, operators and LiteLLM are skipped — the gateway routes directly to verified providers only.
+When [Zero Data Retention](/gateway/zdr) or [no-train](/gateway/no-train) is requested, operators and LiteLLM are skipped - the gateway routes directly to verified providers only.
 
 ## How it fits
 
@@ -52,7 +52,7 @@ The gateway sits between the [Workbench](/vibe/introduction) where agents run an
 
 ## Next steps
 
-- [Getting Started](/gateway/getting-started) — make your first request in 2 minutes
-- [Supported Models](/gateway/models) — browse the model catalog
-- [How Routing Works](/gateway/how-routing-works) — understand the 3-tier architecture
-- [Zero Data Retention](/gateway/zdr) — compliance for regulated industries
+- [Getting Started](/gateway/getting-started) - make your first request in 2 minutes
+- [Supported Models](/gateway/models) - browse the model catalog
+- [How Routing Works](/gateway/how-routing-works) - understand the 3-tier architecture
+- [Zero Data Retention](/gateway/zdr) - compliance for regulated industries

@@ -11,6 +11,16 @@ The workbench is built to work with existing company systems. You can connect in
 
 Integrations are governed by profiles and policies, so the agent only has access to what it needs.
 
+## What a Profile Should Specify
+
+| Area        | Examples                                                                                     |
+| ----------- | -------------------------------------------------------------------------------------------- |
+| Identity    | Which user, service account, or team owns the run.                                           |
+| Tools       | Repositories, ticket queues, data stores, browser access, shell commands, and internal APIs. |
+| Secrets     | Provider keys, app tokens, SSH keys, and environment variables available to the sandbox.     |
+| Network     | Domains or private endpoints the session can reach.                                          |
+| Review gate | Whether the agent can only draft, can open a PR, or can take a production action.            |
+
 ## Tool Servers And Gateways
 
 Advanced integrations can be exposed as tool servers. Profiles can allowlist local or remote servers, attach headers or environment variables, and set timeouts. Sensitive systems stay behind explicit gates, and approved workflows still get the tools they need.
@@ -18,3 +28,5 @@ Advanced integrations can be exposed as tool servers. Profiles can allowlist loc
 ## Design Principle
 
 Integrations should be explicit and scoped. If a tool is not required for a workflow, it should not be enabled.
+
+Start with read-only tools, add write access only for a named workflow, and keep production credentials out of general-purpose profiles.

@@ -12,6 +12,8 @@ Simulations are how you evaluate agent performance before shipping. Instead of a
 
 Each simulation produces a structured record of inputs, outputs, and logs. This makes it easier to score results, audit failures, and tune workflows based on evidence instead of anecdotes.
 
+Useful simulation output should include the task input, selected profile, model or harness, tool calls, final output, score, cost, duration, and failure reason. Without those fields, a failed run is hard to reproduce and a passing run is hard to trust.
+
 ## The Evaluation Loop
 
 Every execution generates traces: what agents did, inputs received, outputs produced, timing. These traces feed evaluation systems:
@@ -27,3 +29,7 @@ This creates a flywheel: more usage generates more traces, better traces improve
 - Before shipping a new workflow.
 - After changing tools, models, or policies.
 - When outcomes start drifting or costs spike.
+
+## Minimum Comparison
+
+Run the current workflow and the proposed workflow on the same task set. Compare success rate, review burden, cost, latency, and failure categories. Ship the change only when it improves the target metric without creating a new failure mode that operators or reviewers cannot see.

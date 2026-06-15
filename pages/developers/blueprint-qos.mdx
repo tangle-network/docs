@@ -350,9 +350,9 @@ event MetricViolation(
 
 Violation reasons include:
 
-- `"required metric missing"` — a required metric was not reported
-- `"value below minimum"` — reported value < `minValue`
-- `"value above maximum"` — reported value > `maxValue`
+- `"required metric missing"` - a required metric was not reported
+- `"value below minimum"` - reported value < `minValue`
+- `"value above maximum"` - reported value > `maxValue`
 
 Slashing is intentionally decoupled from validation. Auto-slashing from metric violations is dangerous because transient spikes or network delays could trigger false positives. Instead:
 

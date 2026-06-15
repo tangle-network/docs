@@ -1,8 +1,8 @@
 # Participation Credits
 
-Tangle uses a credits system to recognize contributions and make participation auditable. Credits are computed off-chain, published as a Merkle root, and claimed on-chain through a dedicated contract.
+Tangle uses a credits system to recognize contributions. Credits are computed off-chain, published as a Merkle root, and claimed on-chain through a dedicated contract.
 
-Credits are not token transfers. They are a verifiable record of participation that can be used for programs, access, or distributions over time.
+Credits are not token transfers. A user proves inclusion by submitting the claim data and Merkle proof accepted by the `Credits` contract.
 
 ## How Credits Work
 
@@ -10,7 +10,7 @@ Credits are not token transfers. They are a verifiable record of participation t
 2. A Merkle root for the epoch is published on-chain.
 3. Users claim credits for that epoch via a single transaction.
 
-This approach keeps the system lightweight while preserving verifiability.
+This approach keeps on-chain storage small while still giving the contract a deterministic proof to check.
 
 ## Example Credit Sources
 

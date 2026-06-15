@@ -101,6 +101,6 @@ Now that you understand jobs, it might be helpful to take a look at:
 - [Consumers](/developers/blueprint-runner/consumers) - How to handle job results
 - [Building a Blueprint Runner](/developers/blueprint-runner/building) - Step-by-step guide to building your own Blueprint Runner
 
-## Conclusion
+## Before You Ship
 
-Jobs are the core building blocks of your Blueprint, encapsulating the business logic that processes events and produces meaningful results. By implementing well-designed jobs, you can create powerful and flexible Blueprints that can handle a wide range of use cases.
+Test each job with valid input, invalid input, and an execution failure. The handler should reject malformed calls before doing work and return errors that let a consumer decide whether to retry, alert, or stop.

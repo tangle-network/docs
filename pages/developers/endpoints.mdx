@@ -1,5 +1,19 @@
 import NetworkTabs from "../../components/NetworkResources.tsx"
 
-# Resources
+# Network Resources
+
+Use this page when you need the public dapp, chain endpoints, explorers, wallet metadata, or source repos for Tangle.
+
+## What to use
+
+| Need                             | Use                                                                     |
+| -------------------------------- | ----------------------------------------------------------------------- |
+| Stake, delegate, or inspect apps | The Tangle dapp for the target network.                                 |
+| Read chain state                 | The public RPC or WSS endpoint for the target network.                  |
+| Check transactions and contracts | The EVM explorer for the target network.                                |
+| Build protocol integrations      | The `tnt-core` contracts and generated bindings for the current branch. |
+| Build or run Blueprint services  | The Blueprint SDK and product-specific blueprint docs.                  |
+
+Public RPC endpoints are shared infrastructure. Production apps and operators should use their own RPC provider or a monitored endpoint when reliability matters.
 
 <NetworkTabs />

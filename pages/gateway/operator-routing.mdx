@@ -1,6 +1,6 @@
 ---
 title: Operator Routing
-description: Route inference through decentralized operators on the Tangle network.
+description: Route inference through registered operators on the Tangle network.
 ---
 
 # Operator Routing
@@ -17,7 +17,7 @@ Operators run **Blueprints**: service templates that define what software an ope
 | **Vector Store**  | Embedding storage and retrieval for RAG                        | Operator-deployed                                                                                   |
 | **Custom**        | Any model/pipeline an operator chooses to serve                | [Build your own](/developers/blueprints/introduction)                                               |
 
-The LLM Inference Blueprint uses [tangle-inference-core](https://github.com/tangle-network/tangle-inference-core) — a shared Rust crate for EIP-712 signature verification, nonce management, and on-chain settlement. Operators compile it into a binary (`operator-lite`) that runs alongside their model server.
+The LLM Inference Blueprint uses [tangle-inference-core](https://github.com/tangle-network/tangle-inference-core) - a shared Rust crate for EIP-712 signature verification, nonce management, and on-chain settlement. Operators compile it into a binary (`operator-lite`) that runs alongside their model server.
 
 To build and deploy your own inference Blueprint, see the [Blueprint SDK docs](/developers/blueprints/introduction) and the [Blueprint Runner](/developers/blueprint-runner/introduction).
 
@@ -85,5 +85,5 @@ Because endpoint URL and backing provider are self-reported, operator routing is
 
 Operator requests can be paid two ways:
 
-1. **Platform credits** — deducted from your credit balance at the operator's listed price
-2. **SpendAuth (on-chain)** — direct EIP-712 signed payment to the operator. No credit card needed. See [SpendAuth](/gateway/spend-auth).
+1. **Platform credits** - deducted from your credit balance at the operator's listed price
+2. **SpendAuth (on-chain)** - direct EIP-712 signed payment to the operator. No credit card needed. See [SpendAuth](/gateway/spend-auth).

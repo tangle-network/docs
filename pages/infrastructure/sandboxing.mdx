@@ -2,6 +2,8 @@
 
 Every workload runs inside an isolated sandbox. This protects the host, the operator, and the customer while making agent behavior reviewable.
 
+Isolation is enforced by the runtime. Slashing applies only when an onchain Blueprint service defines the fault, the evidence path, and the slashable collateral. Tangle-managed API incidents still need operational response even when no onchain slashing rule applies.
+
 ## Isolation Technologies
 
 Operators choose isolation based on security requirements and workload type:
@@ -23,7 +25,7 @@ Regardless of technology, these guarantees must hold:
 - **Network isolation**: Restricted external access per policy.
 - **Resource limits**: Bounded CPU, memory, and I/O consumption.
 
-Operators who fail to maintain isolation guarantees are subject to slashing.
+For onchain services, slashing depends on the Blueprint's rules and evidence path. For Tangle-managed API mode, isolation failures are handled as product security incidents.
 
 ## Policy Enforcement
 
@@ -36,6 +38,8 @@ Each sandbox enforces:
 
 Policies are defined in workbench profiles and enforced at the runtime level.
 
+For protocol-backed services, the app should also check the service instance policy and operator endpoint before launching a session. A chain record proves the service exists; it does not prove the sandbox is currently ready.
+
 ## Auditability
 
 Every session produces:
@@ -45,3 +49,13 @@ Every session produces:
 - **File snapshots**: State of the workspace at key points.
 
 This makes execution reviewable and supports dispute resolution when issues arise.
+
+## Operator Checklist
+
+Before exposing a sandbox endpoint:
+
+1. Run the selected isolation backend locally with the same kernel, container runtime, or microVM assets used in production.
+2. Confirm the sandbox cannot read host files, sibling session files, or unapproved secrets.
+3. Confirm network policy blocks non-allowlisted destinations.
+4. Set CPU, memory, disk, and timeout limits and verify they trigger controlled failures.
+5. Capture one successful run and one blocked-policy run in logs that an operator can inspect later.

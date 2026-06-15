@@ -57,9 +57,9 @@ Approve a service request as one of its operators.
 
 _Single entrypoint covering every approval mode. Pass empty/zero fields on `ApprovalParams` to opt out of the corresponding capability:_
 
-- `securityCommitments == []` — no per-asset commitment supplied. Only valid when the request has no security requirements OR the only requirement is the protocol-default TNT requirement (auto-filled at min-exposure).
-- `blsPubkey == [0,0,0,0]` — operator does NOT register a BLS pubkey for aggregated job-result signing. BLS is opt-in; the protocol accepts any operator.
-- `teeCommitments == []` — operator does NOT bind to a TEE attestation profile.
+- `securityCommitments == []` - no per-asset commitment supplied. Only valid when the request has no security requirements OR the only requirement is the protocol-default TNT requirement (auto-filled at min-exposure).
+- `blsPubkey == [0,0,0,0]` - operator does NOT register a BLS pubkey for aggregated job-result signing. BLS is opt-in; the protocol accepts any operator.
+- `teeCommitments == []` - operator does NOT bind to a TEE attestation profile.
 
 #### getTeeCommitmentRoot
 
@@ -75,7 +75,7 @@ Returns `keccak256(abi.encode(commitments))` over an operator's `TeeAttestationC
 function teeNonceFor(uint64 requestId) external view returns (bytes32)
 ```
 
-Canonical TEE attestation nonce binding for `requestId` on this contract on this chain. Operators MUST submit this exact value as `nonceBinding` in any `TeeAttestationCommitment` for the request — it eliminates cross-request attestation replay at approval time.
+Canonical TEE attestation nonce binding for `requestId` on this contract on this chain. Operators MUST submit this exact value as `nonceBinding` in any `TeeAttestationCommitment` for the request - it eliminates cross-request attestation replay at approval time.
 
 #### blsPopMessage
 

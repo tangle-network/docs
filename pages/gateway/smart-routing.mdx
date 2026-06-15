@@ -33,9 +33,9 @@ If a preferred operator is specified (via `X-Tangle-Operator`), it's moved to th
 
 The gateway tracks operator health via:
 
-- **Health checks** — periodic probes stored in `OperatorHealthCheck`
-- **Request outcomes** — success/failure recorded per request
-- **Latency tracking** — rolling average updated per request
+- **Health checks** - periodic probes stored in `OperatorHealthCheck`
+- **Request outcomes** - success/failure recorded per request
+- **Latency tracking** - rolling average updated per request
 
 Operators that consistently fail are automatically deprioritized by their dropping reputation and rising latency scores.
 
