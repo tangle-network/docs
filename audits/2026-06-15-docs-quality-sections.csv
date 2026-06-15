@@ -12,7 +12,7 @@ pages/blueprints/ai-agent-sandbox/dapp-and-indexer.mdx,Metadata the dapp should 
 pages/blueprints/ai-agent-sandbox/dapp-and-indexer.mdx,Protocol state,2,26,39,7.8,8.1,7,6.2,9,8.7,9,110,0,0,0,thin page
 pages/blueprints/ai-agent-sandbox/dapp-and-indexer.mdx,Live checks,2,40,51,7.6,8.1,6.1,5.8,9,8.7,9,78,0,0,0,thin page; few executable examples
 pages/blueprints/ai-agent-sandbox/dapp-and-indexer.mdx,Iframe policy,2,52,62,7.5,8.1,6,5.8,9,8.7,9,86,0,0,0,thin page; few executable examples
-pages/blueprints/ai-agent-sandbox/dapp-and-indexer.mdx,Bad copy to avoid,2,63,72,7.6,8.1,6.4,5.8,9,8.7,9,108,0,0,0,thin page
+pages/blueprints/ai-agent-sandbox/dapp-and-indexer.mdx,Bad copy to avoid,2,63,72,7.6,8.1,6.4,5.8,9,8.7,9,115,0,0,0,thin page
 pages/blueprints/ai-agent-sandbox/index.mdx,Page Intro,0,1,5,6.7,8.6,6.1,5.8,9,8.7,6.8,14,0,0,0,protocol/hosted boundary needs sharper wording; thin page
 pages/blueprints/ai-agent-sandbox/index.mdx,AI Agent Sandbox Blueprint,1,6,13,7.8,8.1,6.6,6.2,9,8.7,9,59,0,0,0,thin page
 pages/blueprints/ai-agent-sandbox/index.mdx,What happens when a user creates a sandbox,2,14,23,7.6,8.1,6.1,6.2,9,8.7,9,100,0,0,0,thin page; few executable examples
@@ -30,7 +30,7 @@ pages/blueprints/ai-agent-sandbox/operator-requirements.mdx,Firecracker mode,2,4
 pages/blueprints/ai-agent-sandbox/operator-requirements.mdx,TEE mode,2,61,74,7.5,8.1,6,5.8,9,8.7,9,89,0,0,0,thin page; few executable examples
 pages/blueprints/ai-agent-sandbox/operator-requirements.mdx,Local proof,2,75,94,7.9,8.1,7.1,6.5,9,8.7,9,62,0,0,0,thin page
 pages/blueprints/ai-agent-sandbox/runtime-and-harnesses.mdx,Page Intro,0,1,5,6.7,8.6,6.1,5.8,9,8.7,6.8,22,0,0,0,protocol/hosted boundary needs sharper wording; thin page
-pages/blueprints/ai-agent-sandbox/runtime-and-harnesses.mdx,AI Agent Sandbox Runtime and Harnesses,1,6,11,7.7,8.1,6.1,5.8,9,8.7,9,75,0,0,0,thin page
+pages/blueprints/ai-agent-sandbox/runtime-and-harnesses.mdx,AI Agent Sandbox Runtime and Harnesses,1,6,11,7.7,8.1,6.1,5.8,9,8.7,9,76,0,0,0,thin page
 pages/blueprints/ai-agent-sandbox/runtime-and-harnesses.mdx,Runtime backends,2,12,25,7.6,8.1,6.3,5.8,9,8.7,8.6,118,0,0,0,thin page
 pages/blueprints/ai-agent-sandbox/runtime-and-harnesses.mdx,Capability discovery,2,26,46,7.8,8.1,7.1,6.2,9,8.7,9,90,0,0,0,thin page
 pages/blueprints/ai-agent-sandbox/runtime-and-harnesses.mdx,Sidecar image,2,47,64,8.4,8.1,9.7,6.7,9,8.7,8.6,47,0,0,0,thin page
@@ -57,7 +57,7 @@ pages/blueprints/ai-trading/operator-requirements.mdx,Host requirements,2,12,25,
 pages/blueprints/ai-trading/operator-requirements.mdx,Operator binaries,2,26,35,7.8,8.1,7.3,5.8,9,8.7,9,63,0,0,0,thin page
 pages/blueprints/ai-trading/operator-requirements.mdx,Required state,2,36,49,7.7,8.1,6.5,6.2,9,8.7,8.6,94,0,0,0,thin page
 pages/blueprints/ai-trading/operator-requirements.mdx,Admission and capacity,2,50,60,7.5,8.1,6,5.8,9,8.7,8.6,74,0,0,0,thin page; few executable examples
-pages/blueprints/ai-trading/operator-requirements.mdx,Paper mode and AI keys,2,61,66,6.5,8.1,6.1,5.8,9,8.7,6.8,116,0,0,0,protocol/hosted boundary needs sharper wording; thin page
+pages/blueprints/ai-trading/operator-requirements.mdx,Paper mode and AI keys,2,61,66,6.5,8.1,6.1,5.8,9,8.7,6.8,118,0,0,0,protocol/hosted boundary needs sharper wording; thin page
 pages/blueprints/ai-trading/operator-requirements.mdx,Public endpoint,2,67,79,7.8,8.1,7.4,6,9,8.7,8.6,42,0,0,0,thin page
 pages/blueprints/ai-trading/operator-requirements.mdx,Registration proof,2,80,89,7.7,8.1,6.6,6.5,9,8.7,8.6,42,0,0,0,thin page
 pages/blueprints/ai-trading/runtime-and-risk.mdx,Page Intro,0,1,5,7.5,8.6,5.6,5.8,9,8.7,8.6,19,0,0,0,thin page; few executable examples
@@ -88,7 +88,7 @@ pages/blueprints/operator-matrix.mdx,What each operator is responsible for,2,12,
 pages/blueprints/operator-matrix.mdx,Host shape,2,20,27,6.8,8.1,6.8,6.2,9,8.7,6.8,122,0,0,0,protocol/hosted boundary needs sharper wording; thin page
 pages/blueprints/operator-matrix.mdx,Public ports,2,28,35,7.5,8.1,5.9,5.8,9,8.7,9,83,0,0,0,thin page; few executable examples
 pages/blueprints/operator-matrix.mdx,AI and inference credentials,2,36,43,7.5,8.1,5.9,5.8,9,8.7,9,163,0,0,0,thin page; few executable examples
-pages/blueprints/operator-matrix.mdx,Harnesses are not the product boundary,2,44,51,7.7,8.1,6.6,6.2,9,8.7,9,137,0,0,0,thin page
+pages/blueprints/operator-matrix.mdx,Harnesses are not the product boundary,2,44,51,7.7,8.1,6.6,6.2,9,8.7,9,138,0,0,0,thin page
 pages/blueprints/operator-matrix.mdx,Runtime isolation,2,52,59,6.5,8.1,5.9,5.8,9,8.7,6.8,101,0,0,0,protocol/hosted boundary needs sharper wording; thin page; few executable examples
 pages/blueprints/operator-matrix.mdx,Proof boundary,2,60,67,6.7,8.1,6.3,6.2,9,8.7,6.8,88,0,0,0,protocol/hosted boundary needs sharper wording; thin page
 pages/blueprints/operator-matrix.mdx,Operator preflight,2,68,82,7.9,8.1,7.7,6.2,9,8.7,8.6,116,0,0,0,thin page
@@ -2022,10 +2022,10 @@ pages/infrastructure/architecture.mdx,Architecture,1,1,4,7.6,8.6,5.6,5.8,9,8.7,8
 pages/infrastructure/architecture.mdx,Core Components,2,5,15,7.5,8.1,6.2,5.8,9,8.7,8.6,93,0,0,0,thin page; few executable examples
 pages/infrastructure/architecture.mdx,Operational Traits,2,16,22,7.6,8.1,5.9,6.2,9,8.7,8.6,38,0,0,0,thin page; few executable examples
 pages/infrastructure/harnesses.mdx,Page Intro,0,1,5,6.7,8.6,6.1,5.8,9,8.7,6.8,16,0,0,0,protocol/hosted boundary needs sharper wording; thin page
-pages/infrastructure/harnesses.mdx,Sandbox Harnesses,1,6,19,8,8.1,7.7,6.2,9,8.7,9,151,0,0,0,thin page
-pages/infrastructure/harnesses.mdx,Centralized sandbox infrastructure,2,20,44,7.6,8.1,6.3,5.8,9,8.7,9,188,0,0,0,few executable examples
-pages/infrastructure/harnesses.mdx,AI Agent Sandbox blueprint,2,45,57,7.8,8.1,7.2,5.8,9,8.7,9,91,0,0,0,thin page
-pages/infrastructure/harnesses.mdx,Copy rule,2,58,67,6.5,8.1,6.1,5.8,9,8.7,6.8,70,0,0,0,protocol/hosted boundary needs sharper wording; thin page
+pages/infrastructure/harnesses.mdx,Sandbox Harnesses,1,6,19,8,8.1,7.7,6.2,9,8.7,9,155,0,0,0,thin page
+pages/infrastructure/harnesses.mdx,Centralized sandbox infrastructure,2,20,46,7.6,8.1,6.4,5.8,9,8.7,9,205,0,0,0,few executable examples
+pages/infrastructure/harnesses.mdx,AI Agent Sandbox blueprint,2,47,59,7.8,8.1,7.2,5.8,9,8.7,9,91,0,0,0,thin page
+pages/infrastructure/harnesses.mdx,Copy rule,2,60,69,6.5,8.1,6.1,5.8,9,8.7,6.8,72,0,0,0,protocol/hosted boundary needs sharper wording; thin page
 pages/infrastructure/introduction.mdx,Sandbox Runtime,1,1,9,7.6,8.1,5.8,5.8,9,8.7,9,76,0,0,0,thin page; few executable examples
 pages/infrastructure/introduction.mdx,What It Provides,2,10,17,7.5,8.1,6,5.8,9,8.7,8.6,46,0,0,0,thin page; few executable examples
 pages/infrastructure/introduction.mdx,Who This Is For,2,18,23,7.6,8.1,5.8,6.5,9,8.7,8.6,39,0,0,0,thin page; few executable examples
@@ -2358,10 +2358,10 @@ pages/vibe/introduction.mdx,Agentic Workbench,1,1,4,7.5,8.1,5.6,5.8,9,8.7,8.6,45
 pages/vibe/introduction.mdx,What You Can Do,2,5,13,7.5,8.1,6.2,5.8,9,8.7,8.6,56,0,0,0,thin page; few executable examples
 pages/vibe/introduction.mdx,Who This Is For,2,14,19,7.7,8.6,5.9,6.5,9,8.7,8.6,30,0,0,0,thin page; few executable examples
 pages/vibe/introduction.mdx,How It Connects,2,20,23,7.7,8.6,6.1,5.8,9,8.7,9,30,0,0,0,thin page
-pages/vibe/introduction.mdx,Profiles Power The Runtime,2,24,27,7.5,8.1,5.7,5.8,9,8.7,9,54,0,0,0,thin page; few executable examples
+pages/vibe/introduction.mdx,Profiles Power The Runtime,2,24,27,7.5,8.1,5.7,5.8,9,8.7,9,55,0,0,0,thin page; few executable examples
 pages/vibe/introduction.mdx,Start Here (By Role),2,28,36,7.7,8.1,6,6.7,9,8.7,8.6,41,0,0,0,thin page; few executable examples
 pages/vibe/profile-schema.mdx,Profile Schema,1,1,4,7.5,8.1,5.7,5.8,9,8.7,8.6,36,0,0,0,thin page; few executable examples
-pages/vibe/profile-schema.mdx,Current Support,2,5,12,7.7,8.1,6.8,6,9,8.7,9,98,0,0,0,thin page
+pages/vibe/profile-schema.mdx,Current Support,2,5,12,7.7,8.1,6.7,6,9,8.7,9,104,0,0,0,thin page
 pages/vibe/profile-schema.mdx,Top-Level Fields,2,13,26,7.6,8.1,6.6,5.8,9,8.7,8.6,91,0,0,0,thin page; few executable examples
 pages/vibe/profile-schema.mdx,Agent Overrides,2,27,43,7.6,8.1,6.5,5.8,9,8.7,8.6,88,0,0,0,thin page; few executable examples
 pages/vibe/profile-schema.mdx,Permission Policy,2,44,54,7.5,8.1,5.9,5.8,9,8.7,8.6,49,0,0,0,thin page; few executable examples
@@ -2371,7 +2371,7 @@ pages/vibe/profile-schema.mdx,Plugins,2,80,83,7.5,8.6,5.6,5.8,9,8.7,8.6,16,0,0,0
 pages/vibe/profile-schema.mdx,Inheritance And Merging,2,84,87,7.6,8.6,5.7,5.8,9,8.7,8.6,29,0,0,0,thin page; few executable examples
 pages/vibe/profile-schema.mdx,Minimal Example,2,88,112,7.9,8.6,7.4,6,9,8.7,8.6,2,0,0,0,thin page
 pages/vibe/profiles.mdx,Profiles and Policies,1,1,4,7.5,8.1,5.6,5.8,9,8.7,8.6,46,0,0,0,thin page; few executable examples
-pages/vibe/profiles.mdx,What A Profile Controls,2,5,18,7.6,8.1,6.4,5.8,9,8.7,8.6,143,0,0,0,thin page; few executable examples
+pages/vibe/profiles.mdx,What A Profile Controls,2,5,18,7.6,8.1,6.4,5.8,9,8.7,8.6,138,0,0,0,thin page; few executable examples
 pages/vibe/profiles.mdx,Guardrails And Validation,2,19,22,7.4,8.1,5.6,5.8,9,8.7,8.6,39,0,0,0,thin page; few executable examples
 pages/vibe/profiles.mdx,How It Shows Up In The Workbench,2,23,34,7.5,8.1,5.9,5.8,9,8.7,8.6,73,0,0,0,thin page; few executable examples
 pages/vibe/profiles.mdx,Example Profile (Conceptual),2,35,70,8.1,8.1,8.3,6.5,9,8.7,9,45,0,0,0,thin page

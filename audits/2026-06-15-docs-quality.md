@@ -150,7 +150,7 @@ The full subsection table is in `audits/2026-06-15-docs-quality-sections.csv`. T
 | 6.5 | pages/developers/blueprint-runner/routers.mdx | Router Configuration | 24 | 9 | 5.8 | 5.8 | protocol/hosted boundary needs sharper wording; thin page; few executable examples |
 | 6.5 | pages/gateway/how-routing-works.mdx | Routing control | 55 | 9 | 6.1 | 5.8 | protocol/hosted boundary needs sharper wording; thin page; few executable examples |
 | 6.5 | pages/gateway/models.mdx | Providers | 10 | 9 | 7.7 | 6.9 | 1 high scanner findings; protocol/hosted boundary needs sharper wording; thin page |
-| 6.5 | pages/infrastructure/harnesses.mdx | Copy rule | 58 | 9 | 6.1 | 5.8 | protocol/hosted boundary needs sharper wording; thin page |
+| 6.5 | pages/infrastructure/harnesses.mdx | Copy rule | 60 | 9 | 6.1 | 5.8 | protocol/hosted boundary needs sharper wording; thin page |
 | 6.5 | pages/network/overview.mdx | Maximize Resource Utilization | 21 | 9 | 5.7 | 5.8 | protocol/hosted boundary needs sharper wording; thin page; few executable examples |
 | 6.5 | pages/network/points-mechanics.mdx | Participation Credits | 1 | 9 | 5.6 | 5.8 | 2 high scanner findings; thin page; few executable examples |
 | 6.5 | pages/operators/benchmarking.mdx | 2. During Blueprint Runtime (QoS + Metrics) | 32 | 9 | 5.9 | 5.8 | protocol/hosted boundary needs sharper wording; thin page; few executable examples |
@@ -441,7 +441,7 @@ The full subsection table is in `audits/2026-06-15-docs-quality-sections.csv`. T
 | 7.8 | pages/staking/liquid-staking/vaults-and-shares.mdx | staking | staker/governance | 9 | 8.1 | 7 | 7.2 | 6.2 | 8.6 | 8.7 | none obvious from rubric |
 | 8 | pages/staking/staking-concepts.mdx | staking | staker/governance | 9 | 8.1 | 7.5 | 7.7 | 6.7 | 8.6 | 8.7 | none obvious from rubric |
 | 7.6 | pages/vibe/integrations.mdx | workbench | customer/developer | 9 | 8.1 | 6 | 7 | 6.2 | 8.6 | 8.7 | thin page; few executable examples |
-| 8.1 | pages/vibe/introduction.mdx | workbench | customer/developer | 9 | 8.1 | 7.2 | 8.1 | 7.3 | 9 | 8.7 | none obvious from rubric |
+| 8.1 | pages/vibe/introduction.mdx | workbench | customer/developer | 9 | 8.1 | 7.2 | 8.2 | 7.3 | 9 | 8.7 | none obvious from rubric |
 | 8.6 | pages/vibe/profile-schema.mdx | workbench | customer/developer | 9 | 8.3 | 10 | 9.2 | 6.2 | 9 | 8.7 | none obvious from rubric |
 | 8.4 | pages/vibe/profiles.mdx | workbench | customer/developer | 9 | 8.2 | 9.3 | 8.4 | 6.5 | 9 | 8.7 | none obvious from rubric |
 | 7.6 | pages/vibe/simulations.mdx | workbench | customer/developer | 9 | 7.6 | 6.4 | 7.4 | 5.8 | 8.6 | 8.7 | few executable examples |

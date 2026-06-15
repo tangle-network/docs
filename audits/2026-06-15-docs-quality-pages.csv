@@ -1,16 +1,16 @@
 file,area,kind,audience,overall,voice,clarity,structure,actionability,completeness,sourceGrounding,boundaryClarity,freshness,examples,audienceFit,words,headings,highFindings,mediumFindings,lowFindings,issueSummary
 pages/ai/index.mdx,ai,general,general,8.2,9,8.2,8.8,7,8.7,7.6,9,8.7,5.7,7.6,340,6,0,0,0,few executable examples
-pages/blueprints/ai-agent-sandbox/dapp-and-indexer.mdx,blueprints,blueprint,app developer,8.6,9,8.4,8.8,10,9.3,6.2,9,8.7,8.5,7.6,545,6,0,0,0,none obvious from rubric
+pages/blueprints/ai-agent-sandbox/dapp-and-indexer.mdx,blueprints,blueprint,app developer,8.6,9,8.4,8.8,10,9.3,6.2,9,8.7,8.5,7.6,552,6,0,0,0,none obvious from rubric
 pages/blueprints/ai-agent-sandbox/index.mdx,blueprints,blueprint,developer/operator,8.6,9,8.3,8.8,9.1,9.3,6.9,9,8.7,8.5,7.6,452,7,0,0,0,none obvious from rubric
 pages/blueprints/ai-agent-sandbox/operator-requirements.mdx,blueprints,blueprint,operator,8.6,9,8.3,8.8,10,9.3,6.5,9,8.7,8.5,7.6,490,7,0,0,0,none obvious from rubric
-pages/blueprints/ai-agent-sandbox/runtime-and-harnesses.mdx,blueprints,blueprint,developer/operator,8.7,9,8.4,8.8,10,9.3,6.7,9,8.7,8.5,7.6,560,6,0,0,0,none obvious from rubric
+pages/blueprints/ai-agent-sandbox/runtime-and-harnesses.mdx,blueprints,blueprint,developer/operator,8.7,9,8.4,8.8,10,9.3,6.7,9,8.7,8.5,7.6,561,6,0,0,0,none obvious from rubric
 pages/blueprints/ai-trading/dapp-and-indexer.mdx,blueprints,blueprint,app developer,8.6,9,8.3,8.8,10,9.3,6.2,9,8.7,8.5,7.6,449,6,0,0,0,none obvious from rubric
 pages/blueprints/ai-trading/index.mdx,blueprints,blueprint,developer/operator,8.6,9,8.3,8.8,9.5,9.3,6.9,9,8.7,8.5,7.6,467,7,0,0,0,none obvious from rubric
-pages/blueprints/ai-trading/operator-requirements.mdx,blueprints,blueprint,operator,8.7,9,8.4,8.8,10,9.3,6.7,9,8.7,8.5,7.6,572,8,0,0,0,none obvious from rubric
+pages/blueprints/ai-trading/operator-requirements.mdx,blueprints,blueprint,operator,8.7,9,8.4,8.8,10,9.3,6.7,9,8.7,8.5,7.6,574,8,0,0,0,none obvious from rubric
 pages/blueprints/ai-trading/runtime-and-risk.mdx,blueprints,blueprint,developer/operator,8.6,9,8.4,8.8,9.9,9.3,6.5,9,8.7,8.4,7.6,511,7,0,0,0,none obvious from rubric
 pages/blueprints/dapp-integration.mdx,blueprints,blueprint,app developer,8.7,9,8.4,8.8,10,9.3,6.7,9,8.7,8.5,7.6,693,7,0,0,0,none obvious from rubric
 pages/blueprints/index.mdx,blueprints,blueprint,developer/operator,8.8,9,8.1,8.8,10,9.3,8,9,8.7,8.5,7.6,462,5,0,0,0,none obvious from rubric
-pages/blueprints/operator-matrix.mdx,blueprints,blueprint,developer/operator,8.6,9,8.3,8.8,10,9.3,6.2,9,8.7,8.5,7.6,988,9,0,0,0,none obvious from rubric
+pages/blueprints/operator-matrix.mdx,blueprints,blueprint,developer/operator,8.6,9,8.3,8.8,10,9.3,6.2,9,8.7,8.5,7.6,989,9,0,0,0,none obvious from rubric
 pages/blueprints/protocol-model.mdx,blueprints,blueprint,developer/operator,8.6,9,8.4,8.8,10,9.3,6.2,9,8.7,8.5,7.6,719,7,0,0,0,none obvious from rubric
 pages/blueprints/surplus-market/dapp-and-indexer.mdx,blueprints,blueprint,app developer,8.5,9,8.3,8.8,9.5,9.3,6.2,9,8.7,8.5,7.6,440,6,0,0,0,none obvious from rubric
 pages/blueprints/surplus-market/index.mdx,blueprints,blueprint,developer/operator,8.6,9,8.3,8.8,9.4,9.3,6.9,9,8.7,8.5,7.6,478,7,0,0,0,none obvious from rubric
@@ -167,7 +167,7 @@ pages/gateway/timeouts.mdx,gateway,gateway,customer/developer,7.9,8.8,8,8.8,7.6,
 pages/gateway/zdr.mdx,gateway,gateway,customer/developer,8.6,8.8,8.3,8.8,8.9,9.1,8.2,8.6,8.7,8.5,8.2,381,7,0,0,1,none obvious from rubric
 pages/index.mdx,index.mdx,home,general,7.4,9,8.6,7.6,5.6,5.9,5.8,9,8.7,5.7,6.8,14,0,0,0,0,thin page; few executable examples
 pages/infrastructure/architecture.mdx,infrastructure,runtime-infra,general,7.6,9,8.1,8.8,6.5,7,6.2,8.6,8.7,5.7,6.8,150,3,0,0,0,thin page; few executable examples
-pages/infrastructure/harnesses.mdx,infrastructure,runtime-infra,general,8.6,9,8.4,8.8,10,9.2,6.2,9,8.7,8.5,7.6,516,4,0,0,0,none obvious from rubric
+pages/infrastructure/harnesses.mdx,infrastructure,runtime-infra,general,8.6,9,8.4,8.8,10,9.2,6.2,9,8.7,8.5,7.6,539,4,0,0,0,none obvious from rubric
 pages/infrastructure/introduction.mdx,infrastructure,runtime-infra,general,8,9,8.1,8.8,7.2,7.7,7.3,9,8.7,6,7.6,209,4,0,0,0,none obvious from rubric
 pages/infrastructure/orchestration.mdx,infrastructure,runtime-infra,general,7.6,9,8.1,8.8,6.5,6.9,5.8,9,8.7,5.7,6.8,143,3,0,0,0,thin page; few executable examples
 pages/infrastructure/protocol-deployment.mdx,infrastructure,runtime-infra,general,7.9,9,8.1,8.8,7.5,7.5,6.2,8.6,8.7,6.6,7.6,215,4,0,0,0,none obvious from rubric
@@ -218,9 +218,9 @@ pages/staking/liquid-staking/staking-flow.mdx,staking,staking,staker/governance,
 pages/staking/liquid-staking/vaults-and-shares.mdx,staking,staking,staker/governance,7.8,9,8.1,8.8,7,7.2,6.2,8.6,8.7,6,7.6,182,4,0,0,0,none obvious from rubric
 pages/staking/staking-concepts.mdx,staking,staking,staker/governance,8,9,8.1,8.8,7.5,7.7,6.7,8.6,8.7,6.3,7.6,220,6,0,0,0,none obvious from rubric
 pages/vibe/integrations.mdx,vibe,workbench,customer/developer,7.6,9,8.1,8.8,6,7,6.2,8.6,8.7,5.7,6.8,137,4,0,0,0,thin page; few executable examples
-pages/vibe/introduction.mdx,vibe,workbench,customer/developer,8.1,9,8.1,8.8,7.2,8.1,7.3,9,8.7,6,7.6,256,6,0,0,0,none obvious from rubric
-pages/vibe/profile-schema.mdx,vibe,workbench,customer/developer,8.6,9,8.3,8.8,10,9.2,6.2,9,8.7,7.7,7.6,487,10,0,0,0,none obvious from rubric
-pages/vibe/profiles.mdx,vibe,workbench,customer/developer,8.4,9,8.2,8.8,9.3,8.4,6.5,9,8.7,7.7,7.6,346,5,0,0,0,none obvious from rubric
+pages/vibe/introduction.mdx,vibe,workbench,customer/developer,8.1,9,8.1,8.8,7.2,8.2,7.3,9,8.7,6,7.6,257,6,0,0,0,none obvious from rubric
+pages/vibe/profile-schema.mdx,vibe,workbench,customer/developer,8.6,9,8.3,8.8,10,9.2,6.2,9,8.7,7.7,7.6,493,10,0,0,0,none obvious from rubric
+pages/vibe/profiles.mdx,vibe,workbench,customer/developer,8.4,9,8.2,8.8,9.3,8.4,6.5,9,8.7,7.7,7.6,341,5,0,0,0,none obvious from rubric
 pages/vibe/simulations.mdx,vibe,workbench,customer/developer,7.6,9,7.6,8.8,6.4,7.4,5.8,8.6,8.7,5.7,7.6,190,5,0,0,0,few executable examples
 pages/vibe/workflows.mdx,vibe,workbench,customer/developer,7.7,9,8.1,8.8,6.6,7.6,5.8,8.6,8.7,5.7,7.6,234,5,0,0,0,few executable examples
 pages/vision/architecture.mdx,vision,vision,general,8.1,8.8,7.7,8.8,7.3,9.2,6.5,9,8.7,7.7,7.2,412,6,2,0,1,2 high scanner findings
