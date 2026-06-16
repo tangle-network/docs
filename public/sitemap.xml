@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://docs.tangle.tools/</loc>
+  </url>
+  <url>
+    <loc>https://docs.tangle.tools/developers</loc>
+  </url>
+  <url>
+    <loc>https://docs.tangle.tools/developers/cli/quickstart</loc>
+  </url>
+  <url>
+    <loc>https://docs.tangle.tools/developers/blueprints/introduction</loc>
+  </url>
+  <url>
+    <loc>https://docs.tangle.tools/infrastructure/sandboxing</loc>
+  </url>
+</urlset>
