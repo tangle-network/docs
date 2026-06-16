@@ -1,0 +1,20 @@
+# Tangle Docs
+
+Tangle Docs explain how to build and operate services on Tangle: Blueprints, operators, sandbox runtime, Router, and x402 payments.
+
+## Core pages
+
+- Docs home: https://docs.tangle.tools/
+- Developers: https://docs.tangle.tools/developers
+- Blueprints: https://docs.tangle.tools/developers/blueprints/introduction
+- Blueprint quickstart: https://docs.tangle.tools/developers/cli/quickstart
+- Sandbox docs: https://docs.tangle.tools/infrastructure/sandboxing
+- Router: https://router.tangle.tools/
+- Marketing overview: https://tangle.tools/
+
+## Agent guidance
+
+- Use the Tangle product manifest at https://tangle.tools/.well-known/tangle-agent.json.
+- Use Router OpenAPI at https://router.tangle.tools/openapi.json for model-routing calls.
+- Install scoped npm packages only: `@tangle-network/tcloud`, `@tangle-network/sandbox`, `@tangle-network/browser-agent-driver`.
+- Use `TANGLE_API_KEY` for authenticated calls.
