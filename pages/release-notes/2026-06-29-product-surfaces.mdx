@@ -1,0 +1,75 @@
+---
+title: June 2026 Product Surfaces
+description: Public release note covering Blueprint Agent, sandbox infrastructure, router infrastructure, browser agents, audit agents, and protocol contracts.
+---
+
+# June 2026 Product Surfaces
+
+Published: June 29, 2026.
+
+This note records the public customer-facing surfaces for the main Tangle product lines.
+It is intended for customers and auditors who need one place to see how product updates are communicated.
+
+## Summary
+
+| Product area                                   | Public surface                                       | Customer action                                                                                             |
+| ---------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Blueprint Agent                                | [ai.tangle.tools](https://ai.tangle.tools)           | No action required                                                                                          |
+| Agent Dev Container and Sandbox infrastructure | [sandbox.tangle.tools](https://sandbox.tangle.tools) | No action required                                                                                          |
+| Router infrastructure                          | [router.tangle.tools](https://router.tangle.tools)   | No action required                                                                                          |
+| Browser Agent                                  | [browser.tangle.tools](https://browser.tangle.tools) | No action required                                                                                          |
+| Audit Agent                                    | [audits.tangle.tools](https://audits.tangle.tools)   | No action required                                                                                          |
+| Protocol contracts and SDK bindings            | [tnt-core v0.13.0](/release-notes/0.13.0)            | Upgrade only if you sign quotes, decode slashing events, run custom BSMs, or maintain L2 slashing receivers |
+
+## Blueprint Agent
+
+Blueprint Agent is the hosted workbench for turning prompts and repository context into Tangle Blueprint work.
+The public application surface is [ai.tangle.tools](https://ai.tangle.tools), and the customer-facing product page is [Tangle Blueprint Agent](https://tangle.tools/services/blueprint-agent).
+
+The June 2026 customer update is publication of this release-note channel plus status coverage for the hosted application.
+No customer migration is required.
+
+## Agent Dev Container and Sandbox Infrastructure
+
+Agent Dev Container and Sandbox infrastructure provide isolated execution environments for coding agents, browser work, file operations, and reproducible task runs.
+The public infrastructure surface is [sandbox.tangle.tools](https://sandbox.tangle.tools), and the product page is [Tangle Sandbox](https://tangle.tools/services/sandbox).
+
+The June 2026 customer update is publication of public service status coverage and clearer release-note routing for sandbox infrastructure changes.
+No customer migration is required.
+
+## Router Infrastructure
+
+The router is the hosted model and agent-routing surface used by Tangle products and integrations.
+The public infrastructure surface is [router.tangle.tools](https://router.tangle.tools).
+
+The June 2026 customer update is inclusion of router infrastructure in public status coverage.
+No customer migration is required.
+
+## Browser Agent
+
+Browser Agent provides browser automation for product QA, UI checks, and evidence-producing website workflows.
+The public application surface is [browser.tangle.tools](https://browser.tangle.tools), and the product page is [Tangle Browser Agent](https://tangle.tools/services/browser-agent).
+
+The June 2026 customer update is inclusion of Browser Agent in public release-note and status coverage.
+No customer migration is required.
+
+## Audit Agent
+
+Audit Agent provides security-review workflows and reproducible audit artifacts for code and application surfaces.
+The public application surface is [audits.tangle.tools](https://audits.tangle.tools).
+
+The June 2026 customer update is inclusion of Audit Agent in public release-note and status coverage.
+No customer migration is required.
+
+## Protocol Contracts and SDK Bindings
+
+The current protocol contract release note is [tnt-core v0.13.0](/release-notes/0.13.0).
+That release includes breaking changes for quote signing, slashing event decoding, custom BSM hooks, and L2 slashing receiver rotations.
+
+Customers and operators who maintain those integrations should follow the migration checklist in the v0.13.0 release note.
+
+## Where Updates Appear
+
+Future customer-visible changes will be posted under this release-note section.
+Operational reachability is posted at [tangle.tools/status](https://tangle.tools/status).
+Security practices are posted at [tangle.tools/security](https://tangle.tools/security).
