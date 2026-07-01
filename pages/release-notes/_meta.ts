@@ -2,6 +2,7 @@ import type { Meta } from "nextra";
 
 const meta: Meta = {
   index: "Overview",
+  all: "All Releases",
   "-- products": {
     type: "separator",
     title: "Products",
