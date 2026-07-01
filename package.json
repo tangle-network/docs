@@ -13,6 +13,7 @@
     "export": "next export",
     "check:harness-copy": "node ./scripts/check-harness-copy.mjs",
     "check:tnt-core-sync": "node ./scripts/check-tnt-core-sync.mjs",
+    "check:release-notes": "node ./scripts/check-release-notes.mjs",
     "lint": "next lint && yarn format",
     "schema": "turbo-gen ./public/schema.json",
     "format": "prettier --write \"{components,pages}/**/*.{mdx,ts,js,jsx,tsx,json}\" ",
