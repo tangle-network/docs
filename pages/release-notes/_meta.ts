@@ -14,9 +14,9 @@ const meta: Meta = {
   "audit-agent": "Audit Agent",
   "-- protocol": {
     type: "separator",
-    title: "Protocol",
+    title: "Protocol Packages",
   },
-  protocol: "Protocol and SDKs",
+  "tnt-core": "tnt-core",
 };
 
 export default meta;
