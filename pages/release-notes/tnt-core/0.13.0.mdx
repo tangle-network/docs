@@ -1,0 +1,207 @@
+---
+title: tnt-core v0.13.0
+description: Quote requester binding, slashing event reshape, BSM hooks, and L2 slashing-receiver timelocks.
+---
+
+# tnt-core v0.13.0
+
+Published: May 8, 2026.
+Product line: tnt-core.
+
+This release cuts in two breaking changes for any off-chain service that signs RFQ
+quotes or decodes slashing events, plus a set of lifecycle and cross-chain hardening
+fixes from the round-2 audit pass. Upstream PRs:
+[tnt-core#124](https://github.com/tangle-network/tnt-core/pull/124),
+[tnt-core#125](https://github.com/tangle-network/tnt-core/pull/125).
+
+If you maintain operator software that signs quotes, an indexer that decodes slash
+events, a custom BSM, or an L2 slashing receiver, treat this as a required upgrade.
+
+## Breaking Changes
+
+### EIP-712 quote binding (`QuoteDetails`, `JobQuoteDetails`)
+
+Both quote structs now carry `address requester` as the **first** field of the EIP-712
+typed data. The contract enforces `requester == msg.sender` on
+`createServiceFromQuotes` / `extendServiceFromQuotes` / `submitJobFromQuote` and rejects
+wildcard `requester == address(0)`.
+
+The new typehash strings are:
+
+```
+QuoteDetails(address requester,uint64 blueprintId,uint64 ttlBlocks,uint256 totalCost,uint64 timestamp,uint64 expiry,uint8 confidentiality,AssetSecurityCommitment[] securityCommitments,ResourceCommitment[] resourceCommitments)
+
+JobQuoteDetails(address requester,uint64 serviceId,uint8 jobIndex,uint256 price,uint64 timestamp,uint64 expiry,uint8 confidentiality)
+```
+
+Previously `requester` lived on `QuoteDetails` but was excluded from the typehash, so a
+mempool observer could rewrite `details.requester` to themselves and the operator's
+signature still recovered. `JobQuoteDetails` had no `requester` at all and any
+`permittedCaller` could lift another caller's signed digest. Both are now bound at the
+typehash level.
+
+**Action for operator software:**
+
+- Add `requester` to the `QuoteDetails` typed-data hash as the first member.
+- Add `requester` to the `JobQuoteDetails` typed-data hash as the first member.
+- Sign per-caller quotes; do **not** emit wildcard quotes - they are rejected on-chain.
+- Pre-fix signatures fail signature recovery against the new typehash and must be regenerated.
+
+See [pricing & payments](/developers/blueprints/pricing-and-payments) for the updated
+struct shapes and a copyable typed-data example.
+
+### `Types.ServiceRequest.activated` reordered
+
+The `activated` flag was moved to the **end** of the `ServiceRequest` struct so a
+hypothetical upgrade from a pre-`activated` storage layout cannot accidentally read a
+non-zero byte from a different field as `activated == true`. ABI consumers regenerate
+from the new bindings.
+
+### `ITangleSlashing` event shapes
+
+`ITangleSlashing` now declares the events the protocol emits from `SlashingLib`.
+Before this release, Rust bindings and indexers wired to `ITangleSlashing` could not decode
+any slash event because the interface declared smaller, legacy shapes.
+
+| Event                | Old fields     | New fields                                                                                                      |
+| -------------------- | -------------- | --------------------------------------------------------------------------------------------------------------- |
+| `SlashProposed`      | 4              | 8 - `slashId`, `serviceId`, `operator`, `proposer`, `slashBps`, `effectiveSlashBps`, `evidence`, `executeAfter` |
+| `SlashExecuted`      | 3              | 4 - `slashId`, `serviceId`, `operator`, `actualSlashed`                                                         |
+| `SlashDisputed`      | (not declared) | `slashId`, `disputer`, `reason`                                                                                 |
+| `SlashCancelled`     | (not declared) | `slashId`, `canceller`, `reason`                                                                                |
+| `SlashConfigUpdated` | (not declared) | full `SlashConfig` tuple (6 fields)                                                                             |
+
+`getSlashConfig()` returns the full 6-field `SlashConfig`. `setSlashConfig` takes 6 args:
+the existing `(disputeWindow, instantSlashEnabled, maxSlashBps)` plus
+`(disputeResolutionDeadline, disputeBond, maxPendingSlashesPerOperator)`.
+
+`proposeSlash` parameter `uint256 amount` is now `uint16 slashBps` (basis points).
+`disputeSlash` is `external payable` (so callers can pass `disputeBond` as native value).
+
+See [`ITangleSlashing`](/developers/api/reference/ITangleSlashing) and
+[Slashing](/developers/slashing) for the updated lifecycle and config matrix.
+
+### BSM hook: `forceRemoveAllowsBelowMin(uint64) -> bool`
+
+`IBlueprintServiceManager` adds a new view:
+
+```solidity
+function forceRemoveAllowsBelowMin(uint64 serviceId) external view returns (bool ok);
+```
+
+Default in `BlueprintServiceManagerBase` is `false` - the protocol enforces
+`operatorCount > minOperators` on `forceRemoveOperator`. Custom BSMs that do **not**
+inherit `BlueprintServiceManagerBase` MUST implement this hook explicitly; an
+unimplemented or reverting view fails closed and the eviction reverts as soon as it
+would push the service below `minOperators`.
+
+Without this gate, a malicious blueprint manager could evict honest operators below
+the configured floor and bias the operator set toward sybils.
+
+## Hardening (non-breaking, behavior-changing)
+
+### Slashing
+
+- `proposeSlash` and `disputeSlash` now carry `nonReentrant`. Previously only
+  `executeSlash`, `executeSlashBatch`, and `cancelSlash` were guarded.
+- `proposeSlash` rejects `bytes32(0)` evidence so off-chain monitors keying off
+  non-zero evidence don't see silently-zero entries.
+- Disputed slashes use the same 15-second `TIMESTAMP_BUFFER` as Pending slashes.
+  `executeSlash` for a `Disputed` proposal now requires
+  `disputeDeadline + TIMESTAMP_BUFFER` to have elapsed.
+- A `SLASH_ADMIN_ROLE` holder that is also the `proposer` of a slash CANNOT dispute
+  their own proposal.
+
+### Service lifecycle
+
+- Every operator-exit entrypoint (`scheduleExit`, `executeExit`, `forceExit`,
+  `leaveService`, `forceRemoveOperator`) reverts when the service is no longer
+  `Active`.
+- `terminateService` and `terminateServiceForNonPayment` carry `nonReentrant`.
+- `approveService` rejects requests past `createdAt + requestExpiryGracePeriod`.
+- `requestService*` rejects duplicate operator entries.
+
+### MBSM registry
+
+- `MBSMRegistry.pinBlueprint` rejects revisions currently inside the deprecation
+  grace window. Pinning to a deprecated revision would break every BSM call for the
+  pinned blueprint the moment `completeDeprecation` ran.
+
+### L2 slashing receiver
+
+- `setMessenger` and `setSlasher` are timelock-gated for non-bootstrap rotations
+  (2-day `SENDER_ACTIVATION_DELAY`). The first write (when the current value is
+  `address(0)`) is a bootstrap exemption so deploy scripts can wire the bridge
+  without a 2-day deadlock.
+- New `activateMessenger()` / `activateSlasher()` consume the queued swap after the
+  delay elapses.
+- `receiveMessage` reverts when the L2 slasher returns `canSlash == false` or when
+  `slashBps == 0`, **before** consuming the bridge nonce. Previously the nonce was
+  marked processed first and a transient failure silently dropped the slash with no
+  retry path. With CEI fixed the bridge keeps the message available for retry.
+- New `SlashingNotPossible(address operator)` error distinguishes the
+  retry-after-condition-clears case from a real misconfiguration.
+
+### Beacon SSZ encoding
+
+`BeaconChainProofs` `getEffectiveBalanceGwei`, `getActivationEpoch`, `getExitEpoch`,
+`getWithdrawableEpoch`, and `_extractBalanceFromLeaf` now perform the canonical
+little-endian byte-swap on SSZ-packed `uint64` fields. EigenPod-CLI fixtures decode
+correctly out of the box; hand-rolled proof builders that pack values into the low 8
+bytes of the chunk (or use big-endian) will be rejected. Real EigenPod proofs would
+silently mis-account every `uint64` field - every effective balance, exit epoch, and
+validator balance - under the previous code.
+
+If you maintain a proof builder, regenerate fixtures with the canonical SSZ packing
+and pin the 32-ETH leaf regression test that ships with v0.13.0.
+
+### Other fixes
+
+- `TNTLockFactory.getOrCreateLock` requires `msg.sender == beneficiary`. Without this
+  gate, a third party could front-run the victim's first interaction with a lock,
+  supply themselves as `delegatee`, and persistently capture the victim's voting
+  power for every future inbound TNT transfer to the deterministic lock address.
+- `_distributePaymentWithEffectiveExposure` reverts (instead of silently retaining
+  funds) when there are zero active operators at billing time.
+- `fundService`, `billSubscription`, and `billSubscriptionBatch` respect the global
+  pause. Reward / refund claim paths remain unguarded so users can always exit.
+- `OperatorStatusRegistry.registerOperator` resets all per-`(serviceId, operator)`
+  heartbeat / metrics state on (re-)register.
+- `LiquidDelegationVault.requestRedeem` rejects `controller == address(0)`.
+
+## Migration Checklist
+
+1. **Operator quote servers**: regenerate signatures with `requester` populated as the
+   first field of `QuoteDetails` and `JobQuoteDetails`. Stop signing wildcard quotes.
+2. **Indexers / Rust binding consumers**: regenerate from
+   [`tnt-core-bindings` v0.13.0](https://crates.io/crates/tnt-core-bindings) and
+   re-decode slash events against the new shapes (`SlashProposed` 8 fields,
+   `SlashExecuted` 4 fields, plus `SlashDisputed`/`SlashCancelled`/`SlashConfigUpdated`).
+3. **Custom BSMs not inheriting `BlueprintServiceManagerBase`**: implement
+   `forceRemoveAllowsBelowMin(uint64) -> bool` (return `false` unless you genuinely need
+   emergency-eviction-below-min).
+4. **MBSM operators**: do not pin a blueprint to a revision that is in the deprecation
+   grace window - `pinBlueprint` will revert. Wait until the deprecation completes or
+   pick a different revision.
+5. **L2 slashing receiver operators**: budget for two-step rotations of `messenger`
+   and `slasher`. Queue with `setMessenger` / `setSlasher`, then schedule
+   `activateMessenger()` / `activateSlasher()` 2 days later.
+6. **Beacon proof builders**: regenerate SSZ fixtures with canonical
+   little-endian packing for `uint64` fields.
+7. **`SLASH_ADMIN` operators**: a SLASH_ADMIN that is also the proposer can no longer
+   self-dispute their own slash. Route disputes through a different admin-keyed
+   account or the operator.
+
+## Reference
+
+- [`ITangleSlashing`](/developers/api/reference/ITangleSlashing)
+- [`IBlueprintServiceManager`](/developers/api/reference/IBlueprintServiceManager)
+- [`IMBSMRegistry`](/developers/api/reference/IMBSMRegistry)
+- [Slashing](/developers/slashing)
+- [Auth Surface](/developers/auth-surface)
+- [Service Lifecycle](/developers/blueprints/service-lifecycle)
+- [Pricing and Payments](/developers/blueprints/pricing-and-payments)
+- tnt-core PR [#124](https://github.com/tangle-network/tnt-core/pull/124),
+  [#125](https://github.com/tangle-network/tnt-core/pull/125)
+- Full bindings changelog:
+  [`tnt-core-bindings/CHANGELOG.md`](https://github.com/tangle-network/tnt-core/blob/main/bindings/CHANGELOG.md)
