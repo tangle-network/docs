@@ -1,0 +1,38 @@
+---
+title: Release Notes
+description: Public release notes for Tangle products.
+---
+
+# Release Notes
+
+Release notes are organized by product line.
+Hosted products use dated entries.
+Protocol and SDK releases use versioned entries.
+
+For current service reachability, use the [public status page](https://tangle.tools/status).
+For security practices, use the [security page](https://tangle.tools/security).
+
+## Product Lines
+
+| Product line             | Type             | Release notes                                     | Public URL                                            | Latest customer action                                                                               |
+| ------------------------ | ---------------- | ------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Blueprint Agent          | Hosted product   | [Blueprint Agent](/release-notes/blueprint-agent) | [ai.tangle.tools](https://ai.tangle.tools)            | No migration required                                                                                |
+| Sandbox                  | Hosted product   | [Sandbox](/release-notes/sandbox)                 | [sandbox.tangle.tools](https://sandbox.tangle.tools)  | No migration required                                                                                |
+| Router                   | Hosted service   | [Router](/release-notes/router)                   | [router.tangle.tools](https://router.tangle.tools)    | No migration required                                                                                |
+| Browser Agent            | Hosted product   | [Browser Agent](/release-notes/browser-agent)     | [browser.tangle.tools](https://browser.tangle.tools)  | No migration required                                                                                |
+| Audit Agent              | Hosted product   | [Audit Agent](/release-notes/audit-agent)         | [audits.tangle.tools](https://audits.tangle.tools)    | No migration required                                                                                |
+| Tangle Protocol and SDKs | Protocol and SDK | [Protocol and SDKs](/release-notes/protocol)      | [Developer docs](/developers/blueprints/introduction) | Upgrade required for quote signers, slashing event consumers, custom BSMs, and L2 receiver operators |
+
+## Organization
+
+| Release type             | Format         | What each note includes                                                                                   |
+| ------------------------ | -------------- | --------------------------------------------------------------------------------------------------------- |
+| Hosted product release   | Dated note     | Published date, product, public URL, customer impact, customer action, and support/status links           |
+| Hosted service release   | Dated note     | Published date, service, affected products, compatibility impact, customer action, and status link        |
+| Protocol and SDK release | Versioned note | Version, source PR or tag, breaking changes, affected roles, migration checklist, and API/reference links |
+
+## Customer Communications
+
+Customer-visible changes are posted under the affected product line.
+Contract and SDK compatibility changes are posted under Protocol and SDKs.
+Security-sensitive notices may be sent directly to affected customers before a public summary is published.

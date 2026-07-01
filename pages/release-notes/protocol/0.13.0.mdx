@@ -5,6 +5,9 @@ description: Quote requester binding, slashing event reshape, BSM hooks, and L2 
 
 # tnt-core v0.13.0
 
+Published: May 8, 2026.
+Product line: Tangle Protocol and SDKs.
+
 This release cuts in two breaking changes for any off-chain service that signs RFQ
 quotes or decodes slashing events, plus a set of lifecycle and cross-chain hardening
 fixes from the round-2 audit pass. Upstream PRs:
@@ -56,7 +59,7 @@ from the new bindings.
 
 ### `ITangleSlashing` event shapes
 
-`ITangleSlashing` now declares the events the protocol actually emits from `SlashingLib`.
+`ITangleSlashing` now declares the events the protocol emits from `SlashingLib`.
 Before this release, Rust bindings and indexers wired to `ITangleSlashing` could not decode
 any slash event because the interface declared smaller, legacy shapes.
 
