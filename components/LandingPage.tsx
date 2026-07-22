@@ -9,7 +9,7 @@ const getStartedCards = [
     icon: <GiPlatform />,
     title: "Agentic workbench",
     description:
-      "Build and run agents in a shared workspace, then turn every run into the next improvement.",
+      "Vibe-code in the browser: describe a project, build it with an AI agent, and run it in a sandbox.",
     link: "/vibe/introduction",
   },
   {
@@ -53,9 +53,9 @@ const LandingPage = () => {
             </h1>
             <p className="text-lg font-bold text-gray-700 md:font-normal lg:text-lg dark:text-gray-400">
               Run any coding agent in an isolated sandbox. Reach every model
-              through one API key. Every run is traced and turned into a better
-              agent. Start on the managed cloud, or run the same services
-              yourself on the Tangle protocol.
+              through one API key. Trace every run to see exactly what your
+              agents do and where to improve them. Start on the managed cloud,
+              or run the same services yourself on the Tangle protocol.
             </p>
           </div>
 
@@ -80,10 +80,10 @@ const LandingPage = () => {
             How it fits together
           </h2>
           <p className="mb-6 text-base text-gray-700 dark:text-gray-400">
-            You author work in the workbench, agents run it in isolated
-            sandboxes, and every run produces the traces that improve the next
-            one. Run those services on the managed cloud, or host them yourself
-            on the protocol and get paid on-chain.
+            You build in the workbench, agents run in isolated sandboxes, and
+            every run produces traces that show what happened and where to
+            improve. Run those services on the managed cloud, or host them
+            yourself on the protocol and get paid on-chain.
           </p>
           <figure className="w-full">
             <div className="relative w-full min-h-[280px]">
