@@ -7,28 +7,30 @@ import CallToActionCard from "./CallToActionCard";
 const getStartedCards = [
   {
     icon: <GiPlatform />,
-    title: "Start in the agentic workbench",
+    title: "Agentic workbench",
     description:
-      "Create autonomous work with teammates and agents in a shared workspace.",
+      "Build and run agents in a shared workspace, then turn every run into the next improvement.",
     link: "/vibe/introduction",
   },
   {
     icon: <GrNodes />,
-    title: "Run work in isolated sandboxes",
-    description: "Work executes in isolated runtimes with policies and limits.",
+    title: "Sandboxes",
+    description:
+      "A real computer for every agent: shell, files, browser, any coding harness.",
     link: "/infrastructure/introduction",
   },
   {
     icon: <GiToken />,
-    title: "Operate the runtime",
+    title: "Inference gateway",
     description:
-      "Host protocol-backed runtimes and get paid through the protocol.",
-    link: "/operators/introduction",
+      "One OpenAI-compatible key. Hundreds of models, routed to a live provider on price and latency.",
+    link: "/gateway",
   },
   {
     icon: <SiBlueprint />,
-    title: "Build and publish Blueprints",
-    description: "Package services and workflows to run on the protocol.",
+    title: "Blueprints",
+    description:
+      "Package a service and run it on the Tangle protocol, settled on-chain to operators.",
     link: "/developers/blueprints/introduction",
   },
 ];
@@ -44,18 +46,16 @@ const LandingPage = () => {
               TANGLE DOCUMENTATION
             </p>
             <h1 className="text-3xl font-normal text-gray-900 dark:text-white md:text-3xl lg:text-5xl">
-              Tangle is the{" "}
+              Infrastructure for AI agents that{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-blue-700">
-                shared operating layer
-              </span>{" "}
-              for autonomous work
+                do real work
+              </span>
             </h1>
             <p className="text-lg font-bold text-gray-700 md:font-normal lg:text-lg dark:text-gray-400">
-              Teams and agents collaborate in shared workbenches or separate
-              ones, work runs in isolated sandboxes with explicit limits, and
-              the protocol pays operators who host protocol-backed services.
-              Workflows improve through agent and task evaluations collected
-              from each run.
+              Run any coding agent in an isolated sandbox. Reach every model
+              through one API key. Every run is traced and turned into a better
+              agent. Start on the managed cloud, or run the same services
+              yourself on the Tangle protocol.
             </p>
           </div>
 
@@ -77,12 +77,13 @@ const LandingPage = () => {
         {/* System Overview */}
         <div className="container mb-12">
           <h2 className="inline-flex mb-6 text-xl font-semibold text-gray-500 underline underline-offset-8 dark:text-white">
-            System Overview
+            How it fits together
           </h2>
           <p className="mb-6 text-base text-gray-700 dark:text-gray-400">
-            Teams and agents collaborate in shared workbenches or separate ones,
-            work runs in isolated sandboxes with explicit limits, and the
-            protocol pays operators who host protocol-backed services.
+            You author work in the workbench, agents run it in isolated
+            sandboxes, and every run produces the traces that improve the next
+            one. Run those services on the managed cloud, or host them yourself
+            on the protocol and get paid on-chain.
           </p>
           <figure className="w-full">
             <div className="relative w-full min-h-[280px]">
@@ -94,8 +95,8 @@ const LandingPage = () => {
               />
             </div>
             <figcaption className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-              Autonomous work loop: workbench -&gt; sandbox runtime -&gt;
-              protocol (payments + evaluation).
+              The loop: workbench -&gt; sandbox runtime -&gt; protocol (payments
+              + evaluation).
             </figcaption>
           </figure>
         </div>
@@ -103,7 +104,7 @@ const LandingPage = () => {
         {/* What Runs Where */}
         <div className="container mb-12">
           <h2 className="inline-flex mb-6 text-xl font-semibold text-gray-500 underline underline-offset-8 dark:text-white">
-            What Runs Where
+            What runs where
           </h2>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
@@ -111,15 +112,17 @@ const LandingPage = () => {
                 Workbench
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Workflows, profiles, simulations, and reviews.
+                Where you author and orchestrate. Profiles, simulations, and
+                reviews.
               </p>
             </div>
             <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
               <h3 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">
-                Sandbox Runtime
+                Sandbox runtime
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Agent sessions, tool calls, and file edits.
+                Where agents run. A real computer per session: shell, files,
+                browser, any harness.
               </p>
             </div>
             <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
@@ -127,7 +130,8 @@ const LandingPage = () => {
                 Protocol
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Service registry, operator payments, staking, and incentives.
+                Where services settle. Operators run Blueprints and get paid
+                on-chain.
               </p>
             </div>
           </div>
@@ -136,7 +140,7 @@ const LandingPage = () => {
         {/* Call-to-Action Cards Row */}
         <div className="container">
           <h2 className="inline-flex mb-10 text-xl font-semibold text-gray-500 underline underline-offset-8 dark:text-white">
-            Get Started
+            Start building
           </h2>
           <div className="relative flex flex-grow p-5 md:p-0">
             <div className="flex flex-col items-center flex-grow gap-5 mb-8 sm:flex-row">
