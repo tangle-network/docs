@@ -1,0 +1,62 @@
+---
+title: Quickstart
+description: Get your first content-bearing trace into Tangle Intelligence in about five minutes.
+---
+
+# Quickstart
+
+Get your first content-bearing trace flowing, then confirm Intelligence can read it. This uses Claude Code as the example; other agents follow the same shape in [Connect your agent](/intelligence/connect).
+
+## 1. Get an API key
+
+Create an `sk-tan-…` key from [Authentication](/platform/authentication) and export it:
+
+```sh
+export TANGLE_API_KEY=sk-tan-...
+```
+
+## 2. Point your agent at Intelligence, with content on
+
+Content rides the OTLP **logs** signal and ships off by default, so the logs exporter and the content gates are both required — telemetry alone gives you a metadata-only feed.
+
+```sh
+export CLAUDE_CODE_ENABLE_TELEMETRY=1
+export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
+export OTEL_EXPORTER_OTLP_ENDPOINT=https://intelligence.tangle.tools/v1/otlp
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer ${TANGLE_API_KEY}"
+
+export OTEL_LOGS_EXPORTER=otlp          # required: content rides log events
+export OTEL_LOG_USER_PROMPTS=1          # task/prompt text
+export OTEL_LOG_TOOL_DETAILS=1          # tool arguments
+
+# group runs so Intelligence rolls them up by project
+export OTEL_RESOURCE_ATTRIBUTES=tangle.subject.key=my-project
+```
+
+The full flag set, privacy tiers, and per-agent config for Codex, OpenCode, and sandbox-run agents are in [Connect your agent](/intelligence/connect).
+
+## 3. Run one real task
+
+Run the agent once on an actual task, not an empty prompt — Intelligence reads the prompts, completions, and tool I/O that a real run produces.
+
+```sh
+claude -p "fix the failing test in src/auth"
+```
+
+## 4. Verify content is flowing
+
+Within about 30 seconds, check that a trace landed with a content key, not just metadata:
+
+```sh
+AUTH="Authorization: Bearer ${TANGLE_API_KEY}"
+TID=$(curl -sS "https://intelligence.tangle.tools/v1/traces?limit=1" -H "$AUTH" | jq -r '.items[0].trace_id')
+curl -sS "https://intelligence.tangle.tools/v1/traces/$TID/spans" -H "$AUTH" \
+  | jq '[.items[].attributes // .spans[].attributes | keys] | add | unique'
+```
+
+If the keys include a content key such as `claude_code.user_prompt` or `gen_ai.prompt`, content is flowing. If you see only `tool_name`, `duration_ms`, and ids, you missed a gate — see [Connect your agent](/intelligence/connect#verify-content-is-flowing).
+
+## Next
+
+- [Connect your agent](/intelligence/connect) — Codex, OpenCode, and agents that only emit content when run inside a Tangle sandbox.
+- Run your agent in the [sandbox runtime](/infrastructure/introduction) and its evidence lands in the same timeline without any exporter setup.
