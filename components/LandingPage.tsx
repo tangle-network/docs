@@ -7,9 +7,9 @@ import CallToActionCard from "./CallToActionCard";
 const getStartedCards = [
   {
     icon: <GiPlatform />,
-    title: "Agentic workbench",
+    title: "Blueprint Agent",
     description:
-      "Vibe-code in the browser: describe a project, build it with an AI agent, and run it in a sandbox.",
+      "Describe a project and build it with an AI agent in the browser, then ship it.",
     link: "/vibe/introduction",
   },
   {
@@ -80,8 +80,8 @@ const LandingPage = () => {
             How it fits together
           </h2>
           <p className="mb-6 text-base text-gray-700 dark:text-gray-400">
-            You build in the workbench, agents run in isolated sandboxes, and
-            every run produces traces that show what happened and where to
+            You build in the Blueprint Agent, work runs in isolated sandboxes,
+            and every run produces traces that show what happened and where to
             improve. Run those services on the managed cloud, or host them
             yourself on the protocol and get paid on-chain.
           </p>
@@ -95,8 +95,8 @@ const LandingPage = () => {
               />
             </div>
             <figcaption className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-              The loop: workbench -&gt; sandbox runtime -&gt; protocol (payments
-              + evaluation).
+              The loop: Blueprint Agent -&gt; sandbox runtime -&gt; protocol
+              (payments + evaluation).
             </figcaption>
           </figure>
         </div>
@@ -109,11 +109,10 @@ const LandingPage = () => {
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
               <h3 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">
-                Workbench
+                Blueprint Agent
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Where you author and orchestrate. Profiles, simulations, and
-                reviews.
+                Where you describe and build projects with an AI agent.
               </p>
             </div>
             <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
