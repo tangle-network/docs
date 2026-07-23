@@ -28,23 +28,23 @@ const meta: Meta = {
   },
   "workbench-intro": {
     title: "Introduction",
-    href: "/vibe/introduction",
+    href: "/workbench/introduction",
   },
   "workbench-workflows": {
     title: "Agent Workflows",
-    href: "/vibe/workflows",
+    href: "/workbench/workflows",
   },
   "workbench-simulations": {
     title: "Simulations",
-    href: "/vibe/simulations",
+    href: "/workbench/simulations",
   },
   "workbench-profiles": {
     title: "Profiles and Policies",
-    href: "/vibe/profiles",
+    href: "/workbench/profiles",
   },
   "workbench-integrations": {
     title: "Integrations",
-    href: "/vibe/integrations",
+    href: "/workbench/integrations",
   },
   "-- runtime": {
     type: "separator",

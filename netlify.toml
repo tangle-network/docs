@@ -16,3 +16,14 @@ status = 301
 from = "/operators"
 to = "/operators/introduction"
 status = 301
+
+# /vibe was renamed to /workbench — keep old links alive.
+[[redirects]]
+from = "/vibe/*"
+to = "/workbench/:splat"
+status = 301
+
+[[redirects]]
+from = "/vibe"
+to = "/workbench/introduction"
+status = 301
