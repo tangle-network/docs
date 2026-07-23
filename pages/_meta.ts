@@ -14,6 +14,10 @@ const meta: Meta = {
     title: "Vision",
     type: "page",
   },
+  sandbox: {
+    title: "Sandbox",
+    type: "page",
+  },
   platform: {
     title: "Platform",
     type: "page",
