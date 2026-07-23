@@ -14,6 +14,10 @@ const meta: Meta = {
     title: "Vision",
     type: "page",
   },
+  platform: {
+    title: "Platform",
+    type: "page",
+  },
   vibe: {
     title: "Workbench",
     type: "page",
