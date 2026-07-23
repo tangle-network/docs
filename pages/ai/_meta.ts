@@ -28,23 +28,23 @@ const meta: Meta = {
   },
   "workbench-intro": {
     title: "Introduction",
-    href: "/workbench/introduction",
+    href: "/blueprint-agent/introduction",
   },
   "workbench-workflows": {
     title: "Agent Workflows",
-    href: "/workbench/workflows",
+    href: "/blueprint-agent/workflows",
   },
   "workbench-simulations": {
     title: "Simulations",
-    href: "/workbench/simulations",
+    href: "/blueprint-agent/simulations",
   },
   "workbench-profiles": {
     title: "Profiles and Policies",
-    href: "/workbench/profiles",
+    href: "/blueprint-agent/profiles",
   },
   "workbench-integrations": {
     title: "Integrations",
-    href: "/workbench/integrations",
+    href: "/blueprint-agent/integrations",
   },
   "-- runtime": {
     type: "separator",

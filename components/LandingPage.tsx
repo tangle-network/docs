@@ -10,7 +10,7 @@ const getStartedCards = [
     title: "Blueprint Agent",
     description:
       "Describe a project and build it with an AI agent in the browser, then ship it.",
-    link: "/workbench/introduction",
+    link: "/blueprint-agent/introduction",
   },
   {
     icon: <GrNodes />,

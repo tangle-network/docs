@@ -17,13 +17,24 @@ from = "/operators"
 to = "/operators/introduction"
 status = 301
 
-# /vibe was renamed to /workbench — keep old links alive.
+# The Blueprint Agent section was previously routed at /vibe, then briefly /workbench.
+# Keep both old paths alive.
 [[redirects]]
 from = "/vibe/*"
-to = "/workbench/:splat"
+to = "/blueprint-agent/:splat"
 status = 301
 
 [[redirects]]
 from = "/vibe"
-to = "/workbench/introduction"
+to = "/blueprint-agent/introduction"
+status = 301
+
+[[redirects]]
+from = "/workbench/*"
+to = "/blueprint-agent/:splat"
+status = 301
+
+[[redirects]]
+from = "/workbench"
+to = "/blueprint-agent/introduction"
 status = 301
