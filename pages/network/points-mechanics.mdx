@@ -4,7 +4,7 @@ Tangle uses a credits system to recognize contributions. Credits are computed of
 
 Credits are not token transfers. A user proves inclusion by submitting the claim data and Merkle proof accepted by the `Credits` contract.
 
-## How Credits Work
+## Off-chain compute, on-chain claim
 
 1. Eligible activity is indexed off-chain.
 2. A Merkle root for the epoch is published on-chain.
@@ -22,7 +22,7 @@ The exact credit sources and weights can evolve. Always refer to the current pro
 
 ## Claiming Credits
 
-Credits are claimed through the `Credits` contract once a new epoch root is published. The claim flow is intentionally simple and can be automated by the UI.
+Credits are claimed through the `Credits` contract once a new epoch root is published. The UI can automate the claim.
 
 Contract source (GitHub): https://github.com/tangle-network/tnt-core/blob/main/packages/credits/src/Credits.sol
 

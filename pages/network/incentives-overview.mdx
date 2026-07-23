@@ -18,8 +18,6 @@ Tangle's incentives come from two sources:
 
 Claim paths: staker fees + staker inflation via `ServiceFeeDistributor`, TNT staking incentives via `RewardVaults`, and operator/customer/developer TNT via `InflationPool`.
 
-Code references: [PaymentsDistribution.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/PaymentsDistribution.sol), [PaymentsRewards.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/PaymentsRewards.sol), [ServiceFeeDistributor.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol), [InflationPool.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/InflationPool.sol), [RewardVaults.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/RewardVaults.sol), [TangleMetrics.sol](https://github.com/tangle-network/tnt-core/blob/main/src/rewards/TangleMetrics.sol)
-
 ## Service Fees
 
 Customers pay for blueprint services using the chain's native token or an ERC-20 payment token (including TNT). Fees are split between:
@@ -54,7 +52,7 @@ The protocol can optionally record activity into a metrics contract (`TangleMetr
 
 - See [Metrics and Scoring](/network/metrics-and-scoring) for details.
 
-## Why This Layout Works
+## What This Layout Guarantees
 
 - **One staker fee path**: Service fees always flow through `ServiceFeeDistributor`, so payout math is consistent across tokens and services.
 - **Budget clarity**: Incentives only exist if governance funds them; there is no hidden inflation.

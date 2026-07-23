@@ -1,6 +1,6 @@
 # Architecture
 
-The runtime is split into an orchestrator and execution sidecars so workloads stay isolated while coordination stays flexible.
+The runtime is split into an orchestrator and execution sidecars so workloads stay isolated and the orchestrator can place, scale, and stream them independently.
 
 The runtime has two operating modes:
 
@@ -20,9 +20,7 @@ Both modes isolate work, stream events, and keep execution reviewable. The app s
 - **Autoscaling and host pools (optional)**: Promote standby hosts and trigger provisioning through a webhook.
 - **Observability layer**: Exposes metrics and health endpoints and preserves execution metadata.
 
-This architecture keeps workloads portable while maintaining consistent safety guarantees.
-
-## Operational Traits
+## Placement, streaming, and policy
 
 - **Multi-provider backends**: Select providers behind consistent policy gates.
 - **Capacity-aware placement**: Allocate based on host health and resource limits.

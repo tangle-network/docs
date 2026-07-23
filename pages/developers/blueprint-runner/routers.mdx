@@ -8,9 +8,9 @@ import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
 SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/runner
 
-Routers are a critical component of the [Blueprint Runner](/developers/blueprint-runner/introduction) architecture. They are responsible for directing job calls to the appropriate job handlers based on job IDs. This document explains how routers work, how to configure them, and best practices for implementation.
+A router in the [Blueprint Runner](/developers/blueprint-runner/introduction) maps each job ID to the handler that runs it, validates the parameters, and returns the result.
 
-## What are Routers?
+## How a router dispatches a job call
 
 In a Blueprint Runner, a router acts as a traffic director for job execution. When a job is called, the router:
 
@@ -19,14 +19,14 @@ In a Blueprint Runner, a router acts as a traffic director for job execution. Wh
 3. Passes the parameters to the job handler
 4. Returns the result to the consumer
 
-Routers ensure that jobs are executed by the appropriate handlers, making them essential for the proper functioning of your Blueprint Runner.
+If no route matches the job ID, the call is rejected before any handler runs.
 
 ## Router Configuration
 
 Routers are configured when building the Blueprint Runner in the `main.rs` file of your Blueprint's binary. The configuration involves:
 
 1. Creating a new router
-2. Defining routes for each job you have, mapping a job ID to each job in it's route
+2. Defining routes for each job you have, mapping a job ID to each job in its route
 3. Setting a context for the router, which will contain any resources needed by the jobs
 
 ### Basic Router Setup
@@ -59,7 +59,7 @@ Layers are used to filter job calls based on certain criteria. There are two pla
 2. A whole Router:
    - A layer can be used to filter job calls based on criteria you control (for example, metadata from Tangle extractors).
 
-## Integration with Other Components
+## Producers in, consumers out
 
 Routers work closely with other Blueprint Runner components:
 

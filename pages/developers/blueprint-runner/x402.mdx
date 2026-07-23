@@ -7,10 +7,6 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
 # x402 Payment Gateway
 
-SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/x402
-Crate README (GitHub): https://github.com/tangle-network/blueprint/blob/main/crates/x402/README.md
-Example blueprint (GitHub): https://github.com/tangle-network/blueprint/blob/main/examples/x402-blueprint/README.md
-
 x402 is an optional, off-chain payment ingress path for job execution. It exposes HTTP endpoints that require a valid
 x402 payment (typically stablecoins on an EVM chain) and then injects a `JobCall` into the Blueprint Runner after the
 payment is verified and settled by an x402 facilitator.
@@ -18,7 +14,11 @@ payment is verified and settled by an x402 facilitator.
 This is useful when you want a service to accept payments from clients on EVM chains without requiring the client to
 submit on-chain Tangle transactions for each job.
 
-## How It Fits In the Runner
+SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/x402
+Crate README (GitHub): https://github.com/tangle-network/blueprint/blob/main/crates/x402/README.md
+Example blueprint (GitHub): https://github.com/tangle-network/blueprint/blob/main/examples/x402-blueprint/README.md
+
+## Gateway and Producer wiring
 
 `X402Gateway` runs as a `BackgroundService` and `X402Producer` is the paired producer that converts verified payments
 into `JobCall`s.

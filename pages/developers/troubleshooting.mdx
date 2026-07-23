@@ -2,11 +2,9 @@ import GithubFileReaderDisplay from "../../components/GithubFileReaderDisplay";
 
 # Troubleshooting Guide
 
-This guide helps developers troubleshoot common issues when working with Tangle Network blueprints.
+A blueprint build most often fails when metadata generation chokes on rustdoc JSON. Here's how to isolate the real compiler error.
 
-## Common Issues
-
-### Blueprint Metadata Build Failures
+## Blueprint Metadata Build Failures
 
 If you encounter build failures when developing blueprints:
 
@@ -33,5 +31,5 @@ Verify that your blueprint's jobs and reports are implemented correctly. If meta
   url="https://github.com/tangle-network/blueprint/blob/main/examples/incredible-squaring/incredible-squaring-bin/build.rs"
   fromLine={1}
   toLine={22}
-  title="Blueprint metadata build script (v2 example)"
+  title="Blueprint metadata build script"
 />

@@ -7,9 +7,9 @@ description: First-party Tangle blueprints, written for users, operators, and ap
 
 A Tangle blueprint is a product template that operators can run. It is not the live service by itself.
 
-The live unit is a service instance. A user requests it, picks registered operators, and then sends jobs to that instance. Tangle Cloud should make that lifecycle obvious: template first, operator capacity second, service instance third.
+The live unit is a service instance. A user requests it, picks registered operators, and then sends jobs to that instance. The lifecycle runs in that order: pick a template, confirm operator capacity, then a service instance is created.
 
-## Start here
+## The core vocabulary
 
 If you only remember one model, use this:
 
@@ -50,4 +50,4 @@ A shared protocol indexer can turn protocol events into app state. It can tell t
 | AI Trading       | https://github.com/tangle-network/ai-trading-blueprint               |
 | Surplus Market   | Internal Tangle repository; public app at `surplus-market.pages.dev` |
 
-These docs describe the current repo contracts and the public app integration shape. If a repo says a path is not live yet, the docs should say the same thing.
+These docs describe the current repo contracts and the public app integration shape. Where a repo marks a path as not yet live, that product's page says so.

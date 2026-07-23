@@ -1,11 +1,11 @@
 ---
 title: Supported Models
-description: Browse models available through Tangle Gateway across 20+ providers.
+description: Browse models available through Tangle Gateway across 16 providers.
 ---
 
 # Supported Models
 
-Tangle Gateway provides access to models from 20+ providers through a single API.
+Tangle Gateway provides access to models from 16 providers through a single API.
 
 ## Providers
 
@@ -64,14 +64,14 @@ Or use bare names - the gateway resolves the provider by prefix:
 
 ## Modalities
 
-| Modality   | Endpoint                                       | Examples                               |
-| ---------- | ---------------------------------------------- | -------------------------------------- |
-| Text       | `/v1/chat/completions`                         | All chat models                        |
-| Images     | `/v1/images/generations`                       | DALL-E, FLUX                           |
-| Audio      | `/v1/audio/transcriptions`, `/v1/audio/speech` | Whisper, TTS                           |
-| Embeddings | `/v1/embeddings`                               | text-embedding-3-small/large           |
-| Video      | `/v1/video/*`                                  | Avatar generation, dubbing (via ph0ny) |
+| Modality   | Endpoint                                       | Examples                     |
+| ---------- | ---------------------------------------------- | ---------------------------- |
+| Text       | `/v1/chat/completions`                         | All chat models              |
+| Images     | `/v1/images/generations`                       | DALL-E, FLUX                 |
+| Audio      | `/v1/audio/transcriptions`, `/v1/audio/speech` | Whisper, TTS                 |
+| Embeddings | `/v1/embeddings`                               | text-embedding-3-small/large |
+| Video      | `/v1/video/*`                                  | Avatar generation, dubbing   |
 
-## Dynamic discovery
+## Model catalog API
 
 The model catalog is available at [`GET /api/models`](https://router.tangle.tools/api/models) with pricing, context length, and modality information for every model.

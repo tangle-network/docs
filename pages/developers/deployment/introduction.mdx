@@ -1,13 +1,13 @@
 # Deploying Blueprints
 
-In order for a blueprint to be instance-able, it'll need to be deployed and have one or more sources defined.
+Deploy a Blueprint with one or more sources defined before anyone can create an instance of it.
 
-If your blueprint has confidentiality requirements, also declare an execution policy in blueprint metadata. TEE is not a
+If your Blueprint has confidentiality requirements, also declare an execution policy in Blueprint metadata. TEE is not a
 separate source type. See [Execution Confidentiality](/developers/blueprints/execution-confidentiality).
 
 ## Defining Sources
 
-Before deploying, you must specify the sources from which to fetch the blueprint binaries.
+Before deploying, you must specify the sources from which to fetch the Blueprint binaries.
 See [Sources](/developers/deployment/sources/introduction).
 
 ### Testing Your Sources
@@ -16,7 +16,7 @@ To verify that your sources are valid, see [Debugging Blueprints](/developers/cl
 
 ## Deploying via the CLI
 
-Once you're ready to deploy your blueprint, simply:
+To deploy your Blueprint:
 
 Install the [cargo-tangle] CLI, if you haven't already.
 

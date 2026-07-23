@@ -21,11 +21,11 @@ The LLM Inference Blueprint uses [tangle-inference-core](https://github.com/tang
 
 To build and deploy your own inference Blueprint, see the [Blueprint SDK docs](/developers/blueprints/introduction) and the [Blueprint Runner](/developers/blueprint-runner/introduction).
 
-## How operators are discovered
+## Operator discovery
 
 1. Operators register on-chain via the [Blueprint Service Manager (BSM)](/developers/blueprints/service-lifecycle) contract
 2. The gateway syncs operator data from the chain every 60 seconds
-3. Operators are stored in the database with their endpoint URL, pricing, and status
+3. The gateway stores each operator with its endpoint URL, pricing, and status
 4. The [scoring algorithm](/gateway/smart-routing) ranks operators per-request
 
 ## Routing to operators

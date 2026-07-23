@@ -8,17 +8,15 @@ import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
 SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/runner
 
-Jobs are the core building blocks of a [Blueprint Runner](/developers/blueprint-runner/introduction). They define the computational tasks that your Blueprint will execute in response to events. This document explains how jobs work, how to define them, and how to integrate them with other components of your Blueprint.
+Jobs are the core building blocks of a [Blueprint Runner](/developers/blueprint-runner/introduction). They define the computational tasks that your Blueprint will execute in response to events.
 
-## What are Jobs?
+## Jobs are event-driven functions
 
 In a Blueprint, jobs are functions that:
 
 1. Receive inputs from [producers](/developers/blueprint-runner/producers)
 2. Perform specific computational tasks
 3. Return results that can be processed by [consumers](/developers/blueprint-runner/consumers)
-
-Jobs are the heart of your Blueprint's functionality, encapsulating the business logic that processes events and produces meaningful results.
 
 ## Job Definition
 

@@ -7,7 +7,7 @@ description: Pay operators directly on-chain via EIP-712 signed authorizations.
 
 SpendAuth lets you pay operators directly on-chain without a credit card or account. Sign an EIP-712 typed data message with your wallet, attach it to the request, and the operator claims payment after serving inference.
 
-## How it works
+## Sign, authorize, claim
 
 1. **Sign:** Create an EIP-712 SpendAuth payload with your wallet
 2. **Send:** Attach the signature as `X-Payment-Signature` header
@@ -42,7 +42,7 @@ curl -X POST "https://router.tangle.tools/v1/chat/completions" \
 
 ## Rate limits
 
-SpendAuth requests get a generous 120 req/min limit per commitment since every request is paid.
+SpendAuth requests are limited to 120 req/min per commitment; the limit is high because every request is paid.
 
 ## On-chain contracts
 

@@ -36,7 +36,7 @@ Each sandbox enforces:
 - **Data access policies**: What files and secrets are available.
 - **Budget limits**: Token and compute ceilings per session.
 
-Policies are defined in workbench profiles and enforced at the runtime level.
+Workbench profiles define policies; the runtime enforces them.
 
 For protocol-backed services, the app should also check the service instance policy and operator endpoint before launching a session. A chain record proves the service exists; it does not prove the sandbox is currently ready.
 
@@ -48,7 +48,7 @@ Every session produces:
 - **Execution metadata**: Timing, resource usage, and exit status.
 - **File snapshots**: State of the workspace at key points.
 
-This makes execution reviewable and supports dispute resolution when issues arise.
+This makes execution reviewable and supports dispute resolution.
 
 ## Operator Checklist
 

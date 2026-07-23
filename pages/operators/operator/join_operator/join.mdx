@@ -1,13 +1,13 @@
 ## Operators
 
-Operators are service providers who stake assets to run blueprint services. Staking gives customers and developers an enforceable security boundary (exposure + slashing) around off-chain work.
+Operators are service providers who stake assets to run Blueprint services. Staking gives customers and developers an enforceable security boundary (exposure + slashing) around off-chain work.
 
 ### Joining as an Operator
 
-This page covers operator onboarding for Tangle Network. You need to:
+Becoming an operator takes three steps:
 
 1. Register with the staking contract (self-stake).
-2. Register for each blueprint you intend to operate.
+2. Register for each Blueprint you intend to operate.
 3. Run the Blueprint Manager to execute jobs.
 
 - Next: [Blueprint Manager](/operators/manager/introduction)
@@ -39,9 +39,9 @@ The CLI flag name is `--restaking-contract` for compatibility; it refers to the 
 The stake amount must meet the minimum configured for the enabled asset. Contract addresses are listed on
 [Network Parameters](/network/network-parameters).
 
-### Step 3: Register for a blueprint
+### Step 3: Register for a Blueprint
 
-Register your operator in the core protocol for a specific blueprint ID:
+Register your operator in the core protocol for a specific Blueprint ID:
 
 ```bash
 cargo tangle blueprint register \
@@ -56,9 +56,9 @@ cargo tangle blueprint register \
   --registration-inputs ./registration.tlv
 ```
 
-- Repeat this step for each blueprint you want to serve.
+- Repeat this step for each Blueprint you want to serve.
 - `--rpc-endpoint` is optional and publishes your operator RPC address.
-- `--registration-inputs` is required only if the blueprint expects extra registration payloads.
+- `--registration-inputs` is required only if the Blueprint expects extra registration payloads.
 
 ### Step 4: Run the Blueprint Manager
 

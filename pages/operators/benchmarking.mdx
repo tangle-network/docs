@@ -1,12 +1,12 @@
 ---
-title: Understanding Benchmarking
+title: Benchmarking and operator pricing
 ---
 
-# Understanding Benchmarking
+# Benchmarking and operator pricing
 
-As a Tangle Network operator, you should understand how the network benchmarks your system to determine pricing for blueprints. This guide explains the automated benchmarking process and how it affects the quotes generated for your operator runtime.
+Tangle automatically benchmarks your hardware when a service activates. The pricing engine uses that profile to quote every blueprint that runs on your host. This guide explains the automated benchmarking process and how it affects the quotes generated for your operator runtime.
 
-## What is Blueprint Benchmarking?
+## What benchmarking measures
 
 Blueprint benchmarking is an automated process that measures your system's capabilities to determine:
 
@@ -16,7 +16,7 @@ Blueprint benchmarking is an automated process that measures your system's capab
 
 When users request quotes from your operator, Tangle's pricing engine uses these benchmark results to calculate fair prices based on your hardware profile.
 
-## How Benchmarking Works
+## Two benchmark phases: service activation and runtime
 
 The benchmarking process happens automatically in two key phases:
 
@@ -110,12 +110,10 @@ A: Benchmarks are initially created during registration and may be updated perio
 **Q: Do benchmark results affect which jobs I receive?**  
 A: Yes, users may choose operators based partly on performance metrics derived from benchmarks.
 
-## Related Information
+## Related operator guides
 
 To learn more about operating on the Tangle Network, you may want to review:
 
 - [Pricing Strategies](/operators/pricing)
 - [Blueprint Manager](/operators/manager/introduction)
 - [Quality of Service](/operators/quality-of-service)
-
-Understanding the benchmarking process helps you better appreciate how the Tangle Network determines pricing for blueprints running on your operator.

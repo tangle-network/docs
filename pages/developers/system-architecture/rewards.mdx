@@ -62,7 +62,7 @@ This keeps incentives explicit and avoids hidden inflation.
 
 If you are building on top of this system, the safe default flows are:
 
-- Use `Tangle` for service payments and let `Payments.sol` route splits.
+- Use `Tangle` for service payments and let `PaymentsDistribution.sol` route splits.
 - Read staker fee rewards from `ServiceFeeDistributor` (or let users claim directly).
 - Read TNT incentives from `RewardVaults`, and optional staker inflation from `ServiceFeeDistributor`.
 
@@ -75,16 +75,16 @@ Service pays 10 ETH with a 20/20/40/20 split:
 
 ## Code + Tests
 
-- Split logic: `src/v2/core/Payments.sol`
-- Staker distribution: `src/v2/rewards/ServiceFeeDistributor.sol`
-- Inflation budgets: `src/v2/rewards/InflationPool.sol`
-- Staking incentives: `src/v2/rewards/RewardVaults.sol`
+- Split logic: `src/core/PaymentsDistribution.sol`
+- Staker distribution: `src/rewards/ServiceFeeDistributor.sol`
+- Inflation budgets: `src/rewards/InflationPool.sol`
+- Staking incentives: `src/rewards/RewardVaults.sol`
 - Tests:
-  - `test/v2/tangle/Payments.t.sol`
-  - `test/v2/rewards/ServiceFeeDistributor.t.sol`
-  - `test/v2/rewards/ServiceFeeDistributorStreaming.t.sol`
-  - `test/v2/Rewards.t.sol`
-  - `test/v2/InflationPool.t.sol`
+  - `test/tangle/Payments.t.sol`
+  - `test/rewards/ServiceFeeDistributor.t.sol`
+  - `test/rewards/ServiceFeeDistributorStreaming.t.sol`
+  - `test/Rewards.t.sol`
+  - `test/InflationPool.t.sol`
 
 <GithubFileReaderDisplay
   url="https://github.com/tangle-network/tnt-core/blob/main/src/rewards/ServiceFeeDistributor.sol"

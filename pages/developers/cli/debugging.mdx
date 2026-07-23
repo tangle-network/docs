@@ -1,10 +1,12 @@
 # Debugging Blueprints
 
-CLI source (GitHub): https://github.com/tangle-network/blueprint/tree/main/cli
+Spawn your blueprint locally in a native, VM, or container sandbox to debug it before deploying.
 
-Blueprints can be deployed to multiple different [sources](/developers/deployment/sources/introduction), with each one
+Blueprints can be deployed to several [sources](/developers/deployment/sources/introduction), with each one
 having its own constraints. The CLI has commands to test your blueprint in these environments, assuming your machine is
 capable of hosting them, see [requirements](/operators/manager/requirements).
+
+CLI source (GitHub): https://github.com/tangle-network/blueprint/tree/main/cli
 
 Supported spawn methods:
 
@@ -15,7 +17,7 @@ Supported spawn methods:
 Note that in any case, the commands need to be run at the root of the blueprint's directory, as the CLI will read the
 generated `blueprint.json`.
 
-# Native Debugging
+## Native Debugging
 
 See the [requirements](/operators/manager/requirements#native-sources)
 
@@ -32,7 +34,7 @@ To test your blueprint natively (as a host process):
    $ cargo tangle debug spawn --method native --binary "./target/debug/my-blueprint-bin"
    ```
 
-# VM Debugging
+## VM Debugging
 
 See the [requirements](/operators/manager/requirements#native-sources)
 
@@ -51,7 +53,7 @@ To test your blueprint in a VM sandbox:
 
 Once spawned, the VM's output will be printed to the terminal (you may need to press `enter` first).
 
-# Container Debugging
+## Container Debugging
 
 See the [requirements](/operators/manager/requirements#container-sources)
 

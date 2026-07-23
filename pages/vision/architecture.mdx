@@ -1,6 +1,6 @@
 # Architecture and Design Pillars
 
-Tangle ties together three layers most platforms separate: the workbench where work is created, the sandbox runtime where it executes, and the protocol that pays the operators who run it.
+Tangle ties together four layers most platforms separate: the workbench where work is created, the gateway that routes and bills inference, the sandbox runtime where it executes, and the protocol that pays the operators who run it.
 
 <figure>
   <img
@@ -13,7 +13,7 @@ Tangle ties together three layers most platforms separate: the workbench where w
   </figcaption>
 </figure>
 
-**Flow:** design -> execute -> evaluate -> pay. Each run generates evaluation data that feeds the next run.
+**Flow:** design -> execute -> evaluate -> pay. Each run captures evaluation metadata that reviewers and later runs can draw on.
 
 ## What Runs Where
 
@@ -24,7 +24,7 @@ Tangle ties together three layers most platforms separate: the workbench where w
 | Sandbox runtime | Executed tasks and tools      | Agent sessions, tool calls, file edits                   |
 | Protocol        | Coordination and settlement   | Service registry, operator payments, staking, incentives |
 
-## System Architecture
+## The Four Layers
 
 **1) Execution Layer**  
 Sandboxed runtimes with isolation, resource limits, and audit logs. This is where tasks actually run.
@@ -36,7 +36,7 @@ The [Gateway](/gateway) routes inference requests across provider APIs and regis
 The coordination plane. It handles operator discovery, payment routing, and incentive enforcement.
 
 **4) Experience Layer**  
-The agentic workbench and [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main). This is where teams design workflows, run simulations, and ship services.
+The agentic Workbench and [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main). This is where teams design workflows, run simulations, and ship services.
 
 The SDK also includes optional gateways for integrating external events and payment-driven HTTP job execution (webhooks,
 x402).
@@ -63,7 +63,7 @@ Developer references:
 
 Autonomous work only scales when delegation is safe. Tangle enforces policy gates before execution, emits logs and execution metadata for every run, and keeps results reviewable so teams can decide what reaches production.
 
-## Design Pillars
+## What we optimize for
 
 - **Isolation first**: Every workload runs inside a sandbox with explicit permissions.
 - **Reviewable outcomes**: Logs, metadata, and evaluations give reviewers evidence about what ran and how it performed.

@@ -22,7 +22,7 @@ For the canonical on-chain API surface, see:
 - **TTL**: time-to-live for a service. In the current protocol implementation, TTL checks use `block.timestamp`. A TTL of
   `0` means "no expiry".
 
-## Creating A Service
+## Creating a Service
 
 There are two high-level creation flows:
 
@@ -32,9 +32,8 @@ There are two high-level creation flows:
 
 The CLI primarily covers the request and approve flow. RFQ flows often require custom client code today.
 
-Both flows can now carry execution confidentiality intent at the protocol layer. That means service creation can bind not
-just operator set and payment terms, but also whether the service should run in standard execution, prefer TEE, or
-require TEE.
+Both flows can now carry execution confidentiality intent at the protocol layer. Service creation now binds the
+confidentiality mode — standard execution, prefer TEE, or require TEE — alongside the operator set and payment terms.
 
 ## Extending A Service (Renewal)
 
@@ -58,7 +57,7 @@ Key properties to design around:
 If you need to extend a service that was created via the request and approve flow, the typical path today is to create a
 new service (request flow or RFQ flow), then migrate at the blueprint layer.
 
-## Migrating Or Rotating Operators
+## Migrating or Rotating Operators
 
 If an extension requires a new operator set, the protocol does not provide a single "extend and replace operators"
 transaction.
@@ -112,7 +111,7 @@ agreement is already over, and so a request cannot be rescued past its expiry gr
   the new `forceRemoveAllowsBelowMin(serviceId)` hook (default: `false`). Blueprints that
   genuinely need emergency-eviction-below-min must override that hook to return `true`.
 
-## Safety Recommendations For Stateful Or Custodial Blueprints
+## Safety Recommendations for Stateful or Custodial Blueprints
 
 If your blueprint holds user funds, tokens, or state that must remain withdrawable, assume that:
 

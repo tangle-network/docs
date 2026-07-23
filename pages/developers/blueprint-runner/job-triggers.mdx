@@ -11,9 +11,7 @@ In Blueprint Runner terms, most "triggers" are just ways to produce a `JobCall`.
 
 If something can emit a stream of `JobCall`s, the runner can route them to job handlers.
 
-This page is a guide to the common trigger patterns and where they live in the SDK.
-
-## Mental Model
+## Producers and JobCalls
 
 - A `Producer` is a `Stream<Item = Result<JobCall, BoxError>>`.
 - A `JobCall` is the unit the router dispatches.

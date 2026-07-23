@@ -2,34 +2,27 @@
 
 The agentic workbench is Tangle's shared workspace for teams building with AI agents. It is multiplayer by design, so engineering, product, and business teams can work in the same space with shared context. Runs capture inputs, outputs, and logs so results are reviewable.
 
-## What You Can Do
+## Core capabilities
 
 - **Build and iterate** on software with agent workflows in a shared project space.
 - **Run background tasks** that keep working without babysitting.
 - **Compare variants** across multiple approaches or branches.
-- **Evaluate at scale** with simulations over large task sets.
+- **Evaluate** with simulations over large task sets.
 - **Control access** with profiles, policies, and limits.
-- **Connect tools** through integrations and shared workspace context.
+- **Connect tools** through [integrations](/vibe/integrations) and shared workspace context.
 
-## Who This Is For
+## For product, engineering, and eval teams
 
 - **Product teams** shipping AI-assisted software. [Start with workflows](/vibe/workflows).
 - **Engineering orgs** standardizing agent workflows. [Define profiles](/vibe/profiles).
 - **Builders** who need repeatable, reviewable output. [Run simulations](/vibe/simulations).
 
-## How It Connects
+## Where runs execute
 
 The workbench sends execution to the sandbox runtime. Hosted runs use product/API-key access. Protocol-backed runs depend on a registered blueprint service instance, operator endpoint, and payment path.
 
 ## Profiles Power The Runtime
 
 Workbench profiles configure the selected agent harness, model routing, per-agent prompts, and tool permissions. OpenCode sits beside 13 other Sandbox SDK backend types: Claude Code, Kimi Code, Codex, AMP, Factory Droids, Pi, Hermes, Forge, OpenClaw, NanoClaw, ACP, Cursor, and CLI base. Protocol-backed service instances must still read their own `/api/capabilities` response.
-
-## Start Here (By Role)
-
-- **Builders**: Start with [agent workflows](/vibe/workflows).
-- **Team leads**: Define guardrails in [profiles and policies](/vibe/profiles).
-- **Evaluators**: Run [simulations](/vibe/simulations) before shipping.
-- **Platform teams**: Wire tools in [integrations](/vibe/integrations).
 
 The workbench is available via partnership or early access.

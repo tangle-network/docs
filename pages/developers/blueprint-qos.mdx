@@ -8,9 +8,9 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
 SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/qos
 
-This guide explains how to integrate the Blueprint SDK Quality of Service (QoS) system for observability, monitoring, and dashboards. QoS combines heartbeats, metrics, logs, and Grafana dashboards into a single service that you can run alongside any Blueprint.
+QoS combines heartbeats, metrics, logs, and Grafana dashboards into a single service that you can run alongside any Blueprint.
 
-## QoS Summary
+## What QoS Includes
 
 The Blueprint QoS system provides a complete observability stack:
 
@@ -231,7 +231,7 @@ if let Some(qos) = &ctx.qos_service {
 
 Custom on-chain metrics let your Blueprint report arbitrary numeric values that are ABI-encoded into each heartbeat, stored on the `OperatorStatusRegistry` contract, and queryable by anyone. This enables transparent SLA enforcement, slashing based on performance, and cross-operator comparison.
 
-### How It Works
+### From Rust Code to On-Chain Storage
 
 The flow from Rust to on-chain storage:
 

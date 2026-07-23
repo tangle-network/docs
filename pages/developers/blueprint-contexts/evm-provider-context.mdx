@@ -8,9 +8,9 @@ import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
 SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/contexts
 
-The `EvmInstrumentedClientContext` trait provides a standardized [alloy-rs](https://github.com/alloy-rs) EVM provider for interacting with EVM-compatible blockchain networks in your Blueprint.
+The `EvmInstrumentedClientContext` trait provides an [alloy-rs](https://github.com/alloy-rs) EVM provider for interacting with EVM-compatible blockchain networks in your Blueprint.
 
-## Context Summary
+## The EvmInstrumentedClientContext trait
 
 The `EvmInstrumentedClientContext` trait provides access to an EVM provider:
 
@@ -25,7 +25,7 @@ The `EvmInstrumentedClientContext` trait provides access to an EVM provider:
 
 ### 1. Define Your Context
 
-First, define your context struct that implements the `EvmProviderContext` trait:
+First, define your context struct that implements the `EvmInstrumentedClientContext` trait:
 
 <GithubFileReaderDisplay
   url="https://github.com/tangle-network/blueprint/blob/main/crates/macros/context-derive/tests/ui/basic.rs"

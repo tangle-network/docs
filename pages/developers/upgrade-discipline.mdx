@@ -38,7 +38,7 @@ mapping(uint64 => Service) internal _services;
 uint256[44] private __gap;
 ```
 
-When adding a `mapping` or a single `uint256`, reduce the gap by 1. When adding a struct that occupies 3 slots in storage, reduce by 3. Adding a `uint64` AND a `uint64` AND an `address` that pack into a single slot reduces by 1. Pay attention to packing.
+When adding a `mapping` or a single `uint256`, reduce the gap by 1. When adding a struct that occupies 3 slots in storage, reduce by 3. Adding an `address` AND a `uint64` AND a `uint32` that pack into a single slot reduces by 1. Pay attention to packing.
 
 For a struct stored INSIDE a mapping, appending fields to the struct does NOT consume gap slots in the parent contract (the struct is not inline). Slashing's `SlashProposal` and `SlashConfig` are extended this way.
 

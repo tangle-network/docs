@@ -12,14 +12,14 @@ Tangle is an EVM protocol for instantiating and operating **services (“bluepri
 - **On-chain contracts** (service lifecycle, payments, staking, incentives, slashing)
 - **Off-chain runtime** (operators running blueprint managers/runners that react to events and submit results)
 
-## Roles and How They Engage
+## Roles and Responsibilities
 
 - **Blueprint developers** publish blueprint definitions and optionally run a service manager contract.
 - **Operators** register for blueprints, run the off-chain runtime, and submit results + heartbeats.
 - **Stakers / delegators** delegate assets to operators and (optionally) constrain delegation to specific blueprints.
 - **Customers** create services (by request/approve or by signed quotes) and submit jobs.
 
-## End-to-End Flow (High Level)
+## End-to-End Flow: Blueprint to Payout
 
 1. Developer **creates a blueprint** (definition + schemas + execution sources).
 2. Operators **register** for that blueprint and advertise preferences.

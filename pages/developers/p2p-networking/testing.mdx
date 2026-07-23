@@ -2,10 +2,10 @@
 
 SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/networking
 
-When you build multi-operator protocols, the networking test utilities let you spin up multiple libp2p nodes and verify
+The networking test utilities spin up multiple libp2p nodes and verify
 handshakes and message flow without running a full chain.
 
-## Example: Multi-node handshake + message
+## Multi-node handshake and message
 
 ```rust
 use blueprint_sdk::crypto::k256::K256Ecdsa;
@@ -41,7 +41,7 @@ async fn test_p2p_protocol() {
 }
 ```
 
-## Tips
+## Test-network helpers
 
 - Use `create_whitelisted_nodes` to keep key management consistent across your test network.
 - `wait_for_all_handshakes` gives deterministic readiness checks before you start sending messages.

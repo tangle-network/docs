@@ -4,12 +4,12 @@ title: Protocol Architecture
 
 # Protocol Architecture
 
+Tangle is the current protocol (EVM-based) composed of a small set of core contracts.
+
 For a system-level view (roles, flows, and code maps), start here:
 
 - [System Architecture](/developers/system-architecture/overview)
 - [API Reference](/developers/api/reference)
-
-Tangle is the current protocol (EVM-based) composed of a small set of core contracts:
 
 ## Core Contracts
 
@@ -27,7 +27,7 @@ TNT distribution at protocol launch is handled via:
 - `TangleMigration`: Merkle + SP1/ZK-gated claim contract for legacy-chain (SS58) allocations.
 - Deploy-time carveouts to prevent non-claimable balances being stuck (treasury module accounts; foundation allocation).
 
-## How To Integrate
+## Contract Addresses and RPC
 
 Contract addresses are deployment-dependent. Use the published addresses and RPC for your environment:
 

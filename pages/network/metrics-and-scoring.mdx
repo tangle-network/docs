@@ -7,7 +7,7 @@ description: How Tangle records protocol activity and uses it for incentive dist
 
 Tangle’s incentive programs can be driven by on-chain activity metrics. Metrics are optional: the protocol is designed so that core actions still work even if metrics recording is disabled or temporarily unavailable.
 
-## Core Components
+## Contracts that record and distribute
 
 - **`TangleMetrics`**: an on-chain activity recorder implementing `IMetricsRecorder`.
 - **Metrics hooks**: best-effort calls from core contracts (wrapped in `try/catch`) that emit or aggregate activity data.
@@ -48,7 +48,7 @@ Operators (often via their blueprint manager) can submit service heartbeats to `
 
 Heartbeats do not automatically slash an operator by themselves; slashing requires an authorized on-chain proposal and execution.
 
-## Important Note on Budgets
+## Rewards require a funded InflationPool
 
 Merit-based rewards only exist if `InflationPool` is funded with TNT. If it has a zero balance, there is nothing to distribute, even if metrics are recorded.
 

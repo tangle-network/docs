@@ -1,0 +1,31 @@
+---
+title: Intelligence
+description: Observability for AI agents. Record every run, find what broke, and measure the fix.
+---
+
+# Tangle Intelligence
+
+Observability for AI agents. Record every run, find the moment one broke, change one thing, and measure what moved.
+
+Ask Intelligence to investigate a run, and an analyst reads the evidence and writes up what happened with the spans attached — "checkout failed 12× today, all on the retry path after a 429." It keeps every run you send it, so when an agent misbehaves you pull up the exact moment it broke. You make the fix; Intelligence never changes your agent for you.
+
+## What you do with it
+
+- **Measure a change.** Compare runs before and after you touch a prompt, model, or tool, and see the difference.
+- **Find the exact run.** Pull up the session, trace, or log that shows what happened, down to the span.
+- **Tie cost to outcome.** Tokens, dollars, and errors for the run that produced a result, not just an aggregate.
+- **Turn a finding into a guardrail.** An eval that catches it next time, or an alert when it recurs.
+
+## Who it's for
+
+Engineers running coding agents, workflow agents, and the eval loops that grade them.
+
+## How data gets in
+
+Send traces over OpenTelemetry or a Tangle SDK, with no other Tangle setup. Or run your agent in the [sandbox runtime](/infrastructure/introduction), and that run's evidence lands in the same timeline.
+
+## Start
+
+1. [Get an API key](/platform/authentication).
+2. Point your agent's OpenTelemetry exporter at Intelligence.
+3. Run the agent and open its run in the timeline.
