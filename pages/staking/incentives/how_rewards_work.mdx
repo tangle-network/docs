@@ -79,15 +79,15 @@ routes those TNT to `ServiceFeeDistributor`, where delegators claim as usual.
 
 ## Where To Look In Code And Tests
 
-- Payment split and staker routing: `src/v2/core/Payments.sol`
-- Staker fee distribution and claims: `src/v2/rewards/ServiceFeeDistributor.sol`
-- Inflation budgets and staker exposure allocation: `src/v2/rewards/InflationPool.sol`
-- TNT staking incentives: `src/v2/rewards/RewardVaults.sol`
+- Payment split and staker routing: `src/core/PaymentsDistribution.sol`
+- Staker fee distribution and claims: `src/rewards/ServiceFeeDistributor.sol`
+- Inflation budgets and staker exposure allocation: `src/rewards/InflationPool.sol`
+- TNT staking incentives: `src/rewards/RewardVaults.sol`
 - Tests:
-  - `test/v2/tangle/Payments.t.sol`
-  - `test/v2/rewards/ServiceFeeDistributor.t.sol`
-  - `test/v2/rewards/ServiceFeeDistributorStreaming.t.sol`
-  - `test/v2/Rewards.t.sol`
-  - `test/v2/InflationPool.t.sol`
+  - `test/tangle/Payments.t.sol`
+  - `test/rewards/ServiceFeeDistributor.t.sol`
+  - `test/rewards/ServiceFeeDistributorStreaming.t.sol`
+  - `test/Rewards.t.sol`
+  - `test/InflationPool.t.sol`
 
 See [Claiming Cheatsheet](/staking/incentives/claiming) for one-tx claim options and multicall tips.
