@@ -30,6 +30,10 @@ const meta: Meta = {
     title: "Runtime",
     type: "page",
   },
+  intelligence: {
+    title: "Intelligence",
+    type: "page",
+  },
   blueprints: {
     title: "Blueprints",
     type: "page",
