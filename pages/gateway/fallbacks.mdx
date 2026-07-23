@@ -7,7 +7,7 @@ description: Configure backup models that are tried when the primary model fails
 
 Specify backup models that are tried in order if the primary model fails or is unavailable.
 
-## Usage
+## Configure fallback models
 
 Pass a `models` array in `providerOptions.gateway`:
 
@@ -31,7 +31,7 @@ The gateway tries:
 
 The response comes from the first model that succeeds.
 
-## How fallback works
+## Each model runs the full routing chain
 
 For each model in the list, the gateway runs the full routing chain:
 

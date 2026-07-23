@@ -6,11 +6,11 @@ SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crate
 
 <ExpandableImage src="/images/blueprint-manager-diagram.png" alt="Blueprint Manager Diagram" />
 
-On Tangle, Blueprints have both onchain and offchain lifecycles. The offchain component is managed by the
-**Blueprint Manager**, which is the operator runtime for Tangle services. This onchain and offchain logic
+The **Blueprint Manager** is the operator runtime for Tangle services. It runs the offchain half of every
+Blueprint's lifecycle while chain events drive the onchain half. This onchain and offchain logic
 functions as follows:
 
-1. Operators must register for Blueprints onchain. This indicates an operators willingness to accept requests for Blueprint Instances of that type.
+1. Operators must register for Blueprints onchain. This indicates an operator's willingness to accept requests for Blueprint Instances of that type.
 2. Operators download the Blueprint's artifacts and metadata after registering. The Blueprint Manager watches chain
    events and keeps the operator runtime in sync.
 3. Operators execute Blueprint services when they are assigned. The Blueprint Manager runs artifacts natively, in a
@@ -23,7 +23,7 @@ functions as follows:
 Blueprints interact with the Tangle Network in several key ways:
 
 1. Blueprints are deployed to Tangle, with their metadata and manager contracts stored on-chain.
-2. Customers instantiate a Service, which represents a single configured service instance.
+2. Customers instantiate a Service: one configured, running deployment of the Blueprint.
 3. Services end once they reach their time-to-live (TTL) or run out of funds to pay operators.
 
 When confidentiality is declared or requested, the manager uses that policy to decide whether standard execution is
@@ -33,7 +33,7 @@ For renewal, migration, and expiry edge cases, see:
 
 - `/developers/blueprints/service-lifecycle`
 
-Blueprints provide a useful abstraction, allowing developers to create reusable service infrastructures as if they were smart contracts. This enables developers to monetize their work and align long-term incentives with the success of their creations, benefiting proportionally to their Blueprint's usage.
+Developers publish a Blueprint once, like deploying a contract, and earn a share of the fees paid each time an operator runs an instance of it.
 
 Blueprints and Services are managed by the Tangle Protocol contracts in `tnt-core`, including the core `Tangle` contract and
 the `BlueprintServiceManager` stack. Staking and operator registration live in these contracts, and the Blueprint

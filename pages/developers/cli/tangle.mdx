@@ -4,9 +4,9 @@ title: Tangle CLI Blueprint Commands
 
 # Tangle CLI Blueprint Commands
 
-CLI source (GitHub): https://github.com/tangle-network/blueprint/tree/main/cli
+`cargo-tangle` creates and operates blueprints on Tangle’s EVM protocol. This page is the command reference.
 
-This page covers the `cargo-tangle` CLI surface for creating and operating blueprints on Tangle’s EVM protocol.
+CLI source (GitHub): https://github.com/tangle-network/blueprint/tree/main/cli
 
 Note: the CLI still uses the legacy flag name `--restaking-contract`. It refers to the staking contract (`MultiAssetDelegation`).
 
@@ -73,9 +73,7 @@ cargo tangle blueprint service --help
 cargo tangle blueprint service request --help
 ```
 
-The protocol now supports confidentiality intent on service requests and RFQ service quotes. Depending on the SDK/CLI
-version you are running, the newest confidentiality argument may appear first in the raw contract interfaces before every
-high-level helper command exposes it.
+The protocol now supports confidentiality intent on service requests and RFQ service quotes. On older CLI builds, pass the confidentiality argument through the raw contract call; newer builds expose it on the helper commands. Check `--help`.
 
 Example (operator approval flow):
 

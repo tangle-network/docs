@@ -18,7 +18,7 @@ Protocol overview (pricing models, fixed per-job rates, RFQ semantics):
 - Use it when you want operators to answer RFQs off-chain (service creation quotes and/or per-job quotes).
 - If your blueprint only uses fixed pricing (e.g. per-job rates via `setJobEventRates`), you can skip it.
 
-## End-to-End Flow
+## Two RFQ Modes: Service and Per-Job Quotes
 
 The pricing engine supports two RFQ modes:
 
@@ -110,7 +110,7 @@ gRPC server to return x402 settlement options, you need to construct the pricing
 - Pricing engine README: https://github.com/tangle-network/blueprint/blob/main/crates/pricing-engine/README.md
 - Pricing proto: https://github.com/tangle-network/blueprint/blob/main/crates/pricing-engine/proto/pricing.proto
 
-## Best Practices
+## RFQ Client Rules
 
 1. Get multiple quotes from multiple operators and compare them.
 2. Verify signatures before using quotes on-chain.

@@ -5,8 +5,9 @@ description: How blueprint-manager enforces authn/authz for off-chain HTTP/gRPC 
 
 # Blueprint Auth Proxy (`blueprint-auth`)
 
-Blueprints often expose off-chain HTTP/gRPC endpoints (APIs, agents, gateways, etc.). In the Tangle Blueprint stack,
-those endpoints are typically fronted by an **auth proxy** that runs inside `blueprint-manager`.
+The **auth proxy** inside `blueprint-manager` is the single point that authenticates, authorizes, and injects tenant
+identity for a Blueprint's off-chain HTTP/gRPC endpoints (APIs, agents, gateways, etc.). Blueprints often expose such
+endpoints, and in the Tangle Blueprint stack they are typically fronted by this proxy.
 
 That proxy is implemented by the `blueprint-auth` crate and is the **single enforcement point** for:
 
@@ -27,7 +28,7 @@ Source of truth (implementation-focused):
 - Applies to: **off-chain** requests that go through the manager’s proxy to your service `upstream_url`.
 - Does not apply to: **on-chain jobs** (`jobs submit`, contract calls). On-chain callers authenticate by signing transactions.
 
-## Key Concepts
+## Identity headers: service_id, x-tenant-id, x-scopes
 
 - `service_id`: Identifies the service behind the proxy. Minting endpoints require `X-Service-Id: <service_id>`.
 - Tenant identity: The proxy injects **`x-tenant-id`** (a privacy-safe hash) so upstreams can partition data safely.

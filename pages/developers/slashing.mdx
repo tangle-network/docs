@@ -5,7 +5,7 @@ description: Lifecycle, dispute economics, and operations runbook for the Tangle
 
 # Slashing
 
-When an operator misbehaves, the protocol burns or redistributes a fraction of their stake and, proportionally, their delegators' stake. This page covers the on-chain lifecycle, the authorization surface, dispute economics, and runbooks for operators and the slashing admin.
+When an operator misbehaves, the protocol burns a fraction of their stake and, proportionally, their delegators' stake. This page covers the on-chain lifecycle, the authorization surface, dispute economics, and runbooks for operators and the slashing admin.
 
 The slashing path is implemented in:
 
@@ -187,7 +187,7 @@ When an operator joins a service via `approveService(ApprovalParams)` with a non
 
 This differs from prior behavior, which slashed all enabled assets uniformly. An operator who committed `TNT@5000bps` and `USDC@2000bps` to service A but only `TNT@5000bps` to service B will have only TNT slashed for a service-B violation.
 
-## Future Evolution
+## What can change without redeployment
 
 The `Tangle` contract is UUPS-upgradeable through `TangleTimelock`. The slashing model can evolve without redeployment:
 

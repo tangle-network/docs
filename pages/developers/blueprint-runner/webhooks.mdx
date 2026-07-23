@@ -7,9 +7,6 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
 # Webhooks Gateway
 
-SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/webhooks
-Crate README (GitHub): https://github.com/tangle-network/blueprint/blob/main/crates/webhooks/README.md
-
 The webhooks feature is an optional HTTP ingress path for a Blueprint Runner. It lets you expose one or more HTTP
 endpoints that:
 
@@ -25,7 +22,7 @@ This is useful when your blueprint needs to react to external events that are no
 - external schedulers or orchestrators that should trigger a job handler
 - bridging legacy systems into a service instance without writing a custom producer
 
-## How It Fits In the Runner
+## WebhookGateway and WebhookProducer
 
 `WebhookGateway` runs as a `BackgroundService` (an `axum` server), and `WebhookProducer` is the paired producer that
 turns verified webhook requests into `JobCall`s.
@@ -72,7 +69,7 @@ Notes:
 - For `bearer`, `hmac-sha256`, and `api-key`, `secret` is required.
 - `secret` supports `env:VAR_NAME` expansion.
 - `service_id` is set at runtime, not from TOML. If it is left as `0`, downstream components that rely on a service ID
-  will not behave as expected.
+  cannot correlate calls to the intended service instance.
 
 ## Auth Modes
 
@@ -90,3 +87,8 @@ Supported auth modes are:
 - Each configured webhook endpoint responds `202 Accepted` on success and returns a `call_id`.
 - Treat webhook ingress as untrusted input. Validate and parse the request body inside the job handler.
 - Prefer `hmac-sha256` or `bearer` when receiving webhooks from the public internet.
+
+## Resources
+
+- [SDK source (GitHub)](https://github.com/tangle-network/blueprint/tree/main/crates/webhooks)
+- [Crate README (GitHub)](https://github.com/tangle-network/blueprint/blob/main/crates/webhooks/README.md)

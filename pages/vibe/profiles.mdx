@@ -1,6 +1,6 @@
 # Profiles and Policies
 
-Profiles define how an agent behaves end to end. They package model choice, tool access, permissions, guardrails, and harness selection into a reusable sidecar profile that the runtime enforces. This is how the workbench configures agent execution without hard-coding behavior into every task.
+Profiles configure how an agent runs. They package model choice, tool access, permissions, guardrails, and harness selection into a reusable sidecar profile that the runtime enforces. This is how the workbench configures agent execution without hard-coding behavior into every task.
 
 ## What A Profile Controls
 
@@ -14,13 +14,11 @@ Profiles define how an agent behaves end to end. They package model choice, tool
 - **Plugins**: allowlisted extensions that can be attached to the runtime.
 - **Inheritance**: extend a base profile and override only what changes.
 
-Profiles make it possible to standardize agent behavior across teams while still allowing targeted customization when needed.
-
 ## Guardrails And Validation
 
 Profiles are validated before execution. Security policies can cap permissions (for example, "bash" at ask), block local tool servers, and require allowlisted plugins. Profiles that exceed policy are rejected so the runtime stays safe and predictable.
 
-## How It Shows Up In The Workbench
+## Base, Variant, and Per-Run Profiles
 
 The workbench will progressively expose profile controls:
 
@@ -30,7 +28,7 @@ The workbench will progressively expose profile controls:
 
 If you want early access to advanced profile configuration, contact the team.
 
-Under the hood, profiles can extend a base profile. The runtime merges overrides with the base profile, validates the final config, and applies the result to the sidecar session.
+The runtime merges overrides with the base profile, validates the final config, and applies the result to the sidecar session.
 
 ## Example Profile (Conceptual)
 

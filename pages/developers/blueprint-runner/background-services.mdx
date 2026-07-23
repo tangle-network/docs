@@ -8,9 +8,9 @@ import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
 SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/runner
 
-Background services are optional components in the [Blueprint Runner](/developers/blueprint-runner/introduction) architecture that run continuously to support the operation of your blueprint. This document explains how background services work, how to configure them, and best practices for implementation.
+Background services are optional components in the [Blueprint Runner](/developers/blueprint-runner/introduction) architecture that run continuously to support the operation of your blueprint.
 
-## What are Background Services?
+## Long-running processes that outlive a job
 
 Background services refer to any long-running processes that operate independently of job execution. They:
 
@@ -58,7 +58,7 @@ The only requirement for a background service is that it implements the `Backgro
   title="Defining a Background Service"
 />
 
-With a background service defined, it is passed into the Blueprint Runner's builder as producers and consumers are:
+Pass the background service into the runner's builder, the same way you add producers and consumers:
 
 <GithubFileReaderDisplay
   url="https://github.com/tangle-network/blueprint/blob/main/examples/incredible-squaring/incredible-squaring-bin/src/main.rs"
@@ -67,7 +67,7 @@ With a background service defined, it is passed into the Blueprint Runner's buil
   title="Adding a Background Service to the Blueprint Runner"
 />
 
-For some background services, it may be necessary to add some sort of cleanup code that runs when the Blueprint Runner shuts down. This can be done in the `with_shutdown_handler` method seen in the above code. This specific example just prints a message, but it might end a background process gracefully.
+For some background services, you may need cleanup code that runs when the runner shuts down. This can be done in the `with_shutdown_handler` method seen in the above code. This specific example just prints a message, but it might end a background process gracefully.
 
 ## Integration with Other Components
 
@@ -77,9 +77,7 @@ Background services work closely with other Blueprint Runner components:
 - **Producers**: Background services can support [producers](/developers/blueprint-runner/producers) by maintaining connections or monitoring event sources
 - **Consumers**: Background services can assist [consumers](/developers/blueprint-runner/consumers) with resource management or periodic tasks
 
-## Next Steps
-
-Now that you understand background services, it might be helpful to take a look at:
+## Related components
 
 - [Routers](/developers/blueprint-runner/routers) - How to direct job calls to appropriate handlers
 - [Producers](/developers/blueprint-runner/producers) - How to capture and process events

@@ -5,7 +5,7 @@ description: Authentication methods for Tangle Gateway.
 
 # Authentication
 
-Four authentication methods, each with different rate limits and capabilities.
+Four ways to authenticate to the gateway — plus anonymous access to free-tier models — each with its own rate limit.
 
 ## API Key
 
@@ -29,7 +29,7 @@ Browser-based authentication via Better Auth. Supports email/password and OAuth 
 
 ## SIWE (Sign-In with Ethereum)
 
-Wallet-based authentication via EIP-191 signatures. Authenticate with your Ethereum wallet.
+Wallet-based authentication: sign an EIP-191 message with your Ethereum wallet.
 
 ```
 POST /api/siwe/verify
@@ -38,7 +38,7 @@ POST /api/siwe/verify
 
 ## SpendAuth (On-Chain Payment)
 
-EIP-712 signed payment authorization. No account needed - pay operators directly on-chain.
+EIP-712 signed payment authorization. No account needed — pay operators directly on-chain.
 
 ```bash
 curl -H "X-Payment-Signature: {\"commitment\":\"0x...\",\"amount\":\"1000000\",...}" \

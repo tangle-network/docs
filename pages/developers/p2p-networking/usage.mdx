@@ -5,7 +5,7 @@ SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crate
 To spin up a P2P network, build a `NetworkConfig` and start a `NetworkService`. The service spawns its event loop and
 returns a `NetworkServiceHandle` you can clone into jobs and background services.
 
-## Example
+## Start a network and send a message
 
 ```rust
 use blueprint_sdk::crypto::k256::K256Ecdsa;

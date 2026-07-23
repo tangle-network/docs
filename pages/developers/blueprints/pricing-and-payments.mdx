@@ -7,14 +7,14 @@ import GithubFileReaderDisplay from "/components/GithubFileReaderDisplay";
 
 # Pricing and Payments
 
-This page describes the protocol-level pricing surface for Tangle blueprints: which pricing models exist, when to use
-them, and how fixed rates vs RFQ (request-for-quote) work for both services and jobs.
+Every Tangle blueprint declares one of three pricing models (PayOnce, Subscription, EventDriven) at registration. This
+page covers each model, per-job fixed rates, and RFQ (request-for-quote) quoting for services and jobs.
 
 If you are looking for the operator-side gRPC daemon that generates EIP-712 quotes, see:
 
 - `/developers/blueprints/pricing-engine`
 
-## Source Of Truth
+## Protocol reference (tnt-core PRICING.md)
 
 The protocol reference lives in `tnt-core`:
 

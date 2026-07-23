@@ -8,12 +8,12 @@ import GithubFileReaderDisplay from '/components/GithubFileReaderDisplay';
 
 SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/contexts
 
-The `TangleClientContext` trait provides a standardized interface for interacting with the Tangle protocol from a
-Blueprint. It exposes a typed `TangleClient` configured from the blueprint environment.
+The `TangleClientContext` trait gives a Blueprint a typed `TangleClient` for submitting transactions to Tangle and
+querying service/operator state. It is configured from the blueprint environment.
 
-## Context Summary
+## What the client can do
 
-The `TangleClientContext` trait provides access to a client that enables:
+The client lets a Blueprint:
 
 - Transaction submission to core protocol contracts
 - Service and operator state queries

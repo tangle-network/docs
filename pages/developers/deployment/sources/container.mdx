@@ -1,7 +1,6 @@
 # Container Source
 
-The `Container` source is used for blueprints that are intended to be built as container images and published to image
-registries, such as `docker.io`.
+Use the `Container` source for blueprints you build as container images and publish to registries like `docker.io`.
 
 Container sources are also the only TEE-eligible artifact source on the current Tangle manager path. If you want to
 allow or require TEE execution, keep using `Container` and declare the confidentiality policy in blueprint metadata. See
@@ -9,7 +8,7 @@ allow or require TEE execution, keep using `Container` and declare the confident
 
 ## Requirements
 
-The requirements for running containerized blueprints are available [here](/operators/manager/requirements#container-sources)
+See the [container source requirements](/operators/manager/requirements#container-sources) for running containerized blueprints.
 
 ## Format
 
@@ -29,7 +28,7 @@ Where:
 - `image` - The name of the image (e.g., `some-user/my-blueprint`)
 - `tag` - The release tag of the image (e.g., `latest`)
 
-And they can be specified in the manifest of your binary crate like so:
+Specify them in your binary crate's manifest:
 
 ```toml
 [package.metadata.blueprint]

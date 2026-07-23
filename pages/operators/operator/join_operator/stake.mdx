@@ -1,10 +1,8 @@
 ## Staking as an Operator
 
-Operators can increase their self-stake to increase capacity, qualify for higher minimums, or signal commitment to customers.
+Operators can increase their self-stake to increase capacity, qualify for higher minimums, or signal commitment to customers; to withdraw, schedule an unstake and execute it after the delay.
 
-## Bond More
-
-### Increase Operator Stake
+## Increase your stake
 
 Operators can increase their self-stake via the CLI. The amount is in wei for the configured bond asset.
 
@@ -30,9 +28,9 @@ The CLI flag name is `--restaking-contract` for compatibility; it refers to the 
 
 If successful, the transaction emits `OperatorStakeIncreased(operator, amount)`.
 
-## Schedule Operator Unstake
+## Unstake
 
-### Step 1: Schedule Operator Unstake
+### Step 1: Schedule
 
 Ensure you have joined as an operator first, see [Join as an Operator](./join).
 
@@ -49,9 +47,7 @@ cargo tangle operator schedule-unstake \
 
 If successful, your tokens will be unlocked after the unstake delay period.
 
-## Execute Operator Unstake
-
-### Step 2: Execute Operator Unstake
+### Step 2: Execute
 
 Ensure you have scheduled an unstake and the delay period has passed.
 

@@ -5,7 +5,7 @@ description: Host, install, state, admission, and provider requirements for AI T
 
 # AI Trading Operator Requirements
 
-A trading operator is accepting bots that can spend compute, disk, model credits, and possibly capital.
+A trading operator accepts bots that can spend compute, disk, model credits, and possibly capital.
 
 Run allowlist admission and paper mode first. Move to public admission or live trading only after you have watched the operator run and fail safely.
 
@@ -62,7 +62,7 @@ Public admission means public cost exposure. Every accepted bot can use CPU, dis
 
 The operator install path defaults new bots to paper trading. Paper mode uses live market data and simulated fills; it should not move capital.
 
-AI keys are optional. If you set `ZAI_API_KEY`, `ANTHROPIC_API_KEY`, `TANGLE_API_KEY`, or OpenCode model/env settings, agentic activation and chat can use those settings when the selected sidecar advertises OpenCode. Treat OpenCode as one harness inside the same capability model as Claude Code, Kimi Code, Codex, AMP, Factory Droids, Pi, Hermes, Forge, OpenClaw, NanoClaw, ACP, Cursor, CLI base, or a smaller blueprint sidecar subset. The operator docs are clear: there is no built-in per-bot, per-day, or total LLM spend cap today. Use provider-side billing limits.
+AI keys are optional. If you set `ZAI_API_KEY`, `ANTHROPIC_API_KEY`, `TANGLE_API_KEY`, or OpenCode model/env settings, agentic activation and chat can use those settings when the selected sidecar advertises OpenCode. OpenCode is one of several harnesses a sidecar can advertise; the AI keys apply the same way across them. There is no built-in per-bot, per-day, or total LLM spend cap today — use provider-side billing limits.
 
 ## Public endpoint
 

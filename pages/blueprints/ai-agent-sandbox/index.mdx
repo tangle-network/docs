@@ -43,7 +43,7 @@ Mode IDs come from the repo metadata. Treat them as network-specific config, not
 
 The internal workflow tick is scheduler-driven and should not be treated as a public on-chain job.
 
-## Read and control surface
+## Operator API endpoints
 
 The operator API owns the live product state:
 
@@ -65,7 +65,3 @@ Every data endpoint requires a signed wallet session. Production operators must 
 | [Operator Requirements](/blueprints/ai-agent-sandbox/operator-requirements) | Host setup, ports, Docker, Firecracker, TEE, state, and secrets.     |
 | [Runtime and Harnesses](/blueprints/ai-agent-sandbox/runtime-and-harnesses) | Runtime backends, capability discovery, harnesses, and AI keys.      |
 | [Dapp Integration](/blueprints/ai-agent-sandbox/dapp-and-indexer)           | Metadata, iframe policy, protocol state, and live health boundaries. |
-
-## Sources used
-
-This page is grounded in the repo `README.md`, `docs/runbook.md`, `TEE-GUIDE.md`, `metadata/blueprint-metadata.json`, `sandbox-runtime/src/operator_api.rs`, and the sidecar image docs.

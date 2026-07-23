@@ -2,7 +2,7 @@
 
 SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/manager
 
-This page covers the operator requirements for running services that prefer or require TEE execution.
+Run a Blueprint in a trusted execution environment (TEE) two ways: locally with Kata containers on Kubernetes, or remotely on a confidential-compute VM from AWS, GCP, or Azure.
 
 ## Two TEE Paths
 
@@ -73,7 +73,7 @@ export BLUEPRINT_ALLOWED_SSH_CIDRS=10.0.0.0/8
 export BLUEPRINT_ALLOWED_QOS_CIDRS=10.0.0.0/8
 ```
 
-## What Operators Should Expect
+## TEE enforcement behavior
 
 - `tee_required` prevents non-TEE fallback.
 - The manager injects `TEE_REQUIRED=true` and `TEE_BACKEND` into remote deployments when TEE is required.

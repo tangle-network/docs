@@ -15,14 +15,14 @@ Similar to unstaking, it is composed of two steps:
 
 ### Schedule Withdraw
 
-The first step to complete a withdraw is to schedule a withdrawal. This is done by calling the `schedule_withdraw` function.
+Scheduling calls the `schedule_withdraw` function.
 
-### Step 1: Access Tangle DApp & Connect Wallet
+#### Step 1: Access Tangle DApp & Connect Wallet
 
 - Open [Tangle DApp's Staking: Withdraw page](https://app.tangle.tools/staking/withdraw).
 - Connect your wallet to the DApp by clicking on the **Connect Wallet** button on the top right and selecting your preferred wallet provider.
 
-### Step 2: Schedule Withdraw
+#### Step 2: Schedule Withdraw
 
 1. Select the **Withdraw** tab on the Staking page.
 2. Click on the **Asset** dropdown, and select an asset from the modal.
@@ -32,7 +32,7 @@ The first step to complete a withdraw is to schedule a withdrawal. This is done 
 
 ![Withdraw Steps](/images/staking/withdraw/steps.png)
 
-### Step 3: Sign and Submit the Transaction
+#### Step 3: Sign and Submit the Transaction
 
 - Sign and submit the transaction. Make sure the account you are using has enough balance to cover the transaction fee.
 - If successful, you should see the withdraw request appear in the table at the right side of the page, and also the following confirmation toast notification:
@@ -43,7 +43,7 @@ The first step to complete a withdraw is to schedule a withdrawal. This is done 
 
 If you've scheduled a withdraw request, you can choose to **cancel** it if you change your mind. To cancel a withdraw request, use the withdraw requests table on the right side of the page. Note that you can cancel a withdraw request even if it has reached its maturity, but as long as it hasn't been executed yet.
 
-Simply select the withdraw request(s) that you'd like to cancel, then click on the **Cancel Withdraw** button to initiate the transaction.
+Select the withdraw request(s) you'd like to cancel, then click on the **Cancel Withdraw** button to initiate the transaction.
 
 ![Unstake Requests Table: Cancel Withdraw](/images/staking/withdraw/cancel-withdraw.png)
 
@@ -51,4 +51,4 @@ Simply select the withdraw request(s) that you'd like to cancel, then click on t
 
 Once a withdraw request has reached its maturity, you can **execute** it to actually withdraw and release the assets.
 
-Tangle DApp makes this process easy by simply clicking on the **Execute All** button. There's no need to select specific withdraw requests, as this action will execute all withdraw requests that have reached their maturity within a single transaction. If the button is disabled, it means that there are no withdraw requests that have reached their maturity yet.
+Click **Execute All** to execute every matured withdraw request in one transaction. There's no need to select specific withdraw requests, as this action will execute all withdraw requests that have reached their maturity within a single transaction. If the button is disabled, it means that there are no withdraw requests that have reached their maturity yet.

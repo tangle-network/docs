@@ -7,7 +7,7 @@ description: Runtime backend, paper/live mode, model keys, and risk boundaries f
 
 Trading docs should start from risk, not from agents.
 
-The bot can reason with an AI harness, but capital moves only when the runtime, validator path, and vault policy allow it. If those boundaries are unclear, the operator should stay in paper mode.
+The bot can reason with an AI harness, but capital moves only when the runtime, signing path, and vault policy allow it. If those boundaries are unclear, the operator should stay in paper mode.
 
 ## Runtime backend
 
@@ -33,7 +33,7 @@ Runtime choice is separate from trust mode. A TEE bot can still have bad policy,
 
 ## Paper mode
 
-Paper mode is the safe default in the operator install path. It uses live market data and simulated fills. The operator repo has done work to model fees, impact, and gas so paper PnL is less fantasy than a frictionless simulator.
+Paper mode is the safe default in the operator install path. It uses live market data and simulated fills. The operator repo models fees, impact, and gas so paper PnL is less fantasy than a frictionless simulator.
 
 Paper mode should still be treated as real production behavior:
 
@@ -46,7 +46,7 @@ Paper mode should still be treated as real production behavior:
 
 | Mode           | Who checks trades                                     | Latency profile                | Use when                                                                  |
 | -------------- | ----------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------- |
-| `PerTrade`     | Validator committee signs each trade intent.          | 5 to 30 seconds.               | The operator is untrusted or the vault needs external approval per trade. |
+| `PerTrade`     | Operator signing committee signs each trade intent.   | 5 to 30 seconds.               | The operator is untrusted or the vault needs external approval per trade. |
 | `Envelope`     | A depositor-approved envelope bounds what can happen. | Immediate inside the envelope. | The user accepts bounded autonomy.                                        |
 | `SelfOperated` | Local operator policy, still inside envelope limits.  | Immediate.                     | The operator and depositor are the same trust domain.                     |
 
@@ -74,7 +74,7 @@ Do not show "AI approved" as if that is a safety property. The useful safety fac
 - paper or live
 - trust mode
 - envelope present and not expired
-- validators reachable when required
+- operators reachable when required
 - vault policy loaded
 - trade blocked or signed
 - operator health
