@@ -1,0 +1,109 @@
+---
+title: Connect your agent
+description: Send content-bearing traces from Claude Code, Codex, OpenCode, and sandbox-run agents to Tangle Intelligence.
+---
+
+# Connect your agent
+
+Intelligence reads your agents' execution traces and tells you why a run failed and how to fix it. That needs **content** — the prompts, model completions, and tool inputs and outputs — not just metadata like token counts, durations, and tool names.
+
+Every major coding agent ships content **off by default** and emits it on the OTLP **logs** signal. Enabling telemetry without also enabling content and the logs exporter is the one mistake that leaves you with a metadata-only feed. The per-agent blocks below get it right.
+
+## Endpoints
+
+OTLP over HTTP with JSON (`http/json`, not protobuf):
+
+- Base: `https://intelligence.tangle.tools/v1/otlp`
+- Traces → `…/v1/otlp/v1/traces` · Logs → `…/v1/otlp/v1/logs`
+- Auth header on every export: `Authorization: Bearer <TANGLE_API_KEY>` (an `sk-tan-…` key from [Authentication](/platform/authentication))
+
+## Group runs into a project
+
+Set the `tangle.subject.key` resource attribute to a stable project name so Intelligence rolls runs up, trends failures across them, and automates per project instead of treating every run as orphaned:
+
+```sh
+export OTEL_RESOURCE_ATTRIBUTES=tangle.subject.key=my-project
+```
+
+Without it, grouping falls back to repository, then service name, then a `default` bucket — usable, but you lose clean per-project rollup.
+
+## Claude Code (CLI + Agent SDK)
+
+Content is gated behind four flags, all default off — this is why a default setup is metadata-only. Set all of it. For the CLI, export in your shell, Dockerfile, or k8s env; for the Agent SDK, put the same keys in `options.env`, spreading `...process.env` first.
+
+```sh
+# Enable and point at Tangle (JSON protocol matches the adapter)
+export CLAUDE_CODE_ENABLE_TELEMETRY=1
+export OTEL_EXPORTER_OTLP_PROTOCOL=http/json
+export OTEL_EXPORTER_OTLP_ENDPOINT=https://intelligence.tangle.tools/v1/otlp
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer ${TANGLE_API_KEY}"
+
+# Content rides log events, so the logs exporter is mandatory
+export OTEL_LOGS_EXPORTER=otlp          # required for prompt/completion/tool content
+export OTEL_METRICS_EXPORTER=otlp       # tokens / cost
+export OTEL_TRACES_EXPORTER=otlp        # spans (beta)
+export CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1   # required only for spans/traces
+
+# The content gates, all default off:
+export OTEL_LOG_USER_PROMPTS=1          # the user/task prompt text
+export OTEL_LOG_TOOL_DETAILS=1          # tool arguments (tool_input / full_command / file_path)
+export OTEL_LOG_TOOL_CONTENT=1          # full tool input+output bodies
+export OTEL_LOG_RAW_API_BODIES=1        # full prompt+completion JSON (richest; whole conversation)
+
+# (optional) flush fast for short non-interactive `claude -p` runs
+export OTEL_LOGS_EXPORT_INTERVAL=1000
+export OTEL_METRIC_EXPORT_INTERVAL=1000
+```
+
+`OTEL_LOG_RAW_API_BODIES=1` ships the entire conversation (extended thinking is redacted). If that is too much, drop it and keep `OTEL_LOG_USER_PROMPTS=1` and `OTEL_LOG_TOOL_DETAILS=1` — you still get the task, prompts, and tool arguments. Secrets (`sk-…`, JWTs, keys) are scrubbed server-side regardless, so do not pre-strip content.
+
+## OpenAI Codex (CLI)
+
+OTel is off by default and prompts are redacted by default — set both. In `~/.codex/config.toml` (or a project `.codex/config.toml`):
+
+```toml
+[otel]
+environment = "prod"
+log_user_prompt = true   # required; default false redacts content
+exporter = { otlp-http = { endpoint = "https://intelligence.tangle.tools/v1/otlp/v1/logs", protocol = "json", headers = { "Authorization" = "Bearer ${TANGLE_API_KEY}" } } }
+```
+
+Codex emits content on the logs signal (`codex.*` events). Set `TANGLE_API_KEY` in the environment before running.
+
+## OpenCode
+
+OpenCode has no native OTel exporter today, so a standalone install emits nothing without a shim.
+
+- **Inside a Tangle sandbox:** already instrumented — the adapter subscribes to OpenCode's event stream and exports content. Nothing to do.
+- **Standalone:** use `tangle-opencode-exporter`, a thin process that subscribes to OpenCode's SSE event bus and exports content-bearing OTLP. This is the one agent where the simple path is ours to provide rather than a config flag.
+
+## OpenClaw, Hermes, NanoClaw
+
+These have no native OTel exporter and no standalone server to subscribe to. Run them **inside a Tangle sandbox**: the sidecar adapter exports their prompt, completion, and tool content, stamping `gen_ai.system=openclaw` / `hermes` / `nanoclaw` so each feed is attributed to the right agent. A bare local install is metadata-only.
+
+For cron, containers, or CI with any agent above, generate a content-on env block with `tangle connect claude-code --format env` (or `--format dockerfile`) and feed it to your service environment — no shell-rc edit and no TTY required. Dial content down with `--content prompts` or `--content metadata`.
+
+## Already connected but only seeing metadata?
+
+If Intelligence shows your runs — models, tokens, tool names, durations — but the prompts, completions, and tool I/O are blank, content is gated off at your agent. You do not need to reconnect or change your endpoint. Turn content on:
+
+- **Claude Code / Symphony** → add the four `OTEL_LOG_*` gates above. For Symphony, set them on the Claude Code child process it spawns.
+- **Codex** → set `log_user_prompt = true`.
+- **OpenCode** → run the `tangle connect opencode` exporter.
+
+Project grouping is unaffected, so this only turns content on.
+
+## Verify content is flowing
+
+Setup is not done until this shows a content key. Run the agent once on a real task, then within about 30 seconds:
+
+```sh
+AUTH="Authorization: Bearer ${TANGLE_API_KEY}"
+TID=$(curl -sS "https://intelligence.tangle.tools/v1/traces?limit=1" -H "$AUTH" | jq -r '.items[0].trace_id')
+curl -sS "https://intelligence.tangle.tools/v1/traces/$TID/spans" -H "$AUTH" \
+  | jq '[.items[].attributes // .spans[].attributes | keys] | add | unique'
+```
+
+The keys must include at least one content key. If you see only metadata (`tool_name`, `duration_ms`, `success`, ids), content is not flowing — you missed a gate. Common misses: Claude Code without `OTEL_LOGS_EXPORTER=otlp` or the `OTEL_LOG_*` gates; Codex without `log_user_prompt=true`; OpenCode standalone without the exporter.
+
+Recognized content keys (any one is enough): `gen_ai.prompt`, `gen_ai.completion`, `input.value`, `llm.input_messages`, `user.message`, `tangle.task`, `tangle.tool.args` / `tangle.tool.result`, or the agent-native `claude_code.user_prompt` / `api_request_body`, `codex.user_prompt`, `opencode message.part.text`.
