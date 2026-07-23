@@ -5,10 +5,10 @@ Tangle ties together four layers most platforms separate: the workbench where wo
 <figure>
   <img
     src="/images/architecture/autonomous-work-loop.svg"
-    alt="Autonomous work loop"
+    alt="Build, run, improve loop"
   />
   <figcaption>
-    Autonomous work loop: workbench -> sandbox runtime -> protocol (payments +
+    Build, run, improve loop: workbench -> sandbox runtime -> protocol (payments +
     evaluation).
   </figcaption>
 </figure>
@@ -36,7 +36,7 @@ The [Gateway](/gateway) routes inference requests across provider APIs and regis
 The coordination plane. It handles operator discovery, payment routing, and incentive enforcement.
 
 **4) Experience Layer**  
-The agentic Workbench and [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main). This is where teams design workflows, run simulations, and ship services.
+The Blueprint Agent and [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main). This is where teams design workflows, run simulations, and ship services.
 
 The SDK also includes optional gateways for integrating external events and payment-driven HTTP job execution (webhooks,
 x402).
@@ -61,7 +61,7 @@ Developer references:
 
 ## Trust and Delegation
 
-Autonomous work only scales when delegation is safe. Tangle enforces policy gates before execution, emits logs and execution metadata for every run, and keeps results reviewable so teams can decide what reaches production.
+Agents only reach production when delegation is safe. Tangle enforces policy gates before execution, emits logs and execution metadata for every run, and keeps results reviewable so teams can decide what reaches production.
 
 ## What we optimize for
 

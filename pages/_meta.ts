@@ -18,8 +18,8 @@ const meta: Meta = {
     title: "Platform",
     type: "page",
   },
-  workbench: {
-    title: "Workbench",
+  "blueprint-agent": {
+    title: "Blueprint Agent",
     type: "page",
   },
   gateway: {
