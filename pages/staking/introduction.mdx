@@ -2,12 +2,12 @@ import CardGrid from "../../components/CardGrid";
 
 # Economic Security
 
-Tangle's economic security stack centers on staking for Blueprint services.
+Staking bonds operators to the Blueprint services they run, so a service that breaks its rules can be slashed.
 
 <CardGrid cards={[
   {
     title: "How Staking Works",
-    description: "Discover Tangle's permissionless and asset-configurable staking system for Blueprints and shared security.",
+    description: "Permissionless, asset-configurable staking for Blueprints and shared security.",
     link: "./how-staking-works"
   },
   {
@@ -17,17 +17,13 @@ Tangle's economic security stack centers on staking for Blueprint services.
   },
 ]} />
 
-## Economic Security
+## Operators, collateral, and slashing
 
-Tangle uses economic security to back operators who run Blueprint services. Operators register for services and provide compute. Assets can be staked to operators as collateral, aligning incentives and enabling slashing where policies require it.
+Tangle uses economic security to back operators who run Blueprint services. Operators register for services and provide compute. Delegators stake assets to operators as collateral; a service can slash that collateral when its policy defines a fault.
 
 The protocol does not make every workload safe by default. Each Blueprint defines the assets it accepts, the operators it needs, the service rules, and the evidence path for slashing. Staking gives the service an economic bond; the Blueprint still has to define what counts as a fault.
 
-## Staking
-
-Tangle provides permissionless and asset-configurable staking for Blueprints. Assets can be staked to operators as collateral for service instances, and participants earn rewards based on service usage and incentives.
-
-Staking aligns operators, developers, and stakers around service reliability and performance. If an operator violates service requirements, delegated assets can be slashed under the protocol’s rules.
+Tangle provides permissionless and asset-configurable staking for Blueprints, and participants earn rewards based on service usage and incentives. Staking aligns operators, developers, and stakers around service reliability and performance.
 
 ## Start by Role
 

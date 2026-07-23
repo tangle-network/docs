@@ -1,13 +1,13 @@
 # Sandbox Runtime
 
-The sandbox runtime is the execution layer for autonomous work. It provisions isolated environments, manages session execution, and streams events so workflows can run safely at scale.
+The sandbox runtime is the execution layer for autonomous work. It provisions isolated environments, manages session execution, and streams events so workflows can run.
 
 There are two paths:
 
 - **Hosted sandbox infrastructure**: apps use the Sandbox SDK/API against Tangle-managed orchestration when they have an API key and product access.
 - **Protocol-backed sandbox services**: operators run sandbox blueprints as service instances, and apps verify chain/service state plus live operator health before routing users in.
 
-## What It Provides
+## Isolation, policy, and streaming control
 
 - **Isolation and containment** for untrusted or semi-trusted workloads.
 - **Policy enforcement** for tools, data access, and budgets.
@@ -15,16 +15,11 @@ There are two paths:
 - **Streaming observability** with real-time events, file updates, and execution metadata.
 - **Capacity management** with host health, pooling, and optional autoscaling.
 
-## Who This Is For
+## Where to start by role
 
 - **Workbench users** who need isolated, repeatable execution. [Start in the workbench](/vibe/introduction).
 - **Operators** who host runtimes and earn for reliable execution. [Operator onboarding](/operators/introduction).
-- **Platform teams** who manage execution reliability and safety. [Review architecture](/infrastructure/architecture).
-
-## Start Here (By Role)
-
-- **Operators**: Begin with [operator onboarding](/operators/introduction).
-- **Platform engineers**: Review [architecture](/infrastructure/architecture) and [orchestration](/infrastructure/orchestration).
+- **Platform teams** who manage execution reliability and safety. [Review architecture](/infrastructure/architecture) and [orchestration](/infrastructure/orchestration).
 - **Security teams**: Start with [sandboxing and safety](/infrastructure/sandboxing).
 
 Hosted runtime access is gated by product/API-key access. Protocol-backed runtime access depends on a registered blueprint service instance and reachable operator endpoint.

@@ -7,7 +7,7 @@ description: Unified API for hundreds of AI models with built-in routing, compli
 
 Tangle Gateway is a unified inference API. One endpoint, hundreds of models, and routing across provider APIs and registered Tangle operators.
 
-## What it does
+## One key for every provider and operator
 
 - **One key, any model.** Access OpenAI, Anthropic, Google, Groq, Mistral, and 20+ providers through a single API key.
 - **Operator network.** Route to operators registered for [Blueprints](/developers/blueprints/introduction); the gateway selects from their advertised endpoint, model support, price, latency, and reputation data.
@@ -42,13 +42,13 @@ The gateway routes through three tiers, in order:
 
 When [Zero Data Retention](/gateway/zdr) or [no-train](/gateway/no-train) is requested, operators and LiteLLM are skipped - the gateway routes directly to verified providers only.
 
-## How it fits
+## Where the gateway sits
 
 ```
 Workbench (agents) → Gateway (inference) → Operators (serving) → Protocol (settlement)
 ```
 
-The gateway sits between the [Workbench](/vibe/introduction) where agents run and the [Protocol](/network/overview) where operators get paid. Agents in the workbench call the gateway for model access. The gateway selects the best provider or operator, routes the request, tracks usage, and settles payment.
+The gateway sits between the [Workbench](/vibe/introduction) where agents run and the [Protocol](/network/overview) where operators get paid. Agents in the workbench call the gateway for model access. The gateway selects a provider or operator by price, latency, and reputation, routes the request, tracks usage, and settles payment.
 
 ## Next steps
 

@@ -2,11 +2,11 @@ import ExpandableImage from "../../components/ExpandableImage";
 
 <ExpandableImage src="/images/banners/TangleBanner.png" alt="Tangle Banner" />
 
-# Protocol Foundation
+# How Tangle coordinates operators and services
 
 Tangle coordinates services that outside operators can run for users. Developers publish Blueprints, users request service instances, operators accept work, and protocol contracts track stake, lifecycle state, and payment terms.
 
-## Today vs Future
+## Managed today, open operator market later
 
 Today the network uses managed onboarding and a curated operator set. The protocol path is still the same one a larger market needs: register operators, request service instances, record commitments, and settle fees.
 
@@ -18,7 +18,7 @@ Blueprints package jobs, metadata, binaries, pricing, and optional service-manag
 
 Operators earn service fees by running requested instances. They choose which Blueprints to register for, which endpoints to expose, and which resources or isolation modes they are willing to commit.
 
-## Maximize Resource Utilization
+## Reuse one stake across Blueprints
 
 Operators can reuse one stake and operations stack across multiple Blueprints. That gives users a consistent way to select operators while each Blueprint keeps its own jobs, pricing, and runtime requirements.
 
@@ -28,7 +28,7 @@ Operators can reuse one stake and operations stack across multiple Blueprints. T
 - **Operators** who want to run services reliably and earn service fees. [Operator onboarding](/operators/introduction)
 - **Stakers** who want to back operators and earn from usage. [Economic security](/staking/introduction)
 
-## How Services Work
+## One Blueprint, many service instances
 
 <ExpandableImage src="/images/ServiceInstanceFlow.png" alt="Service Instance Flow" allowZoom={true} />
 
@@ -70,4 +70,4 @@ Tangle is a protocol for reusable cryptographic, AI, and runtime services. The p
 
 - **Custom cryptographic services**: any service that can be expressed as jobs, operator requirements, and settlement rules.
 
-The point is simple: developers package services once, users instantiate them when needed, and operators get paid for work they can prove they accepted and served.
+Developers package services once, users instantiate them when needed, and operators get paid for work they can prove they accepted and served.

@@ -8,9 +8,9 @@ import CardGrid from "../../../components/CardGrid.tsx"
 
 SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crates/runner
 
-Blueprint Runners are the core orchestration components that execute Tangle Blueprints. They manage the lifecycle of jobs, coordinate between different components, and ensure reliable execution of your blueprint service.
+Blueprint Runners are the core orchestration components that execute Tangle Blueprints. They run each job to completion, route events to the right handler, and restart failed work.
 
-## Getting Started
+## In this section
 
 <CardGrid
   cards={[
@@ -96,7 +96,7 @@ The architecture of a Blueprint Runner consists of the following components:
 
 ## Blueprint Runner Lifecycle
 
-The Blueprint Runner follows a well-defined lifecycle to ensure reliable execution of your blueprint:
+A runner moves each job through six stages:
 
 1. **Initialization**: The Blueprint Runner loads configuration, sets up components, and establishes connections.
 2. **Event Processing**: [Producers](/developers/blueprint-runner/producers) listen for events and convert them into job inputs.
@@ -107,4 +107,4 @@ The Blueprint Runner follows a well-defined lifecycle to ensure reliable executi
 
 ## Next Steps
 
-Ready to build your own Blueprint Runner? Check out our [step-by-step guide](/developers/blueprint-runner/building) to get started.
+Build a runner: follow the [step-by-step guide](/developers/blueprint-runner/building).

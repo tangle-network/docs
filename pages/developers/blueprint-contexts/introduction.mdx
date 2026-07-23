@@ -8,7 +8,7 @@ SDK source (GitHub): https://github.com/tangle-network/blueprint/tree/main/crate
 
 In the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main), a Context holds utilities and dependencies that a job may need that aren't direct inputs. Think of it as a container for all the external resources and services your job requires to function.
 
-A Context can include various elements such as:
+A Context can include:
 
 - HTTP clients for making network requests
 - Access to a keystore
@@ -21,9 +21,9 @@ A Context can include various elements such as:
 
 The Context pattern is closely related to the Dependency Injection (DI) design pattern, which is a technique for achieving Inversion of Control (IoC) between classes and their dependencies.
 
-## Why do we need Contexts?
+## What a Context buys you
 
-The Context pattern offers several significant benefits in software design and development:
+Contexts give you:
 
 1. **Decoupling**: By passing dependencies through a Context, we decouple the job implementation from the specific implementations of its dependencies. This makes the code more modular and easier to maintain.
 

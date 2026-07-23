@@ -5,7 +5,7 @@ description: The shared operating layer for autonomous work, unifying the agenti
 
 # AI
 
-Tangle is the shared operating layer for autonomous work. Teams and agents collaborate in shared workbenches or separate ones, work runs in isolated sandboxes with explicit policies and resource limits, and the protocol pays the operators who host protocol-backed services. Workflows improve through agent and task evaluations collected from each run.
+Tangle runs autonomous work across a shared workbench, isolated sandboxes, and an inference gateway, and pays the operators who host protocol-backed services. Teams and agents collaborate in the same workbench or separate ones, with every run bound by explicit policies and resource limits. Teams review the task and agent evaluations from each run to tune prompts, policies, and workflows.
 
 <figure>
   <img
@@ -42,7 +42,7 @@ Core capabilities:
 
 ## Evaluation Loop
 
-Each run produces task and agent evaluations. That data feeds back into the workbench to improve prompts, policies, and workflows over time.
+Each run produces task and agent evaluations. You use that data in the workbench to refine prompts, policies, and workflows.
 
 ## Inference Gateway
 
@@ -55,7 +55,7 @@ Key capabilities:
 - **Compliance.** [Zero Data Retention](/gateway/zdr) and [no-train](/gateway/no-train) routing with verified provider agreements.
 - **On-chain payments.** [SpendAuth](/gateway/spend-auth) lets users pay operators directly without a credit card.
 
-## Learn More
+## Set up the gateway, workbench, and runtime
 
 - [Gateway: Getting Started](/gateway/getting-started)
 - [Workbench details](/vibe/introduction)
