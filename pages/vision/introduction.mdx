@@ -1,52 +1,42 @@
-# The operating layer for autonomous work
+# Build, run, and improve agents
 
-Tangle is the shared operating layer for autonomous work: a workbench for teams and agents, a sandbox runtime for execution, and a protocol that pays the operators who host it. Every run emits evaluations so workflows improve with evidence, not guesswork.
+Tangle is infrastructure for AI agents. You **build** them in the [Blueprint Agent](/blueprint-agent/introduction), **run** them in isolated [sandboxes](/infrastructure/introduction) with one API key to [every model](/gateway/getting-started), and **improve** them with [Intelligence](/intelligence), which traces every run and tells you what to fix. One account, one key, one balance across all of it.
 
-We started by building a protocol for complex services (MPC, zero-knowledge, distributed systems). That foundation maps directly to what AI needs: isolation, coordination, and economic accountability.
+We started by building a protocol for complex services — MPC, zero-knowledge, distributed systems. That foundation maps directly to what AI agents need: isolation, coordination, and economic accountability.
 
 ## Mission
 
-Make autonomous work safe enough to delegate.
+Give developers the infrastructure to run AI agents in production — and a loop that makes each run better than the last.
 
-AI should ship with the rigor of critical infrastructure. That means isolation by default, reviewable outcomes, and incentives that reward reliability.
+Agents should ship with the rigor of real infrastructure: isolation by default, reviewable outcomes, and cost tied to result.
 
-## Problem
+## The problem
 
-Autonomous work today is brittle: tasks run outside policy, results lack evidence, and responsibility is unclear. Teams either build their own infrastructure or avoid delegation entirely.
+Running agents in production is brittle. They execute outside any policy, results are hard to inspect, and there is no straightforward way to see why a run failed or measure whether a change helped. Teams either build all of this themselves or avoid shipping agents at all.
 
-## What Exists Today
+## What exists today
 
-- **Managed workbench + runtime**: build, run, and review agent workflows with isolation, policy gates, and evaluation tools.
-- **[Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main)**: package services into reusable components with predictable interfaces.
-- **Service connectivity primitives**: optional webhook ingress and paid HTTP job calls (x402) for integrating with external systems.
-- **Multi-tenant service access**: when services expose off-chain HTTP or gRPC endpoints, operators can front them with an auth proxy that enforces authentication and injects tenant identity.
+- **Sandbox runtime** — isolated dev containers, one per agent, pre-loaded with any coding harness. The flagship product; everything runs here.
+- **Inference** — one OpenAI-compatible API key to every model and provider.
+- **Intelligence** — ingests traces from sandbox runs and inference calls, and tells you why agents fail and what to change.
+- **Blueprint Agent** — describe a project and an AI agent builds it with you in an in-browser IDE.
+- **Platform** — one account, `sk-tan-` API keys, and a shared USD balance that every product bills against.
 
-## Where It Goes
+## Where it goes
 
-- **Operator marketplace**: runtime hosting moves to registered operators paid through protocol settlement.
-- **Protocol-native coordination**: payments, reliability, and service discovery move on-chain.
+- **Operator network** — runtime hosting moves to registered operators, paid through on-chain settlement.
+- **Improvement delivery** — today Intelligence reports what to fix; next it delivers those fixes back to the agents directly.
+- **Protocol-native coordination** — payments, reliability, and service discovery move on-chain.
 
-## What Tangle Is
+Managed cloud is live today. The decentralized operator network is the trajectory, not a current claim.
 
-- **Agentic workbench**: A shared workspace where humans and agents build and run autonomous work.
-- **Sandbox runtime**: The execution layer that isolates tasks with policies, resource limits, and audit logs.
-- **Protocol**: The coordination and payment layer that will let registered operators host workloads and settle payment on-chain.
-- **Evaluation loop**: Task and agent evaluations that improve workflows over time.
+## Who this is for
 
-## Who This Is For
+- **Developers shipping AI agents.** [Run one in a sandbox](/infrastructure/introduction).
+- **Teams building products with agents.** [Start in the Blueprint Agent](/blueprint-agent/introduction).
+- **Operators providing compute.** [Operator onboarding](/operators/introduction).
+- **Partners evaluating the stack.** [Protocol overview](/network/overview).
 
-- **AI builders** shipping agentic products. [Start in the workbench](/blueprint-agent/introduction).
-- **Protocol and infrastructure engineers** building new services. [Build with Blueprints](/developers/blueprints/introduction).
-- **Operators** providing compute. [Operator onboarding](/operators/introduction).
-- **Partners and investors** evaluating the stack. [Protocol overview](/network/overview).
+## The long term
 
-## Start Here
-
-- **Build workflows** in the [workbench](/blueprint-agent/introduction).
-- **Package services** with the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main).
-- **Host workloads** via the [runtime](/infrastructure/introduction).
-- **Integrate payments and coordination** in the [protocol](/network/overview).
-
-## The Long Term
-
-As AI becomes a workforce, teams need an operating layer that turns intent into execution and settlement. Tangle is building that layer: where autonomous work is authored, run with policy, and paid at scale.
+As agents take on more real work, developers need infrastructure that runs them safely and a loop that improves them with evidence. Tangle is building that: build the agent, run it under policy, trace what it did, and ship the fix.

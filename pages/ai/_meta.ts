@@ -24,7 +24,7 @@ const meta: Meta = {
   },
   "-- workbench": {
     type: "separator",
-    title: "Agentic Workbench",
+    title: "Blueprint Agent",
   },
   "workbench-intro": {
     title: "Introduction",
