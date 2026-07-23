@@ -18,7 +18,7 @@ const meta: Meta = {
     title: "Platform",
     type: "page",
   },
-  vibe: {
+  workbench: {
     title: "Workbench",
     type: "page",
   },
