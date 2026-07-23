@@ -1,11 +1,11 @@
 ---
 title: Migrate from Vercel AI Gateway
-description: Switch from Vercel AI Gateway to Tangle Gateway.
+description: Switch from Vercel AI Gateway to Tangle Inference.
 ---
 
 # Migrate from Vercel AI Gateway
 
-Tangle Gateway supports the same `providerOptions.gateway` schema as Vercel AI Gateway. Most code works unchanged.
+Tangle Inference supports the same `providerOptions.gateway` schema as Vercel AI Gateway. Most code works unchanged.
 
 ## What maps directly
 
@@ -31,7 +31,7 @@ Tangle Gateway supports the same `providerOptions.gateway` schema as Vercel AI G
 | **Operator network**  | None                                  | Managed provider endpoints, selected by health, price, and latency |
 | **On-chain payments** | None                                  | SpendAuth (EIP-712) - pay without a credit card                    |
 | **Guardrails**        | None                                  | PII + injection detection built-in                                 |
-| **Web search tools**  | Perplexity, Parallel, provider-native | Not available through Tangle Gateway today                         |
+| **Web search tools**  | Perplexity, Parallel, provider-native | Not available through Tangle Inference today                       |
 | **OIDC auth**         | Vercel-only                           | Not applicable                                                     |
 
 ## Code change
