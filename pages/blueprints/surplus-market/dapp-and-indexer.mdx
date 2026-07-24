@@ -5,9 +5,9 @@ description: Dapp routing, metadata gaps, protocol state, and live venue checks 
 
 # Surplus Market Dapp Integration
 
-Surplus is live as a hosted app at `https://surplus-market.pages.dev/`.
+Surplus has no live hosted app today. The previously published address (`surplus-market.pages.dev`) no longer resolves, and no `*.blueprint.tangle.tools` host is deployed for it, unlike Sandbox and Trading.
 
-Tangle Cloud should treat it as a first-party link-out until the repo publishes `blueprintUi` metadata and a `*.blueprint.tangle.tools` iframe host. Do not pretend it has the same iframe contract as Sandbox and Trading yet.
+Until a host is published, treat Surplus as protocol-only: route to the raw blueprint and service-instance views. It does not have the iframe contract that Sandbox and Trading have.
 
 The Surplus repo does not ship a dedicated indexer today. The product app can read protocol state from contracts or a shared protocol indexing layer when one exists, but the venue, order book, settlement outbox, and inference redemption state live in the product/operator path.
 
@@ -27,7 +27,7 @@ It does not yet include the full `blueprintUi` object used by Sandbox and Tradin
 
 | Route             | Behavior                                                       |
 | ----------------- | -------------------------------------------------------------- |
-| Product app       | Link to `https://surplus-market.pages.dev/`.                   |
+| Product app       | None deployed. Do not link out until a host is published.      |
 | Protocol fallback | Preserve the raw blueprint and service-instance route.         |
 | Future iframe     | Use only after a trusted host and iframe policy are published. |
 
