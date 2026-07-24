@@ -4,8 +4,10 @@ import { ComponentProps } from "react";
 const NAV_ITEMS = new Set([
   "vision",
   "sandbox",
+  "gateway",
+  "intelligence",
   "blueprint-agent",
-  "infrastructure",
+  "platform",
   "protocol",
 ]);
 
