@@ -7,15 +7,26 @@ description: Rate limits by authentication method.
 
 The gateway enforces sliding-window rate limits per authentication method.
 
-## Limits
+## Per-minute limits
 
-| Auth method                | Rate limit  | Daily limit              |
-| -------------------------- | ----------- | ------------------------ |
-| API Key                    | 60 req/min  | Unlimited (with credits) |
-| Session                    | 30 req/min  | Unlimited (with credits) |
-| SpendAuth                  | 120 req/min | Unlimited                |
-| Anonymous                  | 10 req/min  | 5 req/day                |
-| Authenticated (no credits) | 30 req/min  | 20 req/day               |
+Set by how the request authenticates. Your credit balance does not change them.
+
+| Auth method | Rate limit  |
+| ----------- | ----------- |
+| API key     | 60 req/min  |
+| Session     | 30 req/min  |
+| SpendAuth   | 120 req/min |
+| Anonymous   | 10 req/min  |
+
+## Daily caps
+
+Set by credit balance, independent of the per-minute limit above.
+
+| Caller                      | Daily limit |
+| --------------------------- | ----------- |
+| Anonymous (no auth)         | 5 req/day   |
+| Authenticated, zero credits | 20 req/day  |
+| Any credits                 | Unlimited   |
 
 ## Response headers
 

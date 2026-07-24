@@ -36,7 +36,8 @@ const box = await client.create({
   resources: { cpuCores: 2, memoryMB: 4096, diskGB: 20 },
   maxLifetimeSeconds: 3600,
   idleTimeoutSeconds: 900,
-  fromSnapshot: "snap_abc123", // optional, restore a saved workspace
+  fromSnapshot: "snap_abc123", // restore a saved workspace (both fields required)
+  fromSandboxId: "sandbox_abc123", // the sandbox that owns the snapshot
 });
 ```
 

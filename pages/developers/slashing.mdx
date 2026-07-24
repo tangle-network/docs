@@ -27,7 +27,7 @@ The slashing path is implemented in:
    [ Disputed ]   cancelSlash   [ Executed ]
      |    \           |
      |     \          v
-     |    cancelSlash (refunds bond)   [ Cancelled ]
+     |    cancelSlash (bond claimable)   [ Cancelled ]
      v
    isExecutable after disputeDeadline
    -> auto-fails, executeSlash succeeds, bond forfeit to treasury
@@ -52,9 +52,9 @@ non-zero evidence never observe silently-zero entries.
 
 ### `disputeSlash(slashId, reason)` `payable` (`nonReentrant`)
 
-The operator (or `SLASH_ADMIN_ROLE`) contests the slash within the dispute window.
+The operator, a `SLASH_ADMIN_ROLE` holder, or a BSM-declared dispute origin contests the slash within the dispute window.
 
-The operator must post `config.disputeBond` in native asset. `SLASH_ADMIN` posts no bond. The dispute snapshots `config.disputeResolutionDeadline` onto the proposal (`disputeDeadline = block.timestamp + deadline`), so a later admin-driven shrink of the live config cannot retroactively shorten the operator's review window.
+The operator must post `config.disputeBond` in native asset. `SLASH_ADMIN` posts no bond. A BSM-declared bondless dispute origin also posts no bond, unless the blueprint itself authored the slash, in which case the bondless path closes and the full `disputeBond` is required. The dispute snapshots `config.disputeResolutionDeadline` onto the proposal (`disputeDeadline = block.timestamp + deadline`), so a later admin-driven shrink of the live config cannot retroactively shorten the operator's review window.
 
 A `SLASH_ADMIN_ROLE` holder that is also the `proposer` of a slash CANNOT dispute their own
 proposal. Without this, a single role-holder could propose, immediately self-dispute (no bond),
@@ -87,10 +87,11 @@ The admin agrees with a dispute or otherwise wants to drop a proposal. State tra
 | Function            | Caller                                                                                                                                                                                                                                                            |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `proposeSlash`      | Service owner, blueprint owner, or BSM-declared `querySlashingOrigin`. Operator must already be in the service (`OperatorNotInService` revert otherwise). `slashBps` must be in `(0, BPS_DENOMINATOR]` and produce non-zero effective bps after exposure scaling. |
-| `disputeSlash`      | The slashed operator (must post bond), or `SLASH_ADMIN_ROLE` (no bond)                                                                                                                                                                                            |
+| `disputeSlash`      | The slashed operator (must post bond), `SLASH_ADMIN_ROLE` (no bond), or a BSM-declared dispute origin (no bond, unless the blueprint authored the slash)                                                                                                          |
 | `executeSlash`      | Anyone, gated by `isExecutable`                                                                                                                                                                                                                                   |
 | `executeSlashBatch` | Anyone. Non-executable ids in the batch are SILENTLY SKIPPED, not reverted.                                                                                                                                                                                       |
 | `cancelSlash`       | `SLASH_ADMIN_ROLE` only. Can cancel from `Pending` or `Disputed`.                                                                                                                                                                                                 |
+| `claimDisputeBond`  | Anyone with a credited balance in `_pendingDisputeBondRefunds` (the disputer after a cancel, or the treasury after a failed push). Withdraws that balance.                                                                                                        |
 | `setSlashConfig`    | `ADMIN_ROLE` (route through `TangleTimelock` in production)                                                                                                                                                                                                       |
 
 The BSM-declared slashing origin is queried dynamically on each `proposeSlash` call. Operators MUST audit the BSM's code AND its upgradeability before joining any blueprint that uses one. A BSM whose owner is compromised can grant slashing rights to an attacker. If you do not accept that risk, only join blueprints whose BSM is non-upgradeable.
@@ -123,8 +124,9 @@ You will see a `SlashProposed(slashId, serviceId, operator, ...)` event indexed 
    - If the slash is correct, do nothing. It will execute after `disputeWindow + TIMESTAMP_BUFFER`. Your delegators' withdrawals are blocked until then.
    - If the slash is incorrect, dispute before `executeAfter`.
 3. **To dispute**, call `disputeSlash{value: config.disputeBond}(slashId, "concise reason")`. If you do not post exactly `disputeBond`, the call reverts.
-4. **After disputing**, escalate to `SLASH_ADMIN`. Provide your evidence off-chain. The admin has up to `disputeResolutionDeadline` to call `cancelSlash` (refunds your bond) or do nothing (slash auto-executes, bond forfeit).
-5. **Watch your `_operatorPendingSlashCount`.** If it stays elevated long after a dispute resolved, raise a ticket with protocol governance to investigate.
+4. **After disputing**, escalate to `SLASH_ADMIN`. Provide your evidence off-chain. The admin has up to `disputeResolutionDeadline` to call `cancelSlash` (credits your bond back to you, claimable) or do nothing (slash auto-executes, bond forfeit).
+5. **Claim your bond.** `cancelSlash` does NOT push the bond back to you. It credits `_pendingDisputeBondRefunds[disputer]`. You must call `claimDisputeBond()` yourself to receive the ETH. A cancelled slash with an unclaimed bond is the common operator mistake here.
+6. **Watch your `_operatorPendingSlashCount`.** If it stays elevated long after a dispute resolved, raise a ticket with protocol governance to investigate.
 
 ### You Want to Leave the Network
 
@@ -142,7 +144,7 @@ A `SlashDisputed(slashId, disputer, reason)` event fires. You have `disputeResol
 
 1. Read the dispute reason and the original evidence.
 2. Off-chain communication with the operator and the slash proposer is expected.
-3. **If the dispute is valid**: `cancelSlash(slashId, "summary")`. Bond refunds to the operator, pending counters decrement.
+3. **If the dispute is valid**: `cancelSlash(slashId, "summary")`. The bond is credited to the disputer's pull-claimable balance (`_pendingDisputeBondRefunds`) and pending counters decrement. Tell the disputer to call `claimDisputeBond()`; the protocol never pushes the ETH back for them.
 4. **If the dispute is spurious**: do nothing. After the deadline passes, anyone can call `executeSlash`, the slash applies, and the bond is forfeit to the treasury.
 5. **To force-resolve early in the spurious case**: call `cancelSlash` only if you mean to drop the proposal entirely. There is no "reject the dispute" path. The auto-execution path is the right answer when the operator is wrong.
 
@@ -165,12 +167,12 @@ The dispute bond is the only economic counter to free DoS by the operator. Witho
 With the bond, in the common case:
 
 - A spurious self-dispute costs the operator `disputeBond`, forfeit to treasury when the dispute auto-fails.
-- A legitimate dispute is refunded to the operator on `cancelSlash`.
+- A legitimate dispute is credited back to the operator on `cancelSlash`. The refund is pull-based: `cancelSlash` only credits `_pendingDisputeBondRefunds[disputer]`, and the operator calls `claimDisputeBond()` to withdraw it.
 
 Edge cases (handled by `_settleDisputeBond`):
 
-- If `_treasury == address(0)` when a forfeit would occur, the bond is RESTORED on the proposal (left claimable) instead of being stranded. Configure the treasury before any forfeit-eligible slash auto-fails.
-- If the recipient call (`disputer.call` or `treasury.call`) reverts, the bond is RESTORED on the proposal symmetrically. The bond is never silently lost.
+- If `_treasury == address(0)` when a forfeit would occur, the bond is credited to `_pendingDisputeBondRefunds[disputer]` instead of being stranded, and the disputer drains it with `claimDisputeBond()`. It is only restored on the proposal in the unreachable case where the disputer is also `address(0)`. Configure the treasury before any forfeit-eligible slash auto-fails.
+- If the treasury push (`treasury.call`) reverts, the bond is credited to `_pendingDisputeBondRefunds[treasury]`, NOT restored on the proposal. There is no push to the disputer anywhere in `_settleDisputeBond`; every refund path is pull-based. The bond is never silently lost, but it is never delivered without the credited address calling `claimDisputeBond()`.
 - If `proposal.disputer == address(0)` on a refund call (no disputer recorded), the bond falls through to treasury rather than reverting.
 
 Setting `disputeBond` correctly is a governance call. Too low and DoS is cheap. Too high and operators with legitimate disputes cannot afford to defend themselves.
@@ -181,7 +183,7 @@ The deadline (`disputeResolutionDeadline`) matters because without auto-resoluti
 
 When an operator joins a service via `approveService(ApprovalParams)` with a non-empty `securityCommitments`, they declare per-asset exposure (`AssetSecurityCommitment[]`). On slash:
 
-- `_executeSlashOnStaking` reads `_serviceSecurityCommitments[serviceId][operator]`.
+- `_executeSlashOnStaking` loads the commitment snapshot taken at `proposeSlash` time (`_slashCommitmentSnapshots[slashId]`), not live storage, so commitment changes after the proposal cannot shrink the slash.
 - If commitments exist, it routes to `slashForService(operator, blueprintId, serviceId, commitments, slashBps, evidence)` which only burns the committed assets proportionally to `commitment.exposureBps`.
 - If no commitments exist (legacy services), it falls back to `slashForBlueprint` which burns all enabled assets uniformly.
 

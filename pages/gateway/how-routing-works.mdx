@@ -24,7 +24,7 @@ Operators run [Blueprints](/developers/blueprints/introduction): service templat
 
 **When it's used:** Default for `auto` routing mode, required for SpendAuth (on-chain payments).
 
-**When it's skipped:** When [ZDR](/gateway/zdr) or [no-train](/gateway/no-train) is requested (operators can't verify compliance). When `routing: "provider"` is set explicitly.
+**When it's skipped:** Only in two cases. When a compliance flag is set ([ZDR](/gateway/zdr), [no-train](/gateway/no-train), or data residency), because operators can't verify compliance. And when `providerOptions.gateway.order` is supplied.
 
 ### Tier 2: Direct provider
 
@@ -46,12 +46,11 @@ Tier 1 is bypassed. The gateway routes only to providers with verified complianc
 
 ## Routing control
 
-| Method                          | Effect                                               |
-| ------------------------------- | ---------------------------------------------------- |
-| `routing: "auto"`               | Try both tiers (default)                             |
-| `routing: "operator"`           | Operators only. Fails if no operator available.      |
-| `routing: "provider"`           | Skip operators, use the direct provider tier only.   |
-| `X-Tangle-Blueprint: <id>`      | Pin to operators under this Blueprint.               |
-| `X-Tangle-Operator: <slug>`     | Pin to a specific operator.                          |
-| `providerOptions.gateway.order` | Control which providers are tried and in what order. |
-| `providerOptions.gateway.only`  | Restrict to these providers only.                    |
+| Method                          | Effect                                                                     |
+| ------------------------------- | -------------------------------------------------------------------------- |
+| `routing: "auto"`               | Try both tiers (default)                                                   |
+| `routing: "operator"`           | Operators only. Fails if no operator available.                            |
+| `X-Tangle-Blueprint: <id>`      | Pin to operators under this Blueprint.                                     |
+| `X-Tangle-Operator: <slug>`     | Pin to a specific operator.                                                |
+| `providerOptions.gateway.order` | Control which providers are tried and in what order. Also skips operators. |
+| `providerOptions.gateway.only`  | Restrict to these providers only.                                          |
