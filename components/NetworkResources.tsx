@@ -46,11 +46,7 @@ const NETWORK_DATA = {
     { property: "Host Chain", value: "Base Mainnet" },
     {
       property: "Public RPC URL",
-      value: { type: "wss", url: "https://rpc.tangle.tools" },
-    },
-    {
-      property: "Public WSS URL",
-      value: { type: "wss", url: "wss://rpc.tangle.tools" },
+      value: { type: "wss", url: "https://mainnet.base.org" },
     },
     {
       property: "Protocol Contracts",
@@ -99,11 +95,7 @@ const NETWORK_DATA = {
     { property: "Host Chain", value: "Base Sepolia" },
     {
       property: "Public RPC URL",
-      value: { type: "wss", url: "https://testnet-rpc.tangle.tools" },
-    },
-    {
-      property: "Public WSS URL",
-      value: { type: "wss", url: "wss://testnet-rpc.tangle.tools" },
+      value: { type: "wss", url: "https://sepolia.base.org" },
     },
     {
       property: "Protocol Contracts",
