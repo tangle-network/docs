@@ -19,16 +19,18 @@ Try the gateway without credits. Free tier restricts to cheap, fast models with 
 
 Free tier requests can use:
 
-| Model                       | Provider  |
-| --------------------------- | --------- |
-| `gpt-4o-mini`               | OpenAI    |
-| `claude-3-5-haiku-20241022` | Anthropic |
-| `llama-3.1-8b-instant`      | Groq      |
-| `llama-3.2-1b-preview`      | Groq      |
-| `llama-3.2-3b-preview`      | Groq      |
-| `gemini-2.0-flash-lite`     | Google    |
-| `cerebras/llama-3.1-8b`     | Cerebras  |
-| `deepseek-chat`             | DeepSeek  |
+| Model                                 | Provider  |
+| ------------------------------------- | --------- |
+| `openai/gpt-4o-mini`                  | OpenAI    |
+| `anthropic/claude-haiku-4-5-20251001` | Anthropic |
+| `groq/llama-3.1-8b-instant`           | Groq      |
+| `google/gemini-2.5-flash-lite`        | Google    |
+| `deepseek/deepseek-chat`              | DeepSeek  |
+| `deepseek/deepseek-v4-flash`          | DeepSeek  |
+| `groq/llama-3.2-1b-preview`           | Groq      |
+| `groq/llama-3.2-3b-preview`           | Groq      |
+
+Write the two `groq/llama-3.2-*-preview` ids in full. Their bare forms are not in the free-tier set and return 402.
 
 ## Blocked models
 
@@ -45,7 +47,7 @@ Requesting a blocked model without credits returns 402:
 ```json
 {
   "error": {
-    "message": "Model \"gpt-4o\" requires credits. Free tier models: gpt-4o-mini, llama-3.1-8b-instant, gemini-2.0-flash-lite, deepseek-chat. Add credits or use a free tier model.",
+    "message": "Model \"gpt-4o\" requires credits. Free-tier models: openai/gpt-4o-mini, groq/llama-3.1-8b-instant, google/gemini-2.5-flash-lite, anthropic/claude-haiku-4-5-20251001, deepseek/deepseek-chat, deepseek/deepseek-v4-flash. Add credits or pick a free-tier model.",
     "type": "insufficient_funds",
     "code": "free_tier_limit"
   }
@@ -54,7 +56,7 @@ Requesting a blocked model without credits returns 402:
 
 ## Response headers
 
-Free tier responses include remaining quota:
+When a request is rejected for free-tier reasons (402), the response reports your quota:
 
 ```
 X-Free-Tier-Remaining: 3

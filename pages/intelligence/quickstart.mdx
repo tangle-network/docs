@@ -26,6 +26,10 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=https://intelligence.tangle.tools/v1/otlp
 export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer ${TANGLE_API_KEY}"
 
 export OTEL_LOGS_EXPORTER=otlp          # required: content rides log events
+export OTEL_METRICS_EXPORTER=otlp       # tokens / cost
+export OTEL_TRACES_EXPORTER=otlp        # spans
+export CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1   # required for spans
+
 export OTEL_LOG_USER_PROMPTS=1          # task/prompt text
 export OTEL_LOG_TOOL_DETAILS=1          # tool arguments
 
@@ -45,16 +49,15 @@ claude -p "fix the failing test in src/auth"
 
 ## 4. Verify content is flowing
 
-Within about 30 seconds, check that a trace landed with a content key, not just metadata:
+Within about 30 seconds, ask Intelligence whether content landed. This endpoint checks both spans and log records, so it sees content wherever it rides:
 
 ```sh
 AUTH="Authorization: Bearer ${TANGLE_API_KEY}"
-TID=$(curl -sS "https://intelligence.tangle.tools/v1/traces?limit=1" -H "$AUTH" | jq -r '.items[0].trace_id')
-curl -sS "https://intelligence.tangle.tools/v1/traces/$TID/spans" -H "$AUTH" \
-  | jq '[.items[].attributes // .spans[].attributes | keys] | add | unique'
+curl -sS "https://intelligence.tangle.tools/v1/onboarding/status" -H "$AUTH" \
+  | jq '{tracesSeen, contentSeen, byAgent}'
 ```
 
-If the keys include a content key such as `claude_code.user_prompt` or `gen_ai.prompt`, content is flowing. If you see only `tool_name`, `duration_ms`, and ids, you missed a gate. See [Connect your agent](/intelligence/connect#verify-content-is-flowing).
+`contentSeen: true` means content is flowing. If `tracesSeen` is true but `contentSeen` is false, you missed a gate. `tangle connect claude-code --verify` runs the same check as one command. See [Connect your agent](/intelligence/connect#verify-content-is-flowing).
 
 ## Next
 

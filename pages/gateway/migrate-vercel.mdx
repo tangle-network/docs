@@ -9,30 +9,30 @@ Tangle Inference supports the same `providerOptions.gateway` schema as Vercel AI
 
 ## What maps directly
 
-| Vercel Feature                                   | Tangle Equivalent | Notes                             |
-| ------------------------------------------------ | ----------------- | --------------------------------- |
-| `providerOptions.gateway.byok`                   | Same              | Identical schema                  |
-| `providerOptions.gateway.zeroDataRetention`      | Same              | 13 verified providers             |
-| `providerOptions.gateway.disallowPromptTraining` | Same              | 25 verified providers             |
-| `providerOptions.gateway.caching: 'auto'`        | Same              | Anthropic cache_control injection |
-| `providerOptions.gateway.order`                  | Same              | Provider priority                 |
-| `providerOptions.gateway.only`                   | Same              | Provider allowlist                |
-| `models` fallback array                          | Same              | Model-level failover              |
-| `GET /v1/credits`                                | Same              | Balance check                     |
-| `GET /v1/generation`                             | Same              | Request detail lookup             |
+| Vercel Feature                                   | Tangle Equivalent | Notes                                                                                                           |
+| ------------------------------------------------ | ----------------- | --------------------------------------------------------------------------------------------------------------- |
+| `providerOptions.gateway.byok`                   | Same              | Identical schema                                                                                                |
+| `providerOptions.gateway.zeroDataRetention`      | Same              | 13 verified providers                                                                                           |
+| `providerOptions.gateway.disallowPromptTraining` | Same              | 18 verified providers                                                                                           |
+| `providerOptions.gateway.caching: 'auto'`        | Same              | Anthropic cache_control injection                                                                               |
+| `providerOptions.gateway.order`                  | Same              | Provider priority                                                                                               |
+| `providerOptions.gateway.only`                   | Same              | Provider allowlist                                                                                              |
+| `providerOptions.gateway.webSearch`              | Same              | Perplexity, Parallel, Exa, Tavily, Brave, You.com, SerpAPI, Serper, Google CSE, SearXNG; plus `POST /v1/search` |
+| `models` fallback array                          | Same              | Model-level failover                                                                                            |
+| `GET /v1/credits`                                | Same              | Balance check                                                                                                   |
+| `GET /v1/generation`                             | Same              | Request detail lookup                                                                                           |
 
 ## What's different
 
-| Feature               | Vercel                                | Tangle                                                             |
-| --------------------- | ------------------------------------- | ------------------------------------------------------------------ |
-| **Base URL**          | `ai-gateway.vercel.sh/v1`             | `router.tangle.tools/v1`                                           |
-| **Auth**              | API key or OIDC token                 | API key, session, SIWE (wallet), or SpendAuth (on-chain)           |
-| **Pricing**           | Zero markup                           | 20% markup (0% with BYOK)                                          |
-| **Operator network**  | None                                  | Managed provider endpoints, selected by health, price, and latency |
-| **On-chain payments** | None                                  | SpendAuth (EIP-712) - pay without a credit card                    |
-| **Guardrails**        | None                                  | PII + injection detection built-in                                 |
-| **Web search tools**  | Perplexity, Parallel, provider-native | Not available through Tangle Inference today                       |
-| **OIDC auth**         | Vercel-only                           | Not applicable                                                     |
+| Feature               | Vercel                    | Tangle                                                             |
+| --------------------- | ------------------------- | ------------------------------------------------------------------ |
+| **Base URL**          | `ai-gateway.vercel.sh/v1` | `router.tangle.tools/v1`                                           |
+| **Auth**              | API key or OIDC token     | API key, session, or SpendAuth (on-chain)                          |
+| **Pricing**           | Zero markup               | 20% markup (0% with BYOK)                                          |
+| **Operator network**  | None                      | Managed provider endpoints, selected by health, price, and latency |
+| **On-chain payments** | None                      | SpendAuth (EIP-712) - pay without a credit card                    |
+| **Guardrails**        | None                      | PII + injection detection built-in                                 |
+| **OIDC auth**         | Vercel-only               | Not applicable                                                     |
 
 ## Code change
 
@@ -75,6 +75,5 @@ Tangle Inference supports the same `providerOptions.gateway` schema as Vercel AI
 
 - **Operator network.** Routes across managed provider endpoints selected by health, model support, price, and latency.
 - **On-chain payments.** Pay with crypto via SpendAuth - no Stripe/credit card required.
-- **Wallet auth.** Sign in with Ethereum (SIWE) for web3-native access.
 - **Guardrails.** Built-in PII and prompt injection detection on every request.
 - **Self-hostable (roadmap).** Running your own open-source gateway instance is planned.

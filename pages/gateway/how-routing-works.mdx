@@ -1,16 +1,16 @@
 ---
 title: How Routing Works
-description: The three-tier routing architecture behind Tangle Inference.
+description: The two-tier routing architecture behind Tangle Inference.
 ---
 
 # How Routing Works
 
-Every request passes through up to three routing tiers. The gateway tries each tier in order and returns the first successful response.
+Every request passes through up to two routing tiers. The gateway tries each tier in order and returns the first successful response.
 
-## The three tiers
+## The two tiers
 
 ```
-Request → Tier 1: Operators → Tier 2: LiteLLM → Tier 3: Direct Provider → Response
+Request → Tier 1: Operators → Tier 2: Direct Provider → Response
 ```
 
 ### Tier 1: Operator routing
@@ -26,19 +26,11 @@ Operators run [Blueprints](/developers/blueprints/introduction): service templat
 
 **When it's skipped:** When [ZDR](/gateway/zdr) or [no-train](/gateway/no-train) is requested (operators can't verify compliance). When `routing: "provider"` is set explicitly.
 
-### Tier 2: LiteLLM proxy
-
-An internal proxy that handles 100+ provider integrations with built-in retries and provider-level fallbacks.
-
-**When it's used:** Default for standard requests when no operator is available.
-
-**When it's skipped:** When ZDR or no-train is requested (LiteLLM's downstream routing is not compliance-controllable). When LiteLLM is not configured (`LITELLM_URL` unset).
-
-### Tier 3: Direct provider
+### Tier 2: Direct provider
 
 The gateway calls the provider API directly using platform credentials (or [BYOK](/gateway/byok) credentials).
 
-**When it's used:** Fallback when tiers 1 and 2 fail. Only tier used when compliance routing is active.
+**When it's used:** Default for standard requests, and the fallback when tier 1 fails. Only tier used when compliance routing is active.
 
 **Always used for:** ZDR requests, no-train requests, BYOK with compliance flags.
 
@@ -47,18 +39,18 @@ The gateway calls the provider API directly using platform credentials (or [BYOK
 When `zeroDataRetention` or `disallowPromptTraining` is set:
 
 ```
-Request → Tier 3: Direct Provider (verified only) → Response
+Request → Tier 2: Direct Provider (verified only) → Response
 ```
 
-Tiers 1 and 2 are bypassed. The gateway routes only to providers with verified compliance agreements. See [Zero Data Retention](/gateway/zdr) for the trust model.
+Tier 1 is bypassed. The gateway routes only to providers with verified compliance agreements. See [Zero Data Retention](/gateway/zdr) for the trust model.
 
 ## Routing control
 
 | Method                          | Effect                                               |
 | ------------------------------- | ---------------------------------------------------- |
-| `routing: "auto"`               | Try all three tiers (default)                        |
+| `routing: "auto"`               | Try both tiers (default)                             |
 | `routing: "operator"`           | Operators only. Fails if no operator available.      |
-| `routing: "provider"`           | Skip operators, use LiteLLM + direct only.           |
+| `routing: "provider"`           | Skip operators, use the direct provider tier only.   |
 | `X-Tangle-Blueprint: <id>`      | Pin to operators under this Blueprint.               |
 | `X-Tangle-Operator: <slug>`     | Pin to a specific operator.                          |
 | `providerOptions.gateway.order` | Control which providers are tried and in what order. |

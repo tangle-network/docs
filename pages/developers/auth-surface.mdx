@@ -15,20 +15,20 @@ Roles are defined in [`Base.sol`](https://github.com/tangle-network/tnt-core/blo
 
 Note: each contract defines its own role set. `Tangle` and `MultiAssetDelegation` (MAD) do NOT share role constants; the same name on both contracts is a different keccak slot.
 
-| Role                 | Where                                                                                                                         | Suggested holder            |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| `DEFAULT_ADMIN_ROLE` | All AccessControl contracts                                                                                                   | `TangleTimelock`            |
-| `ADMIN_ROLE`         | Tangle, MAD, and most peripherals                                                                                             | `TangleTimelock`            |
-| `PAUSER_ROLE`        | Tangle only                                                                                                                   | Operations multisig         |
-| `UPGRADER_ROLE`      | Tangle, MBSMRegistry, TangleToken, RewardVaults, InflationPool, TangleMetrics, ServiceFeeDistributor, StreamingPaymentManager | `TangleTimelock`            |
-| `SLASH_ADMIN_ROLE`   | Tangle only                                                                                                                   | Slashing oversight multisig |
-| `MANAGER_ROLE`       | MBSMRegistry only                                                                                                             | `TangleTimelock`            |
-| `ASSET_MANAGER_ROLE` | MAD only                                                                                                                      | Operations multisig         |
-| `SLASHER_ROLE`       | MAD only                                                                                                                      | Tangle (via `addSlasher`)   |
-| `TANGLE_ROLE`        | MAD only                                                                                                                      | Tangle (via `setTangle`)    |
-| `MINTER_ROLE`        | TangleToken only                                                                                                              | `TangleTimelock`            |
+| Role                 | Where                                                                                                                              | Suggested holder            |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `DEFAULT_ADMIN_ROLE` | All AccessControl contracts                                                                                                        | `TangleTimelock`            |
+| `ADMIN_ROLE`         | Tangle, MAD, and most peripherals                                                                                                  | `TangleTimelock`            |
+| `PAUSER_ROLE`        | Tangle only                                                                                                                        | Operations multisig         |
+| `UPGRADER_ROLE`      | Tangle, MAD, MBSMRegistry, TangleToken, RewardVaults, InflationPool, TangleMetrics, ServiceFeeDistributor, StreamingPaymentManager | `TangleTimelock`            |
+| `SLASH_ADMIN_ROLE`   | Tangle only                                                                                                                        | Slashing oversight multisig |
+| `MANAGER_ROLE`       | MBSMRegistry only                                                                                                                  | `TangleTimelock`            |
+| `ASSET_MANAGER_ROLE` | MAD only                                                                                                                           | Operations multisig         |
+| `SLASHER_ROLE`       | MAD only                                                                                                                           | Tangle (via `addSlasher`)   |
+| `TANGLE_ROLE`        | MAD only                                                                                                                           | Tangle (via `setTangle`)    |
+| `MINTER_ROLE`        | TangleToken only                                                                                                                   | `TangleTimelock`            |
 
-`MultiAssetDelegation` does NOT define a `UPGRADER_ROLE`. Its `_authorizeUpgrade` is gated on `ADMIN_ROLE`. Its pause/unpause are gated on `ADMIN_ROLE` (no separate `PAUSER_ROLE` on MAD).
+`MultiAssetDelegation` defines its own `UPGRADER_ROLE` and gates `_authorizeUpgrade` on it. Its pause/unpause are gated on `ADMIN_ROLE` (no separate `PAUSER_ROLE` on MAD).
 
 ## Tangle (`src/Tangle.sol`)
 
@@ -42,27 +42,27 @@ Tangle is the protocol entrypoint, composed of mixins under `src/core/`. Every s
 
 | Function                               | Caller                             | Source                                                                                                   |
 | -------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `pause()`                              | `PAUSER_ROLE`                      | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
-| `unpause()`                            | `PAUSER_ROLE`                      | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `pause()`                              | `PAUSER_ROLE`                      | [TangleCoreApi.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/TangleCoreApi.sol)     |
+| `unpause()`                            | `PAUSER_ROLE`                      | [TangleCoreApi.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/TangleCoreApi.sol)     |
 | `_authorizeUpgrade(newImpl)`           | `UPGRADER_ROLE`                    | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
-| `setMBSMRegistry(addr)`                | `ADMIN_ROLE` (when not paused)     | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
-| `setMetricsRecorder(addr)`             | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
-| `setOperatorStatusRegistry(addr)`      | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
-| `setServiceFeeDistributor(addr)`       | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
-| `setPriceOracle(addr)`                 | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `setMBSMRegistry(addr)`                | `ADMIN_ROLE` (when not paused)     | [TangleCoreApi.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/TangleCoreApi.sol)     |
+| `setMetricsRecorder(addr)`             | `ADMIN_ROLE`                       | [TangleCoreApi.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/TangleCoreApi.sol)     |
+| `setOperatorStatusRegistry(addr)`      | `ADMIN_ROLE`                       | [TangleCoreApi.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/TangleCoreApi.sol)     |
+| `setServiceFeeDistributor(addr)`       | `ADMIN_ROLE`                       | [TangleCoreApi.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/TangleCoreApi.sol)     |
+| `setPriceOracle(addr)`                 | `ADMIN_ROLE`                       | [TangleCoreApi.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/TangleCoreApi.sol)     |
 | `setTreasury(addr)`                    | `ADMIN_ROLE` (NOT `whenNotPaused`) | [PaymentsRewards.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/PaymentsRewards.sol) |
 | `setPaymentSplit(split)`               | `ADMIN_ROLE` (NOT `whenNotPaused`) | [PaymentsRewards.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/PaymentsRewards.sol) |
-| `setTntToken(addr)`                    | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
-| `setRewardVaults(addr)`                | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
-| `setMaxBlueprintsPerOperator(n)`       | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
-| `setDefaultTntMinExposureBps(bps)`     | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
-| `setTntPaymentDiscountBps(bps)`        | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
-| `setMinServiceTtl(seconds)`            | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
-| `setMaxServiceTtl(seconds)`            | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
-| `setRequestExpiryGracePeriod(seconds)` | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
-| `setMaxQuoteAge(seconds)`              | `ADMIN_ROLE`                       | [Base.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/Base.sol)                       |
+| `setTntToken(addr)`                    | `ADMIN_ROLE`                       | [TangleCoreApi.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/TangleCoreApi.sol)     |
+| `setRewardVaults(addr)`                | `ADMIN_ROLE`                       | [TangleCoreApi.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/TangleCoreApi.sol)     |
+| `setMaxBlueprintsPerOperator(n)`       | `ADMIN_ROLE`                       | [TangleCoreApi.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/TangleCoreApi.sol)     |
+| `setDefaultTntMinExposureBps(bps)`     | `ADMIN_ROLE`                       | [TangleCoreApi.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/TangleCoreApi.sol)     |
+| `setTntPaymentDiscountBps(bps)`        | `ADMIN_ROLE`                       | [TangleCoreApi.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/TangleCoreApi.sol)     |
+| `setMinServiceTtl(seconds)`            | `ADMIN_ROLE`                       | [TangleCoreApi.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/TangleCoreApi.sol)     |
+| `setMaxServiceTtl(seconds)`            | `ADMIN_ROLE`                       | [TangleCoreApi.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/TangleCoreApi.sol)     |
+| `setRequestExpiryGracePeriod(seconds)` | `ADMIN_ROLE`                       | [TangleCoreApi.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/TangleCoreApi.sol)     |
+| `setMaxQuoteAge(seconds)`              | `ADMIN_ROLE`                       | [TangleCoreApi.sol](https://github.com/tangle-network/tnt-core/blob/main/src/core/TangleCoreApi.sol)     |
 
-Most admin setters in `Base.sol` are `whenNotPaused`. The two exceptions, both in `Payments.sol`, are `setTreasury` and `setPaymentSplit`. Paused governance can still rewire payment routing; this is intentional so a halted protocol can fix a known-bad treasury before resuming.
+Most admin setters in `TangleCoreApi.sol` are `whenNotPaused`. The two exceptions, both in `PaymentsRewards.sol`, are `setTreasury` and `setPaymentSplit`. Paused governance can still rewire payment routing; this is intentional so a halted protocol can fix a known-bad treasury before resuming.
 
 ### Slashing
 
@@ -117,8 +117,10 @@ See [Slashing](/developers/slashing) for the full lifecycle and runbooks.
 | `withdrawRemainingEscrow(serviceId)`       | Service owner, after termination          |
 | `billSubscription(serviceId)`              | Anyone, gated by interval                 |
 | `billSubscriptionBatch(ids)`               | Anyone                                    |
-| `claimReward(token)`                       | The reward beneficiary                    |
-| `claimRewards(tokens)`                     | The reward beneficiary                    |
+| `claimRewards()`                           | The reward beneficiary                    |
+| `claimRewards(token)`                      | The reward beneficiary                    |
+| `claimRewardsBatch(tokens)`                | The reward beneficiary                    |
+| `claimRewardsAll()`                        | The reward beneficiary                    |
 
 ## MultiAssetDelegation (`src/staking/MultiAssetDelegation.sol`)
 
@@ -126,20 +128,20 @@ Staking and delegation are a separate proxy with its own role registry. Function
 
 ### Upgrade and Global Config (StakingAdminFacet)
 
-| Function                                                     | Caller                                                                            |
-| ------------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| `_authorizeUpgrade(newImpl)`                                 | `ADMIN_ROLE` (NOT a separate `UPGRADER_ROLE`; SHOULD be held by `TangleTimelock`) |
-| `pause()` / `unpause()`                                      | `ADMIN_ROLE` (no separate `PAUSER_ROLE` on MAD)                                   |
-| `setTangle(addr)`                                            | `ADMIN_ROLE` -- grants `TANGLE_ROLE`                                              |
-| `setOperatorBondToken(token)`                                | `ADMIN_ROLE` -- locked once any operator exists                                   |
-| `addSlasher(addr)` / `removeSlasher(addr)`                   | `ADMIN_ROLE` -- grants/revokes `SLASHER_ROLE`                                     |
-| `setOperatorCommission(bps)`                                 | `ADMIN_ROLE` (queues a 7-day timelocked commission change)                        |
-| `executeCommissionChange()` / `cancelCommissionChange()`     | `ADMIN_ROLE`                                                                      |
-| `setDelays(...)`                                             | `ADMIN_ROLE`                                                                      |
-| `setRewardsManager(addr)` / `setServiceFeeDistributor(addr)` | `ADMIN_ROLE`                                                                      |
-| `rescueTokens(token, to, amount)`                            | `DEFAULT_ADMIN_ROLE`                                                              |
-| `sweepDust(token, to)`                                       | `ADMIN_ROLE`                                                                      |
-| `resetPendingSlashCount(op, count)`                          | `ADMIN_ROLE` (recovery only; default reverts unless overridden)                   |
+| Function                                                     | Caller                                                          |
+| ------------------------------------------------------------ | --------------------------------------------------------------- |
+| `_authorizeUpgrade(newImpl)`                                 | `UPGRADER_ROLE` (SHOULD be held by `TangleTimelock`)            |
+| `pause()` / `unpause()`                                      | `ADMIN_ROLE` (no separate `PAUSER_ROLE` on MAD)                 |
+| `setTangle(addr)`                                            | `ADMIN_ROLE` -- grants `TANGLE_ROLE`                            |
+| `setOperatorBondToken(token)`                                | `ADMIN_ROLE` -- locked once any operator exists                 |
+| `addSlasher(addr)` / `removeSlasher(addr)`                   | `ADMIN_ROLE` -- grants/revokes `SLASHER_ROLE`                   |
+| `setOperatorCommission(bps)`                                 | `ADMIN_ROLE` (queues a 7-day timelocked commission change)      |
+| `executeCommissionChange()` / `cancelCommissionChange()`     | `ADMIN_ROLE`                                                    |
+| `setDelays(...)`                                             | `ADMIN_ROLE`                                                    |
+| `setRewardsManager(addr)` / `setServiceFeeDistributor(addr)` | `ADMIN_ROLE`                                                    |
+| `rescueTokens(token, to, amount)`                            | `DEFAULT_ADMIN_ROLE`                                            |
+| `sweepDust(token, to)`                                       | `ADMIN_ROLE`                                                    |
+| `resetPendingSlashCount(op, count)`                          | `ADMIN_ROLE` (recovery only; default reverts unless overridden) |
 
 ### Asset Configuration (StakingAssetsFacet)
 
@@ -191,10 +193,11 @@ Staking and delegation are a separate proxy with its own role registry. Function
 
 ### `ValidatorPodManager`
 
-| Function                                                   | Caller                       |
-| ---------------------------------------------------------- | ---------------------------- |
-| `createPod()`                                              | Anyone (one pod per address) |
-| `recordBeaconChainEthBalanceUpdate(podOwner, sharesDelta)` | Pod (the contract itself)    |
+| Function                                         | Caller                       |
+| ------------------------------------------------ | ---------------------------- |
+| `createPod()`                                    | Anyone (one pod per address) |
+| `recordBeaconChainDeposit(podOwner, assets)`     | Pod (the contract itself)    |
+| `recordBeaconChainRebase(podOwner, assetsDelta)` | Pod (the contract itself)    |
 
 ### `L2SlashingReceiver`
 

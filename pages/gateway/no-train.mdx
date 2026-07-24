@@ -32,12 +32,12 @@ Use `disallowPromptTraining` when you care about IP protection but don't need fu
 
 ## No-train verified providers
 
-All ZDR providers plus: OpenAI, Google AI Studio, Cohere, Perplexity, xAI, Morph AI, Novita AI, Voyage AI.
+All ZDR providers plus: OpenAI, Google, Cohere, Perplexity, xAI.
 
 See the full list at [`GET /api/gateway/compliance`](/gateway/api-compliance).
 
 ## Routing behavior
 
-Same as ZDR: operators and LiteLLM are skipped. Only direct provider calls to verified no-train providers.
+Same as ZDR: operators are skipped. Only direct provider calls to verified no-train providers.
 
-Can be enabled team-wide via `noTrainEnabled: true` on the team record.
+Team-wide no-train lives on the `Team.noTrainEnabled` column. There is no self-serve API for it today: contact Tangle and we set it on your team record.

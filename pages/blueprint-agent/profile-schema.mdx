@@ -5,7 +5,7 @@ The profile schema configures sidecar agents. The schema is shared across sandbo
 ## Current Support
 
 - **Sandbox SDK backends**: OpenCode, Claude Code, Kimi Code, Codex, AMP, Factory Droids, Pi, Hermes, Forge, OpenClaw, NanoClaw, ACP, Cursor, and CLI base.
-- **Sandbox UI picker**: the current picker exposes OpenCode, Claude Code, Codex, AMP, Factory Droids, Kimi Code, OpenClaw, NanoClaw, Hermes, and CLI base while deferring Pi, Forge, ACP, and Cursor.
+- **Sandbox UI picker**: the session picker exposes OpenCode, Claude Code, Codex, Kimi Code, OpenClaw, NanoClaw, and Hermes. CLI base is excluded (a no-agent sandbox has nothing to chat with); AMP, Factory Droids, Pi, Forge, and Cursor are SDK-only today.
 - **Blueprint sidecar**: the AI Agent Sandbox blueprint's current all-harness sidecar advertises Claude Code, Codex, OpenCode, Kimi Code, and Gemini CLI through `/api/capabilities`.
 
 Products can expose a subset of these lists. Read runtime capabilities from the sandbox or blueprint service instance instead of assuming every harness is enabled. See [Sandbox Harnesses](/infrastructure/harnesses).

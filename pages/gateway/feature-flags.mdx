@@ -28,7 +28,7 @@ ENABLE_RESPONSE_CACHE=false # Disable response cache reads/writes
 
 ## Behavior when disabled
 
-- `ENABLE_COMPLIANCE_FILTER` only disables the early validation check that returns a 400 before routing. The actual ZDR/no-train enforcement in the routing tiers (skip operators, skip LiteLLM) stays active regardless. This flag is for suppressing the early error, not for bypassing compliance.
+- `ENABLE_COMPLIANCE_FILTER` only disables the early validation check that returns a 400 before routing. The actual ZDR/no-train enforcement in the routing tiers (skip operators) stays active regardless. This flag is for suppressing the early error, not for bypassing compliance.
 
 - When `ENABLE_GUARDRAILS=false`, no PII or injection scanning occurs. The `X-Tangle-Guardrails` header is never set. GuardrailEvent records are not created.
 

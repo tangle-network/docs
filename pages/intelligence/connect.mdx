@@ -75,7 +75,7 @@ Codex emits content on the logs signal (`codex.*` events). Set `TANGLE_API_KEY` 
 OpenCode has no native OTel exporter today, so a standalone install emits nothing without a shim.
 
 - **Inside a Tangle sandbox:** already instrumented. The adapter subscribes to OpenCode's event stream and exports content. Nothing to do.
-- **Standalone:** use `tangle-opencode-exporter`, a thin process that subscribes to OpenCode's SSE event bus and exports content-bearing OTLP. This is the one agent where the simple path is ours to provide rather than a config flag.
+- **Standalone:** install the CLI with `npm i -g @tangle-network/sandbox-cli`, start OpenCode in server mode with `opencode serve`, then in another terminal run `tangle connect opencode --run`. That process subscribes to OpenCode's event stream and exports content-bearing OTLP. This is the one agent where the simple path is ours to provide rather than a config flag.
 
 ## OpenClaw, Hermes, NanoClaw
 
@@ -89,21 +89,30 @@ If Intelligence shows your runs (models, tokens, tool names, durations) but the 
 
 - **Claude Code / Symphony** → add the four `OTEL_LOG_*` gates above. For Symphony, set them on the Claude Code child process it spawns.
 - **Codex** → set `log_user_prompt = true`.
-- **OpenCode** → run the `tangle connect opencode` exporter.
+- **OpenCode** → run `tangle connect opencode --run` alongside a running `opencode serve`.
 
 Project grouping is unaffected, so this only turns content on.
 
 ## Verify content is flowing
 
-Setup is not done until this shows a content key. Run the agent once on a real task, then within about 30 seconds:
+Setup is not done until this reports content. Run the agent once on a real task, then within about 30 seconds:
 
 ```sh
 AUTH="Authorization: Bearer ${TANGLE_API_KEY}"
-TID=$(curl -sS "https://intelligence.tangle.tools/v1/traces?limit=1" -H "$AUTH" | jq -r '.items[0].trace_id')
-curl -sS "https://intelligence.tangle.tools/v1/traces/$TID/spans" -H "$AUTH" \
-  | jq '[.items[].attributes // .spans[].attributes | keys] | add | unique'
+curl -sS "https://intelligence.tangle.tools/v1/onboarding/status" -H "$AUTH" \
+  | jq '{tracesSeen, contentSeen, byAgent}'
 ```
 
-The keys must include at least one content key. If you see only metadata (`tool_name`, `duration_ms`, `success`, ids), content is not flowing. You missed a gate. Common misses: Claude Code without `OTEL_LOGS_EXPORTER=otlp` or the `OTEL_LOG_*` gates; Codex without `log_user_prompt=true`; OpenCode standalone without the exporter.
+`contentSeen: true` means content is landing; `byAgent` breaks it down so you can see which agent is still metadata-only. `tangle connect <agent> --verify` polls this same endpoint as a one-command equivalent.
 
-Recognized content keys (any one is enough): `gen_ai.prompt`, `gen_ai.completion`, `input.value`, `llm.input_messages`, `user.message`, `tangle.task`, `tangle.tool.args` / `tangle.tool.result`, or the agent-native `claude_code.user_prompt` / `api_request_body`, `codex.user_prompt`, `opencode message.part.text`.
+If `tracesSeen` is true but `contentSeen` is false, you missed a gate. Common misses: Claude Code without `OTEL_LOGS_EXPORTER=otlp` or the `OTEL_LOG_*` gates; Codex without `log_user_prompt=true`; OpenCode standalone without the exporter.
+
+To see which keys a single run carried, list that trace's log records. Content rides the logs signal, so span attributes on their own will look metadata-only even when everything is wired correctly:
+
+```sh
+TID=$(curl -sS "https://intelligence.tangle.tools/v1/traces?limit=1" -H "$AUTH" | jq -r '.items[0].traceId')
+curl -sS "https://intelligence.tangle.tools/v1/traces/$TID/logs" -H "$AUTH" \
+  | jq '[.items[].attributes | keys] | add | unique'
+```
+
+Recognized content keys (any one is enough): `gen_ai.prompt`, `gen_ai.completion`, `input.value`, `llm.input_messages`, `user.message`, `tangle.task`, `tangle.tool.args` / `tangle.tool.result`. Agents that emit their own keys are also recognized: Claude Code writes `claude_code.user_prompt` and `api_request_body`, Codex writes `codex.user_prompt`, and OpenCode writes `message.part.text`. See [supported harnesses](/infrastructure/harnesses) for the full set.

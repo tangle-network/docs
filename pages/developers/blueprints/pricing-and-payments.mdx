@@ -77,7 +77,7 @@ High-level flow:
 
 1. User requests a per-job quote from one or more operators (off-chain).
 2. Operators respond with an EIP-712 signed
-   `JobQuoteDetails { requester, serviceId, jobIndex, price, timestamp, expiry, confidentiality }`.
+   `JobQuoteDetails { requester, serviceId, jobIndex, price, timestamp, expiry, confidentiality, inputsHash }`.
 3. User submits the job on-chain with the signed quote(s) via `submitJobFromQuote`.
 
 Key properties:
@@ -87,7 +87,7 @@ Key properties:
   wildcard `requester == address(0)`. Operators MUST sign per-caller quotes and populate
   `requester` with the address they expect to consume the quote; an attacker who lifts a
   signed digest off the wire cannot redirect it to themselves. The new typehash string is:
-  `JobQuoteDetails(address requester,uint64 serviceId,uint8 jobIndex,uint256 price,uint64 timestamp,uint64 expiry,uint8 confidentiality)`.
+  `JobQuoteDetails(address requester,uint64 serviceId,uint8 jobIndex,uint256 price,uint64 timestamp,uint64 expiry,uint8 confidentiality,bytes32 inputsHash)`.
 - `msg.value` must equal `sum(quote.price)` across quotes.
 - Quotes are replay-protected and expire (protocol also enforces `maxQuoteAge`).
 - Only quoted operators can submit results for RFQ jobs.
@@ -102,7 +102,8 @@ Types.JobQuoteDetails({
     price: 1_000_000 gwei,
     timestamp: uint64(block.timestamp),
     expiry: uint64(block.timestamp + 5 minutes),
-    confidentiality: 0           // 0=Any, 1=Required, 2=Preferred
+    confidentiality: 0,          // 0=Any, 1=Required, 2=Preferred
+    inputsHash: keccak256(inputs) // the job inputs the price is quoted against
 });
 ```
 
@@ -116,7 +117,8 @@ The equivalent EIP-712 typed-data payload (`message`):
   "price": "1000000000000000",
   "timestamp": "1746700000",
   "expiry": "1746700300",
-  "confidentiality": 0
+  "confidentiality": 0,
+  "inputsHash": "0xCAFE000000000000000000000000000000000000000000000000000000000000"
 }
 ```
 
@@ -140,7 +142,8 @@ Service RFQ lets a user create a service instantly using operator quotes:
 
 1. User requests service quotes from operators for `(blueprintId, ttlBlocks, confidentiality, security requirements)`.
 2. Operators sign EIP-712
-   `QuoteDetails { requester, blueprintId, ttlBlocks, totalCost, timestamp, expiry, confidentiality, securityCommitments[], resourceCommitments[] }`.
+   `QuoteDetails { requester, blueprintId, ttlBlocks, totalCost, timestamp, expiry, confidentiality, operation, serviceId, securityCommitments[], resourceCommitments[] }`.
+   `serviceId` MUST be 0 on Create and equal the target service on Extend.
 3. User calls `createServiceFromQuotes(...)` (or `extendServiceFromQuotes(...)`) with quotes and payment.
 
 All quotes for a single RFQ service creation or extension must agree on confidentiality. Changing confidentiality mode is
@@ -153,7 +156,7 @@ EIP-712 typehash. The contract enforces `requester == msg.sender` on
 expect to redeem the quote; previously the field existed on the struct but was excluded from
 the typehash, so a mempool observer could rewrite `details.requester` and the operator's
 signature still recovered. The new typehash string is:
-`QuoteDetails(address requester,uint64 blueprintId,uint64 ttlBlocks,uint256 totalCost,uint64 timestamp,uint64 expiry,uint8 confidentiality,AssetSecurityCommitment[] securityCommitments,ResourceCommitment[] resourceCommitments)`.
+`QuoteDetails(address requester,uint64 blueprintId,uint64 ttlBlocks,uint256 totalCost,uint64 timestamp,uint64 expiry,uint8 confidentiality,uint8 operation,uint64 serviceId,AssetSecurityCommitment[] securityCommitments,ResourceCommitment[] resourceCommitments)Asset(uint8 kind,address token)AssetSecurityCommitment(Asset asset,uint16 exposureBps)ResourceCommitment(uint8 kind,uint64 count)`.
 
 Pre-fix signatures (without `requester` in the typehash) are invalid against the new
 typehash and will fail signature recovery.

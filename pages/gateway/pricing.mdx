@@ -28,10 +28,14 @@ curl -H "Authorization: Bearer sk-tan-YOUR_KEY" \
 
 ```json
 {
-  "balance": "95.50",
-  "total_used": "4.50"
+  "data": {
+    "total_credits": 100.0,
+    "total_usage": 4.5
+  }
 }
 ```
+
+`total_credits` is every credit ever granted (balance plus lifetime spend) and `total_usage` is lifetime consumption, so your remaining balance is `total_credits` - `total_usage`.
 
 ## Cost per request
 

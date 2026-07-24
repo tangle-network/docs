@@ -5,7 +5,7 @@ description: Authentication methods for Tangle Inference.
 
 # Authentication
 
-Four ways to authenticate to the gateway, plus anonymous access to free-tier models, each with its own rate limit.
+Three ways to authenticate to the gateway, plus anonymous access to free-tier models, each with its own rate limit.
 
 ## API Key
 
@@ -26,15 +26,6 @@ Browser-based authentication via Better Auth. Supports email/password and OAuth 
 
 - **Rate limit:** 30 req/min
 - **Credit check:** Yes
-
-## SIWE (Sign-In with Ethereum)
-
-Wallet-based authentication: sign an EIP-191 message with your Ethereum wallet.
-
-```
-POST /api/siwe/verify
-{ "address": "0x...", "signature": "0x...", "message": "..." }
-```
 
 ## SpendAuth (On-Chain Payment)
 
