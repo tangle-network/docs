@@ -10,7 +10,7 @@ const getStartedCards = [
     title: "Blueprint Agent",
     description:
       "Describe a project and build it with an AI agent in the browser, then ship it.",
-    link: "/workbench/introduction",
+    link: "/blueprint-agent/introduction",
   },
   {
     icon: <GrNodes />,
@@ -42,20 +42,18 @@ const LandingPage = () => {
         {/* Header and Image Row */}
         <div className="z-10 flex flex-col items-center justify-between gap-5 p-5 font-bold lg:pt-0 lg:flex-row lg:items-center">
           <div className="flex flex-col items-start gap-1 space-y-4 lg:space-xy-6">
-            <p className="pl-1 text-sm text-slate-500 dark:text-slate-400 font-bol md:absolute lg:text-sm">
-              TANGLE DOCUMENTATION
-            </p>
             <h1 className="text-3xl font-normal text-gray-900 dark:text-white md:text-3xl lg:text-5xl">
-              Infrastructure for AI agents that{" "}
+              Build, run, and{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-blue-700">
-                do real work
+                improve agents
               </span>
             </h1>
             <p className="text-lg font-bold text-gray-700 md:font-normal lg:text-lg dark:text-gray-400">
-              Run any coding agent in an isolated sandbox. Reach every model
-              through one API key. Trace every run to see exactly what your
-              agents do and where to improve them. Start on the managed cloud,
-              or run the same services yourself on the Tangle protocol.
+              Build agents in the Blueprint Agent, run them in isolated
+              sandboxes with one API key to every model, and improve them with
+              Intelligence, which traces every run and tells you what to fix.
+              Start on the managed cloud, or run the same services yourself on
+              the Tangle protocol.
             </p>
           </div>
 
@@ -77,10 +75,10 @@ const LandingPage = () => {
         {/* System Overview */}
         <div className="container mb-12">
           <h2 className="inline-flex mb-6 text-xl font-semibold text-gray-500 underline underline-offset-8 dark:text-white">
-            How it fits together
+            How the products connect
           </h2>
           <p className="mb-6 text-base text-gray-700 dark:text-gray-400">
-            You build in the Blueprint Agent, work runs in isolated sandboxes,
+            You build in the Blueprint Agent, agents run in isolated sandboxes,
             and every run produces traces that show what happened and where to
             improve. Run those services on the managed cloud, or host them
             yourself on the protocol and get paid on-chain.
@@ -89,7 +87,7 @@ const LandingPage = () => {
             <div className="relative w-full min-h-[280px]">
               <Image
                 src="/images/architecture/autonomous-work-loop.svg"
-                alt="Autonomous work loop"
+                alt="Build, run, improve loop"
                 fill
                 sizes="(max-width: 1024px) 100vw, 80vw"
               />
