@@ -10,10 +10,10 @@ Every response includes an `X-Tangle-Routing-Trace` header showing the routing p
 ## Header format
 
 ```
-X-Tangle-Routing-Trace: openai/gpt-4o[operator(err:5001ms)→openai(200:340ms)]
+X-Tangle-Routing-Trace: openai/gpt-4o[operator(err:5001ms) -> openai(200:340ms)]
 ```
 
-Format: `model[provider(status:latency)→provider(status:latency)]`
+Format: `model[provider(status:latency) -> provider(status:latency)]`
 
 Multiple models (from [fallbacks](/gateway/fallbacks)):
 

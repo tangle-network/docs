@@ -52,7 +52,7 @@ All standard OpenAI parameters (`tools`, `tool_choice`, `response_format`, `top_
 
 | Header                | Effect                                          |
 | --------------------- | ----------------------------------------------- |
-| `X-Tangle-Routing`    | `operator`, `provider`, or `auto` (default)     |
+| `X-Tangle-Routing`    | `operator` or `auto` (default)                  |
 | `X-Tangle-Blueprint`  | Pin to operators under this Blueprint ID        |
 | `X-Tangle-Service`    | Pin to a specific service instance              |
 | `X-Tangle-Operator`   | Pin to a specific operator (slug or 0x address) |
@@ -66,7 +66,7 @@ All standard OpenAI parameters (`tools`, `tool_choice`, `response_format`, `top_
 | `messages`    | Required. Non-empty array. Each must have `role`.                                                 |
 | `max_tokens`  | Optional. Accepted range 1-128,000; the effective ceiling sent upstream is 8,192. Default: 4,096. |
 | `temperature` | Optional. 0-2. Default: 1.                                                                        |
-| Body size     | Max 1MB.                                                                                          |
+| Body size     | Max 4MB. Over the limit returns 413 `body_too_large`.                                             |
 
 ## Response (non-streaming)
 

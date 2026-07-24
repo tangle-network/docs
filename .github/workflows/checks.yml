@@ -35,6 +35,11 @@ jobs:
         env:
           TNT_CORE_DIR: ${{ github.workspace }}/tnt-core
 
+      - name: Validate the Solidity API reference against tnt-core
+        run: node ./scripts/check-solidity-reference.mjs
+        env:
+          TNT_CORE_DIR: ${{ github.workspace }}/tnt-core
+
   lint:
     name: lint
     runs-on: ubuntu-latest

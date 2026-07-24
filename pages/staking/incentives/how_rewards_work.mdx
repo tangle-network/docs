@@ -22,7 +22,7 @@ You choose your exposure scope (All vs Fixed), and your share is calculated from
 ## How The Money Moves On-Chain
 
 1. **A service is paid** (one-time or subscription).
-2. `Payments.sol` splits the payment into developer, protocol, operator, and staker shares.
+2. `PaymentsDistribution.sol` splits the payment into developer, protocol, operator, and staker shares.
 3. Operator shares accrue as pending rewards in the core protocol.
 4. Staker shares are forwarded **per operator** to `ServiceFeeDistributor` (or to treasury if no distributor is configured).
 5. `ServiceFeeDistributor` allocates those fees to delegators by score:

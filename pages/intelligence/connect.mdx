@@ -112,7 +112,9 @@ To see which keys a single run carried, list that trace's log records. Content r
 ```sh
 TID=$(curl -sS "https://intelligence.tangle.tools/v1/traces?limit=1" -H "$AUTH" | jq -r '.items[0].traceId')
 curl -sS "https://intelligence.tangle.tools/v1/traces/$TID/logs" -H "$AUTH" \
-  | jq '[.items[].attributes | keys] | add | unique'
+  | jq '[.items[] | (.attributes | keys) + (if (.body // "") != "" then ["body"] else [] end)] | add | unique'
 ```
 
-Recognized content keys (any one is enough): `gen_ai.prompt`, `gen_ai.completion`, `input.value`, `llm.input_messages`, `user.message`, `tangle.task`, `tangle.tool.args` / `tangle.tool.result`. Agents that emit their own keys are also recognized: Claude Code writes `claude_code.user_prompt` and `api_request_body`, Codex writes `codex.user_prompt`, and OpenCode writes `message.part.text`. See [supported harnesses](/infrastructure/harnesses) for the full set.
+A `*.user_prompt` event can carry its prompt in the record `body` instead of an attribute, which is why the probe includes `body` and why `/v1/onboarding/status` is the authoritative check.
+
+Recognized content keys (any one is enough): `gen_ai.prompt`, `gen_ai.completion`, `input.value`, `llm.input_messages`, `user.message`, `tangle.task`, `tangle.tool.args` / `tangle.tool.result`. Agents that emit their own keys are also recognized: Claude Code writes `claude_code.user_prompt` and `api_request_body`, Codex writes `codex.user_prompt`, and OpenCode writes `message.part.text`.

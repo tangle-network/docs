@@ -12,7 +12,7 @@ Operators choose isolation based on security requirements and workload type:
 
 **Firecracker micro-VMs** provide hardware-level isolation with millisecond boot times. Suitable for workloads requiring the strongest guarantees, where even kernel-level exploits should not compromise the host.
 
-Docker containers and Firecracker micro-VMs are the supported drivers today. Operators declare which ones they run, and customers select one per sandbox with `driver: { type: "docker" | "firecracker" }`.
+Docker containers and Firecracker micro-VMs are the isolation technologies today. The create API accepts four driver types: `driver: { type: "docker" | "firecracker" | "host-agent" | "tangle" }`. Operators declare which ones they run, and customers select one per sandbox. A `host-agent` driver picks its isolation separately with `runtimeBackend: "docker" | "firecracker"`.
 
 ## Isolation Guarantees
 

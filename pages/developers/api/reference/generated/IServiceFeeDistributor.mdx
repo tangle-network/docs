@@ -101,18 +101,6 @@ Return reward tokens ever distributed for an operator
 function onDelegationChanged(address delegator, address operator, struct Types.Asset asset, uint256 amount, bool isIncrease, enum Types.BlueprintSelectionMode selectionMode, uint64[] blueprintIds, uint16 lockMultiplierBps) external
 ```
 
-#### onBlueprintAdded
-
-```solidity
-function onBlueprintAdded(address delegator, address operator, struct Types.Asset asset, uint64 blueprintId) external
-```
-
-#### onBlueprintRemoved
-
-```solidity
-function onBlueprintRemoved(address delegator, address operator, struct Types.Asset asset, uint64 blueprintId) external
-```
-
 #### getPoolScore
 
 ```solidity

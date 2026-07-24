@@ -1,10 +1,9 @@
 # Profiles and Policies
 
-Profiles configure how an agent runs. They package model choice, tool access, permissions, guardrails, and harness selection into a reusable sidecar profile that the runtime enforces. This is how the workbench configures agent execution without hard-coding behavior into every task.
+Profiles configure how an agent runs. They package model choice, tool access, permissions, and guardrails into a reusable sidecar profile that the runtime enforces. This is how the workbench configures agent execution without hard-coding behavior into every task.
 
 ## What A Profile Controls
 
-- **Harness selection**: OpenCode, Claude Code, Kimi Code, Codex, AMP, Factory Droids, Pi, Hermes, Forge, OpenClaw, NanoClaw, ACP, Cursor, or CLI base when the product exposes them. The Sandbox session picker currently offers OpenCode, Claude Code, Codex, Kimi Code, OpenClaw, NanoClaw, and Hermes; the remaining backends are SDK-only.
 - **Model selection**: primary and small model routing per profile.
 - **Per-agent tuning**: distinct configs for plan/build/explore (prompt, temperature, max steps).
 - **Tool access**: enable or disable individual tools.
@@ -13,6 +12,8 @@ Profiles configure how an agent runs. They package model choice, tool access, pe
 - **Tool servers**: allowlisted local or remote servers with headers, env, and timeouts.
 - **Plugins**: allowlisted extensions that can be attached to the runtime.
 - **Inheritance**: extend a base profile and override only what changes.
+
+A profile does not pick the coding harness. Blueprint Agent sessions run OpenCode. Choosing between OpenCode, Claude Code, Codex, and the other [supported harnesses](/infrastructure/harnesses) is a Sandbox feature, set per sandbox rather than per profile.
 
 ## Guardrails And Validation
 
@@ -33,7 +34,7 @@ The runtime merges overrides with the base profile, validates the final config, 
 ```json
 {
   "name": "team-default",
-  "extends": "tangle/base",
+  "extends": "baseline",
   "model": "provider/model-id",
   "small_model": "provider/model-small",
   "agent": {
