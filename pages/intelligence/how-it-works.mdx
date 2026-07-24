@@ -1,0 +1,41 @@
+---
+title: How it works
+description: What Intelligence does with a trace once it lands, from investigation to reports to the improvement loop.
+---
+
+# How it works
+
+[Connecting an agent](/intelligence/connect) gets traces flowing. This is what Intelligence does with them.
+
+## Every run becomes evidence
+
+A trace is not just timing. Intelligence records the session, the spans, the logs, the model and tool inputs and outputs, the tokens, the cost, and the errors, and keeps them as one history you can search. When an agent misbehaves, you pull up the exact run and read what it did, span by span.
+
+## Investigate
+
+Start from a symptom and work back to the cause:
+
+- **Find the run** that shows what happened, by project, time, model, or failure.
+- **Inspect it** down to the span: latency, cost, tokens, and the prompt, completion, and tool I/O for each step.
+- **Ask a question across a set of runs**, for example why a step fails only after a 429, and get an answer with the spans attached.
+
+## Reports
+
+Ask Intelligence to write up a set of runs. A fast report is deterministic and free. A deep report runs the agentic analyst, which reads the evidence and produces findings with the exact spans cited, and is billed for the work it does.
+
+## Turn a finding into a guardrail
+
+Evidence is only useful if it changes the next run. From a finding you can create an eval that catches the same failure next time, an alert or webhook when it recurs, or a dataset for testing. You make the change; Intelligence measures whether behavior actually moved after you shipped it.
+
+## The improvement loop
+
+Recommendations can feed an autonomous improvement worker that drafts the fix. Today Intelligence tells you what to change and proves whether a change worked. Delivering those fixes back to the product agents directly is the direction this is heading, not a current guarantee.
+
+## Works with or without Sandbox
+
+Intelligence runs on its own: send OpenTelemetry, SDK traces, routed model calls, or eval runs. It also pairs with the [Sandbox runtime](/sandbox), where a run's evidence lands in the same history without any exporter setup.
+
+## Next
+
+- **[Quickstart](/intelligence/quickstart)** to get your first content-bearing trace flowing.
+- **[Connect your agent](/intelligence/connect)** for per-agent setup.
