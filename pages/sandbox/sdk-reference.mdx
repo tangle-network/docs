@@ -1,0 +1,146 @@
+---
+title: SDK reference
+description: The core @tangle-network/sandbox surface, creating sandboxes, running commands and agents, durable sessions, and GPU leases.
+---
+
+# SDK reference
+
+The core surface of `@tangle-network/sandbox`. The [npm package](https://www.npmjs.com/package/@tangle-network/sandbox) documents every option; this page covers what most builders reach for.
+
+```bash
+npm install @tangle-network/sandbox
+```
+
+## Client
+
+```typescript
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: process.env.SANDBOX_BASE_URL ?? "https://sandbox.tangle.tools",
+  timeoutMs: 30000, // optional
+});
+```
+
+### `client.create(options?)`
+
+Create a sandbox and get back a `SandboxInstance`. Common options:
+
+```typescript
+const box = await client.create({
+  name: "my-project",
+  image: "node:20",
+  backend: { type: "opencode" }, // the coding harness
+  env: { NODE_ENV: "development" },
+  resources: { cpuCores: 2, memoryMB: 4096, diskGB: 20 },
+  maxLifetimeSeconds: 3600,
+  idleTimeoutSeconds: 900,
+  fromSnapshot: "snap_abc123", // optional, restore a saved workspace
+});
+```
+
+`backend.type` picks the coding harness. OpenCode is the default; Claude Code, Codex, and the other [supported harnesses](/infrastructure/harnesses) are selected the same way.
+
+### `client.list(options?)` · `client.get(id)` · `client.usage()`
+
+```typescript
+const running = await client.list({ status: "running", limit: 10 });
+const box = await client.get("sandbox_abc123");
+const usage = await client.usage(); // activeSandboxes, computeMinutes
+```
+
+### `client.runBatch(tasks, options?)`
+
+Run one-shot tasks across freshly provisioned sandboxes in parallel. For coordinated multi-machine work with shared workspaces and policy caps, use [fleets](https://www.npmjs.com/package/@tangle-network/sandbox) instead.
+
+```typescript
+const result = await client.runBatch(
+  [
+    { id: "task-1", message: "Analyze code quality" },
+    { id: "task-2", message: "Run the security scan" },
+  ],
+  { timeoutMs: 300000, scalingMode: "balanced" }, // fastest | balanced | cheapest
+);
+console.log(result.successRate);
+```
+
+## Sandbox instance
+
+### `box.exec(command, options?)`
+
+Run a shell command.
+
+```typescript
+const result = await box.exec("npm install", {
+  cwd: "/workspace",
+  env: { CI: "true" },
+  timeoutMs: 60000,
+});
+console.log(result.exitCode, result.stdout);
+```
+
+### `box.prompt(message, options?)` · `box.streamPrompt(message, options?)`
+
+Run one agent turn. `prompt` returns the result; `streamPrompt` yields events as they happen.
+
+```typescript
+const result = await box.prompt("List the files and summarize the project");
+
+for await (const event of box.streamPrompt("Fix the failing auth test")) {
+  console.log(event);
+}
+```
+
+### `box.task(message, options?)`
+
+A higher-level agent task (plan, edit, run, verify) over a single prompt.
+
+```typescript
+const task = await box.task("Fix any failing tests and commit the changes");
+```
+
+## Durable sessions
+
+`prompt` and `streamPrompt` live and die with the call. For a run that must survive a client crash, a redeploy, or a browser reload, dispatch it with a stable `sessionId` and reconnect from a fresh process.
+
+```typescript
+const { sessionId, alreadyExisted } = await box.dispatchPrompt(prompt, {
+  sessionId, // derive this server-side; never accept a caller-chosen id
+});
+
+// From any process, replay what happened or wait for the result:
+for await (const event of box.session(sessionId).events({ since: 0 })) {
+  console.log(event);
+}
+const final = await box.session(sessionId).result();
+const state = await box.session(sessionId).status();
+```
+
+The same `sessionId` is idempotent. A duplicate dispatch returns the in-flight or completed session instead of running the work twice, which makes it safe to retry a webhook or payment-triggered run.
+
+## GPU leases
+
+Keep the base sandbox cheap and attach a GPU only around the step that needs it. Every lease takes a hard spend cap and lifetime.
+
+```typescript
+const lease = await box.gpu.attach({ maxSpendUsd: 5, maxLifetimeSeconds: 600 });
+try {
+  await box.gpu.exec(lease.id, { command: "python train.py" });
+} finally {
+  await box.gpu.detach(lease.id);
+}
+```
+
+## Lifecycle
+
+```typescript
+await box.stop(); // pause; resume later
+await box.resume();
+await box.delete(); // release the machine
+```
+
+## Next
+
+- **[`@tangle-network/sandbox` on npm](https://www.npmjs.com/package/@tangle-network/sandbox)** for fleets, snapshots, BYOS3, scoped browser tokens, and every option.
+- **[Connect to Intelligence](/intelligence/connect)** to trace each run and see why an agent failed.

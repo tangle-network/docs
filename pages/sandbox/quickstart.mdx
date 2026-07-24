@@ -63,7 +63,7 @@ try {
 }
 ```
 
-For runs that must survive a client crash or a browser reload, use `box.dispatchPrompt(message, { sessionId })` and reconnect with `box.session(sessionId)`. See the [`@tangle-network/sandbox` on npm](https://www.npmjs.com/package/@tangle-network/sandbox).
+For runs that must survive a client crash or a browser reload, use `box.dispatchPrompt(message, { sessionId })` and reconnect with `box.session(sessionId)`. See [durable sessions in the SDK reference](/sandbox/sdk-reference).
 
 ## 5. Check before you build (optional)
 
@@ -76,5 +76,5 @@ curl -fsS https://sandbox.tangle.tools/v1/public-templates
 
 ## Next
 
-- **[`@tangle-network/sandbox` on npm](https://www.npmjs.com/package/@tangle-network/sandbox)**: durable sessions, fleets, snapshots, GPU leases, and the full API.
+- **[SDK reference](/sandbox/sdk-reference)** for durable sessions, GPU leases, and the core API.
 - **[Connect to Intelligence](/intelligence/connect)**: send each run's trace so you can see why an agent failed and what to fix.
