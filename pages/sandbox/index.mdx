@@ -1,38 +1,38 @@
 ---
 title: Sandbox
-description: A real isolated computer for every agent — shell, files, ports, GPU, and any coding harness — driven by an SDK, CLI, or dashboard.
+description: A real isolated computer for every agent: shell, files, ports, GPU, and any coding harness, driven by an SDK, CLI, or dashboard.
 ---
 
 # Sandbox
 
-A real isolated computer for every agent. Each sandbox is a dev container or microVM with a shell, a filesystem, ports, snapshots, and optional GPU — pre-loaded with the coding harness of your choice. You drive it from an SDK, CLI, or dashboard. Sandbox is Tangle's flagship product: the **run** in build, run, and improve.
+A real isolated computer for every agent. Each sandbox is a dev container or microVM with a shell, a filesystem, ports, snapshots, and optional GPU, pre-loaded with the coding harness of your choice. You drive it from an SDK, CLI, or dashboard. Sandbox is Tangle's flagship product: the **run** in build, run, and improve.
 
 ## What you get
 
-- **A full machine per agent** — run shell commands, read and write files, open ports, snapshot state, and attach a GPU only for the command that needs it.
-- **Any coding harness** — each sandbox runs one AI backend: OpenCode (default), Claude Code, Codex, Cursor, and a dozen more. You pick it per sandbox.
-- **Durable agent sessions** — dispatch a prompt and reconnect to the same run after a client crash, a deploy, or a browser reload. Same session ID is idempotent, so a retried request never re-executes.
-- **One key, metered per second** — the same [`sk-tan-` key](/platform/authentication) authenticates every call; you pay for what you use.
+- **A full machine per agent.** Run shell commands, read and write files, open ports, snapshot state, and attach a GPU only for the command that needs it.
+- **Any coding harness.** Each sandbox runs one AI backend: OpenCode (default), Claude Code, Codex, Cursor, and a dozen more. You pick it per sandbox.
+- **Durable agent sessions.** Dispatch a prompt and reconnect to the same run after a client crash, a deploy, or a browser reload. Same session ID is idempotent, so a retried request never re-executes.
+- **One key, metered per second.** The same [`sk-tan-` key](/platform/authentication) authenticates every call; you pay for what you use.
 
 ## Why use it
 
-- **Give an agent a real environment, not a chat box.** It runs actual commands in an isolated machine and returns real results — files changed, tests run, output captured.
+- **Give an agent a real environment, not a chat box.** It runs actual commands in an isolated machine and returns real results: files changed, tests run, output captured.
 - **Run untrusted work safely.** Every sandbox is isolated with its own filesystem and egress policy, so an agent's mistakes stay contained.
-- **Keep long runs alive.** Durable sessions survive the things that normally kill a streaming agent — a dropped connection, a redeployed worker, a closed laptop.
+- **Keep long runs alive.** Durable sessions survive the things that normally kill a streaming agent: a dropped connection, a redeployed worker, a closed laptop.
 - **See what happened.** Every run can emit a trace to [Intelligence](/intelligence), so a failed run is inspectable instead of lost.
 
 ## How it works
 
-Your SDK or CLI call hits the Sandbox API, which routes to a driver (container or microVM), provisions the machine, and relays the agent's output back to you as it streams. You never manage the infrastructure — `create` returns a machine, `delete` releases it. For the execution and orchestration internals, see the [runtime docs](/infrastructure/introduction).
+Your SDK or CLI call hits the Sandbox API, which routes to a driver (container or microVM), provisions the machine, and relays the agent's output back to you as it streams. You never manage the infrastructure: `create` returns a machine, `delete` releases it. For the execution and orchestration internals, see the [runtime docs](/infrastructure/introduction).
 
 ## Use cases
 
-- **Coding agents that ship real changes** — point Claude Code, Codex, or OpenCode at a repo in a sandbox and let it edit, run, and verify.
-- **Batch and background work** — dispatch many runs across a fleet of sandboxes, each isolated, each metered.
-- **Evals at scale** — run a task set across sandboxes and send every trace to Intelligence to score what changed.
-- **GPU jobs on demand** — attach a spend-capped GPU lease around the one step that needs it, then release it.
+- **Coding agents that ship real changes.** Point Claude Code, Codex, or OpenCode at a repo in a sandbox and let it edit, run, and verify.
+- **Batch and background work.** Dispatch many runs across a fleet of sandboxes, each isolated, each metered.
+- **Evals at scale.** Run a task set across sandboxes and send every trace to Intelligence to score what changed.
+- **GPU jobs on demand.** Attach a spend-capped GPU lease around the one step that needs it, then release it.
 
 ## Start
 
-- **[Quickstart](/sandbox/quickstart)** — create a sandbox and run your first agent in a few minutes.
-- **[`@tangle-network/sandbox` on npm](https://www.npmjs.com/package/@tangle-network/sandbox)** — the full `@tangle-network/sandbox` surface.
+- **[Quickstart](/sandbox/quickstart).** Create a sandbox and run your first agent in a few minutes.
+- **[`@tangle-network/sandbox` on npm](https://www.npmjs.com/package/@tangle-network/sandbox)**. The full `@tangle-network/sandbox` surface.

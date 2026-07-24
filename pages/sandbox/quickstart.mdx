@@ -5,7 +5,7 @@ description: Create a sandbox and run your first coding agent in a few minutes.
 
 # Quickstart
 
-Create an isolated machine, run a shell command in it, then hand it to a coding agent — all from a few lines of TypeScript.
+Create an isolated machine, run a shell command in it, then hand it to a coding agent, all from a few lines of TypeScript.
 
 ## 1. Install the SDK
 
@@ -47,7 +47,7 @@ try {
 
 ## 4. Run a coding agent
 
-Each sandbox runs one coding harness. Choose it with `backend.type` — `opencode` (OpenCode) is the default and needs no extra key; `claude-code` (Claude Code) needs an `ANTHROPIC_API_KEY` in the sandbox environment. See [supported harnesses](/infrastructure/harnesses) for the full list.
+Each sandbox runs one coding harness. Choose it with `backend.type`: `opencode` (OpenCode) is the default and needs no extra key; `claude-code` (Claude Code) needs an `ANTHROPIC_API_KEY` in the sandbox environment. See [supported harnesses](/infrastructure/harnesses) for the full list.
 
 ```typescript
 const box = await client.create({
@@ -63,7 +63,7 @@ try {
 }
 ```
 
-For runs that must survive a client crash or a browser reload, use `box.dispatchPrompt(message, { sessionId })` and reconnect with `box.session(sessionId)` — see the [`@tangle-network/sandbox` on npm](https://www.npmjs.com/package/@tangle-network/sandbox).
+For runs that must survive a client crash or a browser reload, use `box.dispatchPrompt(message, { sessionId })` and reconnect with `box.session(sessionId)`. See the [`@tangle-network/sandbox` on npm](https://www.npmjs.com/package/@tangle-network/sandbox).
 
 ## 5. Check before you build (optional)
 
@@ -76,5 +76,5 @@ curl -fsS https://sandbox.tangle.tools/v1/public-templates
 
 ## Next
 
-- **[`@tangle-network/sandbox` on npm](https://www.npmjs.com/package/@tangle-network/sandbox)** — durable sessions, fleets, snapshots, GPU leases, and the full API.
-- **[Connect to Intelligence](/intelligence/connect)** — send each run's trace so you can see why an agent failed and what to fix.
+- **[`@tangle-network/sandbox` on npm](https://www.npmjs.com/package/@tangle-network/sandbox)**: durable sessions, fleets, snapshots, GPU leases, and the full API.
+- **[Connect to Intelligence](/intelligence/connect)**: send each run's trace so you can see why an agent failed and what to fix.
