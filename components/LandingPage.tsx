@@ -6,6 +6,13 @@ import CallToActionCard from "./CallToActionCard";
 
 const getStartedCards = [
   {
+    icon: <GrNodes />,
+    title: "Sandbox",
+    description:
+      "A real computer for every agent: shell, files, browser, any coding harness.",
+    link: "/sandbox",
+  },
+  {
     icon: <GiPlatform />,
     title: "Blueprint Agent",
     description:
@@ -13,15 +20,8 @@ const getStartedCards = [
     link: "/blueprint-agent/introduction",
   },
   {
-    icon: <GrNodes />,
-    title: "Sandboxes",
-    description:
-      "A real computer for every agent: shell, files, browser, any coding harness.",
-    link: "/infrastructure/introduction",
-  },
-  {
     icon: <GiToken />,
-    title: "Inference gateway",
+    title: "Inference",
     description:
       "One OpenAI-compatible key. Hundreds of models, routed to a live provider on price and latency.",
     link: "/gateway",
