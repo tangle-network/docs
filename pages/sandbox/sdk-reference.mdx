@@ -31,7 +31,7 @@ Create a sandbox and get back a `SandboxInstance`. Common options:
 const box = await client.create({
   name: "my-project",
   image: "node:20",
-  backend: { type: "opencode" }, // the coding harness
+  backend: { type: "opencode" }, // coding harness; see supported harnesses below
   env: { NODE_ENV: "development" },
   resources: { cpuCores: 2, memoryMB: 4096, diskGB: 20 },
   maxLifetimeSeconds: 3600,
