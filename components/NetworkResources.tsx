@@ -114,6 +114,48 @@ const NETWORK_DATA = {
       },
     },
   ] satisfies NetworkDetail[],
+  tempo: [
+    { property: "Block Explorers", value: "" },
+    {
+      property: "EVM Explorer",
+      value: {
+        type: "link",
+        url: "https://explorer.tempo.xyz",
+        text: "explorer.tempo.xyz",
+      },
+    },
+    { property: "Developer Resources", value: "" },
+    { property: "Chain ID", value: { type: "wss", url: "42431" } },
+    { property: "Host Chain", value: "Tempo Testnet" },
+    {
+      property: "Public RPC URL",
+      value: { type: "wss", url: "https://rpc.testnet.tempo.xyz" },
+    },
+    {
+      property: "Deployment Manifest",
+      value: {
+        type: "link",
+        url: "https://github.com/tangle-network/tnt-core/blob/main/deployments/tempo/latest.json",
+        text: "deployments/tempo/latest.json",
+      },
+    },
+    {
+      property: "Protocol Contracts",
+      value: {
+        type: "link",
+        url: "https://github.com/tangle-network/tnt-core/tree/main",
+        text: "github.com/tangle-network/tnt-core",
+      },
+    },
+    {
+      property: "Blueprint SDK",
+      value: {
+        type: "link",
+        url: "https://github.com/tangle-network/blueprint/tree/main",
+        text: "github.com/tangle-network/blueprint",
+      },
+    },
+  ] satisfies NetworkDetail[],
 } as const;
 
 const NetworkTabs = () => {
@@ -253,6 +295,21 @@ const NetworkTabs = () => {
           {" "}
           <a
             href="#"
+            onClick={() => handleTabClick("tempo")}
+            className={`inline-block p-4 rounded-t-lg ${
+              activeTab === "tempo"
+                ? "text-blue-600 bg-gray-100 active dark:bg-gray-800 dark:text-blue-500"
+                : "hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+            }`}
+          >
+            <FlaskConical className="inline w-4 h-4 text-blue-600 me-2 dark:text-blue-500" />
+            Tempo Testnet
+          </a>
+        </li>
+        <li className="inline-flex items-center justify-center px-4 pt-8 text-xl border-b-2 border-transparent rounded-t-lg group">
+          {" "}
+          <a
+            href="#"
             onClick={() => handleTabClick("wallets")}
             className={`inline-block p-4 rounded-t-lg ${
               activeTab === "wallets"
@@ -269,7 +326,9 @@ const NetworkTabs = () => {
       <div className="w-full table-auto">
         {activeTab === "wallets" ? (
           <WalletTable />
-        ) : activeTab === "mainnet" || activeTab === "testnet" ? (
+        ) : activeTab === "mainnet" ||
+          activeTab === "testnet" ||
+          activeTab === "tempo" ? (
           renderTable(NETWORK_DATA[activeTab])
         ) : null}
       </div>
