@@ -7,6 +7,9 @@ const meta: Meta = {
   quickstart: {
     title: "Quickstart",
   },
+  "sdk-reference": {
+    title: "SDK reference",
+  },
 };
 
 export default meta;
