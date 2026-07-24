@@ -13,7 +13,7 @@ Tangle Inference is one OpenAI-compatible endpoint for every model. A single API
 - **Operator network.** Route to operators registered for [Blueprints](/developers/blueprints/introduction); the gateway selects from their advertised endpoint, model support, price, latency, and reputation data.
 - **Compliance routing.** Zero Data Retention and no-train filtering with verified provider agreements.
 - **BYOK.** Bring your own provider keys for zero-markup access.
-- **On-chain payments.** Pay operators directly via SpendAuth - no credit card required.
+- **On-chain payments.** Pay operators directly via SpendAuth, no credit card required.
 
 ## Quick example
 
@@ -40,7 +40,7 @@ The gateway routes through three tiers, in order:
 | **LiteLLM**   | Proxy with 100+ provider integrations and built-in retries      | Default for standard requests                                  |
 | **Direct**    | Straight to provider API (OpenAI, Anthropic, etc.)              | Fallback when LiteLLM unavailable, or when compliance required |
 
-When [Zero Data Retention](/gateway/zdr) or [no-train](/gateway/no-train) is requested, operators and LiteLLM are skipped - the gateway routes directly to verified providers only.
+When [Zero Data Retention](/gateway/zdr) or [no-train](/gateway/no-train) is requested, operators and LiteLLM are skipped. The gateway routes directly to verified providers only.
 
 ## Where the gateway sits
 
