@@ -5,14 +5,14 @@ description: UUPS upgrade rules, storage gap discipline, and parameter migration
 
 # Upgrade Discipline
 
-Every upgradeable Tangle contract is UUPS. The role that gates `_authorizeUpgrade` differs by contract: `UPGRADER_ROLE` on most peripherals, `ADMIN_ROLE` on `MultiAssetDelegation`, `onlyGovernance` on `TangleGovernor`, and `onlySelf` on `TangleTimelock`. In production the relevant role SHOULD be held by [`TangleTimelock`](https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleTimelock.sol) so all upgrades flow through governance with a delay window. This page lists the rules for upgrading the protocol so changes stay safe and reviewable.
+Every upgradeable Tangle contract is UUPS. The role that gates `_authorizeUpgrade` differs by contract: `UPGRADER_ROLE` on `Tangle`, `MultiAssetDelegation`, and most peripherals, `onlyGovernance` on `TangleGovernor`, and `onlySelf` on `TangleTimelock`. In production the relevant role SHOULD be held by [`TangleTimelock`](https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleTimelock.sol) so all upgrades flow through governance with a delay window. This page lists the rules for upgrading the protocol so changes stay safe and reviewable.
 
 ## Upgradeable Contracts
 
 | Contract                  | Upgrade gate                                                | Source                                                                                                                                    |
 | ------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `Tangle`                  | `UPGRADER_ROLE`                                             | [`src/Tangle.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/Tangle.sol)                                                   |
-| `MultiAssetDelegation`    | `ADMIN_ROLE` (no `UPGRADER_ROLE` on this contract)          | [`src/staking/MultiAssetDelegation.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/staking/MultiAssetDelegation.sol)       |
+| `MultiAssetDelegation`    | `UPGRADER_ROLE`                                             | [`src/staking/MultiAssetDelegation.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/staking/MultiAssetDelegation.sol)       |
 | `MBSMRegistry`            | `UPGRADER_ROLE`                                             | [`src/MBSMRegistry.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/MBSMRegistry.sol)                                       |
 | `TangleGovernor`          | `onlyGovernance` (proposal-driven)                          | [`src/governance/TangleGovernor.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleGovernor.sol)             |
 | `TangleTimelock`          | `onlySelf` (the timelock executing its own queued proposal) | [`src/governance/TangleTimelock.sol`](https://github.com/tangle-network/tnt-core/blob/main/src/governance/TangleTimelock.sol)             |
@@ -117,10 +117,10 @@ assert(!tangle.hasRole(UPGRADER_ROLE, deployer));
 assert(!tangle.hasRole(PAUSER_ROLE, deployer));
 assert(!tangle.hasRole(SLASH_ADMIN_ROLE, deployer));
 
-// On MultiAssetDelegation (note: NO UPGRADER_ROLE on this contract;
-// upgrades are gated by ADMIN_ROLE).
+// On MultiAssetDelegation (upgrades are gated by UPGRADER_ROLE).
 assert(!staking.hasRole(DEFAULT_ADMIN_ROLE, deployer));
 assert(!staking.hasRole(ADMIN_ROLE, deployer));
+assert(!staking.hasRole(UPGRADER_ROLE, deployer));
 assert(!staking.hasRole(ASSET_MANAGER_ROLE, deployer));
 
 // On MBSMRegistry

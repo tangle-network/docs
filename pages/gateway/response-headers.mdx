@@ -21,16 +21,16 @@ Every response from the gateway includes metadata headers.
 
 ## Conditional headers
 
-| Header                   | When present                      | Description                     |
-| ------------------------ | --------------------------------- | ------------------------------- |
-| `X-Tangle-Routing-Trace` | When `ENABLE_ROUTING_TRACE` is on | Compact routing path            |
-| `X-Tangle-Operator`      | When served by an operator        | Operator slug                   |
-| `X-Tangle-BYOK`          | When BYOK credentials used        | `true`                          |
-| `X-Tangle-Caching`       | When prompt caching applied       | `auto`                          |
-| `X-Tangle-Guardrails`    | When guardrails flagged content   | `pii:low,prompt_injection:high` |
-| `X-Payment-Settled`      | When SpendAuth payment succeeded  | `true`                          |
-| `X-Free-Tier-Remaining`  | Free tier requests                | `3`                             |
-| `X-Free-Tier-Limit`      | Free tier daily cap               | `5`                             |
+| Header                   | When present                               | Description                     |
+| ------------------------ | ------------------------------------------ | ------------------------------- |
+| `X-Tangle-Routing-Trace` | When `ENABLE_ROUTING_TRACE` is on          | Compact routing path            |
+| `X-Tangle-Operator`      | When served by an operator                 | Operator slug                   |
+| `X-Tangle-BYOK`          | When BYOK credentials used                 | `true`                          |
+| `X-Tangle-Caching`       | When prompt caching applied                | `auto`                          |
+| `X-Tangle-Guardrails`    | When guardrails flagged content            | `pii:low,prompt_injection:high` |
+| `X-Payment-Settled`      | When SpendAuth payment succeeded           | `true`                          |
+| `X-Free-Tier-Remaining`  | 402 free-tier / payment-required responses | `3`                             |
+| `X-Free-Tier-Limit`      | 402 free-tier / payment-required responses | `5`                             |
 
 ## Error response headers
 

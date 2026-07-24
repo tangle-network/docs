@@ -4,7 +4,7 @@ Profiles configure how an agent runs. They package model choice, tool access, pe
 
 ## What A Profile Controls
 
-- **Harness selection**: OpenCode, Claude Code, Kimi Code, Codex, AMP, Factory Droids, Pi, Hermes, Forge, OpenClaw, NanoClaw, ACP, Cursor, or CLI base when the product exposes them. The current Sandbox UI picker defers Pi, Forge, ACP, and Cursor until product policy lands.
+- **Harness selection**: OpenCode, Claude Code, Kimi Code, Codex, AMP, Factory Droids, Pi, Hermes, Forge, OpenClaw, NanoClaw, ACP, Cursor, or CLI base when the product exposes them. The Sandbox session picker currently offers OpenCode, Claude Code, Codex, Kimi Code, OpenClaw, NanoClaw, and Hermes; the remaining backends are SDK-only.
 - **Model selection**: primary and small model routing per profile.
 - **Per-agent tuning**: distinct configs for plan/build/explore (prompt, temperature, max steps).
 - **Tool access**: enable or disable individual tools.
@@ -20,13 +20,11 @@ Profiles are validated before execution. Security policies can cap permissions (
 
 ## Base, Variant, and Per-Run Profiles
 
-The workbench will progressively expose profile controls:
+The workbench exposes profile controls today:
 
-- **Base profiles** for org-wide defaults.
-- **Profile variants** for team or project overrides.
-- **Per-run overrides** for experimentation and simulations.
-
-If you want early access to advanced profile configuration, contact the team.
+- **Base profiles** for org-wide defaults, inherited with `extends`.
+- **Custom profiles** for team or project overrides, created and edited from the profile selector in the chat composer.
+- **Per-run selection**: pick the profile a session runs under before each run.
 
 The runtime merges overrides with the base profile, validates the final config, and applies the result to the sidecar session.
 

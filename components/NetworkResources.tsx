@@ -83,8 +83,8 @@ const NETWORK_DATA = {
       property: "EVM Explorer",
       value: {
         type: "link",
-        url: "https://testnet-explorer.tangle.tools",
-        text: "testnet-explorer.tangle.tools",
+        url: "https://sepolia.basescan.org",
+        text: "sepolia.basescan.org",
       },
     },
     { property: "Asset Details", value: "" },

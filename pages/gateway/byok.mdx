@@ -27,22 +27,7 @@ Pass credentials in `providerOptions.gateway.byok`:
 
 ### Multiple credentials
 
-Specify multiple credentials per provider. The gateway tries them in order:
-
-```json
-{
-  "providerOptions": {
-    "gateway": {
-      "byok": {
-        "anthropic": [
-          {"apiKey": "sk-ant-primary"},
-          {"apiKey": "sk-ant-backup"}
-        ]
-      }
-    }
-  }
-}
-```
+The array shape is accepted for Vercel AI Gateway compatibility, but only the first credential is used. If it fails, the gateway falls back to platform credentials (compliance filters preserved), not to a second BYOK key.
 
 ### Multiple providers
 

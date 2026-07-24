@@ -109,8 +109,8 @@ const { sessionId, alreadyExisted } = await box.dispatchPrompt(prompt, {
   sessionId, // derive this server-side; never accept a caller-chosen id
 });
 
-// From any process, replay what happened or wait for the result:
-for await (const event of box.session(sessionId).events({ since: 0 })) {
+// From any process, follow the run or wait for the result:
+for await (const event of box.session(sessionId).events()) {
   console.log(event);
 }
 const final = await box.session(sessionId).result();
@@ -124,7 +124,11 @@ The same `sessionId` is idempotent. A duplicate dispatch returns the in-flight o
 Keep the base sandbox cheap and attach a GPU only around the step that needs it. Every lease takes a hard spend cap and lifetime.
 
 ```typescript
-const lease = await box.gpu.attach({ maxSpendUsd: 5, maxLifetimeSeconds: 600 });
+const lease = await box.gpu.attach({
+  accelerator: { kind: "nvidia-h100", count: 1 },
+  maxSpendUsd: 5,
+  maxLifetimeSeconds: 600,
+});
 try {
   await box.gpu.exec(lease.id, { command: "python train.py" });
 } finally {

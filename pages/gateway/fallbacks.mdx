@@ -17,7 +17,7 @@ Pass a `models` array in `providerOptions.gateway`:
   "messages": [{"role": "user", "content": "Hello"}],
   "providerOptions": {
     "gateway": {
-      "models": ["anthropic/claude-sonnet-4-6", "groq/llama-3.1-70b-versatile"]
+      "models": ["anthropic/claude-sonnet-4-6", "groq/llama-3.1-8b-instant"]
     }
   }
 }
@@ -27,7 +27,7 @@ The gateway tries:
 
 1. `openai/gpt-4o` (primary model)
 2. `anthropic/claude-sonnet-4-6` (first fallback)
-3. `groq/llama-3.1-70b-versatile` (second fallback)
+3. `groq/llama-3.1-8b-instant` (second fallback)
 
 The response comes from the first model that succeeds.
 
@@ -36,10 +36,9 @@ The response comes from the first model that succeeds.
 For each model in the list, the gateway runs the full routing chain:
 
 1. **Operators** - try operators serving this model (if available)
-2. **LiteLLM** - try the proxy with built-in retries
-3. **Direct provider** - call the provider API directly
+2. **Direct provider** - call the provider API directly
 
-If all tiers fail for a model, the gateway moves to the next model in the list.
+If both tiers fail for a model, the gateway moves to the next model in the list.
 
 ## Combining with provider ordering
 

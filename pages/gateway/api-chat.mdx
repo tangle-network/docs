@@ -60,13 +60,13 @@ All standard OpenAI parameters (`tools`, `tool_choice`, `response_format`, `top_
 
 ### Validation
 
-| Field         | Constraint                                         |
-| ------------- | -------------------------------------------------- |
-| `model`       | Required. Alphanumeric + `/-.:\\_`, max 128 chars. |
-| `messages`    | Required. Non-empty array. Each must have `role`.  |
-| `max_tokens`  | Optional. 1-128,000. Default: 4,096.               |
-| `temperature` | Optional. 0-2. Default: 1.                         |
-| Body size     | Max 1MB.                                           |
+| Field         | Constraint                                                                                        |
+| ------------- | ------------------------------------------------------------------------------------------------- |
+| `model`       | Required. Alphanumeric + `/-.:\\_`, max 128 chars.                                                |
+| `messages`    | Required. Non-empty array. Each must have `role`.                                                 |
+| `max_tokens`  | Optional. Accepted range 1-128,000; the effective ceiling sent upstream is 8,192. Default: 4,096. |
+| `temperature` | Optional. 0-2. Default: 1.                                                                        |
+| Body size     | Max 1MB.                                                                                          |
 
 ## Response (non-streaming)
 

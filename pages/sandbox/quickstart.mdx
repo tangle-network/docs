@@ -47,7 +47,7 @@ try {
 
 ## 4. Run a coding agent
 
-Each sandbox runs one coding harness. Choose it with `backend.type`: `opencode` (OpenCode) is the default and needs no extra key; `claude-code` (Claude Code) needs an `ANTHROPIC_API_KEY` in the sandbox environment. See [supported harnesses](/infrastructure/harnesses) for the full list.
+Each sandbox runs one coding harness. Choose it with `backend.type`. `opencode` (OpenCode) is the default and needs no extra key. `claude-code` (Claude Code) runs on Tangle Router by default with no extra key. To bring your own Anthropic credential, pass `backend: { type: 'claude-code', model: { apiKey: process.env.ANTHROPIC_API_KEY } }`. See [supported harnesses](/infrastructure/harnesses) for the full list.
 
 ```typescript
 const box = await client.create({

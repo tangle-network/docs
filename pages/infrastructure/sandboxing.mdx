@@ -10,11 +10,9 @@ Operators choose isolation based on security requirements and workload type:
 
 **Docker containers** provide process, filesystem, and network separation. Containers are lightweight, well-understood, and suitable for most workloads where standard isolation suffices.
 
-**gVisor** adds an additional isolation layer by intercepting system calls through a user-space kernel. This limits attack surface and is suitable for higher-security workloads where container escapes are a concern.
-
 **Firecracker micro-VMs** provide hardware-level isolation with millisecond boot times. Suitable for workloads requiring the strongest guarantees, where even kernel-level exploits should not compromise the host.
 
-Operators declare supported isolation technologies. Customers specify requirements when requesting services.
+Docker containers and Firecracker micro-VMs are the supported drivers today. Operators declare which ones they run, and customers select one per sandbox with `driver: { type: "docker" | "firecracker" }`.
 
 ## Isolation Guarantees
 

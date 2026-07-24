@@ -9,10 +9,11 @@ These endpoints report each provider's Zero Data Retention (ZDR) and no-train gu
 
 ## GET /api/gateway/compliance
 
-List compliance data for all providers. Public endpoint (rate-limited).
+List compliance data for all providers. Requires authentication (API key or session).
 
 ```bash
-curl https://router.tangle.tools/api/gateway/compliance
+curl https://router.tangle.tools/api/gateway/compliance \
+  -H "Authorization: Bearer sk-tan-YOUR_KEY"
 ```
 
 ```json

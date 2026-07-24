@@ -18,12 +18,16 @@ Authorization: Bearer sk-tan-YOUR_KEY
 
 ```json
 {
-  "balance": "95.50",
-  "total_used": "4.50"
+  "data": {
+    "total_credits": 100.0,
+    "total_usage": 4.5
+  }
 }
 ```
 
-| Field        | Description                    |
-| ------------ | ------------------------------ |
-| `balance`    | Remaining credit balance (USD) |
-| `total_used` | Total credits consumed (USD)   |
+| Field           | Description                                                   |
+| --------------- | ------------------------------------------------------------- |
+| `total_credits` | Total credits ever granted: balance plus lifetime spend (USD) |
+| `total_usage`   | Lifetime credits consumed (USD)                               |
+
+Remaining balance = `total_credits` - `total_usage`.

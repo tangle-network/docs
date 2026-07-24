@@ -110,6 +110,25 @@ jobs:
       - name: harness copy
         run: node ./scripts/check-harness-copy.mjs
 
+  endpoints:
+    name: endpoints
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+        with:
+          access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: live endpoints
+        run: node ./scripts/check-live-endpoints.mjs
+
   links:
     name: links
     runs-on: ubuntu-latest

@@ -13,7 +13,6 @@ Read the [ZDR trust model](/gateway/zdr#trust-model) first. Key points:
 
 - ZDR is enforced at the **direct provider** level only.
 - **Operators are skipped** when ZDR is enabled (their backing provider is unverifiable).
-- **LiteLLM is skipped** (its internal routing is uncontrollable).
 - BYOK fallback to platform credentials preserves ZDR filtering.
 
 ## Step 2: Choose your approach
@@ -22,14 +21,7 @@ Read the [ZDR trust model](/gateway/zdr#trust-model) first. Key points:
 
 Enable ZDR for all requests from your team. No code changes needed - every request is automatically filtered.
 
-Contact your admin to set `zdrEnabled: true` on your team record via the admin API:
-
-```bash
-# Admin sets team-wide ZDR
-curl -X PUT https://router.tangle.tools/api/admin/compliance \
-  -H "Cookie: session_token=ADMIN_SESSION" \
-  -d '{"providerId": "...", "zdr": true}'
-```
+Team-wide ZDR lives on the `Team.zdrEnabled` column. There is no self-serve API for it today: contact Tangle and we set it on your team record.
 
 ### Option B: Per-request ZDR
 
@@ -52,7 +44,9 @@ response = client.chat.completions.create(
 Check which providers are ZDR-verified for the models you need:
 
 ```bash
-curl https://router.tangle.tools/api/gateway/compliance | jq '.providers[] | select(.zdr == true)'
+curl https://router.tangle.tools/api/gateway/compliance \
+  -H "Authorization: Bearer sk-tan-YOUR_KEY" \
+  | jq '.providers[] | select(.zdr == true)'
 ```
 
 If your required model is only available from a non-ZDR provider, the request will return 400 with a clear error listing which providers were considered.
