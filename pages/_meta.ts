@@ -27,7 +27,7 @@ const meta: Meta = {
     type: "page",
   },
   gateway: {
-    title: "Gateway",
+    title: "Inference",
     type: "page",
   },
   infrastructure: {
