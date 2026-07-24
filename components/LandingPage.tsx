@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { GiPlatform, GiToken } from "react-icons/gi";
 import { GrNodes } from "react-icons/gr";
-import { SiBlueprint } from "react-icons/si";
+import { FiActivity } from "react-icons/fi";
 import CallToActionCard from "./CallToActionCard";
 
 const getStartedCards = [
@@ -13,13 +13,6 @@ const getStartedCards = [
     link: "/sandbox",
   },
   {
-    icon: <GiPlatform />,
-    title: "Blueprint Agent",
-    description:
-      "Describe a project and build it with an AI agent in the browser, then ship it.",
-    link: "/blueprint-agent/introduction",
-  },
-  {
     icon: <GiToken />,
     title: "Inference",
     description:
@@ -27,11 +20,18 @@ const getStartedCards = [
     link: "/gateway",
   },
   {
-    icon: <SiBlueprint />,
-    title: "Blueprints",
+    icon: <FiActivity />,
+    title: "Intelligence",
     description:
-      "Package a service and run it on the Tangle protocol, settled on-chain to operators.",
-    link: "/developers/blueprints/introduction",
+      "Every run leaves a trace. See why an agent failed and what to change.",
+    link: "/intelligence",
+  },
+  {
+    icon: <GiPlatform />,
+    title: "Blueprint Agent",
+    description:
+      "Describe a project and build it with an AI agent in the browser, then ship it.",
+    link: "/blueprint-agent/introduction",
   },
 ];
 

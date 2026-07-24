@@ -18,28 +18,20 @@ const meta: Meta = {
     title: "Sandbox",
     type: "page",
   },
-  platform: {
-    title: "Platform",
-    type: "page",
-  },
-  "blueprint-agent": {
-    title: "Blueprint Agent",
-    type: "page",
-  },
   gateway: {
     title: "Inference",
-    type: "page",
-  },
-  infrastructure: {
-    title: "Runtime",
     type: "page",
   },
   intelligence: {
     title: "Intelligence",
     type: "page",
   },
-  blueprints: {
-    title: "Blueprints",
+  "blueprint-agent": {
+    title: "Blueprint Agent",
+    type: "page",
+  },
+  platform: {
+    title: "Platform",
     type: "page",
   },
   protocol: {
@@ -63,6 +55,14 @@ const meta: Meta = {
         href: "/staking/introduction",
       },
     },
+  },
+  infrastructure: {
+    title: "Runtime",
+    type: "page",
+  },
+  blueprints: {
+    title: "Blueprints",
+    type: "page",
   },
   ai: {
     title: "AI",
