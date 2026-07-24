@@ -1,0 +1,80 @@
+---
+title: Quickstart
+description: Create a sandbox and run your first coding agent in a few minutes.
+---
+
+# Quickstart
+
+Create an isolated machine, run a shell command in it, then hand it to a coding agent — all from a few lines of TypeScript.
+
+## 1. Install the SDK
+
+```bash
+npm install @tangle-network/sandbox
+```
+
+## 2. Get an API key
+
+Create an `sk-tan-` key from [Authentication](/platform/authentication) and export it:
+
+```bash
+export TANGLE_API_KEY=sk-tan-...
+```
+
+One key authenticates every Tangle product; the SDK reads it from the environment.
+
+## 3. Create a sandbox and run a command
+
+```typescript
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: process.env.SANDBOX_BASE_URL ?? "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ image: "universal", name: "agent-smoke" });
+
+try {
+  const result = await box.exec("node --version && npm --version");
+  console.log(result.stdout);
+} finally {
+  await box.delete();
+}
+```
+
+`create` returns a live machine; `delete` releases it. You never provision infrastructure yourself.
+
+## 4. Run a coding agent
+
+Each sandbox runs one coding harness. Choose it with `backend.type` — `opencode` (OpenCode) is the default and needs no extra key; `claude-code` (Claude Code) needs an `ANTHROPIC_API_KEY` in the sandbox environment. See [supported harnesses](/infrastructure/harnesses) for the full list.
+
+```typescript
+const box = await client.create({
+  image: "universal",
+  backend: { type: "opencode" },
+});
+
+try {
+  const result = await box.prompt("List the files in this project and summarize what it does");
+  console.log(result);
+} finally {
+  await box.delete();
+}
+```
+
+For runs that must survive a client crash or a browser reload, use `box.dispatchPrompt(message, { sessionId })` and reconnect with `box.session(sessionId)` — see the [`@tangle-network/sandbox` on npm](https://www.npmjs.com/package/@tangle-network/sandbox).
+
+## 5. Check before you build (optional)
+
+These calls are safe to run without creating a sandbox:
+
+```bash
+curl -fsS https://sandbox.tangle.tools/health
+curl -fsS https://sandbox.tangle.tools/v1/public-templates
+```
+
+## Next
+
+- **[`@tangle-network/sandbox` on npm](https://www.npmjs.com/package/@tangle-network/sandbox)** — durable sessions, fleets, snapshots, GPU leases, and the full API.
+- **[Connect to Intelligence](/intelligence/connect)** — send each run's trace so you can see why an agent failed and what to fix.
