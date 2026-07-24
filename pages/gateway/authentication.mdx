@@ -5,7 +5,7 @@ description: Authentication methods for Tangle Inference.
 
 # Authentication
 
-Four ways to authenticate to the gateway — plus anonymous access to free-tier models — each with its own rate limit.
+Four ways to authenticate to the gateway, plus anonymous access to free-tier models, each with its own rate limit.
 
 ## API Key
 
@@ -38,7 +38,7 @@ POST /api/siwe/verify
 
 ## SpendAuth (On-Chain Payment)
 
-EIP-712 signed payment authorization. No account needed — pay operators directly on-chain.
+EIP-712 signed payment authorization. No account needed: pay operators directly on-chain.
 
 ```bash
 curl -H "X-Payment-Signature: {\"commitment\":\"0x...\",\"amount\":\"1000000\",...}" \

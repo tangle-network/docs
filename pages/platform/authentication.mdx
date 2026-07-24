@@ -1,14 +1,14 @@
 # Authentication & API keys
 
-One account, one API key, one balance — across every Tangle product.
+One account, one API key, one balance, across every Tangle product.
 
 ## Sign in
 
-Create your account at [id.tangle.tools](https://id.tangle.tools), then sign in with email and password, GitHub, Google, or X — or an Ethereum wallet, by signing a message (nothing goes on-chain).
+Create your account at [id.tangle.tools](https://id.tangle.tools), then sign in with email and password, GitHub, Google, or X. You can also use an Ethereum wallet, by signing a message (nothing goes on-chain).
 
 ## Get an API key
 
-Open **API keys** in [id.tangle.tools](https://id.tangle.tools) and create one. Keys start with `sk-tan-`. You see the full key only once — copy it now, and keep it secret: anyone who has it can spend your balance.
+Open **API keys** in [id.tangle.tools](https://id.tangle.tools) and create one. Keys start with `sk-tan-`. You see the full key only once. Copy it now, and keep it secret: anyone who has it can spend your balance.
 
 Save it:
 
@@ -35,13 +35,13 @@ curl -sS https://id.tangle.tools/v1/billing/balance \
 }
 ```
 
-- `data.balance` — your spendable credit, in US dollars.
-- `data.lifetimeSpent` — total you've spent to date, in US dollars.
+- `data.balance`: your spendable credit, in US dollars.
+- `data.lifetimeSpent`: total you've spent to date, in US dollars.
 
 A `401` with `"code": "UNAUTHORIZED"` means the key is missing or wrong.
 
 ## If a key leaks
 
-Revoke it in [id.tangle.tools](https://id.tangle.tools) under **API keys** — a revoked key stops working. Use a separate key for each app or environment, so revoking one never breaks the others.
+Revoke it in [id.tangle.tools](https://id.tangle.tools) under **API keys**. A revoked key stops working. Use a separate key for each app or environment, so revoking one never breaks the others.
 
 Add credit and manage your plan at [id.tangle.tools](https://id.tangle.tools).
