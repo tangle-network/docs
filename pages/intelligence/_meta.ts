@@ -4,6 +4,9 @@ const meta: Meta = {
   index: {
     title: "Overview",
   },
+  "how-it-works": {
+    title: "How it works",
+  },
   quickstart: {
     title: "Quickstart",
   },
