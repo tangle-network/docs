@@ -14,7 +14,7 @@ Customers pay for blueprint services using the chain’s native token or an ERC-
 - **Operators** (weighted by that service’s per-operator exposure)
 - **Restakers** (delegators who restaked with the chosen operators)
 
-The default split is **50% developer / 10% protocol / 20% operators / 20% restakers**, and can be updated by governance.
+The default split is **20% developer / 20% protocol / 40% operators / 20% restakers**, and can be updated by governance.
 
 Restaker shares are routed per-operator to the on-chain `ServiceFeeDistributor`, which distributes fees to delegators based on:
 
@@ -27,11 +27,18 @@ Restaker shares are routed per-operator to the on-chain `ServiceFeeDistributor`,
 TNT incentives are distributed from a pre-funded on-chain pool:
 
 - `InflationPool` holds TNT allocated by governance/treasury and distributes it in epochs.
-- The staking portion funds `RewardVaults`, which pays APY-like TNT incentives for delegated assets (with a deposit cap per asset).
-- Other portions become claimable TNT balances for operators, customers, developers, and restakers.
+- The staking portion funds `RewardVaults`, which pays TNT incentives for delegated assets (with a deposit cap per asset).
+- Other portions become claimable TNT balances for operators, customers, and developers.
+- If `restakersBps > 0`, a restaker TNT budget is distributed by service exposure and routed through `ServiceFeeDistributor`.
 
 ## Metrics and Scoring
 
 The protocol can optionally record activity into a metrics contract (`TangleMetrics`) using best-effort hooks (failures do not block core protocol actions). Those metrics drive merit-based distributions in `InflationPool`.
 
 - See [Metrics and Scoring](/network/metrics-and-scoring) for details.
+
+## Why This Layout Works
+
+- **One restaker fee path**: Service fees always flow through `ServiceFeeDistributor`, so payout math is consistent across tokens and services.
+- **Budget clarity**: Incentives only exist if governance funds them; there is no hidden inflation.
+- **Predictable integration**: Developers can reason about exactly where funds go and how to claim them.

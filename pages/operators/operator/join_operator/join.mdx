@@ -11,11 +11,11 @@ This page covers **restaking-layer** operator registration (becoming an active o
 ### Step 1: Prepare an EVM wallet
 
 - Use an EVM wallet (e.g., MetaMask/Rabby) and ensure you’re connected to the correct EVM chain where Tangle is deployed.
-- Ensure you have enough balance to cover the operator bond and gas.
+- Ensure you have enough balance to cover the operator self-stake and gas.
 
 ### Step 2: Register as an Operator
 
-Operator registration is performed by calling the restaking contract’s `registerOperator()` function and sending the required bond amount.
+Operator registration is performed by calling the restaking contract’s `registerOperator()` function and sending at least the required **self-stake**.
 
 Use Foundry’s `cast`:
 
@@ -25,14 +25,14 @@ export RPC_URL="https://..."
 export PRIVATE_KEY="0x..."
 export RESTAKING_CONTRACT="0x..." # MultiAssetDelegation contract
 
-# Read the minimum operator bond (native asset)
+# Read the minimum operator self-stake (native asset)
 cast call "$RESTAKING_CONTRACT" "minOperatorStake()(uint256)" --rpc-url "$RPC_URL"
 
 # Register (send at least the minOperatorStake as value)
 cast send "$RESTAKING_CONTRACT" "registerOperator()" \
   --rpc-url "$RPC_URL" \
   --private-key "$PRIVATE_KEY" \
-  --value "<BOND_AMOUNT_WEI>"
+  --value "<STAKE_AMOUNT_WEI>"
 ```
 
 If successful, the transaction emits `OperatorRegistered(operator, stake)`.

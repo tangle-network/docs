@@ -29,6 +29,22 @@ function claimRewards(address token) external
 
 Claim accumulated rewards for a specific token
 
+#### claimRewardsBatch
+
+```solidity
+function claimRewardsBatch(address[] tokens) external
+```
+
+Claim accumulated rewards for multiple tokens
+
+#### claimRewardsAll
+
+```solidity
+function claimRewardsAll() external
+```
+
+Claim accumulated rewards for all pending tokens
+
 #### pendingRewards
 
 ```solidity
@@ -45,16 +61,21 @@ function pendingRewards(address account, address token) external view returns (u
 
 Get pending rewards for an account and token
 
-#### Events
-
-#### RewardsDistributed
+#### rewardTokens
 
 ```solidity
-event RewardsDistributed(uint64 serviceId, uint256 developerAmount, uint256 protocolAmount, uint256 operatorAmount, uint256 restakerAmount)
+function rewardTokens(address account) external view returns (address[])
 ```
+
+List tokens with non-zero pending rewards for an account
+
+_Convenience view; mappings are not enumerable._
+
+#### Events
 
 #### RewardsClaimed
 
 ```solidity
-event RewardsClaimed(address account, uint256 amount)
+event RewardsClaimed(address account, address token, uint256 amount)
 ```
+

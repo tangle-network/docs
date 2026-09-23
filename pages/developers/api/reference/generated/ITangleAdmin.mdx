@@ -23,8 +23,8 @@ Set the restaking module
 
 ##### Parameters
 
-| Name      | Type    | Description                   |
-| --------- | ------- | ----------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | restaking | address | The IRestaking implementation |
 
 #### setTreasury
@@ -37,8 +37,8 @@ Set the protocol treasury
 
 ##### Parameters
 
-| Name     | Type    | Description          |
-| -------- | ------- | -------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | treasury | address | The treasury address |
 
 #### setPaymentSplit
@@ -51,8 +51,8 @@ Set the payment split configuration
 
 ##### Parameters
 
-| Name  | Type                      | Description                 |
-| ----- | ------------------------- | --------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | split | struct Types.PaymentSplit | The new split configuration |
 
 #### paymentSplit
@@ -167,14 +167,6 @@ function mbsmRegistry() external view returns (address)
 
 Get Master Blueprint Service Manager registry
 
-#### operatorBondToken
-
-```solidity
-function operatorBondToken() external view returns (address)
-```
-
-Get operator bond token
-
 #### maxBlueprintsPerOperator
 
 ```solidity
@@ -190,30 +182,6 @@ function setMaxBlueprintsPerOperator(uint32 newMax) external
 ```
 
 Set max blueprints per operator
-
-#### operatorBlueprintBond
-
-```solidity
-function operatorBlueprintBond() external view returns (uint256)
-```
-
-Get operator bond amount
-
-#### setOperatorBlueprintBond
-
-```solidity
-function setOperatorBlueprintBond(uint256 newBond) external
-```
-
-Set operator bond amount
-
-#### setOperatorBondAsset
-
-```solidity
-function setOperatorBondAsset(address token) external
-```
-
-Set operator bond asset
 
 #### tntToken
 
@@ -263,22 +231,6 @@ function setDefaultTntMinExposureBps(uint16 minExposureBps) external
 
 Set default TNT min exposure bps
 
-#### tntRestakerFeeBps
-
-```solidity
-function tntRestakerFeeBps() external view returns (uint16)
-```
-
-Get TNT restaker fee bps
-
-#### setTntRestakerFeeBps
-
-```solidity
-function setTntRestakerFeeBps(uint16 feeBps) external
-```
-
-Set TNT restaker fee bps
-
 #### tntPaymentDiscountBps
 
 ```solidity
@@ -294,3 +246,4 @@ function setTntPaymentDiscountBps(uint16 discountBps) external
 ```
 
 Set TNT payment discount bps
+

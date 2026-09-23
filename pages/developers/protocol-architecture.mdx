@@ -17,7 +17,7 @@ Tangle is the current protocol (EVM-based; legacy: Tangle Substrate) composed of
 - `MultiAssetDelegation`: restaking and delegation system (operator self-stake, deposits, delegation, exits, and slashing application).
 - `ServiceFeeDistributor` + `StreamingPaymentManager`: distributes the restaker share of service fees (including streamed payments).
 - `TangleMetrics` + `InflationPool`: optional metrics-driven TNT incentive budgeting (pre-funded; no minting).
-- `RewardVaults`: optional APY/cap-style TNT incentives per delegated asset (funded by `InflationPool`).
+- `RewardVaults`: optional TNT incentives per delegated asset with a deposit cap (funded by `InflationPool`).
 - `OperatorStatusRegistry`: heartbeat-based liveness tracking for services (often driven by the operator’s blueprint manager).
 - `LiquidDelegationVault` + `LiquidDelegationFactory`: liquid restaking via transferable vault shares over delegated positions.
 

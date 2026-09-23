@@ -23,15 +23,15 @@ Check if operator is approved for controller
 
 ##### Parameters
 
-| Name       | Type    | Description            |
-| ---------- | ------- | ---------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | controller | address | The controller address |
-| operator   | address | The operator address   |
+| operator | address | The operator address |
 
 ##### Return Values
 
-| Name   | Type | Description      |
-| ------ | ---- | ---------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | status | bool | True if approved |
 
 #### setOperator
@@ -44,15 +44,15 @@ Grant or revoke operator permissions
 
 ##### Parameters
 
-| Name     | Type    | Description                      |
-| -------- | ------- | -------------------------------- |
-| operator | address | The operator address             |
-| approved | bool    | True to approve, false to revoke |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | The operator address |
+| approved | bool | True to approve, false to revoke |
 
 ##### Return Values
 
-| Name    | Type | Description        |
-| ------- | ---- | ------------------ |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | success | bool | True if successful |
 
 #### Events
@@ -64,3 +64,4 @@ event OperatorSet(address controller, address operator, bool approved)
 ```
 
 Emitted when operator approval changes
+

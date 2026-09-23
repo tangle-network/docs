@@ -33,6 +33,44 @@ When a service pays a fee, `Payments.sol` calculates and routes the split:
 - Optional USD weighting (oracle-enabled)
 - Blueprint selection mode (All vs Fixed)
 
+## Inflation-Funded Incentives (TNT)
+
+`InflationPool` is a budgeted, pre-funded source of TNT incentives:
+
+- **Staking portion** is distributed to `RewardVaults` and paid to delegators (with operator commission).
+- **Operator / Customer / Developer portions** accrue as pending TNT balances and are claimed from `InflationPool`.
+- **Restaker portion** (if `restakersBps > 0`) is distributed by service exposure and routed through `ServiceFeeDistributor`.
+
+This keeps incentives explicit and avoids hidden inflation.
+
+## How To Integrate
+
+If you are building on top of this system, the safe default flows are:
+
+- Use `Tangle` for service payments and let `Payments.sol` route splits.
+- Read restaker fee rewards from `ServiceFeeDistributor` (or let users claim directly).
+- Read TNT incentives from `RewardVaults`, and optional restaker inflation from `ServiceFeeDistributor`.
+
+## Example: Fee Split And Restaker Payout
+
+Service pays 10 ETH with a 20/20/40/20 split:
+
+- 2 ETH to developer, 2 ETH to treasury, 4 ETH to operators, 2 ETH to restakers.
+- Restaker share goes to `ServiceFeeDistributor`, where delegators earn by score and blueprint selection.
+
+## Code + Tests
+
+- Split logic: `src/v2/core/Payments.sol`
+- Restaker distribution: `src/v2/rewards/ServiceFeeDistributor.sol`
+- Inflation budgets: `src/v2/rewards/InflationPool.sol`
+- Staking incentives: `src/v2/rewards/RewardVaults.sol`
+- Tests:
+  - `test/v2/tangle/Payments.t.sol`
+  - `test/v2/rewards/ServiceFeeDistributor.t.sol`
+  - `test/v2/rewards/ServiceFeeDistributorStreaming.t.sol`
+  - `test/v2/Rewards.t.sol`
+  - `test/v2/InflationPool.t.sol`
+
 <GithubFileReaderDisplay
   url="https://github.com/tangle-network/tnt-core/blob/v2/src/v2/rewards/ServiceFeeDistributor.sol"
   fromLine={19}

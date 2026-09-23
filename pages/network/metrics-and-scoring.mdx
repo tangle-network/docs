@@ -12,7 +12,7 @@ Tangle’s incentive programs can be driven by on-chain activity metrics. Metric
 - **`TangleMetrics`**: an on-chain activity recorder implementing `IMetricsRecorder`.
 - **Metrics hooks**: best-effort calls from core contracts (wrapped in `try/catch`) that emit or aggregate activity data.
 - **`InflationPool`**: a pre-funded TNT budget that can distribute TNT based on recorded metrics.
-- **`ServiceFeeDistributor`**: distributes the restaker share of service fees and can record “exposure” scores that feed restaker rewards.
+- **`ServiceFeeDistributor`**: distributes the restaker share of service fees and exposes USD-weighted exposure views for restaker inflation.
 
 ## What Gets Recorded
 
@@ -26,12 +26,13 @@ Depending on what is configured on-chain, the protocol can record:
 
 ## Restaker “Exposure” Scoring
 
-For restaker rewards (from `InflationPool`), the protocol can compute an exposure score based on service participation:
+For restaker rewards funded by `InflationPool`, exposure is **computed at distribution time**:
 
-- Exposure is tracked as a **value × time** measure (for example, USD-weighted exposure over the duration of a streamed payment).
-- If a price oracle is configured, scoring can be normalized in USD terms; if not, the protocol falls back to raw amounts.
+- `InflationPool.distributeEpochWithServices` queries `ServiceFeeDistributor.getOperatorServiceUsdExposure`.
+- Exposure uses the same security requirements and commitments that gate service-fee payouts.
+- If a price oracle is configured, the exposure is normalized in USD terms; otherwise it falls back to raw amounts.
 
-This scoring is separate from (and in addition to) per-asset APY-like incentives paid through `RewardVaults`.
+This avoids storing per-delegator exposure metrics on-chain and keeps restaker inflation aligned with the same exposure model used for fees.
 
 ## Heartbeats and QoS
 

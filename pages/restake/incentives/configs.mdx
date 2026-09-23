@@ -11,9 +11,11 @@ This page summarizes the main on-chain configuration points for restaking incent
 
 Governance configures per-asset incentive vaults:
 
-- `createVault(asset, apyBps, depositCap, incentiveCap, boostMultiplierBps)`
-- `updateVaultConfig(asset, apyBps, depositCap, incentiveCap, boostMultiplierBps)`
+- `createVault(asset, depositCap)`
+- `updateVaultConfig(asset, depositCap)`
 - `deactivateVault(asset)`
+- `setOperatorCommission(newBps)`
+- `setLockDurations(oneMonth, twoMonths, threeMonths, sixMonths)`
 
 ## `InflationPool` (Funding and Distribution)
 
@@ -21,8 +23,10 @@ Governance configures per-asset incentive vaults:
 
 - `fund(amount)` (requires funder role)
 - `distributeEpoch()` (anyone can call when ready)
+- `distributeEpochWithServices(serviceIds)` (DISTRIBUTOR_ROLE; required for restaker inflation)
 - `setWeights(stakingBps, operatorsBps, customersBps, developersBps, restakersBps)`
 - `setEpochLength(seconds)`
+- `setRestakerInflationConfig(tangle, serviceFeeDistributor)`
 
 The staking portion of each epoch is transferred to `RewardVaults`.
 
@@ -33,3 +37,10 @@ Service payments are split between developer / protocol / operators / restakers:
 - `Tangle.setPaymentSplit({ developerBps, protocolBps, operatorBps, restakerBps })`
 
 If restaker fee distribution is enabled, the protocol routes restaker shares to `ServiceFeeDistributor`.
+
+## Wiring Checklist (One-Time Deployment Setup)
+
+- `Tangle.setServiceFeeDistributor(distributor)`
+- `MultiAssetDelegation.setServiceFeeDistributor(distributor)`
+- `ServiceFeeDistributor.setInflationPool(inflationPool)`
+- `InflationPool.setRestakerInflationConfig(tangle, distributor)`

@@ -145,6 +145,33 @@ function undelegate(address operator, uint256 amount) external
 function executeDelegatorUnstake() external
 ```
 
+#### executeDelegatorUnstakeAndWithdraw
+
+```solidity
+function executeDelegatorUnstakeAndWithdraw(address operator, address token, uint256 shares, uint64 requestedRound, address receiver) external returns (uint256 amount)
+```
+
+Execute a specific matured unstake request and withdraw the resulting assets to `receiver`.
+
+_Convenience helper for integrations (e.g. ERC7540 liquid delegation vaults) to avoid a separate
+     scheduleWithdraw/executeWithdraw flow after bond-less delay has already elapsed._
+
+##### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | Operator to unstake from |
+| token | address | Token address (address(0) for native) |
+| shares | uint256 | Shares to unstake (as stored in the underlying bond-less request) |
+| requestedRound | uint64 | Round in which the unstake was scheduled |
+| receiver | address | Recipient of the withdrawn assets |
+
+##### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| amount | uint256 | Actual amount returned (after exchange-rate + lazy-slash adjustments) |
+
 #### addBlueprintToDelegation
 
 ```solidity
@@ -155,36 +182,6 @@ function addBlueprintToDelegation(uint256 delegationIndex, uint64 blueprintId) e
 
 ```solidity
 function removeBlueprintFromDelegation(uint256 delegationIndex, uint64 blueprintId) external
-```
-
-#### notifyRewardForBlueprint
-
-```solidity
-function notifyRewardForBlueprint(address operator, uint64 blueprintId, uint64 serviceId, uint256 amount) external
-```
-
-#### notifyReward
-
-```solidity
-function notifyReward(address operator, uint64 serviceId, uint256 amount) external
-```
-
-#### claimDelegatorRewards
-
-```solidity
-function claimDelegatorRewards() external returns (uint256 totalRewards)
-```
-
-#### claimOperatorRewards
-
-```solidity
-function claimOperatorRewards() external
-```
-
-#### claimOperatorRewardsTo
-
-```solidity
-function claimOperatorRewardsTo(address payable recipient) external
 ```
 
 #### slashForBlueprint
@@ -383,18 +380,6 @@ function getPendingUnstakes(address delegator) external view returns (struct Typ
 
 ```solidity
 function getOperatorRewardPool(address operator) external view returns (struct Types.OperatorRewardPool)
-```
-
-#### getPendingDelegatorRewards
-
-```solidity
-function getPendingDelegatorRewards(address delegator) external view returns (uint256)
-```
-
-#### getPendingOperatorRewards
-
-```solidity
-function getPendingOperatorRewards(address operator) external view returns (uint256)
 ```
 
 #### getOperatorDelegators
@@ -735,18 +720,6 @@ event SlashedForService(address operator, uint64 serviceId, uint64 blueprintId, 
 event SlashRecorded(address operator, uint64 slashId, uint256 totalSlashed, uint256 exchangeRateBefore, uint256 exchangeRateAfter)
 ```
 
-#### RewardDistributed
-
-```solidity
-event RewardDistributed(address operator, uint256 amount)
-```
-
-#### RewardClaimed
-
-```solidity
-event RewardClaimed(address account, uint256 amount)
-```
-
 #### AdapterRegistered
 
 ```solidity
@@ -764,3 +737,4 @@ event AdapterRemoved(address token)
 ```solidity
 event RequireAdaptersUpdated(bool required)
 ```
+

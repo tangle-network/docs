@@ -25,12 +25,12 @@ Record a stake/delegation event
 
 ##### Parameters
 
-| Name      | Type    | Description                                    |
-| --------- | ------- | ---------------------------------------------- |
-| delegator | address | The delegator address                          |
-| operator  | address | The operator receiving delegation              |
-| asset     | address | The asset being staked (address(0) for native) |
-| amount    | uint256 | The amount staked                              |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| delegator | address | The delegator address |
+| operator | address | The operator receiving delegation |
+| asset | address | The asset being staked (address(0) for native) |
+| amount | uint256 | The amount staked |
 
 #### recordUnstake
 
@@ -42,12 +42,12 @@ Record an unstake event
 
 ##### Parameters
 
-| Name      | Type    | Description                    |
-| --------- | ------- | ------------------------------ |
-| delegator | address | The delegator address          |
-| operator  | address | The operator losing delegation |
-| asset     | address | The asset being unstaked       |
-| amount    | uint256 | The amount unstaked            |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| delegator | address | The delegator address |
+| operator | address | The operator losing delegation |
+| asset | address | The asset being unstaked |
+| amount | uint256 | The amount unstaked |
 
 #### recordOperatorRegistered
 
@@ -59,11 +59,11 @@ Record operator registration
 
 ##### Parameters
 
-| Name     | Type    | Description          |
-| -------- | ------- | -------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | operator | address | The operator address |
-| asset    | address | The asset staked     |
-| amount   | uint256 | Initial stake amount |
+| asset | address | The asset staked |
+| amount | uint256 | Initial stake amount |
 
 #### recordHeartbeat
 
@@ -75,11 +75,11 @@ Record operator heartbeat (liveness proof)
 
 ##### Parameters
 
-| Name      | Type    | Description                  |
-| --------- | ------- | ---------------------------- |
-| operator  | address | The operator address         |
-| serviceId | uint64  | The service ID               |
-| timestamp | uint64  | Block timestamp of heartbeat |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | The operator address |
+| serviceId | uint64 | The service ID |
+| timestamp | uint64 | Block timestamp of heartbeat |
 
 #### recordJobCompletion
 
@@ -91,12 +91,12 @@ Record job completion by operator
 
 ##### Parameters
 
-| Name      | Type    | Description               |
-| --------- | ------- | ------------------------- |
-| operator  | address | The operator address      |
-| serviceId | uint64  | The service ID            |
-| jobCallId | uint64  | The job call ID           |
-| success   | bool    | Whether the job succeeded |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | The operator address |
+| serviceId | uint64 | The service ID |
+| jobCallId | uint64 | The job call ID |
+| success | bool | Whether the job succeeded |
 
 #### recordSlash
 
@@ -108,11 +108,11 @@ Record operator slashing (negative metric)
 
 ##### Parameters
 
-| Name      | Type    | Description          |
-| --------- | ------- | -------------------- |
-| operator  | address | The operator address |
-| serviceId | uint64  | The service ID       |
-| amount    | uint256 | Amount slashed       |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | The operator address |
+| serviceId | uint64 | The service ID |
+| amount | uint256 | Amount slashed |
 
 #### recordServiceCreated
 
@@ -124,11 +124,11 @@ Record service creation/activation
 
 ##### Parameters
 
-| Name          | Type    | Description         |
-| ------------- | ------- | ------------------- |
-| serviceId     | uint64  | The service ID      |
-| blueprintId   | uint64  | The blueprint ID    |
-| owner         | address | The service owner   |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| serviceId | uint64 | The service ID |
+| blueprintId | uint64 | The blueprint ID |
+| owner | address | The service owner |
 | operatorCount | uint256 | Number of operators |
 
 #### recordServiceTerminated
@@ -141,10 +141,10 @@ Record service termination
 
 ##### Parameters
 
-| Name      | Type    | Description                        |
-| --------- | ------- | ---------------------------------- |
-| serviceId | uint64  | The service ID                     |
-| duration  | uint256 | How long the service ran (seconds) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| serviceId | uint64 | The service ID |
+| duration | uint256 | How long the service ran (seconds) |
 
 #### recordJobCall
 
@@ -156,11 +156,11 @@ Record a job call on a service
 
 ##### Parameters
 
-| Name      | Type    | Description           |
-| --------- | ------- | --------------------- |
-| serviceId | uint64  | The service ID        |
-| caller    | address | Who initiated the job |
-| jobCallId | uint64  | The job call ID       |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| serviceId | uint64 | The service ID |
+| caller | address | Who initiated the job |
+| jobCallId | uint64 | The job call ID |
 
 #### recordPayment
 
@@ -172,12 +172,12 @@ Record fee payment for a service
 
 ##### Parameters
 
-| Name      | Type    | Description                               |
-| --------- | ------- | ----------------------------------------- |
-| payer     | address | Who paid the fee                          |
-| serviceId | uint64  | The service ID                            |
-| token     | address | The payment token (address(0) for native) |
-| amount    | uint256 | The amount paid                           |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| payer | address | Who paid the fee |
+| serviceId | uint64 | The service ID |
+| token | address | The payment token (address(0) for native) |
+| amount | uint256 | The amount paid |
 
 #### recordBlueprintCreated
 
@@ -189,10 +189,10 @@ Record blueprint creation
 
 ##### Parameters
 
-| Name        | Type    | Description           |
-| ----------- | ------- | --------------------- |
-| blueprintId | uint64  | The blueprint ID      |
-| developer   | address | The developer address |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| blueprintId | uint64 | The blueprint ID |
+| developer | address | The developer address |
 
 #### recordBlueprintRegistration
 
@@ -204,48 +204,8 @@ Record operator registration to a blueprint
 
 ##### Parameters
 
-| Name        | Type    | Description          |
-| ----------- | ------- | -------------------- |
-| blueprintId | uint64  | The blueprint ID     |
-| operator    | address | The operator address |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| blueprintId | uint64 | The blueprint ID |
+| operator | address | The operator address |
 
-#### recordServiceExposure
-
-```solidity
-function recordServiceExposure(address delegator, address operator, uint64 serviceId, uint64 blueprintId, uint256 usdExposure, uint256 durationSeconds) external
-```
-
-Record restaker service exposure for inflation scoring (per-delegator)
-
-_Called when a delegator materializes their exposure score_
-
-##### Parameters
-
-| Name            | Type    | Description                                |
-| --------------- | ------- | ------------------------------------------ |
-| delegator       | address | The delegator earning exposure             |
-| operator        | address | The operator the delegator is delegated to |
-| serviceId       | uint64  | The service the exposure is for            |
-| blueprintId     | uint64  | The blueprint the service is running       |
-| usdExposure     | uint256 | The USD value of exposed stake             |
-| durationSeconds | uint256 | The time period this exposure covers       |
-
-#### recordOperatorServiceExposure
-
-```solidity
-function recordOperatorServiceExposure(address operator, uint64 serviceId, uint64 blueprintId, uint256 totalUsdExposure, uint256 durationSeconds) external
-```
-
-Record aggregate operator exposure for a service (gas-efficient)
-
-_Called by ServiceFeeDistributor during drip - records total exposure, not per-delegator_
-
-##### Parameters
-
-| Name             | Type    | Description                                              |
-| ---------------- | ------- | -------------------------------------------------------- |
-| operator         | address | The operator                                             |
-| serviceId        | uint64  | The service the exposure is for                          |
-| blueprintId      | uint64  | The blueprint the service is running                     |
-| totalUsdExposure | uint256 | Total USD value of all exposed stake (All + Fixed modes) |
-| durationSeconds  | uint256 | The time period this exposure covers                     |

@@ -11,14 +11,13 @@ Source: https://github.com/tangle-network/tnt-core/blob/v2/src/v2/interfaces/IRe
 
 Abstract interface for restaking/shared security protocols
 
-\_Implement this to integrate with native staking, EigenLayer, Symbiotic, etc.
+_Implement this to integrate with native staking, EigenLayer, Symbiotic, etc.
 
 Design principles:
-
 - Minimal interface - only what Tangle core needs
 - Read-heavy - most operations are queries
 - Write-light - only slash() modifies state
-- No assumptions about underlying implementation\_
+- No assumptions about underlying implementation_
 
 #### Functions
 
@@ -32,15 +31,15 @@ Check if an address is a registered operator
 
 ##### Parameters
 
-| Name     | Type    | Description          |
-| -------- | ------- | -------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | operator | address | The address to check |
 
 ##### Return Values
 
-| Name | Type | Description                    |
-| ---- | ---- | ------------------------------ |
-| [0]  | bool | True if registered as operator |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | True if registered as operator |
 
 #### isOperatorActive
 
@@ -52,15 +51,15 @@ Check if an operator is currently active (not leaving, not slashed out)
 
 ##### Parameters
 
-| Name     | Type    | Description          |
-| -------- | ------- | -------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | operator | address | The address to check |
 
 ##### Return Values
 
-| Name | Type | Description    |
-| ---- | ---- | -------------- |
-| [0]  | bool | True if active |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | True if active |
 
 #### getOperatorStake
 
@@ -72,15 +71,15 @@ Get an operator's total stake (self-stake + delegations)
 
 ##### Parameters
 
-| Name     | Type    | Description          |
-| -------- | ------- | -------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | operator | address | The operator address |
 
 ##### Return Values
 
-| Name | Type    | Description                        |
-| ---- | ------- | ---------------------------------- |
-| [0]  | uint256 | Total stake amount in native units |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | Total stake amount in native units |
 
 #### getOperatorSelfStake
 
@@ -92,15 +91,15 @@ Get an operator's self-stake only
 
 ##### Parameters
 
-| Name     | Type    | Description          |
-| -------- | ------- | -------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | operator | address | The operator address |
 
 ##### Return Values
 
-| Name | Type    | Description       |
-| ---- | ------- | ----------------- |
-| [0]  | uint256 | Self-stake amount |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | Self-stake amount |
 
 #### getOperatorDelegatedStake
 
@@ -112,15 +111,15 @@ Get total amount delegated to an operator
 
 ##### Parameters
 
-| Name     | Type    | Description          |
-| -------- | ------- | -------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | operator | address | The operator address |
 
 ##### Return Values
 
-| Name | Type    | Description            |
-| ---- | ------- | ---------------------- |
-| [0]  | uint256 | Total delegated amount |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | Total delegated amount |
 
 #### getDelegation
 
@@ -132,16 +131,16 @@ Get a delegator's delegation to a specific operator
 
 ##### Parameters
 
-| Name      | Type    | Description           |
-| --------- | ------- | --------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | delegator | address | The delegator address |
-| operator  | address | The operator address  |
+| operator | address | The operator address |
 
 ##### Return Values
 
-| Name | Type    | Description       |
-| ---- | ------- | ----------------- |
-| [0]  | uint256 | Delegation amount |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | Delegation amount |
 
 #### getTotalDelegation
 
@@ -153,15 +152,15 @@ Get a delegator's total delegations across all operators
 
 ##### Parameters
 
-| Name      | Type    | Description           |
-| --------- | ------- | --------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | delegator | address | The delegator address |
 
 ##### Return Values
 
-| Name | Type    | Description            |
-| ---- | ------- | ---------------------- |
-| [0]  | uint256 | Total delegated amount |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | Total delegated amount |
 
 #### minOperatorStake
 
@@ -173,9 +172,9 @@ Get minimum stake required to be an operator
 
 ##### Return Values
 
-| Name | Type    | Description          |
-| ---- | ------- | -------------------- |
-| [0]  | uint256 | Minimum stake amount |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | Minimum stake amount |
 
 #### meetsStakeRequirement
 
@@ -187,16 +186,16 @@ Check if operator meets a specific stake requirement
 
 ##### Parameters
 
-| Name     | Type    | Description               |
-| -------- | ------- | ------------------------- |
-| operator | address | The operator address      |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | The operator address |
 | required | uint256 | The required stake amount |
 
 ##### Return Values
 
-| Name | Type | Description                           |
-| ---- | ---- | ------------------------------------- |
-| [0]  | bool | True if operator has sufficient stake |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | True if operator has sufficient stake |
 
 #### slashForBlueprint
 
@@ -210,18 +209,18 @@ _Only affects delegators exposed to this blueprint (All mode + Fixed mode who se
 
 ##### Parameters
 
-| Name        | Type    | Description                             |
-| ----------- | ------- | --------------------------------------- |
-| operator    | address | The operator to slash                   |
-| blueprintId | uint64  | The blueprint where violation occurred  |
-| serviceId   | uint64  | The service where violation occurred    |
-| amount      | uint256 | Amount to slash                         |
-| evidence    | bytes32 | Evidence hash (IPFS or other reference) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | The operator to slash |
+| blueprintId | uint64 | The blueprint where violation occurred |
+| serviceId | uint64 | The service where violation occurred |
+| amount | uint256 | Amount to slash |
+| evidence | bytes32 | Evidence hash (IPFS or other reference) |
 
 ##### Return Values
 
-| Name          | Type    | Description                                                   |
-| ------------- | ------- | ------------------------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | actualSlashed | uint256 | The actual amount slashed (may be less if insufficient stake) |
 
 #### slashForService
@@ -236,19 +235,19 @@ _Only slashes assets the operator committed to this service, proportionally_
 
 ##### Parameters
 
-| Name        | Type                                   | Description                                                |
-| ----------- | -------------------------------------- | ---------------------------------------------------------- |
-| operator    | address                                | The operator to slash                                      |
-| blueprintId | uint64                                 | The blueprint where violation occurred                     |
-| serviceId   | uint64                                 | The service where violation occurred                       |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | The operator to slash |
+| blueprintId | uint64 | The blueprint where violation occurred |
+| serviceId | uint64 | The service where violation occurred |
 | commitments | struct Types.AssetSecurityCommitment[] | The operator's asset security commitments for this service |
-| amount      | uint256                                | Amount to slash                                            |
-| evidence    | bytes32                                | Evidence hash (IPFS or other reference)                    |
+| amount | uint256 | Amount to slash |
+| evidence | bytes32 | Evidence hash (IPFS or other reference) |
 
 ##### Return Values
 
-| Name          | Type    | Description                                                             |
-| ------------- | ------- | ----------------------------------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | actualSlashed | uint256 | The actual amount slashed (may be less if insufficient committed stake) |
 
 #### slash
@@ -263,17 +262,17 @@ _Only callable by authorized slashers (e.g., Tangle core contract)_
 
 ##### Parameters
 
-| Name      | Type    | Description                             |
-| --------- | ------- | --------------------------------------- |
-| operator  | address | The operator to slash                   |
-| serviceId | uint64  | The service where violation occurred    |
-| amount    | uint256 | Amount to slash                         |
-| evidence  | bytes32 | Evidence hash (IPFS or other reference) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | The operator to slash |
+| serviceId | uint64 | The service where violation occurred |
+| amount | uint256 | Amount to slash |
+| evidence | bytes32 | Evidence hash (IPFS or other reference) |
 
 ##### Return Values
 
-| Name          | Type    | Description                                                   |
-| ------------- | ------- | ------------------------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | actualSlashed | uint256 | The actual amount slashed (may be less if insufficient stake) |
 
 #### isSlasher
@@ -286,52 +285,15 @@ Check if an address is authorized to call slash()
 
 ##### Parameters
 
-| Name    | Type    | Description          |
-| ------- | ------- | -------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | account | address | The address to check |
 
 ##### Return Values
 
-| Name | Type | Description        |
-| ---- | ---- | ------------------ |
-| [0]  | bool | True if authorized |
-
-#### notifyRewardForBlueprint
-
-```solidity
-function notifyRewardForBlueprint(address operator, uint64 blueprintId, uint64 serviceId, uint256 amount) external
-```
-
-Notify the restaking module of rewards from a specific blueprint
-
-_Routes rewards to appropriate pools based on delegator blueprint exposure_
-
-##### Parameters
-
-| Name        | Type    | Description                      |
-| ----------- | ------- | -------------------------------- |
-| operator    | address | The operator receiving rewards   |
-| blueprintId | uint64  | The blueprint generating rewards |
-| serviceId   | uint64  | The service generating rewards   |
-| amount      | uint256 | Reward amount                    |
-
-#### notifyReward
-
-```solidity
-function notifyReward(address operator, uint64 serviceId, uint256 amount) external
-```
-
-Notify the restaking module of rewards to distribute (legacy)
-
-_Called by Tangle core after service payments_
-
-##### Parameters
-
-| Name      | Type    | Description                    |
-| --------- | ------- | ------------------------------ |
-| operator  | address | The operator receiving rewards |
-| serviceId | uint64  | The service generating rewards |
-| amount    | uint256 | Reward amount                  |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | True if authorized |
 
 #### Events
 
@@ -342,3 +304,4 @@ event OperatorSlashed(address operator, uint64 serviceId, uint256 amount, bytes3
 ```
 
 Emitted when an operator is slashed
+

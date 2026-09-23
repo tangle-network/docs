@@ -21,6 +21,80 @@ _Receives delegation-change hooks from MultiAssetDelegation and fee-distribution
 function distributeServiceFee(uint64 serviceId, uint64 blueprintId, address operator, address paymentToken, uint256 amount) external payable
 ```
 
+#### distributeInflationReward
+
+```solidity
+function distributeInflationReward(uint64 serviceId, uint64 blueprintId, address operator, address paymentToken, uint256 amount) external payable
+```
+
+Distribute inflation-funded restaker rewards using service exposure weights
+
+_Intended for InflationPool; rewards are paid in the provided token (TNT)._
+
+#### claimFor
+
+```solidity
+function claimFor(address token, address operator, struct Types.Asset asset) external returns (uint256 amount)
+```
+
+Claim rewards for a specific delegator position and token
+
+#### claimAll
+
+```solidity
+function claimAll(address token) external returns (uint256 totalAmount)
+```
+
+Claim all pending rewards across all positions for a token
+
+#### claimAllBatch
+
+```solidity
+function claimAllBatch(address[] tokens) external returns (uint256[] amounts)
+```
+
+Claim all pending rewards for multiple tokens
+
+#### pendingRewards
+
+```solidity
+function pendingRewards(address delegator, address token) external view returns (uint256 pending)
+```
+
+Preview pending rewards for a delegator across all positions for a token
+
+#### delegatorOperators
+
+```solidity
+function delegatorOperators(address delegator) external view returns (address[] operators)
+```
+
+Return all operators a delegator has positions with
+
+#### delegatorAssets
+
+```solidity
+function delegatorAssets(address delegator, address operator) external view returns (bytes32[] assetHashes)
+```
+
+Return all asset hashes a delegator has positions for with an operator
+
+#### getPosition
+
+```solidity
+function getPosition(address delegator, address operator, bytes32 assetHash) external view returns (uint8 mode, uint256 principal, uint256 score)
+```
+
+Return a delegator's position details
+
+#### operatorRewardTokens
+
+```solidity
+function operatorRewardTokens(address operator) external view returns (address[] tokens)
+```
+
+Return reward tokens ever distributed for an operator
+
 #### onDelegationChanged
 
 ```solidity
@@ -45,6 +119,16 @@ function onBlueprintRemoved(address delegator, address operator, struct Types.As
 function getPoolScore(address operator, uint64 blueprintId, struct Types.Asset asset) external view returns (uint256 allScore, uint256 fixedScore)
 ```
 
+#### getOperatorServiceUsdExposure
+
+```solidity
+function getOperatorServiceUsdExposure(uint64 serviceId, uint64 blueprintId, address operator) external view returns (uint256 totalUsdExposure)
+```
+
+Get USD-weighted exposure for an operator/service
+
+_Returns total USD exposure across All+Fixed pools for the service._
+
 #### onOperatorLeaving
 
 ```solidity
@@ -67,7 +151,8 @@ _Cancels streaming payments and refunds remaining amounts to the service owner_
 
 ##### Parameters
 
-| Name            | Type    | Description                                                   |
-| --------------- | ------- | ------------------------------------------------------------- |
-| serviceId       | uint64  | The terminated service ID                                     |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| serviceId | uint64 | The terminated service ID |
 | refundRecipient | address | Where to send the remaining payment (typically service owner) |
+

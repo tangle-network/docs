@@ -9,7 +9,7 @@ This page is the shortest path to becoming an operator on Tangle: register in re
 
 ## What You Need
 
-- An **EVM wallet** funded for gas and the operator bond/self-stake.
+- An **EVM wallet** funded for gas and the operator self-stake.
 - A host that can run your target blueprint runtimes (native, containers, or VM sandbox).
 - `foundry` (`cast`) for on-chain calls.
 - The Blueprint SDK CLI (`cargo-tangle`) for heartbeats and operational helpers.
@@ -47,7 +47,7 @@ cast call "$RESTAKING_CONTRACT" "minOperatorStake()(uint256)" --rpc-url "$RPC_UR
 cast send "$RESTAKING_CONTRACT" "registerOperator()" \
   --rpc-url "$RPC_URL" \
   --private-key "$PRIVATE_KEY" \
-  --value "<BOND_AMOUNT_WEI>"
+  --value "<STAKE_AMOUNT_WEI>"
 ```
 
 ## 2) Opt Into Blueprints for Delegation (Recommended)
