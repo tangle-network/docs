@@ -1,0 +1,158 @@
+---
+title: Architecture
+description: How the Tangle production agent runtime works -- from SDK client through the orchestration layer to isolated environments with sidecars.
+---
+
+# Architecture
+
+The Tangle production agent runtime is a multi-layer system that manages isolated execution environments for AI agents, automated workflows, and programmatic development tasks. This page describes the architecture from the SDK client down to the environment internals.
+
+## System Overview
+
+```
+┌──────────────────────┐
+│   Your Application   │
+│  (SDK / CLI / UI)    │
+└──────────┬───────────┘
+           │ HTTPS + SSE
+           ▼
+┌──────────────────────┐
+│   Sandbox API        │
+│  (Auth, Routing,     │
+│   Quota, Billing)    │
+└──────────┬───────────┘
+           │
+           ▼
+┌──────────────────────┐
+│   Orchestrator       │
+│  (Scheduling,        │
+│   Provisioning,      │
+│   Lifecycle)         │
+└──────────┬───────────┘
+           │
+           ▼
+┌──────────────────────────────────────────┐
+│           Isolated Environment           │
+│  ┌────────────────┐  ┌────────────────┐  │
+│  │   Workspace    │  │    Sidecar     │  │
+│  │  (user code,   │  │  (runtime API, │  │
+│  │   git repo,    │  │   agent, bash, │  │
+│  │   tools)       │  │   files, git,  │  │
+│  │                │  │   tools, SSE)  │  │
+│  └────────────────┘  └────────────────┘  │
+└──────────────────────────────────────────┘
+```
+
+## Layers
+
+### SDK Client
+
+The `Sandbox` class is a stateless HTTP client. It authenticates requests with an API key, serializes options into JSON, and deserializes responses into typed `SandboxInstance` objects. Long-running operations (agent prompts, provisioning, batch execution) use SSE streams that the SDK consumes as async iterators.
+
+The client handles:
+- Request authentication (Bearer token from API key)
+- Timeout enforcement with client-side grace periods
+- SSE stream parsing with automatic reconnection
+- Error classification into typed error classes
+
+### Sandbox API
+
+The API layer sits between the SDK and the orchestrator. It handles:
+
+- **Authentication and authorization.** API key validation, team membership checks, secret injection.
+- **Quota enforcement.** Concurrent environment limits, compute minute tracking, credit balance checks.
+- **Request routing.** Lifecycle operations go to the orchestrator. Runtime operations (exec, prompt, files, git) are proxied to the target environment's sidecar.
+- **Billing.** Usage metering per compute-second with plan-based pricing.
+
+Runtime calls can also be routed directly to the environment using `box.direct()`, which bypasses the API proxy for lower latency. Direct mode uses the `connection.runtimeUrl` and `connection.authToken` from the environment metadata.
+
+### Orchestrator
+
+The orchestrator manages the full lifecycle of environments:
+
+1. **Scheduling.** Selects a host based on available resources and the requested driver type.
+2. **Provisioning.** Multi-step process reported via SSE events:
+   - `match` -- Find available capacity
+   - `networking` -- Configure network isolation
+   - `image-check` / `image-pull` / `image-build` -- Resolve container image
+   - `container-create` / `container-start` -- Launch the environment
+   - `health-check` -- Verify container health
+   - `runtime-ready` -- Sidecar is accepting connections
+   - `git` -- Clone repository if configured
+   - `workspace` -- Finalize workspace setup
+3. **Lifecycle management.** Stop, resume, idle timeout, max lifetime enforcement, expiration.
+4. **Snapshot coordination.** Filesystem snapshots, BYOS3 uploads, checkpoint/restore (CRIU).
+
+### Isolated Environment
+
+Each environment runs as an isolated container (or microVM, depending on the driver). Inside:
+
+**Workspace.** The `/workspace` directory contains the user's code, cloned repositories, and tool state. This is the default working directory for all operations.
+
+**Sidecar.** A process injected into every managed environment (not present in `bare` mode) that exposes a local HTTP API. The sidecar provides:
+
+| Capability | Endpoint Pattern | Description |
+|-----------|------------------|-------------|
+| Shell execution | `/terminals/commands` | Run arbitrary commands with cwd and env overrides |
+| File read/write | `/files/read`, `/files/write` | Text file operations |
+| File system | `/fs/upload`, `/fs/download`, `/fs/list` | Binary uploads, downloads, directory ops |
+| Code search | `/search` | Ripgrep-powered pattern search |
+| Git | `/git/status`, `/git/commit`, etc. | Full git operations |
+| Tools | `/tools/install`, `/tools/list` | mise-based runtime management |
+| Agent execution | `/agents/run/stream` | SSE stream of agent events |
+| Event replay | `/agents/run/:id/events` | Replay missed events after reconnection |
+
+The sidecar is the reason custom Docker images work without modification: the runtime integration is layered on top of whatever image the user provides.
+
+## Driver Model
+
+The orchestrator supports multiple infrastructure drivers that control how environments are isolated:
+
+| Driver | Isolation | Snapshot | Use Case |
+|--------|-----------|----------|----------|
+| Container (default) | Linux namespaces + cgroups | Filesystem snapshots | General purpose, fast startup |
+| Firecracker | MicroVM | CRIU checkpoint/restore | Stronger isolation, memory snapshots |
+
+The driver is selected at creation via `driver.type`. The SDK abstracts the difference: all `SandboxInstance` methods work identically regardless of driver.
+
+## Data Flow: Agent Prompt
+
+A typical `box.prompt("Fix the tests")` call flows through the system as:
+
+1. SDK serializes the prompt and opens an SSE connection to `POST /v1/sandboxes/:id/runtime/agents/run/stream`.
+2. The API authenticates the request, checks quota, and proxies to the environment's sidecar.
+3. The sidecar dispatches to the configured agent backend (OpenCode, Claude Code, Codex, etc.).
+4. The agent executes, making tool calls (bash, file read/write, search) through the sidecar's local API.
+5. Each agent event (text delta, tool call, tool result, reasoning) is emitted as an SSE event.
+6. The SDK yields events to the caller's async iterator.
+7. On `result` or `done`, the stream completes and the SDK returns `PromptResult`.
+
+If the SSE stream drops before a terminal event, the SDK reconnects via the event replay endpoint (`/agents/run/:executionId/events?lastEventId=...`), deduplicates already-seen events, and continues yielding transparently.
+
+## Data Flow: Batch Execution
+
+`client.runBatch(tasks)` sends all tasks to a single API endpoint that fans them out across multiple environments in parallel:
+
+1. SDK opens an SSE connection to `POST /v1/batch/run`.
+2. The server allocates environments (one per task) according to `scalingMode`.
+3. Each task runs independently. Per-task events stream back on the shared SSE connection.
+4. On completion, the SDK collects all `BatchTaskResult` entries and returns the aggregate `BatchResult`.
+
+The client-side deadline includes a 30-second grace period beyond the server's `timeoutMs` to account for TCP setup and SSE teardown latency.
+
+## Snapshot Architecture
+
+Snapshots capture the environment's filesystem state at a point in time. They enable:
+
+- **Checkpoint/restore workflows.** Snapshot before a risky operation, restore if it fails.
+- **Template environments.** Create a fully configured environment once, snapshot it, then create new environments from the snapshot.
+- **BYOS3.** Store snapshots in your own S3-compatible storage for compliance or cost control.
+
+When using the Firecracker driver with CRIU, checkpoints capture both filesystem and memory state, enabling sub-second restore of the full process tree.
+
+## Security Model
+
+- **Network isolation.** Environments have no network access to other environments. Outbound access can be restricted via `NetworkConfig` (block all, allow list, or expose specific ports).
+- **Authentication.** Every API request requires a valid API key. Runtime tokens are scoped to a single environment and expire.
+- **Secret management.** Secrets are encrypted at rest and injected as environment variables at runtime. They never appear in API responses or logs.
+- **Team scoping.** When `teamId` is set, the environment is accessible to team members based on their role.

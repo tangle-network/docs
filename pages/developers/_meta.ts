@@ -16,6 +16,11 @@ const meta: Meta = {
   "blueprint-auth": "Auth Proxy",
   "blueprint-qos": "Quality of Service",
   "p2p-networking": "P2P Networking",
+  "-- agent-runtime": {
+    type: "separator",
+    title: "Agent Runtime",
+  },
+  "sandbox-sdk": "Sandbox SDK",
   "-- tooling": {
     type: "separator",
     title: "Tooling",

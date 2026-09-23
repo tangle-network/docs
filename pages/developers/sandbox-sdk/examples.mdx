@@ -1,0 +1,435 @@
+---
+title: Examples
+description: Real-world usage patterns for the Tangle Sandbox SDK -- AI agent execution, code review automation, testing pipelines, multi-agent workflows, and checkpoint/restore.
+---
+
+# Examples
+
+## AI Agent Execution
+
+Run an AI coding agent against a repository to fix issues, implement features, or perform analysis.
+
+```typescript
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: process.env.SANDBOX_BASE_URL!,
+});
+
+const box = await client.create({
+  git: {
+    url: "https://github.com/org/repo.git",
+    ref: "main",
+    auth: { token: process.env.GITHUB_TOKEN },
+  },
+  tools: { node: "22" },
+});
+
+await box.waitFor("running");
+
+const result = await box.task(
+  "Find and fix all TypeScript type errors. Run the test suite after each fix to confirm nothing regresses. Commit the changes.",
+  { maxTurns: 20 },
+);
+
+if (result.success) {
+  console.log("Agent completed successfully");
+  console.log(result.response);
+
+  const status = await box.git.status();
+  if (status.ahead > 0) {
+    await box.git.push();
+  }
+}
+
+await box.delete();
+```
+
+## Automated Code Review
+
+Create an environment per pull request, run analysis, and post results.
+
+```typescript
+import { Sandbox } from "@tangle-network/sandbox";
+
+async function reviewPR(repoUrl: string, prBranch: string) {
+  const client = new Sandbox({
+    apiKey: process.env.TANGLE_API_KEY!,
+    baseUrl: process.env.SANDBOX_BASE_URL!,
+  });
+
+  const box = await client.create({
+    git: { url: repoUrl, ref: prBranch },
+    tools: { node: "22" },
+  });
+
+  await box.waitFor("running");
+
+  // Run static analysis
+  const lint = await box.exec("npx eslint . --format json");
+  const types = await box.exec("npx tsc --noEmit 2>&1");
+  const tests = await box.exec("npm test -- --reporter json");
+
+  // Get AI review
+  const review = await box.prompt(
+    `Review this branch for code quality issues. Here's the context:
+    - Lint results: ${lint.stdout.slice(0, 2000)}
+    - Type check: ${types.exitCode === 0 ? "PASS" : types.stderr.slice(0, 2000)}
+    - Tests: ${tests.exitCode === 0 ? "ALL PASS" : tests.stderr.slice(0, 2000)}
+
+    Focus on: correctness, security, performance. Be specific with file paths and line numbers.`,
+  );
+
+  await box.delete();
+
+  return {
+    lint: { exitCode: lint.exitCode, output: lint.stdout },
+    types: { exitCode: types.exitCode, output: types.stderr },
+    tests: { exitCode: tests.exitCode, output: tests.stdout },
+    review: review.response,
+  };
+}
+```
+
+## Streaming Agent Output
+
+Display agent reasoning and tool usage in real time.
+
+```typescript
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: process.env.SANDBOX_BASE_URL!,
+});
+
+const box = await client.create({ tools: { node: "22" } });
+await box.waitFor("running");
+
+for await (const event of box.streamPrompt("Explain the architecture of this codebase")) {
+  switch (event.type) {
+    case "message.part.updated": {
+      const part = event.data.part as { type?: string; text?: string };
+      if (part.type === "text" && event.data.delta) {
+        process.stdout.write(String(event.data.delta));
+      }
+      if (part.type === "reasoning" && event.data.delta) {
+        process.stderr.write(`\x1b[2m${String(event.data.delta)}\x1b[0m`);
+      }
+      break;
+    }
+    case "result":
+      console.log("\n---");
+      console.log("Tokens:", event.data.tokenUsage);
+      break;
+  }
+}
+
+await box.delete();
+```
+
+## Parallel Test Matrix
+
+Run tests across multiple configurations simultaneously using batch execution.
+
+```typescript
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: process.env.SANDBOX_BASE_URL!,
+});
+
+const nodeVersions = ["18", "20", "22"];
+const tasks = nodeVersions.map((version) => ({
+  id: `node-${version}`,
+  message: `Install Node.js ${version}, run npm ci, then npm test. Report pass/fail with counts.`,
+}));
+
+const result = await client.runBatch(tasks, {
+  timeoutMs: 600000,
+  scalingMode: "fastest",
+});
+
+console.log(`Success rate: ${result.successRate}%`);
+for (const task of result.results) {
+  const version = task.taskId.replace("node-", "");
+  const status = task.success ? "PASS" : "FAIL";
+  console.log(`  Node ${version}: ${status} (${task.durationMs}ms)`);
+  if (!task.success) {
+    console.log(`    Error: ${task.error}`);
+  }
+}
+```
+
+## Checkpoint / Restore Workflow
+
+Snapshot before a risky operation, restore if it fails.
+
+```typescript
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: process.env.SANDBOX_BASE_URL!,
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/org/repo.git" },
+  tools: { node: "22" },
+});
+await box.waitFor("running");
+
+// Set up baseline
+await box.exec("npm ci");
+const baseline = await box.exec("npm test");
+console.log(`Baseline: ${baseline.exitCode === 0 ? "PASS" : "FAIL"}`);
+
+// Snapshot the known-good state
+const snap = await box.snapshot({ tags: ["baseline", "green-tests"] });
+console.log(`Snapshot: ${snap.snapshotId}`);
+
+// Attempt a risky change
+const migration = await box.task("Migrate from Express to Hono. Update all route handlers and middleware.");
+
+// Verify
+const postMigration = await box.exec("npm test");
+if (postMigration.exitCode !== 0) {
+  console.log("Migration broke tests. Restoring from snapshot...");
+  await box.delete();
+
+  // Restore from checkpoint
+  const restored = await client.create({ fromSnapshot: snap.snapshotId });
+  await restored.waitFor("running");
+
+  const verify = await restored.exec("npm test");
+  console.log(`Restored: ${verify.exitCode === 0 ? "PASS" : "FAIL"}`);
+} else {
+  console.log("Migration succeeded");
+  await box.git.add(["."]);
+  await box.git.commit("Migrate Express to Hono");
+}
+```
+
+## Custom Image with ML Dependencies
+
+Build a custom image with pre-installed ML libraries and use it across multiple environments.
+
+```typescript
+import { Image, Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: process.env.SANDBOX_BASE_URL!,
+});
+
+// Build once
+const image = await Image.create("python:3.11-slim")
+  .python("3.11")
+  .addPackages(["torch", "transformers", "datasets", "accelerate"])
+  .addAptPackages(["ffmpeg", "libsm6", "libxext6"])
+  .withEnv({ HF_HOME: "/models", TRANSFORMERS_CACHE: "/models" })
+  .build({ client });
+
+console.log(`Image built: ${image.id} (cached: ${image.spec ? "no" : "yes"})`);
+
+// Reuse across environments
+const box = await client.create({
+  image: image.id,
+  secrets: ["HF_TOKEN"],
+  resources: { cpuCores: 4, memoryMB: 16384, diskGB: 50 },
+});
+
+await box.waitFor("running");
+
+const result = await box.exec("python -c \"import torch; print(torch.__version__)\"");
+console.log(`PyTorch: ${result.stdout.trim()}`);
+
+await box.delete();
+```
+
+## Multi-Agent Workflow
+
+Chain multiple agent sessions where each builds on the previous one's work.
+
+```typescript
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: process.env.SANDBOX_BASE_URL!,
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/org/repo.git" },
+  tools: { node: "22" },
+});
+await box.waitFor("running");
+
+// Phase 1: Analysis
+const analysis = await box.prompt(
+  "Analyze this codebase. Identify the top 3 areas that need improvement for reliability. List specific files and issues.",
+  { sessionId: "workflow-1" },
+);
+console.log("Analysis:", analysis.response);
+
+// Phase 2: Implementation (continues same session for context)
+const implementation = await box.task(
+  "Fix the issues you identified. Write tests for each fix. Do not commit yet.",
+  { sessionId: "workflow-1", maxTurns: 30 },
+);
+console.log("Implementation:", implementation.response);
+
+// Phase 3: Verification (new session, clean perspective)
+const verify = await box.prompt(
+  "Review the uncommitted changes in this repo. Check for correctness, test coverage, and edge cases. Run the full test suite.",
+  { sessionId: "workflow-verify" },
+);
+console.log("Verification:", verify.response);
+
+// Phase 4: Commit if verified
+const tests = await box.exec("npm test");
+if (tests.exitCode === 0) {
+  await box.git.add(["."]);
+  await box.git.commit("Improve reliability: fix top 3 issues with tests");
+  await box.git.push();
+  console.log("Changes committed and pushed");
+}
+
+await box.delete();
+```
+
+## Provisioning Progress Monitoring
+
+Watch environment creation with granular progress events.
+
+```typescript
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: process.env.SANDBOX_BASE_URL!,
+});
+
+const box = await client.create({
+  image: "ethereum",
+  git: { url: "https://github.com/org/solidity-project.git" },
+});
+
+const stream = box.watchProvisioning();
+for await (const event of stream) {
+  const pct = event.percent !== undefined ? ` (${event.percent}%)` : "";
+  console.log(`[${event.step}] ${event.status}${pct} -- ${event.message ?? ""}`);
+}
+
+console.log(`Environment ${box.id} is ready`);
+```
+
+## BYOS3 Snapshots
+
+Store snapshots in your own S3-compatible bucket for compliance or cost control.
+
+```typescript
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: process.env.SANDBOX_BASE_URL!,
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/org/repo.git" },
+  storage: {
+    type: "r2",
+    bucket: "agent-snapshots",
+    endpoint: `https://${process.env.CF_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: process.env.R2_ACCESS_KEY!,
+      secretAccessKey: process.env.R2_SECRET_KEY!,
+    },
+    prefix: "production/",
+  },
+});
+
+await box.waitFor("running");
+
+// Do work...
+await box.exec("npm ci && npm run build");
+
+// Snapshot goes to your R2 bucket
+const snap = await box.snapshot({ tags: ["build-complete"] });
+console.log(`Snapshot ${snap.snapshotId} stored in R2`);
+
+// List snapshots from your storage
+const snapshots = await box.listSnapshots();
+for (const s of snapshots) {
+  console.log(`  ${s.snapshotId}: ${s.tags.join(", ")} (${s.createdAt})`);
+}
+```
+
+## SSH Debugging Session
+
+Create an environment with SSH access for interactive debugging alongside programmatic control.
+
+```typescript
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: process.env.SANDBOX_BASE_URL!,
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/org/repo.git" },
+  sshEnabled: true,
+  tools: { node: "22" },
+  idleTimeoutSeconds: 3600,
+});
+
+await box.waitFor("running");
+
+// Get SSH connection info
+const ssh = await box.ssh();
+console.log(`Connect with: ssh ${ssh.username}@${ssh.host} -p ${ssh.port}`);
+
+// Programmatic setup while SSH is available for debugging
+await box.exec("npm ci");
+await box.exec("npm run dev &");
+
+console.log("Dev server running. SSH in to debug. Environment will idle-timeout in 1 hour.");
+// Environment stays alive for interactive SSH use
+```
+
+## Secrets Management
+
+Store and inject secrets securely across environments.
+
+```typescript
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: process.env.SANDBOX_BASE_URL!,
+});
+
+// Create secrets (once)
+await client.secrets.create("GITHUB_TOKEN", process.env.GITHUB_TOKEN!);
+await client.secrets.create("DATABASE_URL", process.env.DATABASE_URL!);
+
+// Use in environments
+const box = await client.create({
+  secrets: ["GITHUB_TOKEN", "DATABASE_URL"],
+  tools: { node: "22" },
+});
+await box.waitFor("running");
+
+// Secrets are injected as env vars
+const result = await box.exec("node -e \"console.log(!!process.env.GITHUB_TOKEN)\"");
+console.log(`GITHUB_TOKEN available: ${result.stdout.trim()}`); // true
+
+// Rotate a secret
+await client.secrets.update("GITHUB_TOKEN", "ghp_new_token_value");
+
+await box.delete();
+```

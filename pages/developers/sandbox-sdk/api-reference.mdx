@@ -1,0 +1,934 @@
+---
+title: API Reference
+description: Complete API reference for @tangle-network/sandbox covering the client, sandbox instances, image builder, batch execution, event streaming, and collaboration.
+---
+
+# API Reference
+
+## Sandbox Client
+
+The `Sandbox` class (aliased as `SandboxClient`) is the entry point for all SDK operations.
+
+```typescript
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: "sk_sandbox_...",
+  baseUrl: "https://your-sandbox-api.example.com",
+  timeoutMs: 30000, // optional, default 30s
+});
+```
+
+### `SandboxClientConfig`
+
+```typescript
+interface SandboxClientConfig {
+  apiKey: string;     // Must start with sk_sandbox_
+  baseUrl: string;    // Sandbox API base URL
+  timeoutMs?: number; // Request timeout in ms (default: 30000)
+}
+```
+
+---
+
+### `client.create(options?)`
+
+Create a new isolated environment. Returns a `SandboxInstance`.
+
+```typescript
+const box = await client.create({
+  name: "my-project",
+  image: "universal",
+  git: {
+    url: "https://github.com/user/repo.git",
+    ref: "main",
+    depth: 1,
+    auth: { token: process.env.GITHUB_TOKEN },
+  },
+  tools: { node: "22", python: "3.12" },
+  backend: { type: "opencode" },
+  env: { NODE_ENV: "development" },
+  resources: { cpuCores: 2, memoryMB: 4096, diskGB: 20 },
+  sshEnabled: true,
+  maxLifetimeSeconds: 3600,
+  idleTimeoutSeconds: 900,
+  secrets: ["HF_TOKEN", "AWS_ACCESS_KEY"],
+  metadata: { team: "platform" },
+  teamId: "team_abc",
+});
+```
+
+#### `CreateSandboxOptions`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | `string` | Human-readable name |
+| `image` | `string` | Image or environment name. Simple names (e.g. `"universal"`) resolve as environments; full paths (e.g. `"python:3.12-slim"`) are Docker images. |
+| `environment` | `string` | Explicit environment name. Takes precedence over `image`. |
+| `bare` | `boolean` | If `true`, no sidecar. Only `exec()` and lifecycle methods. Default `false`. |
+| `git` | `GitConfig` | Repository to clone during provisioning. |
+| `tools` | `ToolsConfig` | Tool versions to pre-install via mise (e.g. `{ node: "22" }`). |
+| `backend` | `BackendConfig` | AI agent backend selection (`opencode`, `claude-code`, `codex`, `amp`, `factory-droids`). |
+| `driver` | `DriverConfig` | Infrastructure driver (e.g. `{ type: "firecracker", enableCriu: true }`). |
+| `permissions` | `SandboxPermissionsConfig` | Access control and initial users. |
+| `network` | `NetworkConfig` | Network security (block outbound, allow lists, pre-exposed ports). |
+| `env` | `Record<string, string>` | Environment variables injected into the environment. |
+| `resources` | `SandboxResources` | CPU cores, memory MB, disk GB limits. |
+| `sshEnabled` | `boolean` | Enable SSH access. Default `false`. |
+| `sshPublicKey` | `string` | Custom SSH public key. |
+| `webTerminalEnabled` | `boolean` | Enable browser terminal. Default `false`. |
+| `maxLifetimeSeconds` | `number` | Auto-delete after this duration. Default `3600`. |
+| `idleTimeoutSeconds` | `number` | Suspend after inactivity. Default `900`. |
+| `storage` | `StorageConfig` | BYOS3 configuration for snapshot storage. |
+| `fromSnapshot` | `string` | Restore from a snapshot ID at creation. |
+| `fromSandboxId` | `string` | Source sandbox for the snapshot. |
+| `secrets` | `string[]` | Secret names to inject as env vars (created via `client.secrets`). |
+| `metadata` | `Record<string, unknown>` | Arbitrary metadata. |
+| `teamId` | `string` | Share with a team. |
+
+---
+
+### `client.list(options?)`
+
+List environments with optional filtering and pagination.
+
+```typescript
+const running = await client.list({ status: "running" });
+const page = await client.list({ status: ["running", "stopped"], limit: 10, offset: 0 });
+```
+
+#### `ListSandboxOptions`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `status` | `SandboxStatus \| SandboxStatus[]` | Filter by status |
+| `limit` | `number` | Max results |
+| `offset` | `number` | Pagination offset |
+
+---
+
+### `client.get(id)`
+
+Retrieve a single environment by ID. Returns `SandboxInstance | null`.
+
+```typescript
+const box = await client.get("sandbox_abc123");
+```
+
+---
+
+### `client.usage()`
+
+Get account usage statistics.
+
+```typescript
+const usage = await client.usage();
+// { computeMinutes, activeSandboxes, totalSandboxes, periodStart, periodEnd }
+```
+
+---
+
+### `client.secrets`
+
+Manage encrypted secrets that can be injected into environments.
+
+```typescript
+await client.secrets.create("HF_TOKEN", "hf_xxx");
+const secrets = await client.secrets.list();     // SecretInfo[]
+const value = await client.secrets.get("HF_TOKEN");
+await client.secrets.update("HF_TOKEN", "hf_new");
+await client.secrets.delete("HF_TOKEN");
+```
+
+---
+
+### `client.environments`
+
+Discover available pre-built environments.
+
+```typescript
+const envs = await client.environments.list();
+// [{ id: "universal", description: "...", version: "..." }]
+```
+
+---
+
+### `client.teams`
+
+Team management for shared environments.
+
+```typescript
+const teams = await client.teams.list();
+await client.teams.invite(teams[0].id, { email: "alice@example.com", role: "member" });
+```
+
+---
+
+## SandboxInstance
+
+Returned by `client.create()`, `client.get()`, and `client.list()`. Represents a single environment.
+
+### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `id` | `string` | Unique identifier |
+| `name` | `string \| undefined` | Human-readable name |
+| `status` | `SandboxStatus` | `"pending"` \| `"provisioning"` \| `"running"` \| `"stopped"` \| `"failed"` \| `"expired"` |
+| `connection` | `SandboxConnection \| undefined` | Runtime URL, auth token, SSH, web terminal |
+| `metadata` | `Record<string, unknown>` | Custom metadata |
+| `createdAt` | `Date` | Creation timestamp |
+| `startedAt` | `Date \| undefined` | When environment started running |
+| `lastActivityAt` | `Date \| undefined` | Last activity timestamp |
+| `expiresAt` | `Date \| undefined` | Expiration timestamp |
+| `error` | `string \| undefined` | Error message if status is `"failed"` |
+| `url` | `string \| undefined` | Web terminal URL |
+
+---
+
+### Command Execution
+
+#### `box.exec(command, options?)`
+
+Execute a shell command in the environment.
+
+```typescript
+const result = await box.exec("npm test", {
+  cwd: "/workspace",
+  env: { CI: "true" },
+  timeoutMs: 60000,
+});
+
+console.log(result.exitCode); // 0
+console.log(result.stdout);
+console.log(result.stderr);
+```
+
+**Returns:** `ExecResult` -- `{ exitCode: number, stdout: string, stderr: string }`
+
+---
+
+### Agent Execution
+
+#### `box.prompt(message, options?)`
+
+Send a prompt to the AI agent. Blocks until the agent finishes.
+
+```typescript
+const result = await box.prompt("Fix the failing tests", {
+  sessionId: "session-1",
+  model: "anthropic/claude-sonnet-4-20250514",
+  backend: { type: "opencode" },
+  timeoutMs: 120000,
+});
+
+console.log(result.success);
+console.log(result.response);
+console.log(result.usage); // { inputTokens, outputTokens }
+console.log(result.durationMs);
+```
+
+Multimodal input is supported via `PromptInputPart[]`:
+
+```typescript
+const result = await box.prompt([
+  { type: "text", text: "What's in this screenshot?" },
+  { type: "image", path: "/workspace/screenshot.png" },
+]);
+```
+
+**Returns:** `PromptResult`
+
+```typescript
+interface PromptResult {
+  success: boolean;
+  response?: string;
+  error?: string;
+  traceId?: string;
+  durationMs: number;
+  usage?: { inputTokens: number; outputTokens: number };
+}
+```
+
+#### `box.streamPrompt(message, options?)`
+
+Stream agent events in real time. Automatically reconnects if the SSE stream drops before a terminal event.
+
+```typescript
+for await (const event of box.streamPrompt("Explain this codebase")) {
+  switch (event.type) {
+    case "message.part.updated": {
+      const part = event.data.part as { type?: string; text?: string };
+      if (part.type === "text" && event.data.delta) {
+        process.stdout.write(String(event.data.delta));
+      }
+      if (part.type === "reasoning" && event.data.delta) {
+        process.stderr.write(`[thinking] ${String(event.data.delta)}`);
+      }
+      break;
+    }
+    case "result":
+      console.log("\nFinal:", event.data.finalText);
+      break;
+    case "done":
+      break;
+  }
+}
+```
+
+**Yields:** `SandboxEvent` -- `{ type: string, data: Record<string, unknown>, id?: string }`
+
+#### `box.task(message, options?)`
+
+Run a multi-turn agent task. The agent works autonomously until completion.
+
+```typescript
+const result = await box.task("Set up a REST API with auth", {
+  maxTurns: 20,
+  sessionId: "task-session",
+});
+
+console.log(result.turnsUsed);
+console.log(result.response);
+console.log(result.sessionId); // reuse for follow-up
+```
+
+**Returns:** `TaskResult` (extends `PromptResult`)
+
+```typescript
+interface TaskResult extends PromptResult {
+  turnsUsed: number;
+  sessionId: string;
+}
+```
+
+#### `box.streamTask(message, options?)`
+
+Stream events from a multi-turn task.
+
+```typescript
+for await (const event of box.streamTask("Build a CLI tool")) {
+  if (event.type === "task.start") console.log("Task started");
+  if (event.type === "task.complete") console.log("Task done");
+  // Plus all standard agent events
+}
+```
+
+---
+
+### File Operations
+
+#### `box.read(path)`
+
+Read a file. Relative paths resolve from the workspace root.
+
+```typescript
+const content = await box.read("src/index.ts");
+const absolute = await box.read("/tmp/output.json");
+```
+
+#### `box.write(path, content)`
+
+Write content to a file.
+
+```typescript
+await box.write("src/fix.ts", "export const fix = () => {}");
+await box.write("/tmp/config.json", JSON.stringify(config));
+```
+
+#### `box.fs`
+
+Enhanced file system operations for binary files, directories, and metadata.
+
+```typescript
+// Upload and download
+await box.fs.upload("./model.bin", "/workspace/models/model.bin");
+await box.fs.download("/workspace/results.zip", "./results.zip");
+
+// Directory operations
+await box.fs.uploadDir("./project", "/workspace/project");
+await box.fs.downloadDir("/workspace/output", "./output");
+const files = await box.fs.list("/workspace");
+
+// Metadata
+const exists = await box.fs.exists("/workspace/config.json");
+const info = await box.fs.stat("/workspace/config.json");
+
+// Management
+await box.fs.mkdir("/workspace/output", { recursive: true });
+await box.fs.delete("/workspace/temp", { recursive: true });
+```
+
+---
+
+### Code Search
+
+#### `box.search(pattern, options?)`
+
+Search files using ripgrep. Returns an async iterator.
+
+```typescript
+for await (const match of box.search("TODO:", { glob: "**/*.ts" })) {
+  console.log(`${match.path}:${match.line}: ${match.text}`);
+}
+```
+
+#### `SearchOptions`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `glob` | `string` | Glob pattern to filter files |
+| `cwd` | `string` | Search directory (default: workspace root) |
+| `maxResults` | `number` | Limit results |
+| `ignoreCase` | `boolean` | Case-insensitive search |
+| `context` | `number` | Lines of context around matches |
+
+#### `SearchMatch`
+
+```typescript
+interface SearchMatch {
+  path: string;     // Relative file path
+  line: number;     // 1-indexed line number
+  column: number;   // 1-indexed column
+  text: string;     // Matching line content
+  before?: string[];
+  after?: string[];
+}
+```
+
+---
+
+### Git Operations
+
+#### `box.git`
+
+Full git capability object for repository operations.
+
+```typescript
+// Status
+const status = await box.git.status();
+// { branch, head, isDirty, ahead, behind, staged, modified, untracked }
+
+// Log
+const commits = await box.git.log(20);
+// [{ sha, shortSha, message, author, email, date }]
+
+// Diff
+const diff = await box.git.diff("HEAD~3");
+// { files: [{ path, status, additions, deletions }], additions, deletions, raw }
+
+// Stage, commit, push
+await box.git.add(["src/fix.ts"]);
+const commit = await box.git.commit("Fix bug");
+await box.git.push();
+
+// Pull
+await box.git.pull({ rebase: true });
+
+// Branches
+const branches = await box.git.branches();
+await box.git.checkout("feature-branch", { create: true });
+```
+
+---
+
+### Tool Management
+
+#### `box.tools`
+
+Manage language runtimes via mise.
+
+```typescript
+// Install
+await box.tools.install("node", "22");
+await box.tools.install("python", "3.12");
+
+// Activate for session
+await box.tools.use("node", "22");
+
+// List installed
+const tools = await box.tools.list();
+// [{ name: "node", version: "22.0.0", path: "...", active: true }]
+
+// Run with specific tool
+const result = await box.tools.run("python", ["-c", "print('hello')"]);
+```
+
+---
+
+### Snapshots
+
+#### `box.snapshot(options?)`
+
+Create a point-in-time snapshot of the environment state.
+
+```typescript
+const snapshot = await box.snapshot({
+  tags: ["v1.0", "stable"],
+  paths: ["/workspace"],
+});
+
+console.log(snapshot.snapshotId);
+console.log(snapshot.sizeBytes);
+```
+
+#### `box.listSnapshots()`
+
+```typescript
+const snapshots = await box.listSnapshots();
+for (const snap of snapshots) {
+  console.log(`${snap.snapshotId}: ${snap.createdAt} [${snap.tags.join(", ")}]`);
+}
+```
+
+#### Restore from snapshot
+
+```typescript
+const restored = await client.create({ fromSnapshot: snapshot.snapshotId });
+```
+
+#### BYOS3 (Bring Your Own S3)
+
+Store snapshots in your own S3-compatible storage (AWS S3, GCS, Cloudflare R2).
+
+```typescript
+const box = await client.create({
+  storage: {
+    type: "s3",
+    bucket: "my-snapshots",
+    region: "us-east-1",
+    credentials: {
+      accessKeyId: "AKIA...",
+      secretAccessKey: "...",
+    },
+    prefix: "sandbox-snapshots/",
+  },
+});
+
+// Snapshots go to your bucket
+const snap = await box.snapshot({ tags: ["production"] });
+```
+
+---
+
+### SSH Access
+
+#### `box.ssh()`
+
+Get SSH credentials for direct access. Requires `sshEnabled: true` at creation.
+
+```typescript
+const ssh = await box.ssh();
+// { host: string, port: number, username: string }
+
+console.log(`ssh ${ssh.username}@${ssh.host} -p ${ssh.port}`);
+```
+
+---
+
+### Lifecycle Methods
+
+```typescript
+// Stop (preserves state, can be resumed)
+await box.stop();
+
+// Resume a stopped environment
+await box.resume();
+
+// Delete (permanent, destroys all state)
+await box.delete();
+
+// Refresh status from server
+await box.refresh();
+
+// Wait for a target status
+await box.waitFor("running", { timeoutMs: 60000 });
+
+// Wait with provisioning progress
+await box.waitFor("running", {
+  onProgress: (event) => {
+    console.log(`[${event.step}] ${event.status} -- ${event.message}`);
+  },
+});
+```
+
+#### `box.watchProvisioning()`
+
+Stream granular provisioning progress events.
+
+```typescript
+const stream = box.watchProvisioning();
+for await (const event of stream) {
+  console.log(`[${event.step}] ${event.status} -- ${event.message}`);
+  if (event.percent !== undefined) {
+    updateProgressBar(event.percent);
+  }
+}
+```
+
+Provisioning steps: `match`, `networking`, `git`, `host-select`, `storage`, `image-check`, `image-pull`, `image-build`, `container-create`, `container-start`, `health-check`, `runtime-ready`, `workspace`.
+
+---
+
+### Event Streaming
+
+#### `box.events(options?)`
+
+Subscribe to lifecycle and activity events via SSE.
+
+```typescript
+const controller = new AbortController();
+
+for await (const event of box.events({ signal: controller.signal })) {
+  console.log(`Event: ${event.type}`, event.data);
+}
+```
+
+Filter to specific event types:
+
+```typescript
+for await (const event of box.events({
+  eventTypes: ["provision_progress", "provision_complete"],
+})) {
+  // Only matching events yielded
+}
+```
+
+---
+
+### Collaboration
+
+#### `box.collaborate(path, options?)`
+
+Bootstrap a real-time collaboration session for a file. Returns WebSocket connection info for Hocuspocus/Yjs integration.
+
+```typescript
+const collab = await box.collaborate("src/index.ts", { access: "write" });
+// {
+//   documentId: string,
+//   transport: { websocketUrl: string, token: string, expiresAt: number },
+//   permissions: { access: "read" | "write", canSnapshot: boolean }
+// }
+```
+
+#### `box.refreshCollaborationToken(documentId, currentToken)`
+
+Refresh an expiring collaboration token. Access level is preserved (cannot be escalated).
+
+```typescript
+const refreshed = await box.refreshCollaborationToken(
+  collab.documentId,
+  collab.transport.token,
+);
+// { token: string, expiresAt: number, access: "read" | "write" }
+```
+
+---
+
+### Direct Runtime Access
+
+#### `box.direct()`
+
+Create a direct-runtime view. Runtime methods (`exec`, `prompt`, file ops, git) bypass the API and talk to the environment runtime directly. Lifecycle methods still route through the API client.
+
+```typescript
+const directBox = box.direct();
+const result = await directBox.exec("npm test");
+```
+
+Requires the environment to have a `connection.runtimeUrl`. Throws `StateError` otherwise.
+
+---
+
+## ImageBuilder
+
+Build custom container images with a chainable API.
+
+```typescript
+import { Image, Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({ apiKey: "...", baseUrl: "..." });
+
+const image = await Image.create("python:3.11-slim")
+  .python("3.11")
+  .addPackages(["numpy", "pandas", "torch"])
+  .addAptPackages(["ffmpeg", "libsm6"])
+  .addCommands(["pip install -r /workspace/requirements.txt"])
+  .withEnv({ HF_HOME: "/models" })
+  .withSecrets(["HF_TOKEN"])
+  .build({ client });
+
+const box = await client.create({ image: image.id });
+```
+
+### `Image.create(baseImage?)`
+
+Start building from a base image. Default: `"ubuntu:22.04"`.
+
+### `Image.fromId(imageId)`
+
+Reference an existing image by its content-addressed ID.
+
+```typescript
+const image = Image.fromId("sha256:abc123...");
+```
+
+### `Image.fromDockerfile(dockerfile, context?)`
+
+Build from a Dockerfile path or inline content.
+
+```typescript
+const builder = Image.fromDockerfile("./Dockerfile", "./");
+```
+
+### Builder Methods
+
+All builder methods return `this` for chaining.
+
+| Method | Description |
+|--------|-------------|
+| `.python(version)` | Set Python version |
+| `.addPackages(packages)` | Add pip packages |
+| `.addPackagesFromFile(path)` | Install from requirements.txt |
+| `.addCommands(commands)` | Run shell commands during build |
+| `.addAptPackages(packages)` | Install system packages via apt-get |
+| `.withEnv(env)` | Set environment variables |
+| `.withSecrets(names)` | Inject secrets during build |
+| `.withConda(config)` | Configure conda environment |
+| `.withWorkdir(path)` | Set working directory |
+| `.withUser(user)` | Set runtime user |
+| `.withBuildArgs(args)` | Set build arguments |
+| `.withLabels(labels)` | Set image labels |
+| `.build(options)` | Build the image. Returns `Image`. |
+
+### `ImageBuildResult`
+
+```typescript
+interface ImageBuildResult {
+  id: string;          // Content-addressed image ID
+  tag: string;
+  size: number;        // Bytes
+  buildTimeMs: number;
+  cached: boolean;
+  createdAt: Date;
+  spec: ImageSpec;
+  digest: string;
+}
+```
+
+### Dockerfile Generation
+
+Generate a Dockerfile from a spec without building:
+
+```typescript
+import { generateDockerfile } from "@tangle-network/sandbox";
+
+const dockerfile = generateDockerfile({
+  baseImage: "python:3.11-slim",
+  pythonVersion: "3.11",
+  packages: ["torch", "transformers"],
+  commands: ["apt-get update && apt-get install -y ffmpeg"],
+});
+```
+
+---
+
+## Batch Execution
+
+### `client.runBatch(tasks, options?)`
+
+Execute tasks across multiple environments in parallel.
+
+```typescript
+const result = await client.runBatch(
+  [
+    { id: "lint", message: "Run linting and fix issues" },
+    { id: "test", message: "Run the test suite" },
+    { id: "audit", message: "Audit for security vulnerabilities" },
+  ],
+  {
+    timeoutMs: 300000,
+    scalingMode: "balanced",
+    backend: { type: "opencode" },
+    signal: controller.signal,
+  },
+);
+
+console.log(`${result.succeeded}/${result.totalTasks} succeeded`);
+console.log(`Success rate: ${result.successRate}%`);
+
+for (const task of result.results) {
+  console.log(`${task.taskId}: ${task.success ? "OK" : task.error}`);
+}
+```
+
+### `client.streamBatch(tasks, options?)`
+
+Stream batch events in real time.
+
+```typescript
+for await (const event of client.streamBatch(tasks, options)) {
+  console.log(`${event.type}:`, event.data);
+}
+```
+
+### Types
+
+```typescript
+interface BatchTask {
+  id: string;
+  message: string;
+  context?: Record<string, unknown>;
+  timeoutMs?: number;
+}
+
+interface BatchOptions {
+  timeoutMs?: number;                      // Default 300000 (5 min)
+  scalingMode?: "fastest" | "balanced" | "cheapest";
+  backend?: Partial<BackendConfig>;
+  persistent?: boolean;                     // Keep environments alive after
+  signal?: AbortSignal;
+}
+
+interface BatchResult {
+  totalTasks: number;
+  succeeded: number;
+  failed: number;
+  totalRetries: number;
+  successRate: number;                      // 0-100
+  results: BatchTaskResult[];
+}
+
+interface BatchTaskResult {
+  taskId: string;
+  success: boolean;
+  response?: string;
+  error?: string;
+  durationMs: number;
+  retries: number;
+  tokensUsed?: number;
+}
+```
+
+---
+
+## SSE Parser
+
+The SDK exports a shared SSE parser for consuming server-sent event streams in custom integrations.
+
+```typescript
+import { parseSSEStream } from "@tangle-network/sandbox";
+
+for await (const event of parseSSEStream(response.body)) {
+  console.log(event.type, event.data);
+}
+```
+
+---
+
+## Agent Profiles
+
+Define reusable agent configurations with inline or named profiles.
+
+```typescript
+import { defineAgentProfile, mergeAgentProfiles } from "@tangle-network/sandbox";
+
+const securityAuditor = defineAgentProfile({
+  name: "security-auditor",
+  prompt: {
+    systemPrompt: "You are a senior application security auditor.",
+    instructions: ["Prioritize authz, tenancy, and secret handling."],
+  },
+  tools: { bash: true },
+  permissions: { bash: "allow" },
+});
+
+// Merge profiles
+const combined = mergeAgentProfiles(baseProfile, securityAuditor);
+
+// Use inline
+await box.prompt("Audit the auth flow", {
+  backend: { type: "opencode", profile: securityAuditor },
+});
+```
+
+---
+
+## Collaboration Primitives
+
+Token issuance and document identity helpers for building collaborative editing on top of environments.
+
+### `issueCollaborationToken(options)`
+
+Issue a signed collaboration token for document access.
+
+```typescript
+import { issueCollaborationToken } from "@tangle-network/sandbox";
+
+const { token, expiresAt } = issueCollaborationToken({
+  productId: "my-app",
+  signingSecret: process.env.SANDBOX_SIGNING_SECRET!,
+  userId: "user_123",
+  sessionId: "sess_456",
+  projectId: "ws_123",
+  documentId: "doc_789",
+  access: "write",
+});
+```
+
+### `CollaborationClient`
+
+API client for collaboration bootstrap and token refresh.
+
+```typescript
+import { CollaborationClient } from "@tangle-network/sandbox";
+
+const collab = new CollaborationClient({
+  baseUrl: "https://app.example.com",
+  headers: () => ({ Authorization: `Bearer ${token}` }),
+});
+
+const bootstrap = await collab.bootstrap({
+  workspaceId: "ws_123",
+  relativePath: "system/operating-system.md",
+});
+```
+
+### `CollaborationFileBridge`
+
+Headless file bridge for syncing document adapters with environment files.
+
+### Document identity helpers
+
+```typescript
+import {
+  buildCollaborationDocumentId,
+  parseCollaborationDocumentId,
+  normalizeCollaborationPath,
+} from "@tangle-network/sandbox";
+
+const docId = buildCollaborationDocumentId({
+  workspaceId: "ws_123",
+  relativePath: "system/operating-system.md",
+});
+
+const parsed = parseCollaborationDocumentId(docId);
+// { workspaceId: "ws_123", relativePath: "system/operating-system.md" }
+```
+
+---
+
+## Error Classes
+
+All errors extend `SandboxError`.
+
+| Class | When |
+|-------|------|
+| `AuthError` | Invalid or missing API key |
+| `ValidationError` | Invalid request parameters |
+| `NotFoundError` | Environment or resource not found |
+| `StateError` | Environment not in expected state (has `currentState` property) |
+| `TimeoutError` | Request or operation timed out |
+| `NetworkError` | Connection or transport failure |
+| `QuotaError` | Account limits exceeded |
+| `ServerError` | Server-side error (5xx) |

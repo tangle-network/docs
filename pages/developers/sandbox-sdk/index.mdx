@@ -1,0 +1,159 @@
+---
+title: Sandbox SDK
+description: TypeScript SDK for the Tangle production agent runtime. Create isolated environments, run AI agents, execute commands, and build automation workflows.
+---
+
+# Sandbox SDK
+
+`@tangle-network/sandbox` is the TypeScript SDK for the Tangle production agent runtime. It provides a programmatic interface to create isolated execution environments, run AI coding agents, execute shell commands, manage files and git repositories, and snapshot/restore state.
+
+Each environment is a long-running, stateful, reconnectable session managed by the Tangle orchestration layer. A sidecar process inside each environment exposes capabilities (bash, file access, git, tools, agent execution) without baking them into the container image.
+
+## Installation
+
+```bash
+npm install @tangle-network/sandbox
+```
+
+```bash
+pnpm add @tangle-network/sandbox
+```
+
+```bash
+yarn add @tangle-network/sandbox
+```
+
+## Quick Start
+
+```typescript
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: process.env.SANDBOX_BASE_URL!,
+});
+
+// Create an isolated environment
+const box = await client.create({
+  image: "universal",
+  git: { url: "https://github.com/user/repo.git" },
+  tools: { node: "22", python: "3.12" },
+});
+
+// Wait until the environment is ready
+await box.waitFor("running");
+
+// Execute shell commands
+const result = await box.exec("npm install && npm test");
+console.log(result.stdout);
+
+// Run an AI agent
+const response = await box.prompt("Fix the failing tests and commit");
+console.log(response.response);
+
+// Read and write files
+const content = await box.read("src/index.ts");
+await box.write("src/fix.ts", "export const fix = () => {}");
+
+// Git operations
+const status = await box.git.status();
+if (status.isDirty) {
+  await box.git.add(["."]);
+  await box.git.commit("Apply fixes");
+  await box.git.push();
+}
+
+// Snapshot for checkpoint/restore
+const snapshot = await box.snapshot({ tags: ["after-fix"] });
+
+// Clean up
+await box.delete();
+```
+
+## Core Concepts
+
+### Environments
+
+An environment is an isolated execution context with:
+
+- A programmatic runtime API (shell, files, git, tools, agent)
+- Optional SSH access for interactive debugging
+- Optional web terminal for browser-based access
+- Persistent storage with snapshot/restore support
+- Configurable resource limits (CPU, memory, disk)
+
+### Status Lifecycle
+
+```
+pending -> provisioning -> running -> stopped -> (deleted)
+                              |
+                              v
+                           failed
+```
+
+Use `box.waitFor("running")` to block until the environment is ready. Use `box.watchProvisioning()` for granular progress events during creation.
+
+### Images and Environments
+
+The SDK supports three image modes:
+
+| Mode | Example | Description |
+|------|---------|-------------|
+| Pre-built environment | `"universal"`, `"ethereum"` | Nix-provisioned toolchains. Use `client.environments.list()` to discover. |
+| Custom Docker image | `"python:3.12-slim"` | Any Docker image. The runtime sidecar is injected automatically. |
+| Bare mode | `{ image: "ubuntu:24.04", bare: true }` | No sidecar. Only `exec()` and lifecycle methods available. |
+
+### AI Agent Backends
+
+Each environment runs one AI backend for agent execution. Set `backend.type` at creation or per-prompt:
+
+| Type | Runtime | Notes |
+|------|---------|-------|
+| `opencode` | OpenCode | Default. Multi-provider, profile system, MCP support. |
+| `claude-code` | Claude Code | Anthropic-native. Requires `ANTHROPIC_API_KEY`. |
+| `codex` | Codex CLI | OpenAI-native. Requires `OPENAI_API_KEY`. |
+| `amp` | AMP | Sourcegraph AMP agent. |
+| `factory-droids` | Factory | Factory Droid agent. |
+
+### Sessions
+
+Sessions are stateful and long-running. Pass a `sessionId` to maintain conversation continuity across prompts:
+
+```typescript
+const r1 = await box.prompt("Analyze the codebase", { sessionId: "session-1" });
+const r2 = await box.prompt("Now fix the auth bug you found", { sessionId: "session-1" });
+```
+
+### Error Handling
+
+The SDK exports typed error classes for structured error handling:
+
+```typescript
+import {
+  AuthError,
+  NetworkError,
+  NotFoundError,
+  QuotaError,
+  StateError,
+  TimeoutError,
+  ValidationError,
+} from "@tangle-network/sandbox";
+
+try {
+  await box.exec("npm test");
+} catch (err) {
+  if (err instanceof TimeoutError) {
+    // Command exceeded timeout
+  } else if (err instanceof StateError) {
+    // Environment not in expected state (e.g., not running)
+  } else if (err instanceof QuotaError) {
+    // Account limits reached
+  }
+}
+```
+
+## What's Next
+
+- [API Reference](/developers/sandbox-sdk/api-reference) -- Full method signatures and types
+- [Architecture](/developers/sandbox-sdk/architecture) -- How the runtime works under the hood
+- [Examples](/developers/sandbox-sdk/examples) -- Real-world usage patterns
