@@ -1,5 +1,4 @@
 import nextra from "nextra";
-import { withPlausibleProxy } from "next-plausible";
 
 /**
  * @type {import('next').NextConfig}
@@ -47,8 +46,7 @@ const withNextra = nextra({
   theme: "nextra-theme-docs",
   themeConfig: "./theme.config.tsx",
   staticImage: true,
-  flexsearch: true,
   latex: true,
 });
 
-export default withPlausibleProxy()(withNextra(nextConfig));
+export default withNextra(nextConfig);
