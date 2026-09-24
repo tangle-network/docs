@@ -1,22 +1,13 @@
 ---
 title: AI
-description: Build, run, and improve AI agents on Tangle.
+description: Shared infrastructure for Tangle assistants and developer-built agents.
 ---
 
-# AI
+# Agent infrastructure
 
-Tangle runs AI agents across the Blueprint Agent, isolated sandboxes, and one-key inference, and pays the operators who host protocol-backed services. Every run is bound by explicit policies and resource limits, and Intelligence traces each one so you can see what happened and tune prompts, policies, and tools.
-
-<figure>
-  <img
-    src="/images/architecture/autonomous-work-loop.svg"
-    alt="Build, run, improve loop"
-  />
-  <figcaption>
-    Build, run, improve loop: workbench -> sandbox runtime -> protocol (payments +
-    evaluation).
-  </figcaption>
-</figure>
+Tangle uses isolated sandboxes, model routing, integrations, and evaluation tools to run its hosted assistant preview.
+Developers can use the same services for their own agents.
+The managed services are live; the hospitality request-to-resolution flow is still being verified.
 
 ## Blueprint Agent
 
@@ -42,15 +33,16 @@ Core capabilities:
 
 ## Evaluation Loop
 
-Each run produces task and agent evaluations. You use that data in the workbench to refine prompts, policies, and workflows.
+Instrumented runs can produce traces and evaluations.
+Teams review that evidence before changing prompts, policies, and workflows.
 
-## Inference Gateway
+## Router
 
-The [Tangle Gateway](/gateway) is the hosted inference routing layer. Agents and applications call one API, and the gateway applies provider policy, model selection, compliance filters, billing, and settlement rules before forwarding the request.
+The [Tangle Router](/gateway) is the hosted inference routing layer. Agents and applications call one API, and the router applies provider policy, model selection, compliance filters, billing, and settlement rules before forwarding the request.
 
 Key capabilities:
 
-- **One API, any model.** OpenAI, Anthropic, Google, Groq, and every other supported provider.
+- **One API for supported models.** Check the [live model catalog](https://router.tangle.tools/v1/models) for routeable choices.
 - **Operator routing.** Route to registered operators when a request pins an operator path or uses SpendAuth.
 - **Compliance.** [Zero Data Retention](/gateway/zdr) and [no-train](/gateway/no-train) routing with verified provider agreements.
 - **On-chain payments.** [SpendAuth](/gateway/spend-auth) lets users pay operators directly without a credit card.

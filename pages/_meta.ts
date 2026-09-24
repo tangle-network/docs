@@ -19,7 +19,7 @@ const meta: Meta = {
     type: "page",
   },
   gateway: {
-    title: "Inference",
+    title: "Router",
     type: "page",
   },
   intelligence: {

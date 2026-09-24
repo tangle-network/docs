@@ -1,42 +1,32 @@
-# Build, run, and improve agents
+# Build and run assistants on Tangle
 
-Tangle is infrastructure for AI agents. You **build** them in the [Blueprint Agent](/blueprint-agent/introduction), **run** them in isolated [sandboxes](/infrastructure/introduction) with one API key to [every model](/gateway/getting-started), and **improve** them with [Intelligence](/intelligence), which traces every run and tells you what to fix. One account, one key, one balance across all of it.
+Tangle builds hosted AI assistants for businesses, starting with hospitality.
+The hospitality preview is designed to turn a guest message into an assigned task and bring overdue work to a person.
+The complete request-to-resolution flow is still being verified with a design partner.
 
-We started by building a protocol for complex services: MPC, zero-knowledge, distributed systems. That foundation maps directly to what AI agents need: isolation, coordination, and economic accountability.
-
-## Mission
-
-Give developers the infrastructure to run AI agents in production, and a loop that makes each run better than the last.
-
-Agents should ship with the rigor of real infrastructure: isolation by default, reviewable outcomes, and cost tied to result.
-
-## The problem
-
-Running agents in production is brittle. They execute outside any policy, results are hard to inspect, and there is no straightforward way to see why a run failed or measure whether a change helped. Teams either build all of this themselves or avoid shipping agents at all.
+Developers use Tangle's [Sandbox](/sandbox), [Router](/gateway), agent runtime, integrations, and evaluation tools to build and run agents.
+Agent Builder is becoming the hosted path for creating an assistant and connecting approved channels.
+That hosted path is in preview while Builder adopts the shared kit.
 
 ## What exists today
 
-- **Sandbox runtime**: isolated dev containers, one per agent, pre-loaded with any coding harness. The flagship product; everything runs here.
-- **Inference**: one OpenAI-compatible API key to every model and provider.
-- **Intelligence**: ingests traces from sandbox runs and inference calls, and tells you why agents fail and what to change.
-- **Blueprint Agent**: describe a project and an AI agent builds it with you in an in-browser IDE.
-- **Platform**: one account, `sk-tan-` API keys, and a shared USD balance that every product bills against.
+- **Sandbox:** an isolated computer for an agent, with files, a shell, and browser access.
+- **Router:** one API for model requests across supported providers.
+- **Intelligence:** traces and comparisons that help a person inspect an agent run and evaluate a change.
+- **Blueprint Agent:** an [in-browser coding workspace](/blueprint-agent/introduction) for building projects with an AI agent.
+- **Platform:** one account, API keys, and a shared balance for supported services.
 
-## Where it goes
-
-- **Operator network**: runtime hosting moves to registered operators, paid through on-chain settlement.
-- **Improvement delivery**: today Intelligence reports what to fix; next it delivers those fixes back to the agents directly.
-- **Protocol-native coordination**: payments, reliability, and service discovery move on-chain.
-
-Managed cloud is live today. The decentralized operator network is the trajectory, not a current claim.
+The hosted assistant offer uses these shared components.
+A live component does not establish that the complete hosted assistant workflow is ready.
 
 ## Who this is for
 
-- **Developers shipping AI agents.** [Run one in a sandbox](/infrastructure/introduction).
-- **Teams building products with agents.** [Start in the Blueprint Agent](/blueprint-agent/introduction).
-- **Operators providing compute.** [Operator onboarding](/operators/introduction).
-- **Partners evaluating the stack.** [Protocol overview](/network/overview).
+- **Business operators** evaluating the hospitality assistant preview.
+- **Developers** running agents in [Sandbox](/sandbox) or building a hosted assistant in Agent Builder.
+- **Teams** inspecting run evidence in [Intelligence](/intelligence).
 
-## The long term
+## Where it goes
 
-As agents take on more real work, developers need infrastructure that runs them safely and a loop that improves them with evidence. Tangle is building that: build the agent, run it under policy, trace what it did, and ship the fix.
+The first acceptance proof is a real hospitality request completed from message through task assignment, follow-up, and human escalation when needed.
+The protocol is a separate long-term path for operator-hosted services and on-chain settlement.
+The managed Sandbox and Router services are live today.
