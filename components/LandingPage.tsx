@@ -12,6 +12,12 @@ const startingPoints = [
     description: "Route model requests through one API.",
     href: "/gateway",
   },
+  {
+    name: "Intelligence",
+    state: "Live service",
+    description: "Send agent traces to inspect runs and compare changes.",
+    href: "/intelligence",
+  },
 ];
 
 const LandingPage = () => {
