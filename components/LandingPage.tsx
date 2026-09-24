@@ -12,26 +12,18 @@ const startingPoints = [
     description: "Route model requests through one API.",
     href: "/gateway",
   },
-  {
-    name: "Agent Builder",
-    state: "Hosted-assistant preview",
-    description:
-      "Planned hosted path for assistant creation and approved channels.",
-    href: null,
-  },
 ];
 
 const LandingPage = () => {
   return (
     <main className="mx-auto max-w-5xl px-5 pb-20 pt-16 sm:px-8 sm:pt-24">
       <h1 className="max-w-3xl text-4xl font-normal leading-tight text-gray-900 dark:text-white sm:text-5xl">
-        Build and run assistants on Tangle
+        Build and run AI agents on Tangle
       </h1>
       <p className="mt-6 max-w-3xl text-lg leading-relaxed text-gray-700 dark:text-gray-300">
-        Tangle provides isolated sandboxes, agent runtime, model routing,
-        integrations, and evaluation tools. Agent Builder is becoming the hosted
-        path for creating an assistant and connecting approved channels. That
-        hosted path is in preview while Builder adopts the shared kit.
+        Tangle provides five layers for AI agents: Sandbox, Runtime, Router,
+        Integrations, and observability through Intelligence. Evaluation is part
+        of each layer and the products built on them.
       </p>
 
       <section className="mt-16" aria-labelledby="start-here">
@@ -39,7 +31,7 @@ const LandingPage = () => {
           id="start-here"
           className="text-2xl font-semibold text-gray-900 dark:text-white"
         >
-          Choose where to start
+          Start with a live service
         </h2>
         <ul className="mt-5 divide-y divide-gray-200 border-y border-gray-200 dark:divide-gray-800 dark:border-gray-800">
           {startingPoints.map((point) => (
@@ -47,18 +39,12 @@ const LandingPage = () => {
               key={point.name}
               className="py-6 sm:grid sm:grid-cols-[12rem_1fr_9rem] sm:gap-6"
             >
-              {point.href ? (
-                <a
-                  href={point.href}
-                  className="text-lg font-semibold text-blue-700 underline-offset-4 hover:underline dark:text-blue-300"
-                >
-                  {point.name}
-                </a>
-              ) : (
-                <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {point.name}
-                </span>
-              )}
+              <a
+                href={point.href}
+                className="text-lg font-semibold text-blue-700 underline-offset-4 hover:underline dark:text-blue-300"
+              >
+                {point.name}
+              </a>
               <p className="mt-2 text-gray-700 dark:text-gray-300 sm:mt-0">
                 {point.description}
               </p>
@@ -70,14 +56,29 @@ const LandingPage = () => {
         </ul>
       </section>
 
-      <p className="mt-10 max-w-3xl text-gray-700 dark:text-gray-300">
-        The hospitality preview is designed to turn a guest message into an
-        assigned task and bring overdue work to a person. The complete
-        request-to-resolution flow is still being verified with a design
-        partner.
-      </p>
+      <section className="mt-10 max-w-3xl" aria-labelledby="hosted-assistants">
+        <h2
+          id="hosted-assistants"
+          className="text-2xl font-semibold text-gray-900 dark:text-white"
+        >
+          Hosted assistants are a preview
+        </h2>
+        <p className="mt-4 text-gray-700 dark:text-gray-300">
+          Tangle&apos;s first packaged use case is a hospitality assistant.
+          Agent Builder is expected to provide the creation and approved channel
+          setup path. The first completed text reply and full
+          request-to-resolution flow have not yet been verified.
+        </p>
+      </section>
       <p className="mt-5 max-w-3xl text-gray-700 dark:text-gray-300">
-        For an in-browser coding workspace, see the{" "}
+        See how the five layers fit in the{" "}
+        <a
+          className="text-blue-700 underline dark:text-blue-300"
+          href="/vision/architecture"
+        >
+          infrastructure architecture
+        </a>
+        . For an in-browser coding workspace, see the{" "}
         <a
           className="text-blue-700 underline dark:text-blue-300"
           href="/blueprint-agent/introduction"

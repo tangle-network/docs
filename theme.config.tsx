@@ -16,9 +16,9 @@ function Head() {
 
   // Set default values for title and description
   const defaultTitle = "Tangle Docs";
-  const tabTitle = "Tangle Docs - Assistants and Developer Tools";
+  const tabTitle = "Tangle Docs - AI Agent Infrastructure";
   const defaultDescription =
-    "Build assistants with Tangle's hosted preview, Sandbox, and Router.";
+    "Build and run AI agents with Tangle Sandbox, Runtime, Router, Integrations, and Intelligence.";
 
   // Get the title and description from the front matter, or use the default values
   const title = frontMatter.title

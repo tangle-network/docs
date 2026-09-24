@@ -1,16 +1,18 @@
 ---
 title: Router
-description: One OpenAI-compatible API key to every model, routed across providers and Tangle operators on price, latency, and reputation.
+description: One API for supported models, with standard provider routes and explicit Tangle operator routes.
 ---
 
 # Router
 
-Tangle Inference is one OpenAI-compatible endpoint for every model. A single API key routes each request across provider APIs and registered Tangle operators, chosen on price, latency, and reputation.
+Tangle Router provides an OpenAI-compatible endpoint for supported models.
+Standard requests use supported provider APIs.
+An operator-pinned or SpendAuth request can use a registered Tangle operator.
 
-## One key for every provider and operator
+## One key for supported models
 
-- **One key, any model.** Reach OpenAI, Anthropic, Google, Groq, Mistral, and every other supported provider through a single API key. The live catalog is at [`/v1/models`](https://router.tangle.tools/v1/models).
-- **Operator network.** Route to operators registered for [Blueprints](/developers/blueprints/introduction); the gateway selects from their advertised endpoint, model support, price, latency, and reputation data.
+- **Supported provider routes.** Use one API key for models in the live [`/v1/models`](https://router.tangle.tools/v1/models) catalog.
+- **Explicit operator routes.** Use an operator-pinned request or SpendAuth for a registered [Blueprint](/developers/blueprints/introduction) operator.
 - **Compliance routing.** Zero Data Retention and no-train filtering with verified provider agreements.
 - **BYOK.** Bring your own provider keys for zero-markup access.
 - **On-chain payments.** Pay operators directly via SpendAuth, no credit card required.
@@ -28,26 +30,29 @@ curl -X POST "https://router.tangle.tools/v1/chat/completions" \
   }'
 ```
 
-Works with any OpenAI-compatible SDK. Change the base URL and you're done.
+Use an OpenAI-compatible SDK with the Router base URL for supported routes.
 
 ## Architecture
 
-The gateway routes through two tiers, in order:
+Router uses two request paths:
 
-| Tier          | What                                                            | When                                                           |
-| ------------- | --------------------------------------------------------------- | -------------------------------------------------------------- |
-| **Operators** | Tangle-registered inference operators with advertised endpoints | Default for operator-pinned requests and SpendAuth             |
-| **Direct**    | Straight to provider API (OpenAI, Anthropic, etc.)              | Default for standard requests, and when compliance is required |
+| Tier          | What                                                            | When                                    |
+| ------------- | --------------------------------------------------------------- | --------------------------------------- |
+| **Direct**    | Supported provider APIs                                         | Standard requests and compliance routes |
+| **Operators** | Tangle-registered inference operators with advertised endpoints | Operator-pinned requests and SpendAuth  |
 
 When [Zero Data Retention](/gateway/zdr) or [no-train](/gateway/no-train) is requested, operators are skipped. The gateway routes directly to verified providers only.
 
 ## Where the gateway sits
 
 ```
-Workbench (agents) → Gateway (inference) → Operators (serving) → Protocol (settlement)
+Standard request → Router → supported provider API
+Explicit route   → Router → registered operator
 ```
 
-The gateway sits between the [Workbench](/blueprint-agent/introduction) where agents run and the [Protocol](/network/overview) where operators get paid. Agents in the workbench call the gateway for model access. The gateway selects a provider or operator by price, latency, and reputation, routes the request, tracks usage, and settles payment.
+Agents can call Router for model access.
+Standard requests use supported provider APIs.
+Explicit operator routes use a registered operator and may use the [protocol](/network/overview) for settlement.
 
 ## Next steps
 

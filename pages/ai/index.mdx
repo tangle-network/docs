@@ -5,9 +5,11 @@ description: Shared infrastructure for Tangle assistants and developer-built age
 
 # Agent infrastructure
 
-Tangle uses isolated sandboxes, model routing, integrations, and evaluation tools to run its hosted assistant preview.
-Developers can use the same services for their own agents.
-The managed services are live; the hospitality request-to-resolution flow is still being verified.
+Tangle builds five layers for AI agents: Sandbox, Runtime, Router, Integrations, and observability through Intelligence.
+Evaluation belongs inside each layer and product.
+Developers can use the live [Sandbox](/sandbox) and [Router](/gateway) services for their own agents.
+Hosted assistants are the first packaged use case and remain a preview.
+The first completed text reply and hospitality request-to-resolution flow have not yet been verified.
 
 ## Blueprint Agent
 
@@ -21,7 +23,7 @@ Key traits:
 - **Simulations** for evaluating workflows across many tasks.
 - **Integrations** for connecting internal tools and data.
 
-## Sandbox Runtime
+## Sandbox and Runtime
 
 Work executes inside isolated sandboxes so tasks are contained and repeatable. The runtime separates lifecycle control from execution through an orchestrator and sidecar, then applies policy and resource limits before the task runs.
 
@@ -31,14 +33,15 @@ Core capabilities:
 - **Task isolation** so background work can be reviewed and accepted before merge.
 - **Orchestrator + sidecar** separation for lifecycle control and execution.
 
-## Evaluation Loop
+## Evaluation across the layers
 
-Instrumented runs can produce traces and evaluations.
-Teams review that evidence before changing prompts, policies, and workflows.
+Instrumented runs can produce traces and evaluations from the same execution path.
+Teams can review that evidence before changing prompts, policies, and workflows.
 
 ## Router
 
-The [Tangle Router](/gateway) is the hosted inference routing layer. Agents and applications call one API, and the router applies provider policy, model selection, compliance filters, billing, and settlement rules before forwarding the request.
+The [Tangle Router](/gateway) handles model requests through supported provider APIs.
+An operator-pinned or SpendAuth request can use a registered operator route.
 
 Key capabilities:
 
