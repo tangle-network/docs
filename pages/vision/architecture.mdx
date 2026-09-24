@@ -1,72 +1,37 @@
-# Architecture and Design Pillars
+# Infrastructure Architecture
 
-Tangle ties together four layers most platforms separate: the workbench where work is created, the gateway that routes and bills inference, the sandbox runtime where it executes, and the protocol that pays the operators who run it.
+Tangle builds five infrastructure layers for AI agents.
+Products and research systems use the same layers.
+Evaluation belongs inside each layer and product.
 
-<figure>
-  <img
-    src="/images/architecture/autonomous-work-loop.svg"
-    alt="Build, run, improve loop"
-  />
-  <figcaption>
-    Build, run, improve loop: workbench -> sandbox runtime -> protocol (payments +
-    evaluation).
-  </figcaption>
-</figure>
+| Layer                        | Responsibility                                                                     | Start here                                                         |
+| ---------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Sandbox                      | Give an agent an isolated computer with files, a shell, and browser access.        | [Sandbox](/sandbox)                                                |
+| Runtime                      | Control agent sessions, execution, and streaming events in sandboxes.              | [Runtime](/infrastructure/introduction)                            |
+| Router                       | Send model requests to supported providers or explicitly selected operator routes. | [Router](/gateway)                                                 |
+| Integrations                 | Connect agents to supported tools, data, and external events.                      | [Protocol job triggers](/developers/blueprint-runner/job-triggers) |
+| Observability (Intelligence) | Collect traces so teams can inspect runs and compare changes.                      | [Intelligence](/intelligence)                                      |
 
-**Flow:** design -> execute -> evaluate -> pay. Each run captures evaluation metadata that reviewers and later runs can draw on.
+An application can start a session through Runtime in a Sandbox.
+The agent can call models through Router and use integrations permitted by that application.
+Intelligence can record the run's trace.
+Evaluation can check execution, routing, tool use, and the resulting product behavior against the evidence each surface produces.
 
-## What Runs Where
+## Products and research
 
-| Layer           | Runs here                     | Examples                                                 |
-| --------------- | ----------------------------- | -------------------------------------------------------- |
-| Workbench       | Human and agent collaboration | Workflows, profiles, simulations, reviews                |
-| Gateway         | Inference routing and billing | Model access, BYOK, ZDR compliance, operator selection   |
-| Sandbox runtime | Executed tasks and tools      | Agent sessions, tool calls, file edits                   |
-| Protocol        | Coordination and settlement   | Service registry, operator payments, staking, incentives |
+The product lab builds Agent Builder, Braid, vertical apps, and hosted assistants on this infrastructure.
+Hosted assistants are the first packaged use case and remain a preview.
+The first completed text reply and request-to-resolution flow have not yet been verified.
+The research lab uses the same infrastructure for discovery and the software factory.
 
-## The Four Layers
+## Managed and operator paths
 
-**1) Execution Layer**  
-Sandboxed runtimes with isolation, resource limits, and audit logs. This is where tasks actually run.
+The managed [Sandbox](/sandbox) and [Router](/gateway) services are live.
+Standard Router requests use supported provider APIs.
+An operator-pinned or SpendAuth request can use a registered operator route.
+The [protocol](/network/overview) separately supports operator-hosted Blueprint services and on-chain settlement.
+That path requires a registered service instance and a reachable operator endpoint.
+Access to a managed service does not establish an operator service or an on-prem installation.
 
-**2) Inference Layer**  
-The [Gateway](/gateway) routes inference requests across provider APIs and registered operators. It handles model selection, compliance filtering ([ZDR](/gateway/zdr), [no-train](/gateway/no-train)), [BYOK](/gateway/byok) credential management, and billing.
-
-**3) Protocol Layer**  
-The coordination plane. It handles operator discovery, payment routing, and incentive enforcement.
-
-**4) Experience Layer**  
-The Blueprint Agent and [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main). This is where teams design workflows, run simulations, and ship services.
-
-The SDK also includes optional gateways for integrating external events and payment-driven HTTP job execution (webhooks,
-x402).
-
-## Interfaces and Integration Points
-
-Not every service fits a pure on-chain request flow. Tangle supports multiple integration styles:
-
-- On-chain triggers: jobs and services can be created and invoked through protocol transactions.
-- External triggers: operators can expose HTTP ingress (webhooks) that translate external events into job executions.
-- Alternative settlement: operators can optionally accept paid HTTP job calls via x402 (stablecoin settlement on EVM
-  chains), then translate them into job executions.
-- Multi-tenant APIs: when services expose off-chain HTTP or gRPC endpoints, operators can front them with an auth proxy
-  that injects tenant identity and enforces scopes.
-
-Developer references:
-
-- Job triggers map: `/developers/blueprint-runner/job-triggers`
-- Webhooks: `/developers/blueprint-runner/webhooks`
-- x402: `/developers/blueprint-runner/x402`
-- Auth proxy: `/developers/blueprint-auth`
-
-## Trust and Delegation
-
-Agents only reach production when delegation is safe. Tangle enforces policy gates before execution, emits logs and execution metadata for every run, and keeps results reviewable so teams can decide what reaches production.
-
-## What we optimize for
-
-- **Isolation first**: Every workload runs inside a sandbox with explicit permissions.
-- **Reviewable outcomes**: Logs, metadata, and evaluations give reviewers evidence about what ran and how it performed.
-- **Composable services**: Blueprints define reusable services that can be instantiated on demand.
-- **Economic alignment**: Operators and developers earn based on usage and reliability.
-- **Developer speed**: Workflows are testable, repeatable, and easy to ship.
+Tangle plans to offer infrastructure that can be hosted on-prem.
+These docs do not provide an on-prem installation path today.

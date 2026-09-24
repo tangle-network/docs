@@ -1,9 +1,9 @@
 import type { Meta } from "nextra";
 
 const meta: Meta = {
-  introduction: "Mission",
+  introduction: "Overview",
+  architecture: "Infrastructure Architecture",
   "use-cases": "Use Cases",
-  architecture: "Architecture and Design Pillars",
   "core-concepts": "Core Concepts and Terminology",
 };
 

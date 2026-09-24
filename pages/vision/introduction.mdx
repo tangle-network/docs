@@ -1,32 +1,34 @@
-# Build and run assistants on Tangle
+# Tangle builds infrastructure for AI agents
 
-Tangle builds hosted AI assistants for businesses, starting with hospitality.
-The hospitality preview is designed to turn a guest message into an assigned task and bring overdue work to a person.
-The complete request-to-resolution flow is still being verified with a design partner.
+Tangle provides five infrastructure layers: Sandbox, Runtime, Router, Integrations, and observability through Intelligence.
+Evaluation belongs inside each layer and each product.
+Tangle's product and research labs use the same infrastructure.
 
-Developers use Tangle's [Sandbox](/sandbox), [Router](/gateway), agent runtime, integrations, and evaluation tools to build and run agents.
-Agent Builder is becoming the hosted path for creating an assistant and connecting approved channels.
-That hosted path is in preview while Builder adopts the shared kit.
+Developers can start with the live [Sandbox](/sandbox) and [Router](/gateway) services.
+The [architecture page](/vision/architecture) explains the five layers and the separate protocol path for operator-hosted services.
 
-## What exists today
+## The five layers
 
-- **Sandbox:** an isolated computer for an agent, with files, a shell, and browser access.
-- **Router:** one API for model requests across supported providers.
-- **Intelligence:** traces and comparisons that help a person inspect an agent run and evaluate a change.
-- **Blueprint Agent:** an [in-browser coding workspace](/blueprint-agent/introduction) for building projects with an AI agent.
-- **Platform:** one account, API keys, and a shared balance for supported services.
+- **[Sandbox](/sandbox):** isolated computers for agent work.
+- **[Runtime](/infrastructure/introduction):** sessions and execution control for agents in those sandboxes.
+- **[Router](/gateway):** model requests across supported providers and explicit operator routes.
+- **Integrations:** connections to supported tools, data, and external events.
+- **[Intelligence](/intelligence):** traces and comparisons for inspecting runs and measuring changes.
 
-The hosted assistant offer uses these shared components.
-A live component does not establish that the complete hosted assistant workflow is ready.
+Evaluation uses evidence from these layers to test behavior and changes.
+It is part of the infrastructure and its products, rather than a separate infrastructure layer.
 
-## Who this is for
+## Products built on the infrastructure
 
-- **Business operators** evaluating the hospitality assistant preview.
-- **Developers** running agents in [Sandbox](/sandbox) or building a hosted assistant in Agent Builder.
-- **Teams** inspecting run evidence in [Intelligence](/intelligence).
+The product lab uses these layers for Agent Builder, Braid, vertical apps, and hosted assistants.
+The research lab uses them for discovery and the software factory.
+The hosted assistants are the first packaged use case, starting with hospitality.
+Agent Builder is expected to provide the hosted creation and approved-channel setup path.
+The first completed text reply and request-to-resolution flow have not yet been verified.
+The hosted assistant remains a preview.
 
-## Where it goes
+## Deployment boundaries
 
-The first acceptance proof is a real hospitality request completed from message through task assignment, follow-up, and human escalation when needed.
-The protocol is a separate long-term path for operator-hosted services and on-chain settlement.
-The managed Sandbox and Router services are live today.
+Managed Sandbox and Router services are live today.
+The [protocol](/network/overview) supports a separate path for operator-hosted Blueprint services and on-chain settlement.
+The company plans a hostable on-prem option for infrastructure; these docs do not present an available installation path.
