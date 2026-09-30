@@ -23,7 +23,29 @@ export TANGLE_API_KEY=sk-tan-...
 
 One key authenticates every Tangle product. Pass it to the client as `apiKey`; the SDK does not read env vars for you.
 
-## 3. Create a sandbox and run a command
+## 3. Check your credit and the service
+
+Free accounts start with no included credit.
+Add prepaid credit or select a plan with included credit at [id.tangle.tools](https://id.tangle.tools) before creating a sandbox.
+Agent model usage also draws from your balance.
+On the Free plan, sandboxes pause when the balance reaches zero.
+
+Check your key and available credit without provisioning a machine:
+
+```bash
+curl -fsS https://id.tangle.tools/v1/billing/balance \
+  -H "Authorization: Bearer $TANGLE_API_KEY"
+```
+
+The response's `data.balance` is your available credit in US dollars.
+You can also check the service and available templates without creating a sandbox:
+
+```bash
+curl -fsS https://sandbox.tangle.tools/health
+curl -fsS https://sandbox.tangle.tools/v1/public-templates
+```
+
+## 4. Create a sandbox and run a command
 
 ```typescript
 import { Sandbox } from "@tangle-network/sandbox";
@@ -45,9 +67,10 @@ try {
 
 `create` returns a live machine; `delete` releases it. You never provision infrastructure yourself.
 
-## 4. Run a coding agent
+## 5. Run a coding agent
 
-Each sandbox runs one coding harness. Choose it with `backend.type`. `opencode` (OpenCode) is the default and needs no extra key. `claude-code` (Claude Code) runs on Tangle Router by default with no extra key. To bring your own Anthropic credential, pass `backend: { type: 'claude-code', model: { apiKey: process.env.ANTHROPIC_API_KEY } }`. See [supported harnesses](/infrastructure/harnesses) for the full list.
+Choose the initial coding harness with `backend.type`.
+Sessions can select different [supported harnesses](/infrastructure/harnesses) in the same sandbox. `opencode` (OpenCode) is the default and needs no separate model-provider key. `claude-code` (Claude Code) runs on Tangle Router by default with no separate model-provider key. To bring your own Anthropic credential, pass `backend: { type: 'claude-code', model: { apiKey: process.env.ANTHROPIC_API_KEY } }`. See [supported harnesses](/infrastructure/harnesses) for the full list.
 
 ```typescript
 const box = await client.create({
@@ -63,16 +86,11 @@ try {
 }
 ```
 
-For runs that must survive a client crash or a browser reload, use `box.dispatchPrompt(message, { sessionId })` and reconnect with `box.session(sessionId)`. See [durable sessions in the SDK reference](/sandbox/sdk-reference).
-
-## 5. Check before you build (optional)
-
-These calls are safe to run without creating a sandbox:
-
-```bash
-curl -fsS https://sandbox.tangle.tools/health
-curl -fsS https://sandbox.tangle.tools/v1/public-templates
-```
+For durable runs, use `box.dispatchPrompt(message, { sessionId, turnId })` and reconnect with `box.session(sessionId)`.
+Store both IDs before dispatching and reuse them for retries of the same turn.
+Completed retries are deduplicated while their results remain cached.
+A session ID alone does not deduplicate completed retries.
+See [durable sessions in the SDK reference](/sandbox/sdk-reference).
 
 ## Next
 

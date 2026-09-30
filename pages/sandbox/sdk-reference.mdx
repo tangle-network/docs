@@ -54,20 +54,30 @@ const box = await client.get("sandbox_abc123");
 const usage = await client.usage(); // activeSandboxes, computeMinutes
 ```
 
-### `client.runBatch(tasks, options?)`
+### `client.runBatch(request, options?)`
 
 Run one-shot tasks across freshly provisioned sandboxes in parallel. For coordinated multi-machine work with shared workspaces and policy caps, use [fleets](https://www.npmjs.com/package/@tangle-network/sandbox) instead.
 
 ```typescript
 const result = await client.runBatch(
-  [
-    { id: "task-1", message: "Analyze code quality" },
-    { id: "task-2", message: "Run the security scan" },
-  ],
-  { timeoutMs: 300000, scalingMode: "balanced" }, // fastest | balanced | cheapest
+  {
+    tasks: [
+      { id: "task-1", message: "Analyze code quality" },
+      { id: "task-2", message: "Run the security scan" },
+    ],
+    backends: [{ id: "worker", type: "opencode" }],
+  },
+  { idempotencyKey: "code-review-job-42" },
 );
-console.log(result.successRate);
+console.log(result.totalSuccess, result.totalFailure);
 ```
+
+Select batch workers from the [supported harnesses](/infrastructure/harnesses).
+Reuse an `idempotencyKey` only when retrying the same batch with the same request body.
+A keyed batch continues after a client disconnect.
+While its run record remains retained, a retry joins active work or replays its completed result.
+`options.signal` cancels the client stream.
+Without an idempotency key, cancellation or disconnection also stops server work.
 
 ## Sandbox instance
 
@@ -96,32 +106,71 @@ for await (const event of box.streamPrompt("Fix the failing auth test")) {
 }
 ```
 
-### `box.task(message, options?)`
+### `box.createTaskSession(options)` · `box.taskSession(id)`
 
-A higher-level agent task (plan, edit, run, verify) over a single prompt.
+Create a background task session with isolated file changes using one of the [supported harnesses](/infrastructure/harnesses).
+The sandbox workspace must contain a Git repository.
 
 ```typescript
-const task = await box.task("Fix any failing tests and commit the changes");
+const { session: task } = await box.createTaskSession({
+  sessionId: "test-fix-42",
+  title: "Fix failing tests",
+  backend: { type: "opencode" },
+  isolateFileWrites: true,
+});
+await task.sendMessage({
+  parts: [{ type: "text", text: "Fix the failing tests and run them again" }],
+  turnId: "test-fix-42-turn-1",
+});
+await task.result();
+console.log(await task.changes());
 ```
+
+Reconnect with `box.taskSession("test-fix-42")` to inspect the task later.
+Review `task.changes()` before applying changes with `task.commit()`.
 
 ## Durable sessions
 
-`prompt` and `streamPrompt` live and die with the call. For a run that must survive a client crash, a redeploy, or a browser reload, dispatch it with a stable `sessionId` and reconnect from a fresh process.
+Use `dispatchPrompt` for a turn you must reconnect to after a client crash, redeploy, or browser reload.
+`sessionId` identifies the conversation; `turnId` identifies one logical turn.
+
+Derive both IDs from your trusted job record and store them before dispatching.
+Reuse both IDs and the same prompt when retrying that job.
 
 ```typescript
-const { sessionId, alreadyExisted } = await box.dispatchPrompt(prompt, {
-  sessionId, // derive this server-side; never accept a caller-chosen id
-});
+const sessionId = "code-review-job-42";
+const turnId = "code-review-job-42-turn-1";
 
-// From any process, follow the run or wait for the result:
-for await (const event of box.session(sessionId).events()) {
-  console.log(event);
+const receipt = await box.dispatchPrompt("Analyze code quality", {
+  sessionId,
+  turnId,
+});
+console.log(receipt.dispatched);
+
+const cached = await box.findCompletedTurn(turnId, {
+  sessionId: receipt.sessionId,
+});
+if (cached) {
+  console.log(cached.result);
+} else {
+  if (!receipt.executionId) throw new Error("Missing execution ID");
+  const final = await box.session(receipt.sessionId).result({
+    executionId: receipt.executionId,
+  });
+  console.log(final);
 }
-const final = await box.session(sessionId).result();
-const state = await box.session(sessionId).status();
 ```
 
-The same `sessionId` is idempotent. A duplicate dispatch returns the in-flight or completed session instead of running the work twice, which makes it safe to retry a webhook or payment-triggered run.
+Store the sandbox ID and dispatch receipt to reconnect from another process.
+Use `client.get(sandboxId)` to obtain the sandbox, then select the receipt's session and execution IDs.
+Use `session.events({ executionId })` to follow output while that execution runs.
+
+The same `sessionId` prevents a second dispatch while its session is in flight.
+After completion, that session can receive a new turn.
+Pass a stable `turnId` to deduplicate retries while the completed result remains cached.
+The completed-turn cache can outlive its session; use `findCompletedTurn` to retrieve that cached result.
+`dispatched: false` means the SDK found prior work and did not dispatch another turn.
+`alreadyExisted` reports whether the session existed, not whether work ran.
 
 ## GPU leases
 

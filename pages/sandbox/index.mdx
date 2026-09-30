@@ -10,8 +10,8 @@ A real isolated computer for every agent. Each sandbox is a dev container or mic
 ## What you get
 
 - **A full machine per agent.** Run shell commands, read and write files, open ports, snapshot state, and attach a GPU only for the command that needs it.
-- **Any coding harness.** Each sandbox runs one AI backend: OpenCode (default), Claude Code, Codex, Cursor, and a dozen more. You pick it per sandbox.
-- **Durable agent sessions.** Dispatch a prompt and reconnect to the same run after a client crash, a deploy, or a browser reload. Same session ID is idempotent, so a retried request never re-executes.
+- **Any coding harness.** Choose the initial harness, such as OpenCode (default), Claude Code, or Codex, when you create a sandbox. Sessions can select different [supported harnesses](/infrastructure/harnesses).
+- **Durable agent sessions.** Dispatch a prompt and reconnect to the same run after a client crash, a deploy, or a browser reload. Store session and turn IDs for retries; completed work is deduplicated while its result remains cached.
 - **One key, metered per second.** The same [`sk-tan-` key](/platform/authentication) authenticates every call; you pay for what you use.
 
 ## Why use it
