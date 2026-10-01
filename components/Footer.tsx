@@ -19,6 +19,16 @@ const Footer = () => {
               Contact
             </a>
           </li>
+          <li>
+            <a href="https://app.vanta.com/tangle.tools/trust/kzhjp5g62vhwoalztadtz">
+              <img
+                src="/soc-2-type-ii.svg"
+                alt="SOC 2 Type II"
+                width={148}
+                height={54}
+              />
+            </a>
+          </li>
         </ul>
       </div>
     </footer>
