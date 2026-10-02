@@ -3,26 +3,28 @@ title: Quickstart
 description: Create a sandbox and run your first coding agent in a few minutes.
 ---
 
+import CodeDisplay from '/components/CodeDisplay';
+import { sandboxCode } from '/lib/sandbox-code';
+
 # Quickstart
 
 Create an isolated machine, run a shell command in it, then hand it to a coding agent, all from a few lines of TypeScript.
 
 ## 1. Install the SDK
 
-```bash
-npm install @tangle-network/sandbox
-npm install --save-dev tsx
-```
+<CodeDisplay
+  language="bash"
+  code={sandboxCode.installSdk}
+/>
 
 ## 2. Get an API key
 
 Create an `sk-tan-` key from [Authentication](/platform/authentication) and export it:
 
-```bash
-read -rsp "Tangle API key: " TANGLE_API_KEY
-printf "\n"
-export TANGLE_API_KEY
-```
+<CodeDisplay
+  language="bash"
+  code={sandboxCode.exportApiKey}
+/>
 
 One key authenticates every Tangle product. Pass it to the client as `apiKey`; the SDK does not read env vars for you.
 
@@ -35,18 +37,18 @@ On the Free plan, sandboxes pause when the balance reaches zero.
 
 Check your key and available credit without provisioning a machine:
 
-```bash
-curl -fsS https://id.tangle.tools/v1/billing/balance \
-  -H "Authorization: Bearer ${TANGLE_API_KEY:?Set TANGLE_API_KEY}"
-```
+<CodeDisplay
+  language="bash"
+  code={sandboxCode.checkBalance}
+/>
 
 The response's `data.balance` is your available credit in US dollars.
 You can also check the service and available templates without creating a sandbox:
 
-```bash
-curl -fsS https://sandbox.tangle.tools/health
-curl -fsS https://sandbox.tangle.tools/v1/public-templates
-```
+<CodeDisplay
+  language="bash"
+  code={sandboxCode.checkServices}
+/>
 
 Each TypeScript block below is a separate program for Node.js 22 or later.
 Run it in a project with the SDK installed and `TANGLE_API_KEY` exported.
@@ -55,26 +57,10 @@ Both examples release their machine after completion.
 
 ## 4. Create a sandbox and run a command
 
-```typescript
-import { Sandbox } from "@tangle-network/sandbox";
-
-const apiKey = process.env.TANGLE_API_KEY;
-if (!apiKey) throw new Error("Set TANGLE_API_KEY");
-
-const client = new Sandbox({
-  apiKey,
-  baseUrl: process.env.SANDBOX_BASE_URL ?? "https://sandbox.tangle.tools",
-});
-
-const box = await client.create({ environment: "universal", name: "agent-smoke" });
-
-try {
-  const result = await box.exec("node --version && npm --version");
-  console.log(result.stdout);
-} finally {
-  await box.delete();
-}
-```
+<CodeDisplay
+  language="typescript"
+  code={sandboxCode.createSandbox}
+/>
 
 `create` returns a live machine; `delete` releases it. You never provision infrastructure yourself.
 
@@ -83,29 +69,10 @@ try {
 Choose the initial coding harness with `backend.type`.
 Sessions can select different [supported harnesses](/infrastructure/harnesses) in the same sandbox. `opencode` (OpenCode) is the default and needs no separate model-provider key. `claude-code` (Claude Code) runs on Tangle Router by default with no separate model-provider key. To bring your own Anthropic credential, pass `backend: { type: 'claude-code', model: { apiKey: process.env.ANTHROPIC_API_KEY } }`. See [supported harnesses](/infrastructure/harnesses) for the full list.
 
-```typescript
-import { Sandbox } from "@tangle-network/sandbox";
-
-const apiKey = process.env.TANGLE_API_KEY;
-if (!apiKey) throw new Error("Set TANGLE_API_KEY");
-
-const client = new Sandbox({
-  apiKey,
-  baseUrl: process.env.SANDBOX_BASE_URL ?? "https://sandbox.tangle.tools",
-});
-
-const box = await client.create({
-  environment: "universal",
-  backend: { type: "opencode" }, // Also supports Claude Code, Codex, and other supported harnesses.
-});
-
-try {
-  const result = await box.prompt("List the files in this project and summarize what it does");
-  console.log(result);
-} finally {
-  await box.delete();
-}
-```
+<CodeDisplay
+  language="typescript"
+  code={sandboxCode.runAgent}
+/>
 
 For durable runs, use `box.dispatchPrompt(message, { sessionId, turnId })` and reconnect with `box.session(sessionId)`.
 Store both IDs before dispatching and reuse them for retries of the same turn.

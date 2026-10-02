@@ -29,20 +29,20 @@ Jobs in a Blueprint are defined in the library package of your project. A job de
 
 ### Basic Job Structure
 
-Here's an example of a simple job definition from the Incredible Squaring example:
+This source excerpt defines `square` in the Incredible Squaring example.
+Run it as part of that example project.
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/main/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
-  fromLine={36}
-  toLine={53}
-  title="Job Definition from Incredible Squaring Example"
+  url="https://github.com/tangle-network/blueprint/blob/9acf12127c9ef89b9ffcfb95dd5371dca4326531/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
+  fromLine={83}
+  toLine={87}
 />
 
 In this example:
 
-- `XSQUARE_JOB_ID` is a constant that uniquely identifies the job
+- The router registers `square` under the `XSQUARE_JOB_ID` constant
 - `square` is the function that implements the job's logic
-- The job takes a single ABI-encoded input parameter `x` extracted by `TangleArg<u64>`
+- The job takes a single ABI-encoded input parameter `x` extracted by `TangleArg<(u64,)>`
 - The job returns a `TangleResult<u64>`, which the runner ABI-encodes for submission
 
 ## Job Context
@@ -54,23 +54,18 @@ Jobs can access context information provided by the Blueprint Runner. This conte
 - State information
 - Utility functions
 
-Context is typically passed to jobs through the router configuration:
-
-```rust
-let router = Router::new()
-    .route(MY_JOB_ID, my_job)
-    .with_context(my_context);
-```
+Pass shared state with `Router::with_context`.
+Jobs read that state through the `Context` extractor.
+See the [Contexts guide](/developers/contexts/introduction) for complete examples.
 
 ## Job Registration
 
 Jobs need to be registered to a route with the [router](/developers/blueprint-runner/routers) to be accessible. This is done when defining a Blueprint Runner:
 
 <GithubFileReaderDisplay
-  url="https://github.com/tangle-network/blueprint/blob/main/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
-  fromLine={109}
-  toLine={125}
-  title="Job Registration in Router Configuration"
+  url="https://github.com/tangle-network/blueprint/blob/9acf12127c9ef89b9ffcfb95dd5371dca4326531/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs"
+  fromLine={201}
+  toLine={217}
 />
 
 ## Job Execution Flow
