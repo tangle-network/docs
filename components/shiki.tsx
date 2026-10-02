@@ -7,6 +7,7 @@ import {
 
 export const SHIKI_SUPPORTED_LANGUAGES = [
   "rust",
+  "bash",
   "typescript",
   "javascript",
   "solidity",
