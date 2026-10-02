@@ -4,6 +4,7 @@ description: The core @tangle-network/sandbox surface, creating sandboxes, runni
 ---
 
 import CodeDisplay from '/components/CodeDisplay';
+import { sandboxCode } from '/lib/sandbox-code';
 
 # SDK reference
 
@@ -16,14 +17,14 @@ Save one block as `example.ts` and run it with `npx tsx example.ts`.
 
 <CodeDisplay
   language="bash"
-  code={"npm install @tangle-network/sandbox\nnpm install --save-dev tsx"}
+  code={sandboxCode.installSdkReference}
 />
 
 ## Client
 
 <CodeDisplay
   language="typescript"
-  code={"import { Sandbox } from \"@tangle-network/sandbox\";\n\nconst apiKey = process.env.TANGLE_API_KEY;\nif (!apiKey) throw new Error(\"Set TANGLE_API_KEY\");\n\nconst client = new Sandbox({\n  apiKey,\n  baseUrl: process.env.SANDBOX_BASE_URL ?? \"https://sandbox.tangle.tools\",\n  timeoutMs: 30000,\n});"}
+  code={sandboxCode.client}
 />
 
 ### `client.create(options?)`
@@ -32,7 +33,7 @@ Create a sandbox and get back a `SandboxInstance`. Common options:
 
 <CodeDisplay
   language="typescript"
-  code={"import { Sandbox } from \"@tangle-network/sandbox\";\n\nconst apiKey = process.env.TANGLE_API_KEY;\nif (!apiKey) throw new Error(\"Set TANGLE_API_KEY\");\n\nconst client = new Sandbox({\n  apiKey,\n  baseUrl: process.env.SANDBOX_BASE_URL ?? \"https://sandbox.tangle.tools\",\n});\n\nconst box = await client.create({\n  name: \"my-project\",\n  environment: \"universal\",\n  backend: { type: \"opencode\" }, // Also supports Claude Code, Codex, and other supported harnesses.\n  env: { NODE_ENV: \"development\" },\n  resources: { cpuCores: 2, memoryMB: 4096, diskGB: 20 },\n  maxLifetimeSeconds: 3600,\n  idleTimeoutSeconds: 900,\n});\n\ntry {\n  console.log(box.id);\n} finally {\n  await box.delete();\n}"}
+  code={sandboxCode.create}
 />
 
 `environment` accepts a named environment from `client.environments.list()`, a container image reference, or an SDK-built image ID.
@@ -48,7 +49,7 @@ This example reads that machine and your account usage without creating a machin
 
 <CodeDisplay
   language="typescript"
-  code={"import { Sandbox } from \"@tangle-network/sandbox\";\n\nconst apiKey = process.env.TANGLE_API_KEY;\nif (!apiKey) throw new Error(\"Set TANGLE_API_KEY\");\n\nconst client = new Sandbox({\n  apiKey,\n  baseUrl: process.env.SANDBOX_BASE_URL ?? \"https://sandbox.tangle.tools\",\n});\n\nconst sandboxId = process.env.TANGLE_SANDBOX_ID;\nif (!sandboxId) throw new Error(\"Set TANGLE_SANDBOX_ID to an existing sandbox ID\");\n\nconst running = await client.list({ status: \"running\", limit: 10 });\nconst box = await client.get(sandboxId);\nif (!box) throw new Error(\"Sandbox not found\");\nconst usage = await client.usage();\nconsole.log(running, box.id, usage);"}
+  code={sandboxCode.listGetUsage}
 />
 
 ### `client.runBatch(request, options?)`
@@ -57,7 +58,7 @@ Run one-shot tasks across freshly provisioned sandboxes in parallel. For coordin
 
 <CodeDisplay
   language="typescript"
-  code={"import { Sandbox } from \"@tangle-network/sandbox\";\n\nconst apiKey = process.env.TANGLE_API_KEY;\nif (!apiKey) throw new Error(\"Set TANGLE_API_KEY\");\n\nconst client = new Sandbox({\n  apiKey,\n  baseUrl: process.env.SANDBOX_BASE_URL ?? \"https://sandbox.tangle.tools\",\n});\n\nconst jobId = process.env.TANGLE_BATCH_JOB_ID;\nif (!jobId) throw new Error(\"Set TANGLE_BATCH_JOB_ID to your saved job ID\");\n\nconst result = await client.runBatch(\n  {\n    tasks: [\n      { id: \"task-1\", message: \"Create a JavaScript function that adds two numbers and test it.\" },\n      { id: \"task-2\", message: \"Create a JavaScript function that reverses a string and test it.\" },\n    ],\n    backends: [{ id: \"worker\", type: \"opencode\" }],\n  },\n  { idempotencyKey: jobId },\n);\nconsole.log(result.totalSuccess, result.totalFailure);"}
+  code={sandboxCode.runBatch}
 />
 
 Select batch workers from the [supported harnesses](/infrastructure/harnesses).
@@ -75,7 +76,7 @@ Run a shell command.
 
 <CodeDisplay
   language="typescript"
-  code={"import { Sandbox } from \"@tangle-network/sandbox\";\n\nconst apiKey = process.env.TANGLE_API_KEY;\nif (!apiKey) throw new Error(\"Set TANGLE_API_KEY\");\n\nconst client = new Sandbox({\n  apiKey,\n  baseUrl: process.env.SANDBOX_BASE_URL ?? \"https://sandbox.tangle.tools\",\n});\n\nconst box = await client.create({ environment: \"universal\" });\ntry {\n  const result = await box.exec(\"node --version\", {\n    cwd: \"/workspace\",\n    env: { CI: \"true\" },\n    timeoutMs: 60000,\n  });\n  console.log(result.exitCode, result.stdout);\n} finally {\n  await box.delete();\n}"}
+  code={sandboxCode.exec}
 />
 
 ### `box.prompt(message, options?)` · `box.streamPrompt(message, options?)`
@@ -84,7 +85,7 @@ Run one agent turn. `prompt` returns the result; `streamPrompt` yields events as
 
 <CodeDisplay
   language="typescript"
-  code={"import { Sandbox } from \"@tangle-network/sandbox\";\n\nconst apiKey = process.env.TANGLE_API_KEY;\nif (!apiKey) throw new Error(\"Set TANGLE_API_KEY\");\n\nconst client = new Sandbox({\n  apiKey,\n  baseUrl: process.env.SANDBOX_BASE_URL ?? \"https://sandbox.tangle.tools\",\n});\n\nconst box = await client.create({ environment: \"universal\" });\ntry {\n  const result = await box.prompt(\"Create a JavaScript function that adds two numbers.\");\n  console.log(result);\n\n  for await (const event of box.streamPrompt(\"Add tests for that function and run them.\")) {\n    console.log(event);\n  }\n} finally {\n  await box.delete();\n}"}
+  code={sandboxCode.prompt}
 />
 
 ### `box.createTaskSession(options)` · `box.taskSession(id)`
@@ -95,7 +96,7 @@ The example clones that repository before creating the task session.
 
 <CodeDisplay
   language="typescript"
-  code={"import { randomUUID } from \"node:crypto\";\nimport { Sandbox } from \"@tangle-network/sandbox\";\n\nconst apiKey = process.env.TANGLE_API_KEY;\nif (!apiKey) throw new Error(\"Set TANGLE_API_KEY\");\n\nconst client = new Sandbox({\n  apiKey,\n  baseUrl: process.env.SANDBOX_BASE_URL ?? \"https://sandbox.tangle.tools\",\n});\n\nconst repoUrl = process.env.TANGLE_REPO_URL;\nif (!repoUrl) throw new Error(\"Set TANGLE_REPO_URL to a public Git repository URL\");\n\nconst box = await client.create({\n  environment: \"universal\",\n  git: { url: repoUrl },\n});\ntry {\n  const { session: task } = await box.createTaskSession({\n    sessionId: randomUUID(),\n    title: \"Write a README\",\n    backend: { type: \"opencode\" }, // Also supports Claude Code, Codex, and other supported harnesses.\n    isolateFileWrites: true,\n  });\n  await task.sendMessage({\n    parts: [{ type: \"text\", text: \"Write a README explaining this workspace.\" }],\n    turnId: randomUUID(),\n  });\n  console.log(await task.result());\n  console.log(await task.changes());\n} finally {\n  await box.delete();\n}"}
+  code={sandboxCode.taskSessions}
 />
 
 This example clones your repository, inspects isolated changes, then deletes its machine.
@@ -116,7 +117,7 @@ Delete it when the job and any retries finish.
 
 <CodeDisplay
   language="typescript"
-  code={"import { Sandbox } from \"@tangle-network/sandbox\";\n\nconst apiKey = process.env.TANGLE_API_KEY;\nif (!apiKey) throw new Error(\"Set TANGLE_API_KEY\");\n\nconst client = new Sandbox({\n  apiKey,\n  baseUrl: process.env.SANDBOX_BASE_URL ?? \"https://sandbox.tangle.tools\",\n});\n\nconst sandboxId = process.env.TANGLE_SANDBOX_ID;\nconst sessionId = process.env.TANGLE_SESSION_ID;\nconst turnId = process.env.TANGLE_TURN_ID;\nif (!sandboxId || !sessionId || !turnId) {\n  throw new Error(\"Set TANGLE_SANDBOX_ID, TANGLE_SESSION_ID, and TANGLE_TURN_ID from your saved job record\");\n}\n\nconst box = await client.get(sandboxId);\nif (!box) throw new Error(\"Sandbox not found\");\nconst receipt = await box.dispatchPrompt(\"Analyze code quality\", {\n  sessionId,\n  turnId,\n});\nconsole.log(receipt);\n\nconst cached = await box.findCompletedTurn(turnId, {\n  sessionId: receipt.sessionId,\n});\nif (cached) {\n  console.log(cached.result);\n} else {\n  if (!receipt.executionId) throw new Error(\"Missing execution ID\");\n  const final = await box.session(receipt.sessionId).result({\n    executionId: receipt.executionId,\n  });\n  console.log(final);\n}"}
+  code={sandboxCode.durableSessions}
 />
 
 Store the sandbox ID and dispatch receipt to reconnect from another process.
@@ -136,14 +137,14 @@ Keep the base sandbox cheap and attach a GPU only around the step that needs it.
 
 <CodeDisplay
   language="typescript"
-  code={"import { Sandbox } from \"@tangle-network/sandbox\";\n\nconst apiKey = process.env.TANGLE_API_KEY;\nif (!apiKey) throw new Error(\"Set TANGLE_API_KEY\");\n\nconst client = new Sandbox({\n  apiKey,\n  baseUrl: process.env.SANDBOX_BASE_URL ?? \"https://sandbox.tangle.tools\",\n});\n\nconst box = await client.create({ environment: \"universal\" });\ntry {\n  const lease = await box.gpu.attach({\n    accelerator: { kind: \"nvidia-h100\", count: 1 },\n    maxSpendUsd: 5,\n    maxLifetimeSeconds: 600,\n  });\n  try {\n    console.log(await box.gpu.exec(lease.id, { command: \"nvidia-smi\" }));\n  } finally {\n    await box.gpu.detach(lease.id);\n  }\n} finally {\n  await box.delete();\n}"}
+  code={sandboxCode.gpuLeases}
 />
 
 ## Lifecycle
 
 <CodeDisplay
   language="typescript"
-  code={"import { Sandbox } from \"@tangle-network/sandbox\";\n\nconst apiKey = process.env.TANGLE_API_KEY;\nif (!apiKey) throw new Error(\"Set TANGLE_API_KEY\");\n\nconst client = new Sandbox({\n  apiKey,\n  baseUrl: process.env.SANDBOX_BASE_URL ?? \"https://sandbox.tangle.tools\",\n});\n\nconst box = await client.create({ environment: \"universal\" });\ntry {\n  await box.stop();\n  await box.resume();\n  console.log((await box.exec(\"node --version\")).stdout);\n} finally {\n  await box.delete();\n}"}
+  code={sandboxCode.lifecycle}
 />
 
 ## Next

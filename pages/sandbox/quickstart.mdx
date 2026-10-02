@@ -4,6 +4,7 @@ description: Create a sandbox and run your first coding agent in a few minutes.
 ---
 
 import CodeDisplay from '/components/CodeDisplay';
+import { sandboxCode } from '/lib/sandbox-code';
 
 # Quickstart
 
@@ -13,7 +14,7 @@ Create an isolated machine, run a shell command in it, then hand it to a coding 
 
 <CodeDisplay
   language="bash"
-  code={"npm install @tangle-network/sandbox\nnpm install --save-dev tsx"}
+  code={sandboxCode.installSdk}
 />
 
 ## 2. Get an API key
@@ -22,7 +23,7 @@ Create an `sk-tan-` key from [Authentication](/platform/authentication) and expo
 
 <CodeDisplay
   language="bash"
-  code={"read -rsp \"Tangle API key: \" TANGLE_API_KEY\nprintf \"\\n\"\nexport TANGLE_API_KEY"}
+  code={sandboxCode.exportApiKey}
 />
 
 One key authenticates every Tangle product. Pass it to the client as `apiKey`; the SDK does not read env vars for you.
@@ -38,7 +39,7 @@ Check your key and available credit without provisioning a machine:
 
 <CodeDisplay
   language="bash"
-  code={"curl -fsS https://id.tangle.tools/v1/billing/balance \\\n  -H \"Authorization: Bearer ${TANGLE_API_KEY:?Set TANGLE_API_KEY}\""}
+  code={sandboxCode.checkBalance}
 />
 
 The response's `data.balance` is your available credit in US dollars.
@@ -46,7 +47,7 @@ You can also check the service and available templates without creating a sandbo
 
 <CodeDisplay
   language="bash"
-  code={"curl -fsS https://sandbox.tangle.tools/health\ncurl -fsS https://sandbox.tangle.tools/v1/public-templates"}
+  code={sandboxCode.checkServices}
 />
 
 Each TypeScript block below is a separate program for Node.js 22 or later.
@@ -58,7 +59,7 @@ Both examples release their machine after completion.
 
 <CodeDisplay
   language="typescript"
-  code={"import { Sandbox } from \"@tangle-network/sandbox\";\n\nconst apiKey = process.env.TANGLE_API_KEY;\nif (!apiKey) throw new Error(\"Set TANGLE_API_KEY\");\n\nconst client = new Sandbox({\n  apiKey,\n  baseUrl: process.env.SANDBOX_BASE_URL ?? \"https://sandbox.tangle.tools\",\n});\n\nconst box = await client.create({ environment: \"universal\", name: \"agent-smoke\" });\n\ntry {\n  const result = await box.exec(\"node --version && npm --version\");\n  console.log(result.stdout);\n} finally {\n  await box.delete();\n}"}
+  code={sandboxCode.createSandbox}
 />
 
 `create` returns a live machine; `delete` releases it. You never provision infrastructure yourself.
@@ -70,7 +71,7 @@ Sessions can select different [supported harnesses](/infrastructure/harnesses) i
 
 <CodeDisplay
   language="typescript"
-  code={"import { Sandbox } from \"@tangle-network/sandbox\";\n\nconst apiKey = process.env.TANGLE_API_KEY;\nif (!apiKey) throw new Error(\"Set TANGLE_API_KEY\");\n\nconst client = new Sandbox({\n  apiKey,\n  baseUrl: process.env.SANDBOX_BASE_URL ?? \"https://sandbox.tangle.tools\",\n});\n\nconst box = await client.create({\n  environment: \"universal\",\n  backend: { type: \"opencode\" }, // Also supports Claude Code, Codex, and other supported harnesses.\n});\n\ntry {\n  const result = await box.prompt(\"List the files in this project and summarize what it does\");\n  console.log(result);\n} finally {\n  await box.delete();\n}"}
+  code={sandboxCode.runAgent}
 />
 
 For durable runs, use `box.dispatchPrompt(message, { sessionId, turnId })` and reconnect with `box.session(sessionId)`.
