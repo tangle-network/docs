@@ -1,0 +1,104 @@
+[
+  {
+    "width": 1440,
+    "theme": "light",
+    "sections": [
+      {
+        "i": 0,
+        "copied": "use blueprint_sdk::macros::debug_job;\nuse blueprint_sdk::tangle::extract::{TangleArg, TangleResult};\n\n#[debug_job]\npub async fn square(TangleArg((x,)): TangleArg<(u64,)>) -> TangleResult<u64> {\n    let result = x * x;\n    TangleResult(result)\n}",
+        "source": "https://github.com/tangle-network/blueprint/blob/9acf12127c9ef89b9ffcfb95dd5371dca4326531/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs#L25-L87",
+        "copiedFeedback": "Copied",
+        "focus": true,
+        "scroll": {
+          "width": 830,
+          "overflow": 830,
+          "left": 0
+        }
+      },
+      {
+        "i": 1,
+        "copied": "use blueprint_sdk::macros::debug_job;\nuse blueprint_sdk::tangle::extract::{TangleArg, TangleResult};\nuse blueprint_sdk::tangle::TangleLayer;\nuse blueprint_sdk::{Job, Router};\n\npub const XSQUARE_JOB_ID: u8 = 0;\n\n#[debug_job]\npub async fn square(TangleArg((x,)): TangleArg<(u64,)>) -> TangleResult<u64> {\n    let result = x * x;\n    TangleResult(result)\n}\n\n#[must_use]\npub fn router() -> Router {\n    Router::new().route(XSQUARE_JOB_ID, square.layer(TangleLayer))\n}",
+        "source": "https://github.com/tangle-network/blueprint/blob/9acf12127c9ef89b9ffcfb95dd5371dca4326531/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs#L201-L217",
+        "copiedFeedback": "Copied",
+        "focus": true,
+        "scroll": {
+          "width": 830,
+          "overflow": 830,
+          "left": 0
+        }
+      }
+    ],
+    "widthState": {
+      "client": 1440,
+      "scroll": 1440
+    }
+  },
+  {
+    "width": 390,
+    "theme": "light",
+    "sections": [
+      {
+        "i": 0,
+        "copied": "use blueprint_sdk::macros::debug_job;\nuse blueprint_sdk::tangle::extract::{TangleArg, TangleResult};\n\n#[debug_job]\npub async fn square(TangleArg((x,)): TangleArg<(u64,)>) -> TangleResult<u64> {\n    let result = x * x;\n    TangleResult(result)\n}",
+        "source": "https://github.com/tangle-network/blueprint/blob/9acf12127c9ef89b9ffcfb95dd5371dca4326531/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs#L25-L87",
+        "copiedFeedback": "Copied",
+        "focus": true,
+        "scroll": {
+          "width": 340,
+          "overflow": 730,
+          "left": 4
+        }
+      },
+      {
+        "i": 1,
+        "copied": "use blueprint_sdk::macros::debug_job;\nuse blueprint_sdk::tangle::extract::{TangleArg, TangleResult};\nuse blueprint_sdk::tangle::TangleLayer;\nuse blueprint_sdk::{Job, Router};\n\npub const XSQUARE_JOB_ID: u8 = 0;\n\n#[debug_job]\npub async fn square(TangleArg((x,)): TangleArg<(u64,)>) -> TangleResult<u64> {\n    let result = x * x;\n    TangleResult(result)\n}\n\n#[must_use]\npub fn router() -> Router {\n    Router::new().route(XSQUARE_JOB_ID, square.layer(TangleLayer))\n}",
+        "source": "https://github.com/tangle-network/blueprint/blob/9acf12127c9ef89b9ffcfb95dd5371dca4326531/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs#L201-L217",
+        "copiedFeedback": "Copied",
+        "focus": true,
+        "scroll": {
+          "width": 340,
+          "overflow": 730,
+          "left": 40
+        }
+      }
+    ],
+    "widthState": {
+      "client": 390,
+      "scroll": 390
+    }
+  },
+  {
+    "width": 390,
+    "theme": "dark",
+    "sections": [
+      {
+        "i": 0,
+        "copied": "use blueprint_sdk::macros::debug_job;\nuse blueprint_sdk::tangle::extract::{TangleArg, TangleResult};\n\n#[debug_job]\npub async fn square(TangleArg((x,)): TangleArg<(u64,)>) -> TangleResult<u64> {\n    let result = x * x;\n    TangleResult(result)\n}",
+        "source": "https://github.com/tangle-network/blueprint/blob/9acf12127c9ef89b9ffcfb95dd5371dca4326531/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs#L25-L87",
+        "copiedFeedback": "Copied",
+        "focus": true,
+        "scroll": {
+          "width": 340,
+          "overflow": 730,
+          "left": 1
+        }
+      },
+      {
+        "i": 1,
+        "copied": "use blueprint_sdk::macros::debug_job;\nuse blueprint_sdk::tangle::extract::{TangleArg, TangleResult};\nuse blueprint_sdk::tangle::TangleLayer;\nuse blueprint_sdk::{Job, Router};\n\npub const XSQUARE_JOB_ID: u8 = 0;\n\n#[debug_job]\npub async fn square(TangleArg((x,)): TangleArg<(u64,)>) -> TangleResult<u64> {\n    let result = x * x;\n    TangleResult(result)\n}\n\n#[must_use]\npub fn router() -> Router {\n    Router::new().route(XSQUARE_JOB_ID, square.layer(TangleLayer))\n}",
+        "source": "https://github.com/tangle-network/blueprint/blob/9acf12127c9ef89b9ffcfb95dd5371dca4326531/examples/incredible-squaring/incredible-squaring-lib/src/lib.rs#L201-L217",
+        "copiedFeedback": "Copied",
+        "focus": true,
+        "scroll": {
+          "width": 340,
+          "overflow": 730,
+          "left": 1
+        }
+      }
+    ],
+    "widthState": {
+      "client": 390,
+      "scroll": 390
+    }
+  }
+]
