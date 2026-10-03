@@ -1,0 +1,35 @@
+---
+title: TypeScript and JavaScript
+description: Install the Sandbox SDK, authenticate, and run a command in your first sandbox.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { sandboxCode } from '/lib/sandbox-code';
+
+# TypeScript and JavaScript
+
+Use `@tangle-network/sandbox` from Node.js 22 or later.
+
+## Install
+
+<CodeDisplay language="bash" code={sandboxCode.installSdk} />
+
+Get a [Tangle API key](/platform/authentication) and set `TANGLE_API_KEY` in your environment.
+Add credit at [id.tangle.tools](https://id.tangle.tools) before creating a sandbox.
+
+## Run a command
+
+Save this program as `example.ts` and run `npx tsx example.ts`.
+It creates a sandbox, waits for it to start, runs a command, and deletes it.
+
+<CodeDisplay language="typescript" title="example.ts" code={sandboxCode.createSandbox} />
+
+The same code runs as JavaScript in an `.mjs` file with `node example.mjs`.
+Each example includes its imports and client setup, so you can copy it independently.
+
+## Choose the next task
+
+- [Read and write files](/sandbox/sdk/commands-files#read-and-write-files).
+- [Run an agent](/sandbox/sdk/agents-sessions).
+- [Open an app preview](/sandbox/sdk/previews-snapshots).
+- [Manage sandbox lifetime](/sandbox/sdk/lifecycle).

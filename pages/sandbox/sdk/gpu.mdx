@@ -1,0 +1,21 @@
+---
+title: GPU leases
+description: Attach a temporary GPU with a spend cap, run a command, and release the lease.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { sandboxCode } from '/lib/sandbox-code';
+
+# GPU leases
+
+Attach a GPU for the part of a job that needs one.
+Each lease requires a spend cap and lifetime limit.
+Available accelerators depend on your deployment.
+
+## Run a GPU command
+
+<CodeDisplay language="typescript" code={sandboxCode.gpuLeases} />
+
+`attach()` returns the lease ID.
+Pass it to `gpu.exec()` and `gpu.detach()`.
+Detach the lease when GPU work finishes, and delete the sandbox when the rest of the job is done.

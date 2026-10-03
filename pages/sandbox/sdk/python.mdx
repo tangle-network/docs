@@ -1,0 +1,37 @@
+---
+title: Python
+description: Create sandboxes and run commands from Python with HTTPX and the Sandbox HTTP API.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { sandboxCode } from '/lib/sandbox-code';
+
+# Python
+
+Use HTTPX to call the Sandbox API from Python.
+A public Python SDK package is not available yet.
+
+## Install
+
+<CodeDisplay language="bash" code="pip install httpx" />
+
+Get a [Tangle API key](/platform/authentication) and set `TANGLE_API_KEY` in your environment.
+Add credit at [id.tangle.tools](https://id.tangle.tools) before creating a sandbox.
+
+## Run a command
+
+Save this program as `example.py` and run `python example.py`.
+It waits for the sandbox to start and deletes it when the block exits.
+
+<CodeDisplay language="python" title="example.py" code={sandboxCode.pythonExec} />
+
+Every request sends your key as an `Authorization: Bearer` header.
+`raise_for_status()` reports failed HTTP requests before the example reads their responses.
+
+## Use files and agents
+
+- [Read and write files](/sandbox/sdk/commands-files#read-and-write-files) includes a complete Python program.
+- [Run an agent](/sandbox/sdk/agents-sessions#run-an-agent) includes a complete Python program.
+- [Sandbox lifecycle](/sandbox/sdk/lifecycle#http-endpoints) lists the lifecycle endpoints.
+- [App previews](/sandbox/sdk/previews-snapshots#open-a-running-app) opens a server through a public URL.
+- [Parallel agents](/sandbox/sdk/parallel#run-parallel-agents) sends independent prompts concurrently.

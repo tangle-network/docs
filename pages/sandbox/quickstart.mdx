@@ -1,86 +1,51 @@
 ---
 title: Quickstart
-description: Create a sandbox and run your first coding agent in a few minutes.
+description: Create a sandbox and run a command with TypeScript or Python.
 ---
 
 import CodeDisplay from '/components/CodeDisplay';
+import { Tabs } from 'nextra/components';
 import { sandboxCode } from '/lib/sandbox-code';
 
 # Quickstart
 
-Create an isolated machine, run a shell command in it, then hand it to a coding agent, all from a few lines of TypeScript.
+Create a sandbox, run a command, and delete it when the work finishes.
 
-## 1. Install the SDK
+## Get an API key
 
-<CodeDisplay
-  language="bash"
-  code={sandboxCode.installSdk}
-/>
+Create a key at [id.tangle.tools](https://id.tangle.tools) and add credit to your account.
+Set `TANGLE_API_KEY` in your environment.
+Keep this key on your server.
+See [Authentication](/platform/authentication) for key setup.
 
-## 2. Get an API key
+## Install
 
-Create an `sk-tan-` key from [Authentication](/platform/authentication) and export it:
+<Tabs items={['TypeScript / JavaScript', 'Python']}>
+  <Tabs.Tab><CodeDisplay language="bash" code={sandboxCode.installSdk} /></Tabs.Tab>
+  <Tabs.Tab><CodeDisplay language="bash" code="pip install httpx" /></Tabs.Tab>
+</Tabs>
 
-<CodeDisplay
-  language="bash"
-  code={sandboxCode.exportApiKey}
-/>
+TypeScript and JavaScript use the Sandbox SDK.
+Python uses the HTTP API through HTTPX.
 
-One key authenticates every Tangle product. Pass it to the client as `apiKey`; the SDK does not read env vars for you.
+## Run a command
 
-## 3. Check your credit and the service
+<Tabs items={['TypeScript / JavaScript', 'Python']}>
+  <Tabs.Tab>
+    Save as `example.ts` and run `npx tsx example.ts` with Node.js 22 or later.
+    For JavaScript, save as `example.mjs` and run `node example.mjs`.
+    <CodeDisplay language="typescript" code={sandboxCode.createSandbox} />
+  </Tabs.Tab>
+  <Tabs.Tab>
+    Save as `example.py` and run `python example.py`.
+    <CodeDisplay language="python" code={sandboxCode.pythonExec} />
+  </Tabs.Tab>
+</Tabs>
 
-Free accounts start with no included credit.
-Add prepaid credit or select a plan with included credit at [id.tangle.tools](https://id.tangle.tools) before creating a sandbox.
-Agent model usage also draws from your balance.
-On the Free plan, sandboxes pause when the balance reaches zero.
+## Continue building
 
-Check your key and available credit without provisioning a machine:
-
-<CodeDisplay
-  language="bash"
-  code={sandboxCode.checkBalance}
-/>
-
-The response's `data.balance` is your available credit in US dollars.
-You can also check the service and available templates without creating a sandbox:
-
-<CodeDisplay
-  language="bash"
-  code={sandboxCode.checkServices}
-/>
-
-Each TypeScript block below is a separate program for Node.js 22 or later.
-Run it in a project with the SDK installed and `TANGLE_API_KEY` exported.
-Save either block as `example.ts` and run it with `npx tsx example.ts`.
-Both examples release their machine after completion.
-
-## 4. Create a sandbox and run a command
-
-<CodeDisplay
-  language="typescript"
-  code={sandboxCode.createSandbox}
-/>
-
-`create` returns a live machine; `delete` releases it. You never provision infrastructure yourself.
-
-## 5. Run a coding agent
-
-Choose the initial coding harness with `backend.type`.
-Sessions can select different [supported harnesses](/infrastructure/harnesses) in the same sandbox. `opencode` (OpenCode) is the default and needs no separate model-provider key. `claude-code` (Claude Code) runs on Tangle Router by default with no separate model-provider key. To bring your own Anthropic credential, pass `backend: { type: 'claude-code', model: { apiKey: process.env.ANTHROPIC_API_KEY } }`. See [supported harnesses](/infrastructure/harnesses) for the full list.
-
-<CodeDisplay
-  language="typescript"
-  code={sandboxCode.runAgent}
-/>
-
-For durable runs, use `box.dispatchPrompt(message, { sessionId, turnId })` and reconnect with `box.session(sessionId)`.
-Store both IDs before dispatching and reuse them for retries of the same turn.
-Completed retries are deduplicated while their results remain cached.
-A session ID alone does not deduplicate completed retries.
-See [durable sessions in the SDK reference](/sandbox/sdk-reference).
-
-## Next
-
-- **[SDK reference](/sandbox/sdk-reference)** for durable sessions, GPU leases, and the core API.
-- **[Connect to Intelligence](/intelligence/connect)**: send each run's trace so you can see why an agent failed and what to fix.
+- [Run an agent](/sandbox/sdk/agents-sessions).
+- [Read and write files](/sandbox/sdk/commands-files).
+- [Open an app preview](/sandbox/sdk/previews-snapshots).
+- [Manage sandbox lifetime](/sandbox/sdk/lifecycle).
+- [Run parallel work](/sandbox/sdk/parallel).

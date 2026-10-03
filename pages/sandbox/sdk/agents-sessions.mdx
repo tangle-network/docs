@@ -1,0 +1,56 @@
+---
+title: Agents and sessions
+description: Run agents, stream their output, and reconnect to durable task sessions.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { Tabs } from 'nextra/components';
+import { sandboxCode } from '/lib/sandbox-code';
+
+# Agents and sessions
+
+Run an agent in a sandbox with access to its files and tools.
+Choose a [supported harness](/infrastructure/harnesses), including Claude Code, Codex, OpenCode, or Pi.
+
+## Run an agent
+
+<Tabs items={['TypeScript', 'Python']}>
+  <Tabs.Tab><CodeDisplay language="typescript" code={sandboxCode.runAgent} /></Tabs.Tab>
+  <Tabs.Tab><CodeDisplay language="python" code={sandboxCode.pythonAgent} /></Tabs.Tab>
+</Tabs>
+
+Use a stable `sessionId` for follow-up messages in the same conversation.
+The Python HTTP request encodes text parts as Base64.
+
+## Stream output
+
+`streamPrompt()` yields events while the agent works.
+
+<CodeDisplay language="typescript" code={sandboxCode.prompt} />
+
+## Isolate a task's changes
+
+Set `TANGLE_REPO_URL` to a public Git repository URL.
+This example creates a task session, asks the agent to write a README, and returns its file changes.
+
+<CodeDisplay language="typescript" code={sandboxCode.taskSessions} />
+
+Review `task.changes()` before applying them with `task.commit()`.
+The example deletes its sandbox after inspection.
+Keep its sandbox and session IDs when another process needs to continue the task.
+
+## Reconnect to a durable turn
+
+Use `dispatchPrompt()` when work must continue after the client disconnects.
+Save the sandbox ID, session ID, and turn ID in your job record before dispatching.
+Set the corresponding environment variables for this example.
+
+<CodeDisplay language="typescript" code={sandboxCode.durableSessions} />
+
+Reuse the same turn ID and prompt when retrying the same job.
+A completed result is deduplicated while its cache is retained.
+A session ID alone does not deduplicate completed turns.
+
+Keep the receipt's `executionId` to reconnect to that specific execution.
+`session.events({ executionId })` follows its output.
+Delete the sandbox after the job and its retries finish.

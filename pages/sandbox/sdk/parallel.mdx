@@ -1,0 +1,50 @@
+---
+title: Parallel tasks and fleets
+description: Run independent agent jobs in batches or manage a named fleet of sandboxes.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { Tabs } from 'nextra/components';
+import { sandboxCode } from '/lib/sandbox-code';
+
+# Parallel tasks and fleets
+
+Use a batch for independent agent tasks.
+Use a fleet when you need to address and manage the same workers across multiple operations.
+
+## Run parallel agents
+
+Send independent prompts to different sessions in one sandbox.
+These tasks inspect the workspace without editing it.
+
+<Tabs items={['TypeScript', 'Python']}>
+  <Tabs.Tab><CodeDisplay language="typescript" code={sandboxCode.parallel} /></Tabs.Tab>
+  <Tabs.Tab><CodeDisplay language="python" code={sandboxCode.pythonParallel} /></Tabs.Tab>
+</Tabs>
+
+Sessions share this sandbox's files.
+Use separate sandboxes when concurrent tasks need isolated workspaces.
+
+## Run a batch
+
+Set `TANGLE_BATCH_JOB_ID` to the saved ID of this job.
+This example runs each task in a temporary sandbox and returns a combined result.
+
+<CodeDisplay language="typescript" code={sandboxCode.runBatch} />
+
+Batch sandboxes are deleted after the run by default.
+Select workers from the [supported harnesses](/infrastructure/harnesses).
+
+Reuse an `idempotencyKey` only for the same request body.
+A keyed batch continues after a disconnect; repeating the request joins active work or replays a retained result.
+Disconnecting an unkeyed batch cancels its server work.
+
+## Manage a fleet
+
+Create named workers, run a command across them, and delete the fleet when the work finishes.
+
+<CodeDisplay language="typescript" code={sandboxCode.fleet} />
+
+`maxConcurrent` limits concurrent command dispatches.
+Fleet policies constrain provisioning and do not replace account quotas.
+Keep the fleet ID when another process needs to inspect or continue the same workers.

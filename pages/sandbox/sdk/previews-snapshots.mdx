@@ -1,0 +1,47 @@
+---
+title: Previews and snapshots
+description: Open a sandbox app through a preview URL and save or restore workspace files.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { Tabs } from 'nextra/components';
+import { sandboxCode } from '/lib/sandbox-code';
+
+# Previews and snapshots
+
+Open the app running in your sandbox, or save its workspace before making another change.
+
+## Open a running app
+
+Start a server on `0.0.0.0`, create a preview link for its port, and wait for the public route to respond.
+
+<Tabs items={['TypeScript', 'Python']}>
+  <Tabs.Tab><CodeDisplay language="typescript" code={sandboxCode.preview} /></Tabs.Tab>
+  <Tabs.Tab><CodeDisplay language="python" code={sandboxCode.pythonPreview} /></Tabs.Tab>
+</Tabs>
+
+The preview URL is public.
+Serve only files and application routes you intend to share.
+The example waits for you to open the URL, then deletes the sandbox when you press Enter.
+
+`previewLinks.remove(previewId)` removes a link.
+Deleting its sandbox also ends the app.
+
+## Save and restore files
+
+Capture a workspace snapshot, change a file, and restore that file from the snapshot.
+
+<CodeDisplay language="typescript" code={sandboxCode.snapshot} />
+
+`snapshot()` captures the workspace.
+`restorePaths()` restores selected paths; `revertToSnapshot()` restores the whole workspace.
+Use `listSnapshots()` to find existing snapshots.
+
+## Start from a snapshot
+
+Set `TANGLE_SANDBOX_ID` and `TANGLE_SNAPSHOT_ID` to the source sandbox and its snapshot.
+
+<CodeDisplay language="typescript" code={sandboxCode.fromSnapshot} />
+
+The restored sandbox has its own lifecycle.
+Deleting it does not delete the source sandbox.

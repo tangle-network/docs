@@ -1,0 +1,33 @@
+---
+title: Sandbox SDK and API
+description: Create sandboxes, run commands and agents, manage files, and coordinate parallel work from TypeScript or Python.
+---
+
+# Sandbox SDK and API
+
+Create a sandbox, run code or agents, and keep control of its files and lifetime.
+Use the TypeScript SDK or call the HTTP API from Python.
+
+## Get started
+
+| Language                  | Install                               | Guide                                                |
+| ------------------------- | ------------------------------------- | ---------------------------------------------------- |
+| TypeScript and JavaScript | `npm install @tangle-network/sandbox` | [Create your first sandbox](/sandbox/sdk/typescript) |
+| Python                    | `pip install httpx`                   | [Use the Sandbox HTTP API](/sandbox/sdk/python)      |
+
+Both use your [Tangle API key](/platform/authentication) and account balance.
+Run these examples on your server; keep the API key out of browser code.
+
+## Build with sandboxes
+
+| Task                                                      | What you can do                                             |
+| --------------------------------------------------------- | ----------------------------------------------------------- |
+| [Sandbox lifecycle](/sandbox/sdk/lifecycle)               | Create, find, stop, resume, and delete sandboxes.           |
+| [Commands and files](/sandbox/sdk/commands-files)         | Execute commands, read output, and read or write files.     |
+| [Agents and sessions](/sandbox/sdk/agents-sessions)       | Run an agent, stream output, and reconnect to saved work.   |
+| [Previews and snapshots](/sandbox/sdk/previews-snapshots) | Open a running app and save or restore its workspace.       |
+| [Parallel tasks and fleets](/sandbox/sdk/parallel)        | Distribute tasks across sandboxes and manage them together. |
+| [GPU leases](/sandbox/sdk/gpu)                            | Attach a GPU for a job with a spend and time limit.         |
+
+Find package versions and releases on [npm](https://www.npmjs.com/package/@tangle-network/sandbox).
+Python examples use HTTPX; a public Python SDK package is not available yet.

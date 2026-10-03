@@ -9,6 +9,10 @@ const meta: Meta = {
   },
   "sdk-reference": {
     title: "SDK reference",
+    display: "hidden",
+  },
+  sdk: {
+    title: "SDK & API",
   },
 };
 
