@@ -18,6 +18,7 @@ For an ordinary shell, use [terminals](/sandbox/sdk/interactive#stream-a-termina
 
 Use Node.js 22 or later.
 Set `TANGLE_API_KEY` and `TANGLE_SANDBOX_ID` to a running sandbox you own.
+For a [budgeted fleet](/sandbox/sdk/fleets#run-agents-with-a-budget), obtain `box` with `await fleet.sandbox(machineId)` from the original `fleet` instance.
 Install the SDK and its profile helpers:
 
 <CodeDisplay language="bash" code={`npm install @tangle-network/sandbox @tangle-network/agent-interface

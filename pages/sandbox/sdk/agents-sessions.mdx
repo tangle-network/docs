@@ -31,6 +31,7 @@ Headless agents can also ask questions or request approvals when you enable thos
 Set `TANGLE_API_KEY` and `TANGLE_SANDBOX_ID` to a running sandbox you own.
 Install the [TypeScript SDK](/sandbox/sdk/typescript), or `pip install httpx` for Python.
 These examples leave the sandbox running.
+For a [budgeted fleet](/sandbox/sdk/fleets#run-agents-with-a-budget), obtain `box` with `await fleet.sandbox(machineId)` from the original `fleet` instance.
 
 <CodeDisplay examples={[
   { language: "typescript", code: agentModeExamples.headless },
