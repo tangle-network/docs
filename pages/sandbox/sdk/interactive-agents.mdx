@@ -1,0 +1,93 @@
+---
+title: Interactive agents
+description: Start native agent TUIs, stream their terminal output, send keyboard input, detach, reconnect, and stop sessions.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { interactiveExamples } from '/lib/sandbox-interactive-examples';
+
+# Interactive agents
+
+Run an agent's native terminal interface inside a sandbox.
+Stream its screen, send keyboard input, and reconnect to the same process.
+
+For headless tasks and structured messages, use [agents and sessions](/sandbox/sdk/agents-sessions).
+For an ordinary shell, use [terminals](/sandbox/sdk/interactive#stream-a-terminal).
+
+## Start a native TUI
+
+Use Node.js 22 or later.
+Set `TANGLE_API_KEY` and `TANGLE_SANDBOX_ID` to a running sandbox you own.
+Install the SDK and its profile helpers:
+
+<CodeDisplay language="bash" code={`npm install @tangle-network/sandbox @tangle-network/agent-interface
+npm install --save-dev tsx`} />
+
+Save this program as `start-tui.ts` and run `npx tsx start-tui.ts` in your terminal.
+It starts Claude Code with a prompt, streams its actual terminal output, and forwards your keyboard input.
+
+<CodeDisplay language="typescript" title="start-tui.ts" code={interactiveExamples.start} />
+
+Press **Ctrl-]** to detach while keeping the agent running.
+Other keys, including Ctrl-C, go to the agent's terminal.
+Resizing your terminal updates the remote screen.
+The program prints the filename containing the session reference before attaching.
+
+`profile.harness` selects the agent.
+The runtime supports native launchers for Claude Code, Codex, Pi, OpenCode, Factory Droids, Forge, Kimi Code, Amp, and Hermes.
+The selected agent must be installed and authenticated in the sandbox.
+
+Use `initialPrompt` with Claude Code, Codex, Pi, or OpenCode.
+For other agents, omit it and type after the TUI is ready.
+Check `(await box.capabilities())?.interactiveAgent` before relying on native terminal operations.
+
+## Reconnect to the same agent
+
+Save this as `reattach-tui.ts`.
+Pass the reference filename printed by the start program: `npx tsx reattach-tui.ts tangle-tui-SESSION_ID.json`.
+
+<CodeDisplay language="typescript" title="reattach-tui.ts" code={interactiveExamples.reattach} />
+
+The SDK reads the existing session, claims input control, and attaches to that process.
+It does not start another agent.
+Keep the complete reference; a session ID alone does not identify a specific process incarnation.
+A stopped or expired session cannot be reattached.
+
+## Stop the agent
+
+Detach the viewer first.
+Save this as `stop-tui.ts` and pass the same reference filename: `npx tsx stop-tui.ts tangle-tui-SESSION_ID.json`.
+
+<CodeDisplay language="typescript" title="stop-tui.ts" code={interactiveExamples.stop} />
+
+`stopLifecycle()` stops the referenced agent process.
+The sandbox and its files remain available.
+Delete the sandbox separately when its work is finished.
+
+## Send input from your application
+
+| Operation             | API                                        |
+| --------------------- | ------------------------------------------ |
+| Start with a task     | `tui.start({ ...options, initialPrompt })` |
+| Stream terminal bytes | `tui.attach({ handlers: { onData } })`     |
+| Send keystrokes       | `terminal.write(data)`                     |
+| Resize the screen     | `terminal.resize(cols, rows)`              |
+| Detach the viewer     | `terminal.close()`                         |
+| Inspect the process   | `tui.status()`                             |
+| Stop the process      | `tui.stopLifecycle()`                      |
+
+`write()` sends terminal input, including control keys and escape sequences.
+It is not a structured agent-message API.
+Use `sendPrompt()` when you need a prompt delivery acknowledgement bound to the active process and input-control claim.
+That acknowledgement confirms delivery, not completion of the agent's task.
+Use [headless execution](/sandbox/sdk/agents-sessions#run-without-a-terminal) when your application needs a structured task result.
+
+## Embed a TUI in your product
+
+Use `BrowserInteractiveSessionController` from `@tangle-network/sandbox/interactive-control` to attach a browser terminal.
+Render `onData` bytes with a terminal renderer such as xterm.js, and forward its input and resize events.
+For typed terminal frames with replay identifiers, use `attachAgentTerminal()`.
+
+Your backend must check the user's access before issuing [scoped credentials](/sandbox/sdk/access#browser-access).
+Keep account API keys on the server.
+A browser viewer attaches to an existing session; opening the viewer should not provision or replace a sandbox.

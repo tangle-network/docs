@@ -5,27 +5,82 @@ description: Run agents, stream their output, and reconnect to durable task sess
 
 import CodeDisplay from '/components/CodeDisplay';
 import { sandboxCode } from '/lib/sandbox-code';
+import { agentModeExamples } from '/lib/sandbox-agent-mode-examples';
 
 # Agents and sessions
 
 Run an agent in a sandbox with access to its files and tools.
 Choose a [supported harness](/infrastructure/harnesses), including Claude Code, Codex, OpenCode, or Pi.
 
-## Run an agent
+## Choose an execution mode
+
+| Mode                      | Use it for                                                                         | API                                                        |
+| ------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Non-interactive           | Run a task and read its result.                                                    | `box.prompt()`                                             |
+| Non-interactive, streamed | Show messages and tool activity while a task runs.                                 | `box.streamPrompt()`                                       |
+| Interactive TUI           | Use the agent's native terminal interface, with keyboard input and screen updates. | [`session.interactive()`](/sandbox/sdk/interactive-agents) |
+| Questions and approvals   | Let a headless agent ask a user for input in your application.                     | `backend.interactions`, `session.interactions()`           |
+
+Streaming does not require a TUI.
+Headless agents can also ask questions or request approvals when you enable those interactions.
+
+<span id="run-an-agent" />
+
+## Run without a terminal
+
+Set `TANGLE_API_KEY` and `TANGLE_SANDBOX_ID` to a running sandbox you own.
+Install the [TypeScript SDK](/sandbox/sdk/typescript), or `pip install httpx` for Python.
+These examples leave the sandbox running.
 
 <CodeDisplay examples={[
-  { language: "typescript", code: sandboxCode.runAgent },
-  { language: "python", code: sandboxCode.pythonAgent },
+  { language: "typescript", code: agentModeExamples.headless },
+  { language: "python", code: agentModeExamples.headlessPython },
 ]} />
 
-Use a stable `sessionId` for follow-up messages in the same conversation.
+Use the same `sessionId` for follow-up messages in that conversation.
+Use a new session when switching to a different agent.
 The Python HTTP request encodes text parts as Base64.
 
 ## Stream output
 
-`streamPrompt()` yields events while the agent works.
+`streamPrompt()` yields messages, tool activity, usage, and execution events as the agent works.
+The outcome tracker distinguishes completion, failure, and requests for human input.
 
-<CodeDisplay language="typescript" code={sandboxCode.prompt} />
+<CodeDisplay language="typescript" code={agentModeExamples.stream} />
+
+A closed stream alone does not mean the task succeeded.
+For work that must continue after the caller exits, use a [durable turn](#reconnect-to-a-durable-turn).
+
+## Enable questions and approvals
+
+Enable the interaction kinds your application handles with `backend.interactions`.
+This example lets Codex ask a question and prints requests while the agent runs.
+Keep this stream open while another process or your application sends the answer.
+
+<CodeDisplay language="typescript" code={agentModeExamples.questions} />
+
+| Setting            | Agent behavior                      |
+| ------------------ | ----------------------------------- |
+| `question: true`   | Ask the user to answer or choose.   |
+| `permission: true` | Request a tool or command approval. |
+| `plan: true`       | Submit a plan for a decision.       |
+
+Unsupported interaction kinds fail when the session initializes.
+Read `interaction` events as they arrive.
+`session.interactions()` retrieves outstanding requests when your application reconnects.
+
+### Answer a question
+
+Set `TANGLE_SESSION_ID` to the printed session ID.
+Set `TANGLE_QUESTION_ID` to `event.data.request.id` from the question interaction.
+Set `TANGLE_ANSWERS_JSON` using `request.answerSpec.fields` and your user's answers.
+For a string-array field named `q0`, an answer could be `{"q0":["My project"]}`.
+
+<CodeDisplay language="typescript" code={agentModeExamples.answer} />
+
+Keep the acknowledgement and inspect the session before sending another turn.
+Respond to permissions with `respondToPermission()` and plans with `approvePlan()` or `rejectPlan()`.
+Plan decisions can enqueue a follow-up turn; do not submit that turn again.
 
 ## Isolate a task's changes
 
