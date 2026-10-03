@@ -1,0 +1,110 @@
+---
+title: API map and integrations
+description: Find Sandbox SDK managers, import paths, framework adapters, collaboration, and messaging integrations.
+---
+
+# API map and integrations
+
+Use the task guides for complete programs.
+The tables below locate the SDK's other operations and integration entrypoints.
+
+## Account and sandbox APIs
+
+| API                                                                   | Operations                                                        | Guide                                                                          |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `Sandbox`                                                             | Create, list, get, wait, and delete matching sandboxes.           | [Lifecycle](/sandbox/sdk/lifecycle)                                            |
+| `client.shapes()`, `.environments`, `.listBackends()`                 | Discover resource sizes, environments, and harnesses.             | [Resources](/sandbox/sdk/access#resources-and-usage)                           |
+| `client.usage()`, `.subscription()`, `.getIdentity()`, `.health()`    | Read usage, plan, identity, and service health.                   | [Access and usage](/sandbox/sdk/access)                                        |
+| `box.exec()`, `.runCode()`, `.process`                                | Execute code, spawn processes, read logs, signal, and wait.       | [Commands and files](/sandbox/sdk/commands-files)                              |
+| `box.read()`, `.write()`, `.writeMany()`, `.fs`, `.search()`          | Read, write, search, list, upload, download, and manage files.    | [Commands and files](/sandbox/sdk/commands-files)                              |
+| `box.git`                                                             | Status, diff, branch, commit, push, pull, and repository history. | [Git operations](#git-and-tools)                                               |
+| `Image`, `box.images`, `client.publicTemplates`                       | Build images, publish workspaces, and share templates.            | [Images and storage](/sandbox/sdk/images-storage)                              |
+| `box.snapshot()`, `.revertToSnapshot()`, `.restorePaths()`, `.fork()` | Save, restore, and clone workspaces.                              | [Snapshots](/sandbox/sdk/previews-snapshots)                                   |
+| `box.restoreFromStorage()`                                            | Restore from a customer bucket.                                   | [Snapshot storage](/sandbox/sdk/images-storage#store-snapshots-in-your-bucket) |
+| `box.ports()`, `.previewLinks`, `.network`, `.sshCommand()`           | Discover ports, publish previews, and connect over SSH.           | [Ingress](/sandbox/sdk/networking)                                             |
+| `box.egress`                                                          | Read and change outbound policy; inspect traffic and denials.     | [Egress](/sandbox/sdk/networking#restrict-outbound-access)                     |
+| `box.terminals`, `session.interactive`                                | Attach shells and native agent terminals.                         | [Interactive access](/sandbox/sdk/interactive)                                 |
+| `box.getMcpEndpoint()`                                                | Delegate computer tools to an MCP client.                         | [Computer use](/sandbox/sdk/interactive#connect-computer-tools-through-mcp)    |
+| `box.gpu`                                                             | Attach, inspect, execute on, and detach GPU leases.               | [GPUs](/sandbox/sdk/gpu)                                                       |
+
+## Agents and execution
+
+| API                                                                | Operations                                                      | Guide                                                                     |
+| ------------------------------------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `box.prompt()`, `.streamPrompt()`                                  | Run an agent and consume its result or events.                  | [Agents](/sandbox/sdk/agents-sessions)                                    |
+| `box.sessions()`, `.createSession()`, `.session()`                 | Manage conversations, messages, results, and execution history. | [Sessions](/sandbox/sdk/agents-sessions)                                  |
+| `box.createTaskSession()`, `task.changes()`, `.commit()`           | Inspect and apply isolated task changes.                        | [Task changes](/sandbox/sdk/agents-sessions#isolate-a-tasks-changes)      |
+| `box.dispatchPrompt()`, `.driveTurn()`, `.driveConversationTurn()` | Resume work using stable turn and session identities.           | [Durable turns](/sandbox/sdk/agents-sessions#reconnect-to-a-durable-turn) |
+| `session.interactions()`, `.answer()`, `.respondToPermission()`    | Read and respond to questions and permissions.                  | [Human decisions](#human-decisions)                                       |
+| `session.plan()`, `.approvePlan()`, `.rejectPlan()`                | Review a plan and submit a decision.                            | [Human decisions](#human-decisions)                                       |
+| `client.instances`                                                 | Maintain a workspace per customer.                              | [Customer workspaces](/sandbox/sdk/instances)                             |
+| `client.runBatch()`, `.streamBatch()`                              | Run independent jobs in temporary sandboxes.                    | [Batches](/sandbox/sdk/parallel)                                          |
+| `client.fleets`                                                    | Provision named workers and coordinate agents.                  | [Fleets](/sandbox/sdk/fleets)                                             |
+| `box.trace()`, `.exportTrace()`, `.intelligence()`                 | Inspect runtime records and export them for analysis.           | [Traces](/sandbox/sdk/traces)                                             |
+| `client.intelligence`                                              | Estimate, create, read, and list analysis reports.              | [Analysis](/sandbox/sdk/traces#analyze-runtime-performance)               |
+
+## Git and tools
+
+`box.git` provides `status()`, `diff()`, `log()`, `commit()`, `branches()`, `checkout()`, `pull()`, and `push()`.
+Use the sandbox's configured Git credentials for private repositories.
+Review changes before committing or pushing them.
+
+`box.tools` lists installed tools and manages tool installation.
+`box.backend` exposes the active backend's configuration, models, and supported provider operations.
+Provider-specific operations can return `NOT_SUPPORTED`; use `client.listBackends()` to inspect advertised capabilities.
+
+## Human decisions
+
+Read outstanding requests with `session.interactions()` and keep their exact IDs.
+Respond with `answer()`, `respondToPermission()`, or `respondToInteraction()` for the matching request.
+An interrupted or waiting execution has not completed successfully.
+
+`approvePlan()` and `rejectPlan()` can enqueue a follow-up turn.
+Read that turn's admission and result rather than sending the same prompt again.
+Use `interrupt()` or `cancelRun()` to stop work, and `delete()` to remove a session.
+
+## Security and sharing
+
+| API                                                 | Use                                                               |
+| --------------------------------------------------- | ----------------------------------------------------------------- |
+| `client.secrets`                                    | Create, list, and delete account secrets.                         |
+| `client.sshKeys`                                    | Register and manage SSH public keys.                              |
+| `client.teams`                                      | Teams, invitations, member roles, team secrets, and templates.    |
+| `box.permissions`                                   | Manage sandbox users, directory permissions, and access policies. |
+| `box.mintScopedToken()`                             | Issue short-lived access for runtime or session clients.          |
+| `box.grantNativeCredential()`                       | Grant a named native credential to an agent backend.              |
+| `box.collaborate()`, `.refreshCollaborationToken()` | Authorize shared document editing.                                |
+| `createConfidentialSandbox()`                       | Provision with a compatible confidential operator.                |
+
+See [Access, secrets, and usage](/sandbox/sdk/access) for account credentials and browser access.
+
+## Package entrypoints
+
+| Import                                        | Use                                                              |
+| --------------------------------------------- | ---------------------------------------------------------------- |
+| `@tangle-network/sandbox`                     | Account client, sandboxes, fleets, images, sessions, and traces. |
+| `@tangle-network/sandbox/core`                | Client without the optional chain integration.                   |
+| `@tangle-network/sandbox/runtime`             | Browser or worker runtime access with scoped credentials.        |
+| `@tangle-network/sandbox/interactive-control` | Interactive agent state, attachment, and input control.          |
+| `@tangle-network/sandbox/session-gateway`     | Browser WebSocket events, reconnection, and replay.              |
+| `@tangle-network/sandbox/collaboration`       | Collaborative documents and file synchronization.                |
+| `@tangle-network/sandbox/agent`               | Managed agents, AI SDK and Mastra tools, and an MCP bridge.      |
+| `@tangle-network/sandbox/openai`              | OpenAI-compatible request and event translation.                 |
+| `@tangle-network/sandbox/intelligence`        | Browser-safe reads of Intelligence traces.                       |
+| `@tangle-network/sandbox/auth`                | Server-side token issuance and validation.                       |
+| `@tangle-network/sandbox/tangle`              | Direct Tangle chain operations.                                  |
+| `@tangle-network/sandbox/lines`               | Phone and messaging lines.                                       |
+| `@tangle-network/sandbox/preview`             | Managed agent preview helpers.                                   |
+
+Install optional framework dependencies only for the integration you use.
+The package includes TypeScript declarations for every exported method and option; open a symbol's definition in your editor for its signature.
+
+## Messaging and collaboration
+
+`client.lines` manages messaging addresses connected through Tangle Hub.
+`box.lines` attaches a line to a sandbox so incoming messages reach its agent.
+Line creation and delivery require the corresponding Hub connection.
+
+`CollaborationClient` and `CollaborationFileBridge` connect shared document changes with sandbox files.
+Get the transport and access grant from `box.collaborate()` after checking the viewer's access.
+Use `refreshCollaborationToken()` to renew it.

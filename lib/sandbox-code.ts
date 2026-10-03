@@ -85,6 +85,7 @@ console.log(result.totalSuccess, result.totalFailure);`,
 const fleet = await client.fleets.create({
   defaults: { environment: "universal", maxLifetimeSeconds: 900 },
   machines: [{ machineId: "worker-1" }, { machineId: "worker-2" }],
+  maxConcurrentCreates: 2,
   policy: { maxMachines: 2, maxConcurrentCreates: 2 },
 });
 const results = await fleet.dispatchExec("node --version", {

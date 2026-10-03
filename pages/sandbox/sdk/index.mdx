@@ -5,8 +5,8 @@ description: Create sandboxes, run commands and agents, manage files, and coordi
 
 # Sandbox SDK and API
 
-Create a sandbox, run code or agents, and keep control of its files and lifetime.
-Use the TypeScript SDK or call the HTTP API from Python.
+Run code and agents, expose applications, coordinate workers, and inspect their results.
+Use the SDK from TypeScript or JavaScript, or call the HTTP API from Python.
 
 ## Get started
 
@@ -18,16 +18,33 @@ Use the TypeScript SDK or call the HTTP API from Python.
 Both use your [Tangle API key](/platform/authentication) and account balance.
 Run these examples on your server; keep the API key out of browser code.
 
-## Build with sandboxes
+## Sandboxes
 
-| Task                                                      | What you can do                                             |
-| --------------------------------------------------------- | ----------------------------------------------------------- |
-| [Sandbox lifecycle](/sandbox/sdk/lifecycle)               | Create, find, stop, resume, and delete sandboxes.           |
-| [Commands and files](/sandbox/sdk/commands-files)         | Execute commands, read output, and read or write files.     |
-| [Agents and sessions](/sandbox/sdk/agents-sessions)       | Run an agent, stream output, and reconnect to saved work.   |
-| [Previews and snapshots](/sandbox/sdk/previews-snapshots) | Open a running app and save or restore its workspace.       |
-| [Parallel tasks and fleets](/sandbox/sdk/parallel)        | Distribute tasks across sandboxes and manage them together. |
-| [GPU leases](/sandbox/sdk/gpu)                            | Attach a GPU for a job with a spend and time limit.         |
+| Guide                                                     | What you can do                                                       |
+| --------------------------------------------------------- | --------------------------------------------------------------------- |
+| [Lifecycle](/sandbox/sdk/lifecycle)                       | Create, size, stop, resume, and delete sandboxes.                     |
+| [Commands and files](/sandbox/sdk/commands-files)         | Execute code, manage processes, and read or write files.              |
+| [Images and storage](/sandbox/sdk/images-storage)         | Build images, share templates, and use your own snapshot storage.     |
+| [Ingress and egress](/sandbox/sdk/networking)             | Expose HTTPS previews, connect over SSH, and control outbound access. |
+| [Terminals and computer use](/sandbox/sdk/interactive)    | Stream terminals and connect agents to computer tools.                |
+| [Previews and snapshots](/sandbox/sdk/previews-snapshots) | Open an app, save a workspace, and restore its files.                 |
+| [GPUs](/sandbox/sdk/gpu)                                  | Attach compute for a GPU job and inspect its lease and charges.       |
+
+## Agents and workflows
+
+| Guide                                               | What you can do                                              |
+| --------------------------------------------------- | ------------------------------------------------------------ |
+| [Agents and sessions](/sandbox/sdk/agents-sessions) | Run agents, stream results, review changes, and reconnect.   |
+| [Customer workspaces](/sandbox/sdk/instances)       | Keep a sandbox and conversations for each customer.          |
+| [Parallel tasks and batches](/sandbox/sdk/parallel) | Run independent jobs and collect their results.              |
+| [Fleets](/sandbox/sdk/fleets)                       | Coordinate named workers, select agents, and manage budgets. |
+| [Workflows](/sandbox/sdk/workflows)                 | Compose sandbox steps or run a saved Tangle workflow.        |
+| [Traces and analysis](/sandbox/sdk/traces)          | Inspect agent runs, export timings, and request analysis.    |
+
+## Access and integrations
+
+[Access, secrets, and usage](/sandbox/sdk/access) covers account resources, team access, browser tokens, and credentials.
+The [API map](/sandbox/sdk/reference) connects SDK managers and package entrypoints to their guides.
 
 Find package versions and releases on [npm](https://www.npmjs.com/package/@tangle-network/sandbox).
 Python examples use HTTPX; a public Python SDK package is not available yet.

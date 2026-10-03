@@ -1,0 +1,64 @@
+---
+title: Traces and analysis
+description: Inspect agent results, export sandbox runtime traces, and create performance reports.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { workflowTraceExamples } from '/lib/sandbox-workflow-trace-examples';
+
+# Traces and analysis
+
+Inspect the result and tool calls from an agent run, or review the sandbox's runtime and usage.
+Use [Tangle Intelligence](/intelligence) to investigate recorded agent activity across runs.
+
+Set `TANGLE_API_KEY` and `TANGLE_SANDBOX_ID` to an existing sandbox.
+Install the [TypeScript SDK](/sandbox/sdk/typescript), or `pip install httpx` for Python.
+These examples leave the sandbox available for further inspection.
+
+## Inspect an agent run
+
+Use a running sandbox for this example.
+The agent checks installed tools and saves its actual result to `agent-result.json` on your computer.
+
+<CodeDisplay examples={[
+  { language: "typescript", code: workflowTraceExamples.agentResult },
+  { language: "python", code: workflowTraceExamples.pythonAgentResult },
+]} />
+
+Inspect the returned status or outcome before treating the task as complete.
+The TypeScript result includes a `traceId` for correlating the run's requests, plus usage and cost when reported.
+For live output and reconnecting to a specific execution, see [agents and sessions](/sandbox/sdk/agents-sessions).
+
+## Save runtime timings
+
+`box.trace()` exports the sandbox's observed lifecycle, runtime, and usage snapshots.
+Use agent results and session events for the conversation and tool-call history.
+
+<CodeDisplay examples={[
+  { language: "typescript", code: workflowTraceExamples.trace },
+  { language: "python", code: workflowTraceExamples.pythonTrace },
+]} />
+
+The file is written to your computer before any sandbox cleanup.
+The reported phases can overlap; their durations do not describe a sequence of agent steps.
+
+## Send runtime traces to Intelligence
+
+`exportTrace()` converts the runtime trace to OpenTelemetry JSON and posts it to the authenticated endpoint.
+
+<CodeDisplay language="typescript" code={workflowTraceExamples.forward} />
+
+To include agent prompts, responses, and tool details, follow [Connect your agent](/intelligence/connect).
+
+## Analyze runtime performance
+
+Create a report from the sandbox's runtime, resource, and usage records.
+The example waits for a completed or failed report before reading its result.
+
+<CodeDisplay examples={[
+  { language: "typescript", code: workflowTraceExamples.report },
+  { language: "python", code: workflowTraceExamples.pythonReport },
+]} />
+
+Use `mode: "agentic"` with `budget: { billTo: "customer", maxUsd: 1 }` to request paid analysis with a $1 ceiling.
+Call `client.intelligence.estimateReport()` before requesting paid analysis when your application needs a cost estimate.

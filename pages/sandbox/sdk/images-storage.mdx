@@ -1,0 +1,57 @@
+---
+title: Images and storage
+description: Build reusable sandbox images, share templates, and save workspace snapshots to your own storage.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { sandboxPlatformExamples } from '/lib/sandbox-platform-examples';
+
+# Images and storage
+
+Use an image for installed tools and dependencies.
+Use a snapshot for a workspace's files.
+
+## Build an image
+
+Install packages once and reuse the resulting image when creating sandboxes.
+
+<CodeDisplay language="typescript" code={sandboxPlatformExamples.image} />
+
+`Image.fromDockerfile()` accepts a Dockerfile instead of the builder above.
+The builder also supports system packages, environment variables, build arguments, and a working directory.
+Image builds require a deployment with image-building support.
+
+## Publish a workspace image
+
+`box.images.publish()` builds an image from a workspace Dockerfile and publishes it to your registry.
+Pass `contextPath`, `dockerfilePath`, `repository`, and registry `auth` from your server.
+Registry credentials stay with the publisher rather than entering the sandbox.
+The result includes the image digest and declared ports.
+
+## Share a starting environment
+
+| Operation                            | SDK                                                                      |
+| ------------------------------------ | ------------------------------------------------------------------------ |
+| List available environments          | `client.environments.list()`                                             |
+| Browse public templates and versions | `client.publicTemplates.list()`, `.get()`, `.versions()`                 |
+| Publish a public template or version | `client.publicTemplates.publish()`, `.publishVersion()`                  |
+| Manage a team's templates            | `client.teams.listTemplates()`, `.createTemplate()`, `.deleteTemplate()` |
+| Start from a saved template          | `client.create({ templateId })`                                          |
+
+Explicit create options override a template's defaults.
+Add `teamId` when creating a sandbox shared with your team.
+
+## Store snapshots in your bucket
+
+Set the S3 environment variables used below.
+This example saves a checkpoint to your bucket and restores that exact snapshot.
+
+<CodeDisplay language="typescript" code={sandboxPlatformExamples.storage} />
+
+`StorageConfig` supports S3, Cloudflare R2, and Google Cloud Storage with HMAC credentials.
+R2 requires its account endpoint.
+Keep storage credentials in your server environment.
+
+Customer-storage snapshots do not support `idempotencyKey`.
+Deleting the sandbox does not delete objects in your bucket.
+For managed snapshots, selected-path restore, and cloning a workspace, see [Previews and snapshots](/sandbox/sdk/previews-snapshots).

@@ -1,0 +1,114 @@
+---
+title: Networking
+description: Publish app previews, connect through SSH, and control sandbox outbound traffic.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { networkingExamples } from '/lib/sandbox-networking-examples';
+
+# Networking
+
+Expose an app through HTTPS, connect over SSH, and choose which services your sandbox can reach.
+Use your [Tangle API key](/platform/authentication) with the [TypeScript SDK](/sandbox/sdk/typescript) or [Python HTTP client](/sandbox/sdk/python).
+
+## Open an app preview
+
+Start the server on `0.0.0.0` and expose its listening port.
+Wait for the preview to become ready before sharing its URL.
+
+<CodeDisplay examples={[
+  { language: 'typescript', code: networkingExamples.preview },
+  { language: 'python', code: networkingExamples.pythonPreview },
+]} />
+
+Preview URLs are public.
+The example keeps its sandbox running until you press Enter, then deletes it.
+
+| Method | Use |
+| --- | --- |
+| `box.ports()` | Discover listening ports in the sandbox. |
+| `box.previewLinks.create(port)` | Create an HTTPS preview URL for a running app. |
+| `box.previewLinks.waitUntilReady(previewId)` | Wait for the public route to reach the app. |
+| `box.previewLinks.get(previewId)` | Refresh the link's delivery status. |
+| `box.previewLinks.list()` | List preview links. |
+| `box.previewLinks.remove(previewId)` | Remove a preview link. |
+| `box.network.exposePort(port)` | Expose a port and return its public URL. |
+| `box.network.listUrls()` | Read exposed port URLs. |
+| `box.network.getConfig()` | Read exposed port numbers. |
+
+## Connect over SSH
+
+Create the sandbox with `sshEnabled: true` and supply `sshPublicKeys` or registered `sshKeyIds`.
+Load the matching private key into your local SSH agent.
+Install the Tangle CLI for the SSH tunnel:
+
+<CodeDisplay language="bash" code={networkingExamples.installCli} />
+
+Set `TANGLE_SANDBOX_ID` to that sandbox's ID.
+This program opens SSH and leaves the sandbox running when you disconnect.
+
+<CodeDisplay language="typescript" code={networkingExamples.ssh} />
+
+`sshCommand()` supplies the SSH command and its authentication environment.
+`ssh()` returns the username, port, and proxy command separately.
+The tunnel runs through the Sandbox API using `tangle ssh-proxy`.
+Keep the returned authentication environment out of logs.
+
+Register reusable keys with `tangle.sshKeys.create(name, publicKey)`.
+Use `tangle.sshKeys.list()` and `tangle.sshKeys.delete(id)` to manage them.
+
+## Restrict outbound access
+
+Set `egressPolicy` when creating a sandbox.
+This example permits requests to the documentation site:
+
+<CodeDisplay examples={[
+  { language: 'typescript', code: networkingExamples.createPolicy },
+  { language: 'python', code: networkingExamples.pythonCreatePolicy },
+]} />
+
+| Mode | Outbound access |
+| --- | --- |
+| `open` | Unrestricted internet access. |
+| `strict` | Listed domains and the sandbox's provisioned model endpoints. |
+| `blocked` | No outbound internet access. |
+
+In strict mode, set `includeImplicitDomains: false` to exclude the platform's additional default domains.
+Tangle applies these policies through its egress proxy.
+Use `egressPolicy` and `box.egress` for outbound controls; the deprecated `box.network.update()` rejects outbound policy fields.
+
+## Change a running sandbox's policy
+
+Set `TANGLE_SANDBOX_ID` to a sandbox you own.
+This example replaces its outbound policy and keeps the sandbox running.
+Team sandboxes require an owner or admin to change this policy.
+
+<CodeDisplay examples={[
+  { language: 'typescript', code: networkingExamples.updatePolicy },
+  { language: 'python', code: networkingExamples.pythonUpdatePolicy },
+]} />
+
+Updating the policy restarts the egress proxy and briefly interrupts outbound connections.
+If the API reports `RUNTIME_RELOAD_FAILED`, retry the update; the saved policy has not reached the running proxy.
+
+## Inspect outbound requests
+
+Read allowed and refused destinations for an existing sandbox:
+
+<CodeDisplay examples={[
+  { language: 'typescript', code: networkingExamples.activity },
+  { language: 'python', code: networkingExamples.pythonActivity },
+]} />
+
+`denials()` reports refused hosts and the rule that refused them.
+`activity()` includes allowed requests, refusal counts, and whether the inspected log window is complete.
+Check `complete` and `incompleteReasons` before treating an empty result as evidence of no traffic.
+
+| JavaScript / TypeScript | Python HTTP endpoint |
+| --- | --- |
+| `box.egress.get()` | `GET /v1/sandboxes/{id}`: `egressPolicy` and `egressPolicySource` |
+| `box.egress.update(policy)` | `PATCH /v1/sandboxes/{id}/egress` |
+| `box.egress.denials({ limit })` | `GET /v1/sandboxes/{id}/egress/denials?limit=20` |
+| `box.egress.activity({ limit })` | `GET /v1/sandboxes/{id}/egress/activity?limit=20` |
+
+`activity()` returns HTTP 409 when egress logging is unavailable because the sandbox has no egress proxy.

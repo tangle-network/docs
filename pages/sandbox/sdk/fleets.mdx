@@ -1,0 +1,91 @@
+---
+title: Fleets
+description: Create named sandbox workers, select agents, set budgets, inspect usage, and clean up a fleet.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { fleetGpuExamples } from '/lib/sandbox-fleet-gpu-examples';
+
+# Fleets
+
+Manage several sandboxes as one workload.
+Give workers stable names, send work to selected machines, and track their runtime and spending.
+
+## Create named workers
+
+This example creates isolated `api` and `web` workers, runs a command on both, and deletes them.
+
+<CodeDisplay language="typescript" code={fleetGpuExamples.createFleet} />
+
+`defaults` applies to every machine; a machine's settings override those defaults.
+`maxConcurrentCreates` controls provisioning concurrency.
+`policy.maxConcurrentCreates` sets its allowed ceiling.
+Save `fleet.fleetId` if another process will reconnect before you delete it.
+
+## Select workers for a job
+
+Set `TANGLE_FLEET_ID` to an existing fleet.
+Set `TANGLE_MACHINE_IDS` to its comma-separated worker names; this example defaults to `api,web`.
+
+<CodeDisplay examples={[
+  { language: "typescript", code: fleetGpuExamples.selectWorkers },
+  { language: "python", code: fleetGpuExamples.selectWorkersPython },
+]} />
+
+`maxConcurrent` controls command execution concurrency.
+Each result includes the worker ID, success state, duration, and command output or error.
+Save `dispatchId` to retrieve retained results with `fleet.dispatchResults(dispatchId)`.
+
+## Run agents with a budget
+
+Choose each agent's harness and task.
+Use `placement: "dedicated"` when agents need separate filesystems.
+
+<CodeDisplay language="typescript" code={fleetGpuExamples.budgetedAgents} />
+
+`budgetUsd` creates a budgeted Platform key for the fleet's compute and model usage.
+Use `run()`, `runAll()`, or `prompt()` on the creating client to keep agent turns within that budget.
+A refused charge produces `budget_exhausted`; running turns stop at their next refused charge.
+
+`policy.maxSpendUsd` alone checks the estimated creation cost.
+Use `budgetUsd` for metered spending limits.
+
+| Setting                                  | Use                                                          |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| `agents[].harness`                       | Choose Claude Code, Codex, Pi, or another supported harness. |
+| `agents[].model`                         | Select the model for that agent.                             |
+| `agents[].profile`                       | Supply an inline agent profile or a saved `profileId`.       |
+| `placement: "dedicated"`                 | Give each agent its own sandbox.                             |
+| `placement: { agentsPerSandbox: 2 }`     | Run multiple sessions per sandbox with shared files.         |
+| `runAll(message, { agents: ["tools"] })` | Send a turn to selected agents.                              |
+
+The creating client holds the budgeted key.
+A new client can inspect or delete the fleet, but cannot resume budgeted agent turns with that key.
+
+## Inspect runtime and cost
+
+Set `TANGLE_FLEET_ID` to an existing fleet.
+These examples leave its workers running.
+
+<CodeDisplay examples={[
+  { language: "typescript", code: fleetGpuExamples.fleetUsage },
+  { language: "python", code: fleetGpuExamples.fleetUsagePython },
+]} />
+
+`usage()` reports machine state and metered runtime when available.
+`cost()` estimates compute charges; it is not an invoice or model-usage total.
+For a budgeted fleet, `spend()` reports settled charges and remaining budget.
+Use [trace analysis](/sandbox/sdk/traces) to inspect individual runs.
+
+## Stop work and release workers
+
+`cancel()` interrupts agent sessions and child fleets while keeping the machines.
+`delete()` removes the fleet and its machines.
+
+<CodeDisplay examples={[
+  { language: "typescript", code: fleetGpuExamples.deleteFleet },
+  { language: "python", code: fleetGpuExamples.deleteFleetPython },
+]} />
+
+To stop a single worker, obtain it with `await fleet.sandbox(machineId)` and call its lifecycle methods.
+Use [batch tasks](/sandbox/sdk/parallel) when each job can finish in temporary sandboxes.

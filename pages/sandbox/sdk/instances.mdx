@@ -1,0 +1,40 @@
+---
+title: Sandboxes for your customers
+description: Keep a sandbox and versioned agent conversations for each customer using named instances.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { sandboxPlatformExamples } from '/lib/sandbox-platform-examples';
+
+# Sandboxes for your customers
+
+Use a named instance when each customer needs a persistent workspace.
+`client.instances.ensure()` creates or resumes the sandbox for your customer key.
+
+## Run a customer turn
+
+Set `TANGLE_CUSTOMER_ID` from your application's authenticated customer record.
+Set `TANGLE_TURN_ID` to the saved ID for this message and reuse it when retrying that message.
+
+<CodeDisplay language="typescript" code={sandboxPlatformExamples.instance} />
+
+The example sets a five-minute idle timeout and 30-day workspace retention after stopping.
+Changing `profile.version` starts new conversations on that profile without replacing the workspace.
+The same `thread` and version select the same conversation.
+
+## Lifecycle
+
+| Operation                          | Effect                                                   |
+| ---------------------------------- | -------------------------------------------------------- |
+| `client.instances.get(key)`        | Read the recorded sandbox binding.                       |
+| `client.instances.ensure(options)` | Return a running sandbox for the key.                    |
+| `instance.turn(message, options)`  | Send a turn to a versioned conversation.                 |
+| `client.instances.release(key)`    | Remove the binding; leave the sandbox intact.            |
+| `instance.box.stop()`              | Stop compute while retaining the workspace.              |
+| `instance.box.delete()`            | Delete the sandbox when the customer no longer needs it. |
+
+`ensure()` can replace a deleted sandbox or one that repeatedly fails to start.
+Authentication, billing, and capacity refusals do not authorize replacement.
+Use `adopt` to associate an existing sandbox with an unbound key.
+
+For groups of workers serving one job, use [Fleets](/sandbox/sdk/fleets).
