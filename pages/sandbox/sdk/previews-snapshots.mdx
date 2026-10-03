@@ -4,7 +4,6 @@ description: Open a sandbox app through a preview URL and save or restore worksp
 ---
 
 import CodeDisplay from '/components/CodeDisplay';
-import { Tabs } from 'nextra/components';
 import { sandboxCode } from '/lib/sandbox-code';
 
 # Previews and snapshots
@@ -15,10 +14,10 @@ Open the app running in your sandbox, or save its workspace before making anothe
 
 Start a server on `0.0.0.0`, create a preview link for its port, and wait for the public route to respond.
 
-<Tabs items={['TypeScript', 'Python']}>
-  <Tabs.Tab><CodeDisplay language="typescript" code={sandboxCode.preview} /></Tabs.Tab>
-  <Tabs.Tab><CodeDisplay language="python" code={sandboxCode.pythonPreview} /></Tabs.Tab>
-</Tabs>
+<CodeDisplay examples={[
+  { language: "typescript", code: sandboxCode.preview },
+  { language: "python", code: sandboxCode.pythonPreview },
+]} />
 
 The preview URL is public.
 Serve only files and application routes you intend to share.

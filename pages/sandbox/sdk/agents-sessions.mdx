@@ -4,7 +4,6 @@ description: Run agents, stream their output, and reconnect to durable task sess
 ---
 
 import CodeDisplay from '/components/CodeDisplay';
-import { Tabs } from 'nextra/components';
 import { sandboxCode } from '/lib/sandbox-code';
 
 # Agents and sessions
@@ -14,10 +13,10 @@ Choose a [supported harness](/infrastructure/harnesses), including Claude Code, 
 
 ## Run an agent
 
-<Tabs items={['TypeScript', 'Python']}>
-  <Tabs.Tab><CodeDisplay language="typescript" code={sandboxCode.runAgent} /></Tabs.Tab>
-  <Tabs.Tab><CodeDisplay language="python" code={sandboxCode.pythonAgent} /></Tabs.Tab>
-</Tabs>
+<CodeDisplay examples={[
+  { language: "typescript", code: sandboxCode.runAgent },
+  { language: "python", code: sandboxCode.pythonAgent },
+]} />
 
 Use a stable `sessionId` for follow-up messages in the same conversation.
 The Python HTTP request encodes text parts as Base64.

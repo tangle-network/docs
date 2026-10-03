@@ -4,7 +4,6 @@ description: Run independent agent jobs in batches or manage a named fleet of sa
 ---
 
 import CodeDisplay from '/components/CodeDisplay';
-import { Tabs } from 'nextra/components';
 import { sandboxCode } from '/lib/sandbox-code';
 
 # Parallel tasks and fleets
@@ -17,10 +16,10 @@ Use a fleet when you need to address and manage the same workers across multiple
 Send independent prompts to different sessions in one sandbox.
 These tasks inspect the workspace without editing it.
 
-<Tabs items={['TypeScript', 'Python']}>
-  <Tabs.Tab><CodeDisplay language="typescript" code={sandboxCode.parallel} /></Tabs.Tab>
-  <Tabs.Tab><CodeDisplay language="python" code={sandboxCode.pythonParallel} /></Tabs.Tab>
-</Tabs>
+<CodeDisplay examples={[
+  { language: "typescript", code: sandboxCode.parallel },
+  { language: "python", code: sandboxCode.pythonParallel },
+]} />
 
 Sessions share this sandbox's files.
 Use separate sandboxes when concurrent tasks need isolated workspaces.

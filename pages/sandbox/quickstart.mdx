@@ -4,7 +4,6 @@ description: Create a sandbox and run a command with TypeScript or Python.
 ---
 
 import CodeDisplay from '/components/CodeDisplay';
-import { Tabs } from 'nextra/components';
 import { sandboxCode } from '/lib/sandbox-code';
 
 # Quickstart
@@ -20,27 +19,24 @@ See [Authentication](/platform/authentication) for key setup.
 
 ## Install
 
-<Tabs items={['TypeScript / JavaScript', 'Python']}>
-  <Tabs.Tab><CodeDisplay language="bash" code={sandboxCode.installSdk} /></Tabs.Tab>
-  <Tabs.Tab><CodeDisplay language="bash" code="pip install httpx" /></Tabs.Tab>
-</Tabs>
+<CodeDisplay examples={[
+  { language: "bash", title: "TypeScript", code: sandboxCode.installSdk },
+  { language: "bash", title: "Python", code: "pip install httpx" },
+]} />
 
 TypeScript and JavaScript use the Sandbox SDK.
 Python uses the HTTP API through HTTPX.
 
 ## Run a command
 
-<Tabs items={['TypeScript / JavaScript', 'Python']}>
-  <Tabs.Tab>
-    Save as `example.ts` and run `npx tsx example.ts` with Node.js 22 or later.
-    For JavaScript, save as `example.mjs` and run `node example.mjs`.
-    <CodeDisplay language="typescript" code={sandboxCode.createSandbox} />
-  </Tabs.Tab>
-  <Tabs.Tab>
-    Save as `example.py` and run `python example.py`.
-    <CodeDisplay language="python" code={sandboxCode.pythonExec} />
-  </Tabs.Tab>
-</Tabs>
+Save TypeScript as `example.ts` and run `npx tsx example.ts` with Node.js 22 or later.
+For JavaScript, use `example.mjs` and `node example.mjs`.
+For Python, use `example.py` and `python example.py`.
+
+<CodeDisplay examples={[
+  { language: "typescript", code: sandboxCode.createSandbox },
+  { language: "python", code: sandboxCode.pythonExec },
+]} />
 
 ## Continue building
 

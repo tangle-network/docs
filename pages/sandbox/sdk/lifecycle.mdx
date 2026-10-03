@@ -4,7 +4,6 @@ description: Create, find, stop, resume, and delete sandboxes with the SDK and H
 ---
 
 import CodeDisplay from '/components/CodeDisplay';
-import { Tabs } from 'nextra/components';
 import { sandboxCode } from '/lib/sandbox-code';
 
 # Sandbox lifecycle
@@ -30,10 +29,10 @@ This example lists running sandboxes and reconnects to that sandbox without crea
 
 ## Stop, resume, and delete
 
-<Tabs items={['TypeScript', 'Python']}>
-  <Tabs.Tab><CodeDisplay language="typescript" code={sandboxCode.lifecycle} /></Tabs.Tab>
-  <Tabs.Tab><CodeDisplay language="python" code={sandboxCode.pythonLifecycle} /></Tabs.Tab>
-</Tabs>
+<CodeDisplay examples={[
+  { language: "typescript", code: sandboxCode.lifecycle },
+  { language: "python", code: sandboxCode.pythonLifecycle },
+]} />
 
 `stop()` keeps the workspace for later use.
 `resume()` starts it again; wait for `running` before sending work.

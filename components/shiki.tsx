@@ -10,6 +10,7 @@ export const SHIKI_SUPPORTED_LANGUAGES = [
   "bash",
   "typescript",
   "javascript",
+  "python",
   "solidity",
   "plaintext",
   "toml",
@@ -43,6 +44,8 @@ export const getLanguage = (
     case "js":
     case "jsx":
       return "javascript";
+    case "py":
+      return "python";
     case "sol":
       return "solidity";
     case "toml":
