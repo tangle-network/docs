@@ -1,0 +1,57 @@
+---
+title: Sandbox lifecycle
+description: Create, find, stop, resume, and delete sandboxes with the SDK and HTTP API.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { sandboxCode } from '/lib/sandbox-code';
+
+# Sandbox lifecycle
+
+Create a sandbox for a job, reuse it while work continues, and delete it when you finish.
+
+## Create a sandbox
+
+Choose an environment, resources, and runtime limit when you create the sandbox.
+
+<CodeDisplay language="typescript" code={sandboxCode.create} />
+
+`environment` accepts a named environment, container image reference, or SDK-built image ID.
+Use `client.environments.list()` to list named environments.
+`backend.type` selects the initial [agent harness](/infrastructure/harnesses).
+
+## Find an existing sandbox
+
+Set `TANGLE_SANDBOX_ID` to a sandbox you own.
+This example lists running sandboxes and reconnects to that sandbox without creating another one.
+
+<CodeDisplay language="typescript" code={sandboxCode.listGetUsage} />
+
+## Stop, resume, and delete
+
+<CodeDisplay examples={[
+  { language: "typescript", code: sandboxCode.lifecycle },
+  { language: "python", code: sandboxCode.pythonLifecycle },
+]} />
+
+`stop()` keeps the workspace for later use.
+`resume()` starts it again; wait for `running` before sending work.
+`delete()` releases the sandbox.
+
+`maxLifetimeSeconds` limits each running interval on deployments that support suspension.
+It suspends the sandbox rather than deleting its workspace.
+Delete unneeded sandboxes explicitly, including sandboxes left behind by a failed script.
+
+## HTTP endpoints
+
+Python and other HTTP clients use the same API key.
+See the [Python quickstart](/sandbox/sdk/python) for complete request setup and startup polling.
+
+| Method   | Endpoint                    | Action                  |
+| -------- | --------------------------- | ----------------------- |
+| `POST`   | `/v1/sandboxes`             | Create a sandbox.       |
+| `GET`    | `/v1/sandboxes`             | List sandboxes.         |
+| `GET`    | `/v1/sandboxes/{id}`        | Read its current state. |
+| `POST`   | `/v1/sandboxes/{id}/stop`   | Stop the sandbox.       |
+| `POST`   | `/v1/sandboxes/{id}/resume` | Resume it.              |
+| `DELETE` | `/v1/sandboxes/{id}`        | Delete it.              |

@@ -1,0 +1,81 @@
+---
+title: GPU leases
+description: Discover resource sizes, attach a GPU worker, execute a job, and inspect lease status and charges.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { fleetGpuExamples } from '/lib/sandbox-fleet-gpu-examples';
+
+# GPU leases
+
+Attach a GPU worker for the part of a job that needs an accelerator.
+Set a maximum cost estimate and lifetime, run the job, then detach the lease.
+
+## Check resource sizes
+
+Read the deployment's CPU, memory, and disk presets and your account's resource ceiling.
+Fleet driver capabilities report whether a driver supports accelerator requests.
+
+<CodeDisplay examples={[
+  { language: "typescript", code: fleetGpuExamples.resourceCatalog },
+  { language: "python", code: fleetGpuExamples.resourceCatalogPython },
+]} />
+
+These describe supported configurations, not GPU stock.
+GPU allocation depends on configured providers, available capacity, and the requested limits.
+
+## Attach a GPU and run a command
+
+Set `TANGLE_SANDBOX_ID` to a running sandbox you own.
+The example requests an H100, runs `nvidia-smi`, and releases the GPU lease.
+It keeps the base sandbox for later work.
+
+<CodeDisplay examples={[
+  { language: "typescript", code: fleetGpuExamples.gpuRun },
+  { language: "python", code: fleetGpuExamples.gpuRunPython },
+]} />
+
+`gpu.exec()` runs on the GPU worker; `box.exec()` runs in the base sandbox.
+The worker has its own filesystem.
+Pass inputs through storage or explicit transfers instead of assuming it shares `/workspace`.
+
+| Option                 | Meaning                                                                   |
+| ---------------------- | ------------------------------------------------------------------------- |
+| `accelerator.kind`     | GPU class, such as `nvidia-h100`.                                         |
+| `accelerator.count`    | Number of devices.                                                        |
+| `accelerator.memoryMB` | Minimum device memory when the class is flexible.                         |
+| `maxSpendUsd`          | Maximum accepted cost estimate for the requested lifetime, in US dollars. |
+| `maxLifetimeSeconds`   | Maximum lease lifetime.                                                   |
+| `idleTimeoutSeconds`   | Release the lease after this idle interval.                               |
+| `provider`             | Request a specific configured provider; omit it for provider selection.   |
+| `image`                | Container image for the GPU worker.                                       |
+
+The attach response includes the chosen provider and any available rate and selection details.
+
+## Inspect leases and charges
+
+List the sandbox's leases to inspect their states, rates, final charges, and failures.
+
+<CodeDisplay examples={[
+  { language: "typescript", code: fleetGpuExamples.gpuStatus },
+  { language: "python", code: fleetGpuExamples.gpuStatusPython },
+]} />
+
+| State          | Meaning                                                      |
+| -------------- | ------------------------------------------------------------ |
+| `provisioning` | The GPU worker is being created.                             |
+| `ready`        | The worker can accept commands.                              |
+| `detaching`    | The provider is releasing the worker.                        |
+| `destroyed`    | The lease has ended.                                         |
+| `failed`       | Provisioning or a lease operation failed; inspect `failure`. |
+
+`customerPricePerHourUsd` is a rate.
+`billing.customerCostUsd` is the finalized lease charge when reported.
+A missing billing field does not mean the job was free.
+
+## Release resources
+
+Call `box.gpu.detach(leaseId)` when GPU work finishes.
+The returned lease includes its final state and billing details when available.
+Delete the base sandbox separately when its remaining work is done.
+See [sandbox lifecycle](/sandbox/sdk/lifecycle) for stopping and deleting it.

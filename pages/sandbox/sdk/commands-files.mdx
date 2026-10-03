@@ -1,0 +1,50 @@
+---
+title: Commands and files
+description: Execute shell commands and read or write sandbox files from TypeScript and Python.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { sandboxCode } from '/lib/sandbox-code';
+
+# Commands and files
+
+Run commands in the sandbox and use its filesystem to pass inputs and collect results.
+
+## Execute a command
+
+<CodeDisplay examples={[
+  { language: "typescript", code: sandboxCode.exec },
+  { language: "python", code: sandboxCode.pythonExec },
+]} />
+
+The TypeScript SDK returns `stdout`, `stderr`, and `exitCode`.
+Use `cwd`, `env`, and `timeoutMs` to set the working directory, environment, and command timeout.
+The HTTP command request uses `timeout` in milliseconds.
+
+## Read and write files
+
+<CodeDisplay examples={[
+  { language: "typescript", code: sandboxCode.files },
+  { language: "python", code: sandboxCode.pythonFiles },
+]} />
+
+Paths refer to the sandbox filesystem.
+Use `/workspace` for project files.
+The SDK also provides `upload()` and `download()` for local files and binary data.
+
+## Run a server
+
+Use a background process for servers that must keep running after a command returns.
+Then [create a preview link](/sandbox/sdk/previews-snapshots#open-a-running-app) for the app's port.
+
+## Restrict outbound requests
+
+Set `egressPolicy` at creation to allow specific domains.
+
+<CodeDisplay examples={[
+  { language: "typescript", code: sandboxCode.network },
+  { language: "python", code: sandboxCode.pythonNetwork },
+]} />
+
+Provisioned model endpoints may also be allowed by the platform.
+Use `box.egress` to inspect or update the sandbox's outbound policy.

@@ -1,0 +1,53 @@
+---
+title: Workflows
+description: Compose sandbox tasks or run a saved Tangle workflow from your application.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { workflowTraceExamples } from '/lib/sandbox-workflow-trace-examples';
+
+# Workflows
+
+Build a workflow in your application by combining agent prompts, commands, and files.
+Use [Tangle Workflows](https://id.tangle.tools/app/workflows) for saved workflows with schedules, connected apps, and human decisions.
+
+## Compose agent steps
+
+Set `TANGLE_API_KEY` and `TANGLE_SANDBOX_ID` to a running sandbox containing your project.
+Install the [TypeScript SDK](/sandbox/sdk/typescript).
+
+This example inspects the project, writes a report, and checks that the file exists.
+Both prompts share a session, so the second step can use the first step's findings.
+
+<CodeDisplay language="typescript" code={workflowTraceExamples.steps} />
+
+The sandbox stays available so you can read or continue the work.
+A failed or waiting agent stops the sequence; handle its result before advancing.
+
+For independent tasks, use [parallel agents or batches](/sandbox/sdk/parallel).
+For work that must survive your application's disconnect, use [durable sessions](/sandbox/sdk/agents-sessions#reconnect-to-a-durable-turn).
+Save each step's sandbox, session, and turn IDs in your job record before dispatching.
+
+## Run a saved workflow
+
+Create and enable a workflow in [Tangle Workflows](https://id.tangle.tools/app/workflows).
+Set `TANGLE_WORKFLOW_ID` to its ID and `TANGLE_API_KEY` to your API key.
+Python examples require `pip install httpx`.
+
+The example starts a workflow with no required inputs and reads its progress.
+For workflows with inputs, replace `inputs: {}` with their input names and values.
+
+<CodeDisplay examples={[
+  { language: "typescript", code: workflowTraceExamples.workflow },
+  { language: "python", code: workflowTraceExamples.pythonWorkflow },
+]} />
+
+Keep the printed run ID to retrieve the same run later.
+The workflow continues if this client stops polling.
+Submitting another `POST /run` creates another run.
+
+`waiting` means the workflow needs a human decision; open its page to respond.
+`succeeded`, `failed`, and `cancelled` are terminal states.
+
+Saved workflows use `https://id.tangle.tools/api/v1/workflows`.
+Sandbox commands and sessions use `https://sandbox.tangle.tools/v1/sandboxes`.

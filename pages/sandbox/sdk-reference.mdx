@@ -1,153 +1,49 @@
 ---
 title: SDK reference
-description: The core @tangle-network/sandbox surface, creating sandboxes, running commands and agents, durable sessions, and GPU leases.
+description: Sandbox SDK guides for lifecycle, commands, files, agents, previews, snapshots, fleets, and GPU leases.
 ---
-
-import CodeDisplay from '/components/CodeDisplay';
-import { sandboxCode } from '/lib/sandbox-code';
 
 # SDK reference
 
-The core surface of `@tangle-network/sandbox`. The [npm package](https://www.npmjs.com/package/@tangle-network/sandbox) documents every option; this page covers what most builders reach for.
-Each TypeScript block is a separate program for Node.js 22 or later.
-Set `TANGLE_API_KEY` before running it; optional `SANDBOX_BASE_URL` selects another deployment.
-Examples that create machines or run agents consume account credit.
-Creation examples release their machines in `finally`.
-Save one block as `example.ts` and run it with `npx tsx example.ts`.
-
-<CodeDisplay
-  language="bash"
-  code={sandboxCode.installSdkReference}
-/>
+Use the [TypeScript and JavaScript SDK](/sandbox/sdk/typescript) or the [HTTP API from Python](/sandbox/sdk/python).
+The [SDK and API guides](/sandbox/sdk) contain complete examples organized by task.
 
 ## Client
 
-<CodeDisplay
-  language="typescript"
-  code={sandboxCode.client}
-/>
+<span id="clientcreateoptions" />
+<span id="clientlistoptions--clientgetid--clientusage" />
 
-### `client.create(options?)`
+[Sandbox lifecycle](/sandbox/sdk/lifecycle) covers client setup, creation, resource settings, listing, and reconnecting to existing sandboxes.
 
-Create a sandbox and get back a `SandboxInstance`. Common options:
+<span id="clientrunbatchrequest-options" />
 
-<CodeDisplay
-  language="typescript"
-  code={sandboxCode.create}
-/>
-
-`environment` accepts a named environment from `client.environments.list()`, a container image reference, or an SDK-built image ID.
-Omit it to use the server default.
-To restore a snapshot, provide both `fromSnapshot` and its owning `fromSandboxId` when creating the sandbox.
-
-`backend.type` picks the coding harness. OpenCode is the default; Claude Code, Codex, and the other [supported harnesses](/infrastructure/harnesses) are selected the same way.
-
-### `client.list(options?)` · `client.get(id)` · `client.usage()`
-
-Set `TANGLE_SANDBOX_ID` to an existing sandbox you own.
-This example reads that machine and your account usage without creating a machine.
-
-<CodeDisplay
-  language="typescript"
-  code={sandboxCode.listGetUsage}
-/>
-
-### `client.runBatch(request, options?)`
-
-Run one-shot tasks across freshly provisioned sandboxes in parallel. For coordinated multi-machine work with shared workspaces and policy caps, use [fleets](https://www.npmjs.com/package/@tangle-network/sandbox) instead.
-
-<CodeDisplay
-  language="typescript"
-  code={sandboxCode.runBatch}
-/>
-
-Select batch workers from the [supported harnesses](/infrastructure/harnesses).
-Reuse an `idempotencyKey` only when retrying the same batch with the same request body.
-A keyed batch continues after a client disconnect.
-While its run record remains retained, a retry joins active work or replays its completed result.
-`options.signal` cancels the client stream.
-Without an idempotency key, cancellation or disconnection also stops server work.
+[Parallel tasks and fleets](/sandbox/sdk/parallel) covers batches, retry keys, and named workers.
 
 ## Sandbox instance
 
-### `box.exec(command, options?)`
+<span id="boxexeccommand-options" />
 
-Run a shell command.
+[Commands and files](/sandbox/sdk/commands-files) covers shell commands, output, files, and outbound network policy.
 
-<CodeDisplay
-  language="typescript"
-  code={sandboxCode.exec}
-/>
+<span id="boxpromptmessage-options--boxstreampromptmessage-options" />
+<span id="boxcreatetasksessionoptions--boxtasksessionid" />
 
-### `box.prompt(message, options?)` · `box.streamPrompt(message, options?)`
+[Agents and sessions](/sandbox/sdk/agents-sessions) covers prompts, streaming, and isolated task changes.
 
-Run one agent turn. `prompt` returns the result; `streamPrompt` yields events as they happen.
-
-<CodeDisplay
-  language="typescript"
-  code={sandboxCode.prompt}
-/>
-
-### `box.createTaskSession(options)` · `box.taskSession(id)`
-
-Create a background task session with isolated file changes using one of the [supported harnesses](/infrastructure/harnesses).
-Set `TANGLE_REPO_URL` to a public Git repository URL.
-The example clones that repository before creating the task session.
-
-<CodeDisplay
-  language="typescript"
-  code={sandboxCode.taskSessions}
-/>
-
-This example clones your repository, inspects isolated changes, then deletes its machine.
-For retained tasks, store the sandbox ID and task session ID instead of deleting the machine.
-Reconnect with `client.get(savedSandboxId)` and `box.taskSession(savedSessionId)`.
-Review `task.changes()` before applying changes with `task.commit()`.
+[Previews and snapshots](/sandbox/sdk/previews-snapshots) covers running apps and saved workspaces.
 
 ## Durable sessions
 
-Use `dispatchPrompt` for a turn you must reconnect to after a client crash, redeploy, or browser reload.
-`sessionId` identifies the conversation; `turnId` identifies one logical turn.
-
-Derive both IDs from your trusted job record and store them before dispatching.
-Reuse both IDs and the same prompt when retrying that job.
-Set `TANGLE_SANDBOX_ID`, `TANGLE_SESSION_ID`, and `TANGLE_TURN_ID` from that saved record.
-This example retains the existing sandbox so another process can reconnect.
-Delete it when the job and any retries finish.
-
-<CodeDisplay
-  language="typescript"
-  code={sandboxCode.durableSessions}
-/>
-
-Store the sandbox ID and dispatch receipt to reconnect from another process.
-Use `client.get(sandboxId)` to obtain the sandbox, then select the receipt's session and execution IDs.
-Use `session.events({ executionId })` to follow output while that execution runs.
-
-The same `sessionId` prevents a second dispatch while its session is in flight.
-After completion, that session can receive a new turn.
-Pass a stable `turnId` to deduplicate retries while the completed result remains cached.
-The completed-turn cache can outlive its session; use `findCompletedTurn` to retrieve that cached result.
-`dispatched: false` means the SDK found prior work and did not dispatch another turn.
-`alreadyExisted` reports whether the session existed, not whether work ran.
+[Reconnect to a durable turn](/sandbox/sdk/agents-sessions#reconnect-to-a-durable-turn) using saved sandbox, session, and turn IDs.
 
 ## GPU leases
 
-Keep the base sandbox cheap and attach a GPU only around the step that needs it. Every lease takes a hard spend cap and lifetime.
-
-<CodeDisplay
-  language="typescript"
-  code={sandboxCode.gpuLeases}
-/>
+[GPU leases](/sandbox/sdk/gpu) covers temporary accelerators with spend and lifetime limits.
 
 ## Lifecycle
 
-<CodeDisplay
-  language="typescript"
-  code={sandboxCode.lifecycle}
-/>
+[Stop, resume, and delete](/sandbox/sdk/lifecycle#stop-resume-and-delete) with TypeScript or Python.
 
 ## Next
 
-- **[`@tangle-network/sandbox` on npm](https://www.npmjs.com/package/@tangle-network/sandbox)** for fleets, snapshots, BYOS3, scoped browser tokens, and every option.
-- **[Connect to Intelligence](/intelligence/connect)** to trace each run and see why an agent failed.
+Open the [SDK and API overview](/sandbox/sdk) to choose a guide.

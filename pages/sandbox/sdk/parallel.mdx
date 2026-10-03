@@ -1,0 +1,51 @@
+---
+title: Parallel tasks and batches
+description: Run independent agent jobs concurrently in one workspace or across temporary sandboxes.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { sandboxCode } from '/lib/sandbox-code';
+
+# Parallel tasks and batches
+
+Use a batch for independent agent tasks.
+Use a [fleet](/sandbox/sdk/fleets) when you need to address and manage the same workers across multiple operations.
+
+## Run parallel agents
+
+Send independent prompts to different sessions in one sandbox.
+These tasks inspect the workspace without editing it.
+
+<CodeDisplay examples={[
+  { language: "typescript", code: sandboxCode.parallel },
+  { language: "python", code: sandboxCode.pythonParallel },
+]} />
+
+Sessions share this sandbox's files.
+Use separate sandboxes when concurrent tasks need isolated workspaces.
+
+## Run a batch
+
+Set `TANGLE_BATCH_JOB_ID` to the saved ID of this job.
+This example runs each task in a temporary sandbox and returns a combined result.
+
+<CodeDisplay language="typescript" code={sandboxCode.runBatch} />
+
+Batch sandboxes are deleted after the run by default.
+Select workers from the [supported harnesses](/infrastructure/harnesses).
+
+Reuse an `idempotencyKey` only for the same request body.
+A keyed batch continues after a disconnect; repeating the request joins active work or replays a retained result.
+Disconnecting an unkeyed batch cancels its server work.
+
+## Manage a fleet
+
+Create named workers, run a command across them, and delete the fleet when the work finishes.
+
+<CodeDisplay language="typescript" code={sandboxCode.fleet} />
+
+`maxConcurrent` limits concurrent command dispatches.
+Fleet policies constrain provisioning and do not replace account quotas.
+Keep the fleet ID when another process needs to inspect or continue the same workers.
+
+For worker selection, mixed harnesses, spending limits, and cleanup, see [Fleets](/sandbox/sdk/fleets).

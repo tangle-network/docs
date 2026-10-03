@@ -1,0 +1,56 @@
+---
+title: Terminals and computer use
+description: Stream a sandbox terminal, connect to interactive agent sessions, and use computer tools through MCP.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { sandboxPlatformExamples } from '/lib/sandbox-platform-examples';
+
+# Terminals and computer use
+
+Attach a terminal to a running sandbox or connect an agent to its computer tools.
+Set `TANGLE_SANDBOX_ID` to a sandbox you own for these examples.
+
+## Stream a terminal
+
+This Node.js program opens a shell, streams its output, and disconnects when you press Enter.
+Run it with `npx tsx terminal.ts`.
+
+<CodeDisplay language="typescript" title="terminal.ts" code={sandboxPlatformExamples.terminal} />
+
+Reuse the connection ID to reattach to the same terminal while it remains available.
+Register `onData` before attaching so the handler receives replayed output.
+`write()` sends input; `resize()` changes the terminal dimensions; `close()` disconnects the viewer.
+
+| Operation                    | SDK                              |
+| ---------------------------- | -------------------------------- |
+| Create a terminal            | `box.terminals.create()`         |
+| List or inspect terminals    | `box.terminals.list()`, `.get()` |
+| Send input over HTTP         | `box.terminals.input()`          |
+| Stream live input and output | `box.terminals.attach()`         |
+
+## Interactive agent sessions
+
+`box.session(sessionId).interactive` controls a native agent's interactive session.
+It exposes start, status, prompt, attach, control-claim, and stop operations.
+Preserve the reference and control claim returned by `start()` when reconnecting.
+They identify the exact running process and the caller allowed to send input.
+
+Use `attachAgentTerminal()` for native terminal frames and their replay identity.
+Use `BrowserInteractiveSessionController` and `BrowserInteractiveSessionControlController` from `@tangle-network/sandbox/interactive-control` for browser applications.
+
+For conversation messages and results, use [Agents and sessions](/sandbox/sdk/agents-sessions).
+For a browser viewer, issue a [scoped token](/sandbox/sdk/access#browser-access) from your backend.
+
+## Connect computer tools through MCP
+
+Create the sandbox with `capabilities: ["computer_use"]` before running this example.
+It writes a short-lived MCP configuration for an MCP-compatible agent or editor.
+
+<CodeDisplay language="typescript" code={sandboxPlatformExamples.computerUse} />
+
+Load `tangle-mcp.json` into your MCP client's configuration.
+When the token expires, delete this file and run the example again.
+The example refuses to overwrite an existing configuration.
+Treat the file as a credential and keep it out of version control.
+Computer-use support depends on the sandbox image and deployment.

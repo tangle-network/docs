@@ -1,0 +1,66 @@
+---
+title: Access, secrets, and usage
+description: Read account limits, inject secrets, share sandboxes with teams, and delegate browser access.
+---
+
+import CodeDisplay from '/components/CodeDisplay';
+import { sandboxPlatformExamples } from '/lib/sandbox-platform-examples';
+
+# Access, secrets, and usage
+
+Keep account API keys on your server.
+Use scoped tokens when a browser needs access to a sandbox.
+
+## Resources and usage
+
+Read the serving deployment's resource sizes, environments, harnesses, and your account's usage before creating workloads.
+
+<CodeDisplay language="typescript" code={sandboxPlatformExamples.resources} />
+
+`client.shapes()` returns named sizes and the account's resource ceiling.
+`box.resources` reports a sandbox's granted size.
+`box.resourceUsage()` reads its current CPU and memory counters.
+`box.capabilities()` reports features supported by that running sandbox image.
+
+Use [fleet usage](/sandbox/sdk/fleets) and [GPU lease charges](/sandbox/sdk/gpu) for those resources.
+
+## Inject a secret
+
+Set `SERVICE_TOKEN` locally to the secret your workload needs.
+This example creates a uniquely named secret, injects only that secret, checks its presence, and removes its test resources.
+
+<CodeDisplay language="typescript" code={sandboxPlatformExamples.secrets} />
+
+For existing secrets, pass their names in `client.create({ secrets: [...] })`.
+Avoid `secrets: "all"` when a workload only needs specific credentials.
+`box.setRuntimeEnv()` updates application variables for new processes; it does not change saved creation settings.
+
+## Browser access
+
+Authenticate the user on your server and verify ownership of the sandbox and session before issuing a token.
+Call `box.mintScopedToken()` with the scope for the intended client.
+
+| Scope             | Consumer                       | Access                                    |
+| ----------------- | ------------------------------ | ----------------------------------------- |
+| `read-only`       | `createSandboxRuntimeClient()` | Runtime reads.                            |
+| `session-runtime` | `createSandboxRuntimeClient()` | Runtime operations for the named session. |
+| `session`         | `SessionGatewayClient`         | Stream a mapped browser session's events. |
+| `project`         | `SessionGatewayClient`         | Stream the sandbox's events.              |
+
+Runtime clients use `sidecarProxyUrl` and `token` from the response.
+Session tokens require both the browser `sessionId` and the actual `runtimeSessionId`.
+Refresh expiring tokens through the authenticated backend.
+Never send the account API key or `box.connection.authToken` to browser code.
+
+## Teams
+
+`client.teams` manages teams, invitations, member roles, team secrets, and templates.
+Pass a team's ID to `client.create({ teamId })` to create a sandbox for its members.
+An invitation grants access only after the recipient accepts it.
+
+## Confidential compute
+
+`createConfidentialSandbox()` provisions through a compatible Tangle confidential operator.
+`box.getTeeAttestation()` and `box.getTeePublicKey()` retrieve its hardware evidence and encryption key.
+Verify attestation before sending sealed secrets.
+These calls require a confidential-compute deployment; ordinary hosted sandboxes do not imply TEE support.
