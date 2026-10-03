@@ -14,6 +14,7 @@ const meta: Meta = {
   gpu: "GPUs",
   "-- agents": { type: "separator", title: "Agents & workflows" },
   "agents-sessions": "Agents & sessions",
+  "interactive-agents": "Interactive agents",
   instances: "Customer workspaces",
   parallel: "Parallel tasks & batches",
   fleets: "Fleets",

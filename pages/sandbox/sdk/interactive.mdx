@@ -31,16 +31,9 @@ Register `onData` before attaching so the handler receives replayed output.
 
 ## Interactive agent sessions
 
-`box.session(sessionId).interactive` controls a native agent's interactive session.
-It exposes start, status, prompt, attach, control-claim, and stop operations.
-Preserve the reference and control claim returned by `start()` when reconnecting.
-They identify the exact running process and the caller allowed to send input.
-
-Use `attachAgentTerminal()` for native terminal frames and their replay identity.
-Use `BrowserInteractiveSessionController` and `BrowserInteractiveSessionControlController` from `@tangle-network/sandbox/interactive-control` for browser applications.
-
-For conversation messages and results, use [Agents and sessions](/sandbox/sdk/agents-sessions).
-For a browser viewer, issue a [scoped token](/sandbox/sdk/access#browser-access) from your backend.
+Use `box.session(sessionId).interactive()` to run an agent's native TUI.
+The [interactive agents guide](/sandbox/sdk/interactive-agents) covers starting, streaming, keyboard input, reconnecting, and stopping it.
+Use [agents and sessions](/sandbox/sdk/agents-sessions) for headless execution and structured messages.
 
 ## Connect computer tools through MCP
 
