@@ -45,7 +45,9 @@ Use `placement: "dedicated"` when agents need separate filesystems.
 
 `budgetUsd` creates a budgeted Platform key for the fleet's compute and model usage.
 Use `run()`, `runAll()`, or `prompt()` on the creating client to keep agent turns within that budget.
-A refused charge produces `budget_exhausted`; running turns stop at their next refused charge.
+A refused model charge stops the run.
+The outcome may be `failed` with HTTP `402`, including when an ancestor key's budget refuses authorization.
+Inspect the returned error; a positive fleet balance does not guarantee authorization.
 
 `policy.maxSpendUsd` alone checks the estimated creation cost.
 Use `budgetUsd` for metered spending limits.
