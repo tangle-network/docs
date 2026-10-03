@@ -1,0 +1,9 @@
+node_modules/
+proof/
+__pycache__/
+playback/vendor/
+playback/bin/
+playback/recordings/**/*.mp4
+playback/recordings/**/*.gif
+playback/recordings/**/*.zip
+.env*

@@ -1,0 +1,8 @@
+diff --git a/formatters.ts b/formatters.ts
+index 81bb4df..44b5a58 100644
+--- a/formatters.ts
++++ b/formatters.ts
+@@ -22,0 +23,3 @@ export function formatUptime(valueMs: number) {
++  // NaN/±Infinity mean "unavailable" here, same as in formatBytes above: NaN
++  // fell through to "NaNs" and +Infinity to "Infinityd NaNh".
++  if (!Number.isFinite(valueMs)) return "0s";

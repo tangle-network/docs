@@ -1,0 +1,11 @@
+{
+  "source": "retained/example/proof/headless-recording-overlap-budget-3/headless.cast",
+  "importedAt": "2026-10-03T04:54:09.168Z",
+  "sha256": "0404ba5fe12e5d3522fdbaac6434ff2b50d88218c2d85af27c842d95bf6af373",
+  "cols": 110,
+  "rows": 34,
+  "durationSeconds": 40.24235754203983,
+  "outputBytes": 1860,
+  "outputEvents": 16,
+  "eventCount": 16
+}

@@ -1,0 +1,47 @@
+{
+  "source": "retained/playback/recordings/headless-clean/original.cast",
+  "sourceSha256": "0404ba5fe12e5d3522fdbaac6434ff2b50d88218c2d85af27c842d95bf6af373",
+  "renderer": "agg 1.9.0",
+  "aggArgs": [
+    "--quiet",
+    "--no-loop",
+    "--font-size",
+    "18",
+    "--line-height",
+    "1.35",
+    "--speed",
+    "1",
+    "--idle-time-limit",
+    "3600",
+    "--last-frame-duration",
+    "2",
+    "retained/playback/recordings/headless-clean/original.cast",
+    "retained/playback/recordings/headless-clean/terminal-1x.gif"
+  ],
+  "originalSeconds": 40.24235754203983,
+  "playbackSpeed": 1,
+  "idleGapsRemoved": false,
+  "finalFrameHoldSeconds": 2,
+  "videoSeconds": 42.233333,
+  "gif": {
+    "path": "retained/playback/recordings/headless-clean/terminal-1x.gif",
+    "sha256": "8bd59ebf861863ba584f25ff8a311ad17bc9da320799a1cd5da1f30c0834a07f"
+  },
+  "mp4": {
+    "path": "retained/playback/recordings/headless-clean/terminal-1x.mp4",
+    "sha256": "3ede2679a599698f711b80cc3e51be928f8df00f9c1bae3c73bb2fde087b8adf",
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "width": 1214,
+        "height": 852
+      }
+    ],
+    "format": {
+      "duration": "42.233333",
+      "size": "604048"
+    }
+  }
+}

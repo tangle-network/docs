@@ -1,0 +1,9 @@
+{
+  "repository": "https://github.com/tangle-network/agent-dev-container",
+  "revision": "d205ef1587d5b6c48822786b18cc466e0212e47c",
+  "path": "products/sandbox/web/src/lib/formatters.ts",
+  "sourceUrl": "https://github.com/tangle-network/agent-dev-container/blob/d205ef1587d5b6c48822786b18cc466e0212e47c/products/sandbox/web/src/lib/formatters.ts",
+  "sha256": "311f87fd19c1709173d213a533a117f2660485fa961f59dd791a20e328a005fc",
+  "transformation": "None. Exact committed source; no defect injected.",
+  "task": "Prevent non-finite durations from rendering as NaNs or Infinityd NaNh."
+}

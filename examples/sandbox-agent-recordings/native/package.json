@@ -1,0 +1,16 @@
+{
+  "name": "tangle-sandbox-native-capture",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@tangle-network/agent-interface": "2.16.0",
+    "@tangle-network/sandbox": "0.60.9",
+    "@xterm/headless": "6.0.0"
+  },
+  "scripts": {
+    "capture": "node drive.mjs"
+  },
+  "engines": {
+    "node": ">=22.6.0"
+  }
+}

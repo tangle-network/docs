@@ -1,0 +1,70 @@
+{
+  "archive": "recordings/headless-clean/reproduce.zip",
+  "sha256": "53a9075b4444d78664bee108c5c58392c722c0e8a1ed18eaec2257a8ef668849",
+  "bytes": 12063,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1256,
+      "sha256": "86af16af1135df620a1af67f9e9fb0d792e55ebbb5c3a275a735e6df13605ca5"
+    },
+    {
+      "path": "fixture/formatters.test.mjs",
+      "bytes": 1065,
+      "sha256": "0f4d241f616abdb280ced46f0ddb64b0094a0cc200108a077fec409bb3476d5c"
+    },
+    {
+      "path": "fixture/formatters.ts",
+      "bytes": 2455,
+      "sha256": "311f87fd19c1709173d213a533a117f2660485fa961f59dd791a20e328a005fc"
+    },
+    {
+      "path": "headless.ts",
+      "bytes": 7538,
+      "sha256": "03f168014642729d9cd7a5f596e5214e01f1507349c4598fb0157757d4dab5ea"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 446,
+      "sha256": "b441adbd7de372dd9c2d7185a06d274521c5085730d87f6cd5986ce1279edb21"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 4725,
+      "sha256": "814bb74d5ecedee6a2a794fbc6e10dccf2500c60b1a875236e50866fa181f7c0"
+    },
+    {
+      "path": "package.json",
+      "bytes": 320,
+      "sha256": "7321ed99c7664e09b46ad48bb2626bbcbfd83eddcb1b93beb6a30e80574dc594"
+    },
+    {
+      "path": "prompt.txt",
+      "bytes": 553,
+      "sha256": "40217b5a18df19b4f4004eba119a971982e216de490e320215ae672c0679cc1d"
+    },
+    {
+      "path": "provenance.json",
+      "bytes": 588,
+      "sha256": "d8207206b6a70f617184d77584dcb992b40e8223272938933823f5267dc333fa"
+    },
+    {
+      "path": "run-headless.ts",
+      "bytes": 2728,
+      "sha256": "a74bc0b626dc069fedea38db06592e89e04bb400b5d70710b0eec7be64219f2a"
+    },
+    {
+      "path": "verify.mjs",
+      "bytes": 4501,
+      "sha256": "0d78982b39fc388a15e090eaabea471e174fcc11d9dd2dca48938773e04feade"
+    }
+  ],
+  "sdkVersion": "0.60.9",
+  "exactExecutedSources": true,
+  "fixtureHashesMatch": true,
+  "privateProofIncluded": false,
+  "credentialsIncluded": false,
+  "nodeModulesIncluded": false,
+  "installOrRuntimeRerun": false,
+  "compileEvidence": "validation/headless-fleet-typecheck.json (reused; source change since check was only budget number)"
+}

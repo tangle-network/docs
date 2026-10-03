@@ -1,0 +1,7 @@
+Fix the uptime formatter in formatters.ts.
+It currently displays NaNs for NaN and Infinityd NaNh for positive Infinity.
+Make formatUptime return 0s for any non-finite input, matching the adjacent byte formatter's handling of unavailable values.
+Keep existing formatting for all finite durations, including negative values, unchanged.
+Run node --experimental-strip-types --test formatters.test.mjs before and after the fix.
+Only change formatters.ts. Do not edit the tests or add dependencies.
+Finish by showing the diff and summarizing the test result.
