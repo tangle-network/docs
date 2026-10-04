@@ -53,7 +53,6 @@ const storage: StorageConfig = {
   prefix: "sandbox-snapshots/",
 };
 const box = await client.create({
-  environment: "universal",
   maxLifetimeSeconds: 900,
   storage,
 });
@@ -96,7 +95,6 @@ if (!serviceToken) throw new Error("Set SERVICE_TOKEN");
 const secretName = "DOCS_" + crypto.randomUUID().toUpperCase().replaceAll("-", "_");
 await client.secrets.create(secretName, serviceToken);
 const box = await client.create({
-  environment: "universal",
   maxLifetimeSeconds: 900,
   secrets: [secretName],
 });
@@ -114,7 +112,6 @@ const instance = await client.instances.ensure({
   key: \`customer:\${customerId}\`,
   profile: { version: "v1", backend: { type: "opencode" } },
   create: {
-    environment: "universal",
     idleTimeoutSeconds: 300,
     deleteAfterStoppedSeconds: 30 * 86400,
   },
