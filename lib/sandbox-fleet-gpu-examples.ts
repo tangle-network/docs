@@ -32,7 +32,6 @@ export const fleetGpuExamples = {
 
 const fleet = await client.fleets.create({
   defaults: {
-    environment: "universal",
     resources: { cpuCores: 2, memoryMB: 4096, diskGB: 20 },
     maxLifetimeSeconds: 900,
   },
@@ -84,7 +83,7 @@ for (const result of dispatch.results) {
   budgetedAgents: `${client}
 
 const fleet = await client.fleets.create({
-  defaults: { environment: "universal", maxLifetimeSeconds: 900 },
+  defaults: { maxLifetimeSeconds: 900 },
   agents: [
     { agentId: "tools", harness: "claude-code", task: "Report the installed development tools." },
     { agentId: "workspace", harness: "codex", task: "Describe the workspace files without editing them." },

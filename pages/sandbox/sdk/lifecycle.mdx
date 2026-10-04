@@ -3,8 +3,8 @@ title: Sandbox lifecycle
 description: Create, find, stop, resume, and delete sandboxes with the SDK and HTTP API.
 ---
 
-import CodeDisplay from '/components/CodeDisplay';
-import { sandboxCode } from '/lib/sandbox-code';
+import CodeDisplay from "/components/CodeDisplay";
+import { sandboxCode } from "/lib/sandbox-code";
 
 # Sandbox lifecycle
 
@@ -12,12 +12,14 @@ Create a sandbox for a job, reuse it while work continues, and delete it when yo
 
 ## Create a sandbox
 
-Choose an environment, resources, and runtime limit when you create the sandbox.
+Create with the default image and set the resources and runtime limit your job needs.
 
 <CodeDisplay language="typescript" code={sandboxCode.create} />
 
-`environment` accepts a named environment, container image reference, or SDK-built image ID.
-Use `client.environments.list()` to list named environments.
+Omit `environment` to use the server's default image.
+Set it when you need a container image such as `python:3.12-slim` or an [SDK-built image](/sandbox/sdk/images-storage).
+For named environments, use the IDs from `client.environments.list()`.
+Language names such as `python` or `node` do not select versioned container images.
 `backend.type` selects the initial [agent harness](/infrastructure/harnesses).
 
 ## Find an existing sandbox
@@ -29,10 +31,12 @@ This example lists running sandboxes and reconnects to that sandbox without crea
 
 ## Stop, resume, and delete
 
-<CodeDisplay examples={[
-  { language: "typescript", code: sandboxCode.lifecycle },
-  { language: "python", code: sandboxCode.pythonLifecycle },
-]} />
+<CodeDisplay
+  examples={[
+    { language: "typescript", code: sandboxCode.lifecycle },
+    { language: "python", code: sandboxCode.pythonLifecycle },
+  ]}
+/>
 
 `stop()` keeps the workspace for later use.
 `resume()` starts it again; wait for `running` before sending work.

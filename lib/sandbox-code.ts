@@ -23,7 +23,6 @@ const program = (
 ) => `${imports}${client}
 
 const box = await client.create({
-  environment: "universal",
   maxLifetimeSeconds: 900,
 ${options}});
 await box.waitFor("running");
@@ -83,7 +82,7 @@ console.log(result.totalSuccess, result.totalFailure);`,
   fleet: `${client}
 
 const fleet = await client.fleets.create({
-  defaults: { environment: "universal", maxLifetimeSeconds: 900 },
+  defaults: { maxLifetimeSeconds: 900 },
   machines: [{ machineId: "worker-1" }, { machineId: "worker-2" }],
   maxConcurrentCreates: 2,
   policy: { maxMachines: 2, maxConcurrentCreates: 2 },
@@ -127,7 +126,6 @@ const repoUrl = process.env.TANGLE_REPO_URL;
 if (!repoUrl) throw new Error("Set TANGLE_REPO_URL to a public Git repository URL");
 
 const box = await client.create({
-  environment: "universal",
   maxLifetimeSeconds: 900,
   git: { url: repoUrl },
 });

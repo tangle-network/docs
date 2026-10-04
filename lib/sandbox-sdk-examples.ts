@@ -12,7 +12,7 @@ const tangle = new Sandbox({
   baseUrl: 'https://sandbox.tangle.tools',
 });
 const box = await tangle.create({
-  environment: 'universal', maxLifetimeSeconds: 900,
+  maxLifetimeSeconds: 900,
 ${createOptions}});
 await box.waitFor('running');
 
@@ -35,7 +35,7 @@ with httpx.Client(
     headers={"Authorization": f"Bearer {os.environ['TANGLE_API_KEY']}"},
 ) as tangle, ExitStack() as cleanup:
     box = tangle.post("/v1/sandboxes", json={
-        "environment": "universal", "maxLifetimeSeconds": 900,
+        "maxLifetimeSeconds": 900,
 ${createOptions}    }).raise_for_status().json()
     path = f"/v1/sandboxes/{box['id']}"
     cleanup.callback(lambda: tangle.delete(path).raise_for_status())
