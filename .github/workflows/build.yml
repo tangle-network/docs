@@ -9,7 +9,7 @@ on:
 jobs:
   build_code:
     name: run
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, ci-public]
     strategy:
       matrix:
         node-version: [22.x]
