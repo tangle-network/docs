@@ -1,0 +1,84 @@
+{
+  "label": "Task-only excerpt at original speed",
+  "source": "recordings/headless-clean/terminal-1x.mp4",
+  "sourceSha256": "3ede2679a599698f711b80cc3e51be928f8df00f9c1bae3c73bb2fde087b8adf",
+  "sourceVideoSeconds": 42.233333,
+  "trimStartSeconds": 9.3,
+  "trimEndSeconds": 42.233333,
+  "playbackSpeed": 1,
+  "internalPausesRemoved": false,
+  "originalFinalFrameHoldSeconds": 2,
+  "sourceCast": "recordings/headless-clean/original.cast",
+  "sourceCastSha256": "0404ba5fe12e5d3522fdbaac6434ff2b50d88218c2d85af27c842d95bf6af373",
+  "commands": [
+    [
+      "ffmpeg",
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-n",
+      "-i",
+      "recordings/headless-clean/terminal-1x.mp4",
+      "-an",
+      "-vf",
+      "trim=start=9.3,setpts=PTS-STARTPTS",
+      "-c:v",
+      "libx264",
+      "-crf",
+      "18",
+      "-pix_fmt",
+      "yuv420p",
+      "-movflags",
+      "+faststart",
+      "recordings/headless-clean/terminal-task-only-from-9.3s-1x.mp4"
+    ],
+    [
+      "ffmpeg",
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-n",
+      "-i",
+      "recordings/headless-clean/terminal-task-only-from-9.3s-1x.mp4",
+      "-filter_complex",
+      "split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=sierra2_4a",
+      "-loop",
+      "-1",
+      "recordings/headless-clean/terminal-task-only-from-9.3s-1x.gif"
+    ]
+  ],
+  "mp4": {
+    "file": "recordings/headless-clean/terminal-task-only-from-9.3s-1x.mp4",
+    "sha256": "dc9d02ea39d90ade3192a66b7ad9fe9bea708cfb2bb5ccf06d15749d1cef3e88",
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "width": 1214,
+        "height": 852
+      }
+    ],
+    "format": {
+      "duration": "32.933333",
+      "size": "589931"
+    }
+  },
+  "gif": {
+    "file": "recordings/headless-clean/terminal-task-only-from-9.3s-1x.gif",
+    "sha256": "19d49a4f9fd70dd0cace0ec672c621bbd2c6d834d73a4dea8182d58dc2a860a8",
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "gif",
+        "width": 1214,
+        "height": 852
+      }
+    ],
+    "format": {
+      "duration": "32.930000",
+      "size": "1340034"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "tangle-sandbox-agent-demo",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@tangle-network/agent-interface": "2.16.0",
+    "@tangle-network/sandbox": "0.60.9"
+  },
+  "scripts": {
+    "demo": "node --experimental-strip-types run-headless.ts"
+  },
+  "engines": {
+    "node": ">=22.6.0"
+  }
+}

@@ -1,0 +1,26 @@
+✔ unavailable uptime (NaN) renders as 0s (0.583ms)
+✔ unavailable uptime (positive infinity) renders as 0s (0.057375ms)
+✔ unavailable uptime (negative infinity) renders as 0s (0.04775ms)
+✔ uptime -1 ms remains 0s (0.057583ms)
+✔ uptime -86400000 ms remains 0s (0.049583ms)
+✔ uptime 0 ms remains 0s (0.037ms)
+✔ uptime 999 ms remains 0s (0.059709ms)
+✔ uptime 1000 ms remains 1s (0.584833ms)
+✔ uptime 59999 ms remains 59s (0.0745ms)
+✔ uptime 60000 ms remains 1m 0s (0.083792ms)
+✔ uptime 61001 ms remains 1m 1s (0.048167ms)
+✔ uptime 3599999 ms remains 59m 59s (0.046625ms)
+✔ uptime 3600000 ms remains 1h 0m (0.032542ms)
+✔ uptime 3660000 ms remains 1h 1m (0.024667ms)
+✔ uptime 86399999 ms remains 23h 59m (0.02925ms)
+✔ uptime 86400000 ms remains 1d 0h (0.025333ms)
+✔ uptime 176400000 ms remains 2d 1h (0.027791ms)
+✔ existing byte formatter behavior remains intact (0.115417ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 84.735583

@@ -1,0 +1,20 @@
+{
+  "host": "beelink1-wsl",
+  "node": "v24.21.0",
+  "archiveSha256": "53a9075b4444d78664bee108c5c58392c722c0e8a1ed18eaec2257a8ef668849",
+  "packageLockSha256": "814bb74d5ecedee6a2a794fbc6e10dccf2500c60b1a875236e50866fa181f7c0",
+  "installCommand": "npm ci",
+  "importsResolvedInsideArchive": true,
+  "sourceSyntaxChecked": [
+    "headless.ts",
+    "run-headless.ts",
+    "verify.mjs"
+  ],
+  "sdkVersion": "0.60.9",
+  "runnerExecuted": false,
+  "strictCompilation": "Reused previous TypeScript 6.0.3 strict check of the exact sources; only budget numeric literal changed afterward.",
+  "npmVersion": "11.19.0",
+  "npmCiExitCode": 0,
+  "packageLockUnchanged": true,
+  "hostedSandboxApiCallsMade": false
+}

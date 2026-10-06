@@ -1,0 +1,17 @@
+[
+  {
+    "name": "headless-clean",
+    "title": "Headless SDK run \u00b7 Claude Code",
+    "note": "Custom rendering of headless SDK events. This is not the native Claude Code terminal.",
+    "sha256": "0404ba5fe12e5d3522fdbaac6434ff2b50d88218c2d85af27c842d95bf6af373",
+    "cols": 110,
+    "rows": 34,
+    "durationSeconds": 40.24235754203983,
+    "outputBytes": 1860,
+    "outputEvents": 16,
+    "eventCount": 16,
+    "cast": "recordings/headless-clean/original.cast",
+    "posterAt": 11.8,
+    "result": null
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "files": [
+    {
+      "path": "formatters.test.mjs",
+      "sha256": "0f4d241f616abdb280ced46f0ddb64b0094a0cc200108a077fec409bb3476d5c",
+      "bytes": 1065
+    },
+    {
+      "path": "formatters.ts",
+      "sha256": "311f87fd19c1709173d213a533a117f2660485fa961f59dd791a20e328a005fc",
+      "bytes": 2455
+    }
+  ],
+  "testCommand": "node --experimental-strip-types --test formatters.test.mjs",
+  "mutableFiles": [
+    "formatters.ts"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "recordedAt": "2026-10-03T04:53:15Z",
+  "mode": "headless SDK streamPrompt, with custom stdout rendering",
+  "nativeTui": false,
+  "sandboxId": "sandbox-25c2b04c4de6",
+  "sessionId": "1ad08cbd-f355-4dbe-99db-a28e6f4465c0",
+  "model": "anthropic/claude-opus-5",
+  "testsBefore": {
+    "passed": 16,
+    "failed": 2
+  },
+  "testsAfter": {
+    "passed": 18,
+    "failed": 0
+  },
+  "unchangedFiniteCases": 2007,
+  "inferenceCostUsd": 0.31590525,
+  "fleetSpendBeforeDeletionUsd": 0.328651582,
+  "sandboxAbsentVerifiedAt": "2026-10-03T04:53:22.734Z",
+  "executedSourceSha256": {
+    "headless.ts": "03f168014642729d9cd7a5f596e5214e01f1507349c4598fb0157757d4dab5ea",
+    "run-headless.ts": "a74bc0b626dc069fedea38db06592e89e04bb400b5d70710b0eec7be64219f2a",
+    "verify.mjs": "0d78982b39fc388a15e090eaabea471e174fcc11d9dd2dca48938773e04feade"
+  },
+  "nativeScaffold": {
+    "executed": false,
+    "syntaxCheckOnly": true,
+    "originalSha256": "7e69394aae7832627f0e6c6a8b9cfdaf67d9718d13bd879484750885663fdff1",
+    "changes": "Package imports and output/fixture paths only."
+  },
+  "nativeFix": {
+    "pullRequest": "https://github.com/tangle-network/agent-dev-container/pull/9017",
+    "checkedHead": "5f084b58c7d5ccb9028197f68a407111a4ee1ca3",
+    "mergeCommit": "49e44d6ea94642837aecf9daed68fce961e7bc92",
+    "focusedTestsPassed": 67,
+    "productionTaskProven": false
+  },
+  "nativeReleaseLastRetainedCheck": {
+    "at": "2026-10-03T05:15:13Z",
+    "main": "633e012153272c72835bb84c8a6759eb94aa07e3",
+    "fixIncluded": false
+  },
+  "retainedMediaRoot": ".agent/agent-demo-20261003/playback/recordings/headless-clean/",
+  "recordingMeaning": "The cast records stdout from headless.ts, not bytes from the Claude Code interactive PTY."
+}
