@@ -4,6 +4,7 @@
   "description": "Documentation for Tangle Blueprints, operators, sandbox runtime, Router, and x402 payments.",
   "homepage": "https://docs.tangle.tools/",
   "llms": "https://docs.tangle.tools/llms.txt",
+  "agent_setup": "https://docs.tangle.tools/agent-setup.md",
   "product_manifest": "https://tangle.tools/.well-known/tangle-agent.json",
   "recommended_first_reads": [
     "https://docs.tangle.tools/developers/cli/quickstart",

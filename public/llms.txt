@@ -14,6 +14,7 @@ Tangle Docs explain how to build and operate services on Tangle: Blueprints, ope
 
 ## Agent guidance
 
+- Use the docs setup skill at https://docs.tangle.tools/agent-setup.md.
 - Use the Tangle product manifest at https://tangle.tools/.well-known/tangle-agent.json.
 - Use Router OpenAPI at https://router.tangle.tools/openapi.json for model-routing calls.
 - Install scoped npm packages only: `@tangle-network/tcloud`, `@tangle-network/sandbox`, `@tangle-network/browser-agent-driver`.
