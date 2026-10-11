@@ -4,15 +4,15 @@ import ExpandableImage from "../../components/ExpandableImage";
 
 # How Tangle coordinates operators and services
 
-Tangle coordinates services that outside operators can run for users. Developers publish Blueprints, users request service instances, operators accept work, and protocol contracts track stake, lifecycle state, and payment terms.
+Tangle coordinates services that outside operators can run for users and agents. Developers publish Blueprints, users and agents request service instances, operators accept work, and protocol contracts track stake, lifecycle state, and payment terms.
 
-## Managed today, open operator market later
+## Managed today, operator market live on testnet
 
-Today the network uses managed onboarding and a curated operator set. The protocol path is still the same one a larger market needs: register operators, request service instances, record commitments, and settle fees.
+Managed onboarding and a curated operator set serve the hosted path. The open operator market is live on testnet: three operators serve inference through the Router on Tempo (chain ID `42431`), with mainnet pending. Agents hiring operators are the intended demand side — an agent can request a service instance and settle on-chain without managed onboarding. The protocol path is the same one a larger market needs: register operators, request service instances, record commitments, and settle fees. Agents can start from the [ecosystem setup guide](https://tangle.tools/agent-setup.md); the crypto-settled lane is documented in the [Router agent guide](https://router.tangle.tools/for-agents-crypto.md).
 
 ## Build Composable Services
 
-Blueprints package jobs, metadata, binaries, pricing, and optional service-manager logic. Developers build them with the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main), then users instantiate live service instances from registered operators.
+Blueprints package jobs, metadata, binaries, pricing, and optional service-manager logic. Developers build them with the [Blueprint SDK](https://github.com/tangle-network/blueprint/tree/main), then users and agents instantiate live service instances from registered operators.
 
 ## Earn as a Service Operator
 
@@ -20,7 +20,7 @@ Operators earn service fees by running requested instances. They choose which Bl
 
 ## Reuse one stake across Blueprints
 
-Operators can reuse one stake and operations stack across multiple Blueprints. That gives users a consistent way to select operators while each Blueprint keeps its own jobs, pricing, and runtime requirements.
+Operators can reuse one stake and operations stack across multiple Blueprints. That gives users and agents a consistent way to select operators while each Blueprint keeps its own jobs, pricing, and runtime requirements.
 
 ## Who This Is For
 
@@ -36,7 +36,7 @@ Tangle uses a modular service model:
 
 #### Blueprints
 
-A Blueprint is a service template, not a live service. It defines the runnable artifact, jobs, metadata, pricing hooks, and registration/request logic. Users create service instances by selecting operators and accepting the payment terms. [Read more about Blueprints](/developers/blueprints/introduction)
+A Blueprint is a service template, not a live service. It defines the runnable artifact, jobs, metadata, pricing hooks, and registration/request logic. Users and agents create service instances by selecting operators and accepting the payment terms. [Read more about Blueprints](/developers/blueprints/introduction)
 
 #### Economic Security on Blueprints
 
@@ -44,7 +44,7 @@ Economic security backs operators who run services based on Blueprints. Operator
 
 #### Requesting Service Instances
 
-Users create live service instances through a Blueprint request. The request names the operator set, payment terms, and service parameters the Blueprint supports.
+Users and agents create live service instances through a Blueprint request. The request names the operator set, payment terms, and service parameters the Blueprint supports.
 
 #### Incentives
 
@@ -70,4 +70,4 @@ Tangle is a protocol for reusable cryptographic, AI, and runtime services. The p
 
 - **Custom cryptographic services**: any service that can be expressed as jobs, operator requirements, and settlement rules.
 
-Developers package services once, users instantiate them when needed, and operators get paid for work they can prove they accepted and served.
+Developers package services once, users and agents instantiate them when needed, and operators get paid for work they can prove they accepted and served.
