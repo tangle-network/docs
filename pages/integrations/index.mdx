@@ -6,45 +6,52 @@ image: /images/og/integrations-hub.png
 
 # Tangle Integration Hub
 
-Your Tangle workspace gets dramatically more useful when it can see the tools
-you already run your business on. This hub collects a short, plain-English
-guide for each connection. Every guide follows the same shape: **you create a
-key in the other tool, you paste it into your workspace, your agent starts
-using it.** No developer needed, and each one takes about five minutes.
+Your Tangle workspace gets more useful when it can see the tools you already
+run your business on. This hub collects a plain-English guide for each
+connection, including the account access, costs, and setup limits to check
+before you start.
 
 ## How a connection works
 
-1. **You create an access key inside the other tool** (Cloudbeds, PriceLabs,
-   Deepgram…). The key belongs to your account, and you choose exactly what it
-   is allowed to do.
-2. **You paste that key into your workspace**, under
-   **Setup → Connections**. Your workspace asks one or two follow-up questions
-   (like which property the key is for) and takes it from there.
-3. **Your agent starts using the connection** — answering questions from real
-   reservations, checking today's arrivals, listening to voice notes. Anything
-   that sends a message or charges money still waits for a person's approval.
+1. **Check the provider's requirements.** Cloudbeds, PriceLabs, and Deepgram
+   use API keys from your account. WhatsApp uses the in-app business phone
+   setup instead. PriceLabs API access is paid, and its current Hospitality
+   setup has a limitation described in the guide below.
+2. **Open Integrations in your Hospitality workspace.** Business data
+   providers appear under **Business integrations**. The separate
+   **Connections** page manages messaging channels; it is not the API-key
+   setup page.
+3. **Connect and register the provider for business data.** Follow the
+   provider's guide and check the connection status before relying on its
+   answers. Deepgram needs a separate **Use for business data** step.
+
+Message delivery and write actions follow the workspace's mode, roles, and
+action-specific approval rules. Connecting a provider does not mean every
+message or action waits for approval; check those controls before going live.
 
 ## Your keys stay yours
 
-- Keys are stored encrypted in Tangle's integration vault. They are never
-  shown again after you paste them, not even to your own workspace members.
-- Each key is scoped to one business and to the smallest set of permissions
-  the integration needs — every guide lists them exactly.
-- You can disconnect or rotate a key at any time, in the other tool or in
-  **Setup → Connections**. Disconnecting stops the data flow immediately;
-  your history stays.
-- A connection only _reads_ your data (plus the few write actions each guide
-  names). It never gives your agent permission to send messages or approve
-  charges on its own.
+- Keys are stored encrypted in Tangle's integration vault and are not shown
+  again by the workspace after you paste them.
+- A provider key's permissions and Tangle's connector behavior are different.
+  The provider decides what the key can access; Tangle limits the operations
+  and fields its connector exposes. Choose the narrowest provider access
+  that supports your intended setup.
+- Tangle associates a connection with your workspace. That does not narrow
+  the key's permissions at the provider. For example, leave Cloudbeds'
+  organization-wide option off for a single-property setup.
+- Disconnect in **Integrations** to stop using a connection in the workspace.
+  Revoke or replace the key at the provider if you need to invalidate the
+  credential itself. Follow the provider guide when reconnecting.
 
 ## Available integrations
 
-| Integration                          | What it gives your agent                                                                                                        | Time   |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| [Cloudbeds](/integrations/cloudbeds) | Live reservations, arrivals and departures, in-house guests, housekeeping status, rate plans, and approval-gated folio posting. | ~5 min |
-| [PriceLabs](/integrations/pricelabs) | Today's recommended prices for each listing, so pricing questions get real answers.                                             | ~3 min |
-| [Deepgram](/integrations/deepgram)   | Voice notes from guests and staff become text your agent can read and answer.                                                   | ~2 min |
-| [WhatsApp](/integrations/whatsapp)   | One business number your guests, staff, and vendors can text — a Tangle number or your own.                                     | in-app |
+| Integration                          | What it gives your agent                                                                                       | Setup note                                                     |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| [Cloudbeds](/integrations/cloudbeds) | Reservations, arrivals and departures, in-house guests, housekeeping, rates, and approval-gated folio posting. | Property API access and a scoped key                           |
+| [PriceLabs](/integrations/pricelabs) | Recommended prices for configured listings.                                                                    | Paid API access; current setup limitation                      |
+| [Deepgram](/integrations/deepgram)   | Supported staff and vendor voice notes become text. Guest audio is not currently transcribed.                  | Project key, available credits, and business-data registration |
+| [WhatsApp](/integrations/whatsapp)   | A business number your guests, staff, and vendors can text.                                                    | Number selection and manager handset verification              |
 
 ## Don't see your tool?
 

@@ -8,6 +8,7 @@ const NAV_ITEMS = new Set([
   "intelligence",
   "blueprint-agent",
   "platform",
+  "integrations",
   "protocol",
 ]);
 

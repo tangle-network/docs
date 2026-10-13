@@ -1,47 +1,59 @@
 ---
 title: WhatsApp business line
-description: Give your Tangle agent a WhatsApp number guests, staff, and vendors can text — a Tangle-managed number or your own WhatsApp Business number. The whole flow runs inside your workspace.
+description: Connect a WhatsApp business number in your Hospitality workspace, then verify your manager phone with the displayed TEST text and reply challenge.
 image: /images/og/whatsapp.png
 ---
 
 # WhatsApp business line
 
-WhatsApp is where your guests already are. Your workspace can run one business
-number that your **guests, staff, and vendors** text — and your agent answers
-on it, in each person's own language, with the permissions of the person
-writing. You don't create keys in any developer portal for this one: the whole
-flow runs inside your workspace.
+Your workspace can run a business number that enrolled **guests, staff, and
+vendors** text. The agent handles messages according to each person's role
+and the workspace's delivery settings. This setup happens in the workspace;
+you do not paste a WhatsApp API key into the business integrations panel.
 
 ## Choose your number
 
-**A Tangle-managed number** — we provision and maintain the WhatsApp number
-for you. Best when you want to start immediately or don't have a WhatsApp
-Business number yet.
+**A Tangle-managed number** — select an available WhatsApp line from
+**Business phone**. Availability depends on your workspace. If the section
+says **Not available**, ask Tangle to enable it.
 
-**Your own WhatsApp Business number** — you connect the number your customers
-may already have saved. Best when you've advertised a number you don't want to
-change.
+**Your own WhatsApp Business number** — authorize the business account through
+Meta, select the number, then complete the separate manager-phone verification
+below.
 
 ## Connect it in your workspace
 
-1. Open your Tangle workspace (for example
-   [hospitality.tangle.tools](https://hospitality.tangle.tools)) and go to
-   **Setup → Connections**.
-2. Find the **Business phone** section and choose to add a WhatsApp line.
-3. Follow the in-app steps for the path you chose. Connecting your own number
-   includes a one-time **owner verification** — a code sent to the number's
-   owner — so nobody can attach a number that isn't theirs.
-4. When the line shows **Active**, send it a hello from your own phone.
+1. Open your [Hospitality workspace](https://hospitality.tangle.tools) as an
+   owner or manager and go to **Connections**.
+2. If using your own number, open **WhatsApp Business**, choose
+   **Connect WhatsApp Business**, then **Continue with Meta**. Complete Meta's
+   authorization, choose the **Business account** and **WhatsApp number**, and
+   select **Use this number**.
+3. In **Business phone**, select your available WhatsApp line and choose
+   **Verify my phone**. This step also applies to a Tangle-managed line.
+4. From your own manager or owner handset, send the exact **TEST** text to
+   the destination displayed in the workspace. Then reply to the code you
+   receive. Follow the displayed instructions; do not substitute a generic
+   hello or send the code from another phone.
+5. Select **I replied to the code** if the status has not refreshed. After
+   verification succeeds, choose **Connect line**. If the challenge expired,
+   choose **Get a new code** and use the new TEST text.
+6. When the line shows **Connected**, add the intended guests, staff, and
+   vendors from **People** and follow their enrollment instructions.
 
-The workspace knows who's writing by their enrolled number. Unknown numbers
-get a friendly introduction, not access; each person sees only what their role
-allows.
+The TEST/reply challenge proves control of your manager handset. It is
+separate from authorizing a WhatsApp Business account and number through
+Meta; completing one does not complete the other.
 
 ## Good to know
 
-- Messages that go out under your business's name — vendor requests, guest
-  replies — wait for a manager's approval while you're in approval mode.
-  You choose the mode in **Setup**.
-- Pausing the line stops every queued send instantly, from **Work**.
-- Every conversation, approval, and receipt is visible in your workspace —
-  WhatsApp is the channel, your workspace is the record.
+- **Connections** contains business phone setup. **Integrations** is the
+  separate page for Cloudbeds, PriceLabs, and Deepgram.
+- Replies and outbound requests follow the workspace's mode, roles, approval
+  rules, and recipient consent. Do not assume every guest reply requires a
+  manager's approval.
+- Follow the phone opt-in instructions shown for each enrolled person before
+  expecting approved messages or reminders to reach them.
+- Conversation and action records in the workspace help you check what was
+  received, approved, or sent. Verify the status of a specific message rather
+  than assuming that connecting a line proves delivery.
