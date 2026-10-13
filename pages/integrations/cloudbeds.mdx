@@ -1,0 +1,118 @@
+---
+title: Connect Cloudbeds
+description: Connect your Cloudbeds property to your Tangle workspace in about five minutes — live reservations, arrivals, housekeeping, and approval-gated folio posting. Written for owners and managers, no developer needed.
+image: /images/og/cloudbeds.png
+---
+
+import Callout from "/components/Callout";
+
+# Connect Cloudbeds
+
+Cloudbeds is your property management system (PMS). Once it's connected, your
+agent can answer questions from **live reservation data** — who arrives today,
+who's in house, when guests check out, what a room owes — and your team can
+post charges to a guest folio **after a manager approves them**.
+
+You connect it by creating one API key inside Cloudbeds and pasting it into
+your workspace. That's the whole job.
+
+<Callout type="info">
+**Time:** about 5 minutes. **You need:** a Cloudbeds login with property
+administrator permission for your property.
+</Callout>
+
+## Step 1 — Create an API key in Cloudbeds
+
+1. Sign in to Cloudbeds as a property administrator.
+2. Open **Settings → Integrations → API Keys** (the menu name can vary
+   slightly by account; it's under Settings).
+3. Choose to create a new API key and give it a name like **Tangle**.
+4. If Cloudbeds asks for a **Redirect URL**, paste exactly this:
+
+```text
+https://id.tangle.tools/integrations/cloudbeds/callback
+```
+
+5. Select these **permissions** for the key — check every box in this list,
+   nothing more:
+
+| Permission           | What it lets your agent do                              |
+| -------------------- | ------------------------------------------------------- |
+| `read:reservation`   | See reservations, arrivals, departures, and balances    |
+| `read:room`          | See room types and availability                         |
+| `read:guest`         | See guest names and contact details for a stay          |
+| `read:housekeeping`  | See each room's cleaning status                         |
+| `write:housekeeping` | Mark a room clean or dirty when housekeeping reports it |
+| `read:rate`          | See rate plans and prices                               |
+| `write:item`         | Post an approved charge to a guest folio                |
+
+6. Save. Cloudbeds shows you the key **once**. Copy it now — if you lose it,
+   you'll create a new one the same way.
+
+## Step 2 — Add the key to your workspace
+
+1. Open your Tangle workspace (for example
+   [hospitality.tangle.tools](https://hospitality.tangle.tools)) and sign in
+   as the owner or a manager.
+2. Go to **Setup → Connections** and choose **Cloudbeds**.
+3. Paste the API key you just created.
+4. Your workspace will ask two short questions:
+   - **Property ID** — the number Cloudbeds uses for your property (see
+     below).
+   - **Currency** — the 3-letter currency you bill in, like `USD` or `CRC`.
+5. Confirm with **Use for business data**.
+
+### Where to find your Property ID
+
+Your Property ID is a number only (for example `123456`). You can find it:
+
+- in Cloudbeds under **Settings → Property Settings**, often labeled
+  _Property ID_, or
+- in the web address of your Cloudbeds dashboard, or
+- ask us — send a screenshot of your Cloudbeds settings page and we'll read
+  it off for you.
+
+## Step 3 — Confirm it's working
+
+Within a few minutes, the Cloudbeds row in **Setup → Connections** should
+show **Active**, and your agent should be able to answer:
+
+> "Who arrives today?" · "Who's still in house?" · "What does room 12 owe?"
+
+Ask one of those in chat. If the answer names real guests, you're connected.
+
+## What your agent can and cannot do
+
+**Can do automatically:** read reservations, arrivals, departures, in-house
+guests, guest contact details, housekeeping status, rate plans, and room
+availability — and update a room's cleaning status when housekeeping reports
+through the agent.
+
+**Needs a manager's approval first:** posting any charge to a guest folio.
+The agent prepares the exact item, a manager approves it, and only then is it
+posted — with a receipt you can audit.
+
+**Never does:** create, modify, or cancel reservations; send payment links;
+see identity documents or payment card data (Cloudbeds does not expose them
+through this key).
+
+## If something goes wrong
+
+| What you see                                       | What it means                                            | Fix                                                                        |
+| -------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Connection shows **Reconnect required**            | Cloudbeds rejected the key — it was mistyped, or rotated | Create a fresh key in Cloudbeds and re-paste it in **Setup → Connections** |
+| Arrivals questions say there's no reservation data | Sync hasn't completed yet, or the Property ID is wrong   | Wait a few minutes; if it persists, re-check the Property ID               |
+| Housekeeping updates don't stick                   | The key is missing `write:housekeeping`                  | Edit the key's permissions in Cloudbeds (or make a new key with all seven) |
+| Folio posting is unavailable                       | The key is missing `write:item`                          | Same — add the missing permission                                          |
+
+Still stuck? Send us the exact sentence from the connection row in
+**Setup → Connections** and we'll take it from there.
+
+## Security notes
+
+- The key you paste is stored encrypted in Tangle's integration vault and is
+  never displayed again — not even to workspace owners.
+- It only ever reads your property's data. Every request names your property,
+  and Cloudbeds data for other properties can't be returned.
+- To cut the connection: remove Cloudbeds in **Setup → Connections**, or
+  delete the API key in Cloudbeds. Either one stops the flow immediately.

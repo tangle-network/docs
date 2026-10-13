@@ -27,6 +27,17 @@ function Head() {
 
   const description = frontMatter.description || defaultDescription;
 
+  // Social preview image: a page can set `image` in its front matter (a
+  // repo-relative path like /images/og/example.png); otherwise the shared
+  // branded card is used. Keep the asset local — external hosts can rot or
+  // rebrand and break every link preview at once.
+  const defaultImage = `${SITE_ROOT}/images/og/default.png`;
+  const frontMatterImage =
+    typeof frontMatter.image === "string" && frontMatter.image.startsWith("/")
+      ? `${SITE_ROOT}${frontMatter.image}`
+      : undefined;
+  const image = frontMatterImage ?? defaultImage;
+
   return (
     <>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -55,7 +66,7 @@ function Head() {
       <link rel="shortcut icon" href={`/images/favicon/favicon.ico`} />
       <meta name="msapplication-TileColor" content="#000000" />
       <meta name="theme-color" content="#1F1D2B" />
-      <meta name="twitter:card" content="summary_medium_image" />
+      <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@tangle_network" />
       <meta name="twitter:creator" content="@tanglenetwork" />
       <title>{tabTitle}</title>
@@ -64,15 +75,11 @@ function Head() {
       <meta property="og:description" content={description} />
       <link rel="canonical" href={fullUrl} />
       <meta property="og:type" content="website" />
-      <meta
-        property="twitter:image"
-        content="https://assets-global.website-files.com/6494562b44a28080aafcbad4/6494599436915879aa403230_Tangle%20Logo.png"
-      />
-      <meta
-        property="og:image"
-        content="https://assets-global.website-files.com/6494562b44a28080aafcbad4/6494599436915879aa403230_Tangle%20Logo.png"
-      />
-      <meta property="og:locale" content="en_IE" />
+      <meta property="twitter:image" content={image} />
+      <meta property="og:image" content={image} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:locale" content="en_US" />
       <meta property="og:site_name" content="Tangle Network" />
       <link rel="prefetch" href="/" as="document" />
     </>

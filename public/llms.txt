@@ -10,6 +10,11 @@ Tangle Docs explain how to build and operate services on Tangle: Blueprints, ope
 - Blueprint quickstart: https://docs.tangle.tools/developers/cli/quickstart
 - Sandbox docs: https://docs.tangle.tools/infrastructure/sandboxing
 - Router: https://router.tangle.tools/
+- Integration Hub: https://docs.tangle.tools/integrations
+- Cloudbeds setup guide: https://docs.tangle.tools/integrations/cloudbeds
+- PriceLabs setup guide: https://docs.tangle.tools/integrations/pricelabs
+- Deepgram setup guide: https://docs.tangle.tools/integrations/deepgram
+- WhatsApp business line guide: https://docs.tangle.tools/integrations/whatsapp
 - Marketing overview: https://tangle.tools/
 
 ## Agent guidance
