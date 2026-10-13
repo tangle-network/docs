@@ -1,48 +1,68 @@
 ---
 title: Connect Deepgram
-description: Connect Deepgram so voice notes from guests and staff become text your Tangle agent can read and answer. Two minutes, one API key.
+description: Connect Deepgram for supported staff and vendor voice notes in Hospitality, then register the connection for business data. Guest audio is not currently transcribed.
 image: /images/og/deepgram.png
 ---
 
 # Connect Deepgram
 
-People send voice notes — a guest asking about late checkout by WhatsApp, a
-housekeeper reporting a room by voice while their hands are full. With
-Deepgram connected, your agent **transcribes those voice notes and answers
-them like any text message**.
+A housekeeper can report a room by voice while their hands are full. With
+Deepgram connected and registered for business data, Hospitality can
+transcribe supported **staff and vendor voice notes** from the business line
+for the agent to process as text.
 
-You connect it by creating one API key inside Deepgram and pasting it into
-your workspace.
+**Guest audio is not currently transcribed.** The agent asks for a text
+version instead. Connecting Deepgram does not enable every incoming voice
+note or change the workspace's message-delivery rules.
 
-**Time:** about 2 minutes. **You need:** a Deepgram account (the free tier is
-enough to start).
+**You need:** a Deepgram project, permission to create a key, and available
+credits or billing for transcription. Usage is charged to your Deepgram
+project; check its balance and plan rather than assuming a free tier will
+cover ongoing use.
 
 ## Step 1 — Create an API key in Deepgram
 
-1. Sign in to the Deepgram console.
-2. Open **API Keys** and create a new key.
-3. Copy the key.
+Follow Deepgram's [API-key guide](https://developers.deepgram.com/docs/create-additional-api-keys):
 
-## Step 2 — Add the key to your workspace
+1. Sign in to the Deepgram console and select the intended **Project**.
+2. Open **Settings → API Keys → Create a New API Key**.
+3. Give it a recognizable name, such as **Tangle Hospitality**. Choose a role
+   that permits transcription without unnecessary project-management access.
+   Deepgram's [key-management guidance](https://developers.deepgram.com/guides/deep-dives/safely-removing-team-members-with-active-api-keys)
+   describes the default role as suitable for most production keys; broad
+   Admin or Owner permissions are not needed just to transcribe audio.
+4. Choose an expiration appropriate to your rotation plan. An expired key
+   will stop working, so arrange a replacement before that date.
+5. Create the key and copy its secret while it is shown. It cannot be shown
+   again.
 
-1. Open your Tangle workspace (for example
-   [hospitality.tangle.tools](https://hospitality.tangle.tools)) and go to
-   **Setup → Connections**.
-2. Choose **Deepgram** and paste the key.
-3. Confirm. There are no extra questions — the connection starts working for
-   every voice note your business line receives.
+## Step 2 — Connect and register it in your workspace
+
+1. Open your [Hospitality workspace](https://hospitality.tangle.tools) as an
+   owner or manager and go to **Integrations → Business integrations**.
+2. Choose **Deepgram**, paste the key, and connect.
+3. On the active connection, choose **Use for business data**, then confirm
+   the registration. No extra provider fields are needed for Deepgram, but
+   this separate step is required before Hospitality uses it for audio.
+4. Check that the row confirms business data uses this connection.
 
 ## Step 3 — Confirm it's working
 
-Send a short voice note to your business line ("Testing, testing, one two
-three"). The agent should reply as if you had typed it.
+From an enrolled staff or vendor phone, send a short supported voice note
+to the connected business line. Check that the conversation includes the
+transcribed content. Whether a reply is sent also depends on the workspace's
+mode and delivery controls.
+
+If the audio is not transcribed, check business-data registration, key expiry,
+project permissions, and credits. Ask the sender for text while resolving it.
 
 ## Good to know
 
-- Usage follows your own Deepgram plan — your agent simply uses your key.
-- Only voice notes sent to your business line are transcribed. The agent
-  never listens to anything else.
-- The key is stored encrypted in Tangle's integration vault, never displayed
-  again, and works only for this workspace.
-- To cut the connection, remove Deepgram in **Setup → Connections** or delete
-  the key in Deepgram.
+- Audio submitted for transcription is sent to Deepgram using your key and
+  follows your Deepgram plan and data settings.
+- Tangle stores the key encrypted and does not display it again in the workspace.
+  The key's underlying project permissions still apply outside Tangle.
+- Removing the key's creator from the Deepgram project disables their keys.
+  Replace and verify affected keys before changing project membership.
+- Disconnect in **Integrations** to stop using this connection, or revoke the
+  key in Deepgram to invalidate the credential.

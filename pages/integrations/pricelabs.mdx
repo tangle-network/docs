@@ -1,54 +1,69 @@
 ---
 title: Connect PriceLabs
-description: Connect PriceLabs to your Tangle workspace in about three minutes so pricing questions get real, current answers instead of guesses.
+description: Understand PriceLabs Customer API costs, listing permissions, and the current Hospitality setup limitation before connecting pricing data.
 image: /images/og/pricelabs.png
 ---
 
 # Connect PriceLabs
 
-PriceLabs recommends the right nightly price for each of your listings. Once
-it's connected, your agent can answer "what should we charge this weekend?"
-with **today's actual recommendation** instead of a guess — and your manager
-sees the same numbers in the workspace that PriceLabs shows in its dashboard.
+PriceLabs recommends a nightly price for each of your listings. A configured
+connection lets your agent answer pricing questions using those
+recommendations. Tangle's connector reads this data; it does not change your
+listing prices.
 
-You connect it by creating one API key inside PriceLabs and pasting it into
-your workspace.
+## Before you start
 
-**Time:** about 3 minutes. **You need:** a PriceLabs account login.
+**Current Hospitality setup limitation:** the initial PriceLabs connection
+requires each listing's ID and PMS. The current connect dialog only collects
+the API key, so it cannot finish a new PriceLabs connection. The later
+**Use for business data** form cannot repair a failed initial connection.
+Ask Tangle to confirm that the listing-aware setup is available before
+enabling paid API access solely for this integration.
 
-## Step 1 — Create an API key in PriceLabs
+**Cost:** PriceLabs' Customer API costs **$1 per listing per month, plus tax**
+for every listing that syncs during the billing month. Review the current
+[PriceLabs API enablement terms](https://developers.pricelabs.co/customer-api/api-reference/enable-the-api)
+before enabling it. Only the account owner can enable or revoke a team
+member's API access in **Team Settings**; a sub-user needs that permission.
 
-1. Sign in to PriceLabs.
-2. Open your account settings and find the **API key** page (under
-   Integrations or Account).
-3. Create a key and copy it. PriceLabs may call it a **Customer API key** —
-   that's the one.
+## Step 1 — Enable the Customer API in PriceLabs
 
-## Step 2 — Add the key to your workspace
+When you have confirmed a supported setup path and accepted PriceLabs' costs:
 
-1. Open your Tangle workspace (for example
-   [hospitality.tangle.tools](https://hospitality.tangle.tools)) and go to
-   **Setup → Connections**.
-2. Choose **PriceLabs** and paste the key.
-3. Your workspace asks you to map each listing you want to use — for each
-   one, two short fields:
-   - **Listing ID** — the listing's ID in PriceLabs.
-   - **PMS** — the property system the listing belongs to, for example
-     `cloudbeds`.
-4. Add up to 20 listings, then confirm with **Use for business data**.
+1. Sign in and open **Account Settings → API Details**.
+2. Choose **Enable**, then **I Need API Access**.
+3. Type **API** and choose **Continue** to complete enablement.
+4. Copy the Customer API key shown in **API Details** and keep it private.
+
+The key inherits its user's listing permissions. Confirm that this user can
+access the listings you intend to connect; Tangle's configuration does not
+reduce the key's provider-side permissions.
+
+## Step 2 — Register an existing connection for business data
+
+These steps apply only if an active PriceLabs connection already exists for
+your workspace. They do not bypass the new-connection limitation above.
+
+1. Open your [Hospitality workspace](https://hospitality.tangle.tools) as an
+   owner or manager, then open **Integrations → Business integrations**.
+2. On the active PriceLabs connection, choose **Use for business data**.
+3. Map each listing with its exact **Listing ID** and **PMS** value from
+   PriceLabs, for example `cloudbeds` where that is the listing's PMS.
+4. Add up to 20 listings and confirm with **Use for business data**.
 
 ## Step 3 — Confirm it's working
 
-Ask your agent: **"What's the recommended price for the garden villa this
-weekend?"** If it quotes a real PriceLabs number for a listing you mapped,
-you're connected.
+Once both connection and registration have succeeded, ask your agent:
+**"What's the recommended price for the garden villa this weekend?"**
+Compare the listing, dates, and price with PriceLabs. If data is unavailable,
+check the listing mapping and provider permissions rather than treating a
+connected row as proof of a completed sync.
 
 ## Good to know
 
-- PriceLabs data is **advisory**: it informs answers and suggestions, it
-  never changes prices anywhere. Changing prices stays a human action in
+- PriceLabs data is **advisory**: changing prices stays a human action in
   PriceLabs.
-- The key is stored encrypted in Tangle's integration vault, never displayed
-  again, and works only for this workspace.
-- To cut the connection, remove PriceLabs in **Setup → Connections** or
-  delete the key in PriceLabs.
+- Tangle stores the key encrypted and does not display it again in the workspace.
+- Disconnect in **Integrations** to stop using the connection. Revoke the key
+  in PriceLabs to invalidate the credential. Disconnecting Tangle does not
+  itself cancel PriceLabs' paid API access; manage that in PriceLabs.
