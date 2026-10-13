@@ -34,6 +34,10 @@ const meta: Meta = {
     title: "Platform",
     type: "page",
   },
+  integrations: {
+    title: "Integrations",
+    type: "page",
+  },
   protocol: {
     type: "menu",
     title: "Protocol",
