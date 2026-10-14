@@ -7,6 +7,9 @@ const meta: Meta = {
   quickstart: {
     title: "Quickstart",
   },
+  "cloud-agents": {
+    title: "Cloud agents on your subscription",
+  },
   "sdk-reference": {
     title: "SDK reference",
     display: "hidden",
