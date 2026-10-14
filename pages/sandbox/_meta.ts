@@ -10,6 +10,9 @@ const meta: Meta = {
   "cloud-agents": {
     title: "Cloud agents on your subscription",
   },
+  profiles: {
+    title: "Agent profiles",
+  },
   "sdk-reference": {
     title: "SDK reference",
     display: "hidden",
