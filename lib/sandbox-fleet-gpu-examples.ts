@@ -15,8 +15,7 @@ const existingSandbox = `${client}
 const sandboxId = process.env.TANGLE_SANDBOX_ID;
 if (!sandboxId) throw new Error("Set TANGLE_SANDBOX_ID");
 const box = await client.get(sandboxId);
-if (!box) throw new Error("Sandbox not found");
-await box.waitFor("running");`;
+if (!box) throw new Error("Sandbox not found");`;
 
 const pythonClient = `import os
 import httpx

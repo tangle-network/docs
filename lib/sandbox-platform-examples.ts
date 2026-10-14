@@ -31,10 +31,12 @@ const box = await client.create({
   environment: image.id,
   maxLifetimeSeconds: 900,
 });
-await box.waitFor("running");
-const result = await box.exec("python -c 'import pandas; print(pandas.__version__)'");
-console.log(result.stdout);
-await box.delete();`,
+try {
+  const result = await box.exec("python -c 'import pandas; print(pandas.__version__)'");
+  console.log(result.stdout);
+} finally {
+  await box.delete();
+}`,
   storage: `import type { StorageConfig } from "@tangle-network/sandbox";
 ${client}
 
@@ -56,14 +58,16 @@ const box = await client.create({
   maxLifetimeSeconds: 900,
   storage,
 });
-await box.waitFor("running");
-await box.write("/workspace/checkpoint.txt", "saved");
-const saved = await box.snapshot({ storage });
-await box.write("/workspace/checkpoint.txt", "changed");
-const restored = await box.restoreFromStorage(storage, { snapshotId: saved.snapshotId });
-if (!restored) throw new Error("Snapshot was not found in storage");
-console.log(await box.read("/workspace/checkpoint.txt"));
-await box.delete();`,
+try {
+  await box.write("checkpoint.txt", "saved");
+  const saved = await box.snapshot({ storage });
+  await box.write("checkpoint.txt", "changed");
+  const restored = await box.restoreFromStorage(storage, { snapshotId: saved.snapshotId });
+  if (!restored) throw new Error("Snapshot was not found in storage");
+  console.log(await box.read("checkpoint.txt"));
+} finally {
+  await box.delete();
+}`,
   terminal: `import { createInterface } from "node:readline/promises";
 ${existing}
 
@@ -94,15 +98,20 @@ const serviceToken = process.env.SERVICE_TOKEN;
 if (!serviceToken) throw new Error("Set SERVICE_TOKEN");
 const secretName = "DOCS_" + crypto.randomUUID().toUpperCase().replaceAll("-", "_");
 await client.secrets.create(secretName, serviceToken);
-const box = await client.create({
-  maxLifetimeSeconds: 900,
-  secrets: [secretName],
-});
-await box.waitFor("running");
-const result = await box.exec('test -n "$' + secretName + '"');
-console.log(result.exitCode === 0 ? "Secret available" : "Secret missing");
-await box.delete();
-await client.secrets.delete(secretName);`,
+try {
+  const box = await client.create({
+    maxLifetimeSeconds: 900,
+    secrets: [secretName],
+  });
+  try {
+    const result = await box.exec('test -n "$' + secretName + '"');
+    console.log(result.exitCode === 0 ? "Secret available" : "Secret missing");
+  } finally {
+    await box.delete();
+  }
+} finally {
+  await client.secrets.delete(secretName);
+}`,
   instance: `${client}
 
 const customerId = process.env.TANGLE_CUSTOMER_ID;

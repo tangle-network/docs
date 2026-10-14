@@ -1,4 +1,5 @@
 import { sandboxExamples } from "./sandbox-sdk-examples";
+import { sdkQuickstartExamples } from "./sandbox-quickstart-examples";
 
 const example = (id: string) => {
   const value = sandboxExamples.find((item) => item.id === id);
@@ -6,15 +7,20 @@ const example = (id: string) => {
   return value;
 };
 
+const quickstart = (id: string) => {
+  const value = sdkQuickstartExamples.find((item) => item.id === id);
+  if (!value) throw new Error(`Unknown quickstart example: ${id}`);
+  return value.code.trimEnd();
+};
+
 const client = `import { Sandbox } from "@tangle-network/sandbox";
 
-const apiKey = process.env.TANGLE_API_KEY;
-if (!apiKey) throw new Error("Set TANGLE_API_KEY");
-
 const client = new Sandbox({
-  apiKey,
+  apiKey: process.env.TANGLE_API_KEY!,
   baseUrl: "https://sandbox.tangle.tools",
 });`;
+
+const indent = (code: string) => code.replace(/^(?=.)/gm, "  ");
 
 const program = (
   operation: string,
@@ -25,11 +31,11 @@ const program = (
 const box = await client.create({
   maxLifetimeSeconds: 900,
 ${options}});
-await box.waitFor("running");
-
-${operation}
-
-await box.delete();`;
+try {
+${indent(operation)}
+} finally {
+  await box.delete();
+}`;
 
 export const sandboxCode = {
   installSdk: `npm install @tangle-network/sandbox
@@ -41,8 +47,8 @@ export TANGLE_API_KEY`,
   -H "Authorization: Bearer \${TANGLE_API_KEY:?Set TANGLE_API_KEY}"`,
   checkServices: `curl -fsS https://sandbox.tangle.tools/health
 curl -fsS https://sandbox.tangle.tools/v1/public-templates`,
-  createSandbox: example("run").typescript,
-  runAgent: example("agent").typescript,
+  createSandbox: quickstart("run-code"),
+  runAgent: quickstart("fix-failing-test"),
   client,
   create: program(
     "console.log(box.id);",
@@ -97,7 +103,6 @@ for (const result of results) {
 }
 await fleet.delete();`,
   exec: program(`const result = await box.exec("node --version", {
-  cwd: "/workspace",
   env: { CI: "true" },
   timeoutMs: 60000,
 });
@@ -129,20 +134,22 @@ const box = await client.create({
   maxLifetimeSeconds: 900,
   git: { url: repoUrl },
 });
-await box.waitFor("running");
-const { session: task } = await box.createTaskSession({
-  sessionId: crypto.randomUUID(),
-  title: "Write a README",
-  backend: { type: "opencode" },
-  isolateFileWrites: true,
-});
-await task.sendMessage({
-  parts: [{ type: "text", text: "Write a README explaining this workspace." }],
-  turnId: crypto.randomUUID(),
-});
-console.log(await task.result());
-console.log(await task.changes());
-await box.delete();`,
+try {
+  const { session: task } = await box.createTaskSession({
+    sessionId: crypto.randomUUID(),
+    title: "Write a README",
+    backend: { type: "opencode" },
+    isolateFileWrites: true,
+  });
+  await task.sendMessage({
+    parts: [{ type: "text", text: "Write a README explaining this workspace." }],
+    turnId: crypto.randomUUID(),
+  });
+  console.log(await task.result());
+  console.log(await task.changes());
+} finally {
+  await box.delete();
+}`,
   durableSessions: `${client}
 
 const sandboxId = process.env.TANGLE_SANDBOX_ID;
@@ -167,12 +174,12 @@ if (cached) {
   });
   console.log(result);
 }`,
-  snapshot: program(`await box.write("/workspace/notes.txt", "Original notes");
+  snapshot: program(`await box.write("notes.txt", "Original notes");
 const snapshot = await box.snapshot({ tags: ["baseline"] });
 
-await box.write("/workspace/notes.txt", "Changed notes");
+await box.write("notes.txt", "Changed notes");
 await box.restorePaths(snapshot.snapshotId, ["notes.txt"]);
-console.log(await box.read("/workspace/notes.txt"));
+console.log(await box.read("notes.txt"));
 await box.deleteSnapshot(snapshot.snapshotId);`),
   fromSnapshot: `${client}
 
@@ -183,9 +190,11 @@ if (!fromSandboxId || !fromSnapshot) {
 }
 
 const box = await client.create({ fromSandboxId, fromSnapshot, maxLifetimeSeconds: 900 });
-await box.waitFor("running");
-console.log((await box.exec("ls /workspace")).stdout);
-await box.delete();`,
+try {
+  console.log((await box.exec("ls")).stdout);
+} finally {
+  await box.delete();
+}`,
   gpuLeases: program(`const lease = await box.gpu.attach({
   accelerator: { kind: "nvidia-h100", count: 1 },
   maxSpendUsd: 5,

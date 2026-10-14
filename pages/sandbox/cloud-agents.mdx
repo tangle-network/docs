@@ -40,7 +40,7 @@ const client = new Sandbox({
   baseUrl: "https://sandbox.tangle.tools",
 });
 
-const agent = await client.create({
+const box = await client.create({
   backend: {
     type: "claude-code", // or "codex" with format: "bundle" and CODEX_AUTH
     cliAuth: { account: "me", secretEnv: "CLAUDE_TOKEN", format: "token" },
@@ -49,9 +49,8 @@ const agent = await client.create({
   git: { url: "https://github.com/your-org/your-repo" },
   idleTimeoutSeconds: 900,
 });
-await agent.waitFor("running");
 
-const result = await agent.prompt("Find the failing test and fix it.", { sessionId: "main" });
+const result = await box.prompt("Find the failing test and fix it.", { sessionId: "main" });
 console.log(result.response);
 ```
 
@@ -63,7 +62,7 @@ OpenCode reaches Z.ai's GLM Coding Plan directly and any OpenAI-compatible endpo
 Store the key as a secret and name it with `apiKeyEnv`:
 
 ```ts
-const agent = await client.create({
+const box = await client.create({
   backend: {
     type: "opencode",
     provider: "openai-compat",

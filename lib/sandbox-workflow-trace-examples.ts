@@ -17,20 +17,19 @@ if (!box) throw new Error("Sandbox not found");
 ${operation}`;
 
 export const workflowTraceExamples = {
-  steps: existingSandbox(`await box.waitFor("running");
-const sessionId = crypto.randomUUID();
+  steps: existingSandbox(`const sessionId = crypto.randomUUID();
 const steps = [
   "Inspect this project's files and explain its main packages. Do not edit files.",
-  "Write your findings to /workspace/project-overview.md. Include the paths you inspected.",
+  "Write your findings to project-overview.md. Include the paths you inspected.",
 ];
 for (const prompt of steps) {
   const result = await box.prompt(prompt, { sessionId });
   console.log(result.status, result.response);
   if (!result.success) throw new Error(result.error ?? result.status);
 }
-const check = await box.exec("test -s /workspace/project-overview.md");
+const check = await box.exec("test -s project-overview.md");
 if (check.exitCode !== 0) throw new Error("The report was not written");
-console.log(await box.read("/workspace/project-overview.md"));`),
+console.log(await box.read("project-overview.md"));`),
   workflow: `import { setTimeout } from "node:timers/promises";
 
 const apiKey = process.env.TANGLE_API_KEY;
@@ -89,8 +88,7 @@ with httpx.Client(
         time.sleep(2)
 print(f"https://id.tangle.tools/app/workflows/{workflow_id}")`,
   agentResult: existingSandbox(
-    `await box.waitFor("running");
-const result = await box.prompt(
+    `const result = await box.prompt(
   "Report the Node.js, Python and Git versions. Do not edit files.",
   { sessionId: crypto.randomUUID() },
 );
