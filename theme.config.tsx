@@ -12,7 +12,8 @@ function Head() {
   const fullUrl =
     router.asPath === "/" ? SITE_ROOT : `${SITE_ROOT}${router.asPath}`;
 
-  const { frontMatter } = useConfig();
+  // `title` is the page's front-matter title, else its first heading.
+  const { frontMatter, title: pageTitle } = useConfig();
 
   // Set default values for title and description
   const defaultTitle = "Tangle Docs";
@@ -21,9 +22,11 @@ function Head() {
     "Build and run AI agents with Tangle Sandbox, Runtime, Router, Integrations, and Intelligence.";
 
   // Get the title and description from the front matter, or use the default values
-  const title = frontMatter.title
-    ? `${frontMatter.title} - ${defaultTitle}`
-    : defaultTitle;
+  const heading = frontMatter.title || pageTitle;
+  const title =
+    heading && router.asPath !== "/"
+      ? `${heading} | ${defaultTitle}`
+      : tabTitle;
 
   const description = frontMatter.description || defaultDescription;
 
@@ -69,7 +72,9 @@ function Head() {
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@tangle_network" />
       <meta name="twitter:creator" content="@tanglenetwork" />
-      <title>{tabTitle}</title>
+      {/* One title per page: search results and browser tabs name the page,
+          not the site. Every page used to share `tabTitle`. */}
+      <title>{title}</title>
       <meta name="description" content={description} />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
