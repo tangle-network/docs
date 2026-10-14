@@ -8,8 +8,8 @@ if (!apiKey || !sandboxId) {
   throw new Error('Set TANGLE_API_KEY and TANGLE_SANDBOX_ID');
 }
 
-const tangle = new Sandbox({ apiKey, baseUrl: 'https://sandbox.tangle.tools' });
-const box = await tangle.get(sandboxId);
+const client = new Sandbox({ apiKey, baseUrl: 'https://sandbox.tangle.tools' });
+const box = await client.get(sandboxId);
 if (!box) throw new Error('Sandbox not found');`;
 
 export const networkingExamples = {
@@ -33,11 +33,11 @@ sandbox_id = os.environ['TANGLE_SANDBOX_ID']
 with httpx.Client(
     base_url='https://sandbox.tangle.tools', timeout=180,
     headers={'Authorization': f"Bearer {os.environ['TANGLE_API_KEY']}"},
-) as tangle:
+) as client:
     path = f'/v1/sandboxes/{sandbox_id}'
-    box = tangle.get(path).raise_for_status().json()
+    box = client.get(path).raise_for_status().json()
     print(box.get('egressPolicy'), box.get('egressPolicySource'))
-    result = tangle.patch(f'{path}/egress', json={
+    result = client.patch(f'{path}/egress', json={
         'mode': 'strict',
         'allowDomains': ['docs.tangle.tools', 'api.github.com'],
         'includeImplicitDomains': False,
@@ -60,11 +60,11 @@ sandbox_id = os.environ['TANGLE_SANDBOX_ID']
 with httpx.Client(
     base_url='https://sandbox.tangle.tools', timeout=30,
     headers={'Authorization': f"Bearer {os.environ['TANGLE_API_KEY']}"},
-) as tangle:
+) as client:
     path = f'/v1/sandboxes/{sandbox_id}/egress'
-    denials = tangle.get(f'{path}/denials', params={'limit': 20})
+    denials = client.get(f'{path}/denials', params={'limit': 20})
     print(denials.raise_for_status().json()['denials'])
-    response = tangle.get(f'{path}/activity', params={'limit': 20})
+    response = client.get(f'{path}/activity', params={'limit': 20})
     activity = response.raise_for_status().json()['activity']
     for destination in activity['destinations']:
         print(destination['host'], destination['action'], destination['count'])
