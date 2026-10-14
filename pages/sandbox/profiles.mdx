@@ -1,0 +1,132 @@
+---
+title: Agent profiles
+description: Define a coding agent once — its skills, tools, model, and MCP servers — and run it on any harness, from a file, a GitHub repo, or the platform catalog.
+---
+
+# Agent profiles
+
+An AgentProfile describes what an agent **is**: its instructions, model, tools,
+permissions, skills, and MCP servers. A sandbox describes where it **runs**.
+Separating the two means the same profile runs on Claude Code, Codex, or
+OpenCode, on your subscription or the Router, without changing a line.
+
+## A profile in one file
+
+`agents/reviewer.json`:
+
+```json
+{
+  "name": "reviewer",
+  "description": "Reviews a change for bugs and missing tests.",
+  "prompt": {
+    "appendSystemPrompt": "You review code. Report bugs with file:line and a failing test for each. Do not edit files.",
+    "instructions": ["Run the test suite before you report.", "Keep the report under 300 words."]
+  }
+}
+```
+
+| Field | Purpose |
+|---|---|
+| `prompt.appendSystemPrompt` | Text added to the harness's system prompt. Use this for a role. |
+| `prompt.systemPrompt` | Replaces the system prompt entirely. Only some harnesses accept this. |
+| `prompt.instructions` | Lines placed in the agent's project instructions. |
+| `model` | Model hints: `default`, `small`, `provider`, `reasoningEffort`. |
+| `permissions` | `allow`, `ask`, or `deny` per tool. |
+| `tools` | Turn individual native tools on or off. |
+| `mcp` | MCP servers: a local `command`, or a remote `url`. |
+| `resources.skills` | Skills to install, inline or from GitHub. |
+
+## Three ways to reference a profile
+
+### From a file
+
+```bash
+tangle sandbox create --backend claude-code --profile agents/reviewer.json
+```
+
+### From GitHub
+
+```bash
+tangle sandbox create --backend claude-code \
+  --profile github:my-org/agent-profiles/reviewer.json@main
+```
+
+### From the platform catalog
+
+The platform hosts a profile catalog: built-in profiles (shared, trusted,
+versioned) and your own stored profiles.
+
+```bash
+tangle sandbox create --backend claude-code --profile code-reviewer
+```
+
+The CLI resolves the name against the catalog, fetches the full profile, and
+installs it. You see built-ins plus your own — never another user's.
+
+## How profiles materialize
+
+When a sandbox starts with a profile:
+
+1. The SDK splits inline skills from the create request (keeps it small)
+2. The full profile is delivered to the running sandbox
+3. The **harness** materializes skills into its native directory:
+   - Claude Code → `~/.claude/skills/<name>/SKILL.md`
+   - Codex → `~/.codex/skills/<name>/SKILL.md`
+   - OpenCode → `~/.opencode/skills/<name>/SKILL.md`
+4. MCP servers are configured for the harness's runtime
+
+The agent doesn't read skill files from a prompt — the harness loads them
+natively through its own skill-discovery mechanism. The system prompt carries
+only a lightweight index so the model knows what exists.
+
+## Several profiles, one sandbox
+
+```ts
+const planner = await box.agents.create({
+  profile: { name: "planner", prompt: { appendSystemPrompt: "Plan before editing." } },
+  sessionId: "plan",
+});
+const builder = await box.agents.create({
+  profile: { name: "builder", prompt: { appendSystemPrompt: "Implement and test." } },
+  sessionId: "build",
+});
+```
+
+Each session materializes its own skills. The sandbox's filesystem persists
+across sessions, so agents working in one checkout see each other's files.
+
+## Snapshots and profiles
+
+When you snapshot a sandbox, the materialized skill files are baked in.
+Resume is bit-identical — the agent has exactly the skills it had.
+
+To resume with an updated profile (workspace state from the snapshot, fresh
+skills from the catalog):
+
+```bash
+tangle sandbox create --from-snapshot my-snapshot --profile code-reviewer
+```
+
+## Wrap it in one function
+
+```ts
+export async function startAgent(
+  client: Sandbox,
+  profile: Record<string, unknown>,
+  credential: { kind: "claude" | "codex" | "router"; secret?: string },
+) {
+  const backend =
+    credential.kind === "claude"
+      ? { type: "claude-code" as const, profile, cliAuth: { account: "me", secretEnv: credential.secret!, format: "token" as const } }
+      : credential.kind === "codex"
+        ? { type: "codex" as const, profile, cliAuth: { account: "me", secretEnv: credential.secret!, format: "bundle" as const } }
+        : { type: "opencode" as const, profile };
+
+  const agent = await client.create({
+    backend,
+    secrets: credential.secret ? [credential.secret] : undefined,
+  });
+  await agent.waitFor("running");
+  return agent;
+}
+```
