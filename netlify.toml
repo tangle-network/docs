@@ -1,5 +1,7 @@
 [build]
-    command = "next build"
+    # yarn build also writes sitemap.xml and robots.txt (next-sitemap) and the
+    # Pagefind search index; `next build` alone shipped neither.
+    command = "yarn build"
     publish = "dist"
 
 [[redirects]]

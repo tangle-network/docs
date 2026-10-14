@@ -1,0 +1,87 @@
+---
+title: Cloud agents on your own subscription
+description: Run Claude Code, Codex, or OpenCode in a Tangle sandbox with your Claude plan, ChatGPT plan, or a GLM, Kimi, or MiniMax coding plan.
+---
+
+# Cloud agents on your own subscription
+
+A cloud agent is a coding agent running in its own Tangle sandbox: a Linux machine with a filesystem, shell, and git that keeps working after your laptop closes.
+The agent can pay for its model with a plan you already have, so Tangle bills only the sandbox's compute.
+
+| Credential | Harness | Model usage is billed to |
+| --- | --- | --- |
+| Claude Pro or Max (`claude setup-token`) | Claude Code | Your Claude plan |
+| ChatGPT plan (`codex login`) or OpenAI key | Codex | Your ChatGPT plan or OpenAI account |
+| Z.ai GLM, Kimi, MiniMax, or any OpenAI-compatible key | OpenCode | That provider |
+| No credential | OpenCode | Your Tangle credit, through the Tangle Router |
+
+## Store the credential once
+
+Credentials are stored as encrypted account secrets.
+A sandbox request names the secret; the credential never appears in the request.
+
+```bash
+# Claude Pro or Max
+claude setup-token
+tangle secret create CLAUDE_TOKEN --value-stdin <<< "$CLAUDE_CODE_OAUTH_TOKEN"
+
+# ChatGPT plan
+codex login
+tangle secret create CODEX_AUTH --value-stdin < ~/.codex/auth.json
+```
+
+## Start the agent
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const agent = await client.create({
+  backend: {
+    type: "claude-code", // or "codex" with format: "bundle" and CODEX_AUTH
+    cliAuth: { account: "me", secretEnv: "CLAUDE_TOKEN", format: "token" },
+  },
+  secrets: ["CLAUDE_TOKEN"],
+  git: { url: "https://github.com/your-org/your-repo" },
+  idleTimeoutSeconds: 900,
+});
+await agent.waitFor("running");
+
+const result = await agent.prompt("Find the failing test and fix it.", { sessionId: "main" });
+console.log(result.response);
+```
+
+From a terminal, `tangle sandbox create --backend claude-code --cli-auth CLAUDE_TOKEN` starts the same agent, and `tangle agent prompt <sandbox-id> "..." --session main --stream` talks to it.
+
+## Coding plans
+
+OpenCode reaches Z.ai's GLM Coding Plan directly and any OpenAI-compatible endpoint through `openai-compat`.
+Store the key as a secret and name it with `apiKeyEnv`:
+
+```ts
+const agent = await client.create({
+  backend: {
+    type: "opencode",
+    provider: "openai-compat",
+    baseUrl: "https://api.moonshot.ai/v1", // Kimi; MiniMax: https://api.minimax.io/v1
+    modelId: "kimi-k2-0905-preview",
+    apiKeyEnv: "MOONSHOT_KEY",
+  },
+  secrets: ["MOONSHOT_KEY"],
+});
+```
+
+## Full guides
+
+The Sandbox docs cover each path with streaming, profiles, egress rules, and spin-down:
+
+- [Start a cloud agent](https://sandbox.tangle.tools/docs/cloud-agents)
+- [Claude Code on your Claude subscription](https://sandbox.tangle.tools/docs/cloud-agents/claude-code)
+- [Codex on your ChatGPT plan](https://sandbox.tangle.tools/docs/cloud-agents/codex)
+- [GLM, Kimi, and MiniMax coding plans](https://sandbox.tangle.tools/docs/cloud-agents/coding-plans)
+- [Agent profiles](https://sandbox.tangle.tools/docs/cloud-agents/profiles)
+- [Cost, limits & spin-down](https://sandbox.tangle.tools/docs/cost)

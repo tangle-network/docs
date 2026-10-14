@@ -9,7 +9,7 @@
     "start": "next start",
     "build": "next build && yarn build:sitemap && yarn build:pagefind",
     "build:sitemap": "next-sitemap --config next-sitemap.config.js",
-    "build:pagefind": "pagefind --site .next/server/pages --output-path dist/_pagefind",
+    "build:pagefind": "pagefind --site dist --output-path dist/_pagefind",
     "export": "next export",
     "check:harness-copy": "node ./scripts/check-harness-copy.mjs",
     "check:tnt-core-sync": "node ./scripts/check-tnt-core-sync.mjs",
