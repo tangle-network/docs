@@ -1,0 +1,50 @@
+---
+title: Per-request zero data retention
+description: The zeroDataRetention flag — what it does on one call, and its limits.
+---
+
+# Per-request zero data retention
+
+`zeroDataRetention` constrains a **single request** to providers with verified zero data retention agreements. It is a routing and storage constraint, not an agreement, and it is the lightest-weight tool in the [HIPAA-Ready model](/gateway/hipaa).
+
+## Usage
+
+Canonical form, inside `providerOptions.gateway`:
+
+```json
+{
+  "model": "anthropic/claude-sonnet-4-6",
+  "messages": [{ "role": "user", "content": "Summarize this intake note" }],
+  "providerOptions": {
+    "gateway": {
+      "zeroDataRetention": true
+    }
+  }
+}
+```
+
+Shorthand (equivalent — the canonical shape wins if both are present):
+
+```json
+{ "gateway": { "zdr": true } }
+```
+
+## What one flagged call changes
+
+- **Routing.** Operators are skipped (their backing provider is self-reported and unverifiable), and the aggregator lane is fail-closed. Only direct calls to ZDR-verified providers are eligible.
+- **Router storage.** The request writes no response-cache row and no prompt/completion content row, a failure row never retains the upstream error body (which can echo prompt fragments), and the router injects no provider prompt-cache markers.
+- **Refusals.** If no ZDR-verified provider serves the requested model, or the request demands operator-only routing, the call fails with a `400` instead of silently relaxing the constraint.
+
+The full provider list and trust model live in [Zero Data Retention](/gateway/zdr).
+
+## Limits — read these before relying on the flag
+
+- **It applies to one call only.** Nothing persists. A `zeroDataRetention: true` request followed by an unflagged request routes the second call normally. If you forget the flag, that call has no ZDR constraint — there is no session-level memory to rescue it.
+- **It is not a BAA.** The flag changes where one request routes and what the router stores for it. It does not create a Business Associate Agreement, enroll your app, or make any party's HIPAA obligations disappear.
+- **It does not pin sandboxes.** Sandbox capture, telemetry, and Sentry behavior come from [enrollment](/gateway/hipaa/enable) and verified key lineage, not from request flags.
+- **It does not make an app HIPAA-Ready.** A per-request flag on an unenrolled app is still just a routing constraint on that call.
+
+## When you need more than one call
+
+- **Team-wide ZDR.** Set `zdrEnabled` on your team record so every request enforces ZDR. There is no self-serve API for it today — [contact Tangle](/gateway/enterprise-zdr#option-a-team-wide-zdr-recommended) to enable it. Team-wide ZDR overrides per-request `zeroDataRetention: false`.
+- **HIPAA enrollment.** Keys minted under an enrolled, registered HIPAA origin app dispatch with ZDR forced from verified key provenance, and the request body cannot turn it back off. See [Enable HIPAA protection](/gateway/hipaa/enable).
