@@ -1,0 +1,52 @@
+---
+title: Sandbox compliance pinning
+description: Reference — what the orchestrator pins on a sandbox created under a HIPAA-enrolled key, and which create paths refuse claimed workloads.
+---
+
+# Sandbox compliance pinning
+
+This is the reference for what changes on a sandbox created under a HIPAA-enrolled app or team key. For enrollment itself, see [Enable HIPAA protection](/gateway/hipaa/enable).
+
+## How a sandbox becomes claimed
+
+A sandbox inherits its compliance state from **verified key provenance**, never from the caller:
+
+1. Platform key verification derives a positive `originAppCompliance` claim from the verified app or team lineage of the key, unioned with the first-party registry. A caller-supplied compliance field does not establish this identity.
+2. If a cached verdict contains no positive claim, the Sandbox API requires current verification before creating the sandbox — a stale absence is never used during a Platform outage. A cached **positive** claim is safe to reuse because the acceptance latch cannot be cleared.
+3. The Sandbox API forwards the verified identity and claim, and the orchestrator pins the sandbox's origin and compliance labels at creation time.
+
+A claimed workload must have usable verified attribution; otherwise creation is refused.
+
+## What gets pinned
+
+The pinned labels control the following behaviors for the life of the sandbox:
+
+| Behavior                       | Effect                                                                                       |
+| ------------------------------ | -------------------------------------------------------------------------------------------- |
+| Origin and compliance labels   | Pinned at creation from the verified claim; they drive every behavior below.                 |
+| Run-session capture exclusion  | Run sessions on the sandbox are excluded from capture.                                       |
+| Metadata-only telemetry        | Telemetry is reduced to a metadata skeleton — no content-bearing payloads.                   |
+| Sentry environment withholding | The sandbox's environment is withheld from Sentry reporting.                                 |
+| In-boundary PHI scrubbing      | Content inside the sandbox boundary is scrubbed before it can leave through reporting paths. |
+
+## `SandboxInfo.compliance` is read-only
+
+`SandboxInfo.compliance` is a **read-only echo** of the pinned state. There is no client option to set, unset, or edit it — on create or anywhere else. It exists so your code can confirm what the orchestrator pinned, nothing more.
+
+## Unsupported create paths
+
+Paths that cannot preserve the verified claim refuse claimed workloads with `COMPLIANCE_CREATE_UNSUPPORTED` instead of silently dropping the protection:
+
+- Batch creation
+- Branch creation
+- Rollouts
+- Detached GPU leases — including a GPU lease requested during an otherwise ordinary create
+- E2B create
+- The optional OpenAI-compatible run creation endpoints
+- Sessions without an existing `projectId`
+
+Reads and execution on existing sandboxes remain available. An ordinary create succeeding does not prove restore or multi-cell handling for claimed workloads.
+
+## Not retroactive
+
+Pinning applies to **new** sandboxes. Enrollment does not modify existing sandboxes, retained files, or historical logs — their migration and retention require a separate approved procedure. Until the [launch requirements](/gateway/hipaa#current-readiness-status) close, the shared fleet remains out of bounds for PHI regardless of pinning.

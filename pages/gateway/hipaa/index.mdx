@@ -1,0 +1,58 @@
+---
+title: HIPAA on Tangle
+description: The HIPAA-Ready protection model for apps and teams on Tangle — one toggle, server-side enforcement, and an honest read on current readiness.
+---
+
+# HIPAA on Tangle
+
+Tangle is building toward HIPAA-Ready operation for apps that handle protected health information (PHI). This section explains the protection model, what is enforced today, and where the program stands.
+
+## Current readiness status
+
+**Tangle does not claim HIPAA compliance today, and you should not either.** There is no official HIPAA certification for any vendor — compliance is a property of your own program, not a badge a platform can grant. What Tangle provides is a set of technical protections (described below) plus a Business Associate Agreement (BAA) enrollment flow.
+
+The launch program is still in progress:
+
+- BAA execution and the infrastructure launch requirements (vendor agreements, placement, retention, and recovery controls) are not yet closed.
+- PHI workloads remain **unavailable on the shared fleet** until those requirements close. Enrolling is a protection declaration — it is not deployment approval, not a compliant hosting environment, and not a promise of automatic zero-retention inference.
+
+Use "HIPAA-Ready" when describing this state — never "HIPAA compliant."
+
+## The one-toggle model
+
+HIPAA protection is deliberately one decision, made once:
+
+1. **Dashboard.** The app owner (or team owner) opens the HIPAA enrollment flow for the app or team.
+2. **BAA click-through.** The flow serves the approved BAA document URL and version. The owner reads the document and accepts that exact version.
+3. **Server-side fan-out.** Platform records the acceptance in one append-only record and signs the resulting compliance claim into the lineage of keys minted for that app or team. Downstream products enforce from that verified claim — there is no client-side setting to copy, sync, or keep consistent.
+
+The acceptance record is the permanent protection latch. It stores the document URL, version, accepting user, and timestamp. Concurrent retries return the same acceptance, and a request to clear it returns `409 COMPLIANCE_LATCHED`. Removing enrollment configuration never clears an existing protection.
+
+## What the toggle enforces
+
+- **ZDR routing.** Requests made with keys under a claimed lineage carry Platform's signed `originAppCompliance` claim. Registered HIPAA origin apps (such as `health-agent`) dispatch with [Zero Data Retention](/gateway/zdr) forced on every request — the request body cannot turn it back off. Extending this forced enforcement to every externally enrolled app, together with provider retention proof, is a tracked launch requirement.
+- **No capture.** Claimed sandboxes pin run-session capture exclusion, metadata-only telemetry, and Sentry environment withholding. See [Sandbox compliance pinning](/gateway/hipaa/sandbox-pinning).
+- **Pinned sandboxes.** New sandboxes created under a claimed key are pinned with origin and compliance labels at creation time by the orchestrator — not by caller-supplied flags.
+- **Non-downgradable latch.** The acceptance record is append-only. A claimed lineage cannot silently lose its protections, and a cached positive claim stays safe to reuse because the declaration cannot be cleared.
+
+## The shared-fleet boundary
+
+Tangle's Sandbox and Router products run a multi-tenant shared fleet. Enrollment changes how **new** work is routed and pinned; it does not change the fleet's tenancy, and it does not reach backwards:
+
+- Existing sandboxes, retained files, and historical logs are not modified. Their migration and retention require a separate approved procedure.
+- Some creation paths cannot preserve the verified claim and refuse claimed workloads outright. See [Unsupported create paths](/gateway/hipaa/sandbox-pinning#unsupported-create-paths).
+
+Until the launch requirements close, treat the shared fleet as out of bounds for PHI regardless of enrollment state.
+
+## What enrollment is not
+
+- **Not HIPAA compliance.** Compliance is your organization's program; Tangle supplies technical protections and a BAA.
+- **Not a certification.** No official HIPAA certification exists for any platform.
+- **Not retroactive.** It governs new sandboxes and new key-verified requests only.
+- **Not the per-request flag.** [`zeroDataRetention`](/gateway/hipaa/per-request-zdr) is a one-call routing constraint, not a BAA and not enrollment.
+
+## Next steps
+
+- [Enable HIPAA protection](/gateway/hipaa/enable) for your app or team
+- [Per-request zero data retention](/gateway/hipaa/per-request-zdr) for mixed workloads
+- [Sandbox compliance pinning reference](/gateway/hipaa/sandbox-pinning)
