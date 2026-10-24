@@ -1,0 +1,96 @@
+---
+title: Enable HIPAA protection
+description: Enroll an app or team in HIPAA-Ready protection — dashboard click-through and the compliance API.
+---
+
+# Enable HIPAA protection
+
+Enrollment is available for **apps** and **teams**. Only the app owner or the current team owner can enable protections. Before you start, read [HIPAA on Tangle](/gateway/hipaa) — enrollment is a protection declaration, not deployment approval for PHI on the shared fleet.
+
+## From the dashboard
+
+The developer-app and team dashboards use the same enrollment flow:
+
+1. Open your app (or team) in the dashboard and start HIPAA enrollment.
+2. The flow presents the approved Business Associate Agreement: its document URL and exact version.
+3. Read the document, then accept **that exact version**.
+
+Acceptance fans out server-side: Platform stores one append-only record (document URL, version, accepting user, timestamp) and signs the compliance claim into keys minted for that app or team. There is nothing to configure in your client.
+
+If enrollment is unavailable — no approved BAA is configured for the deployment — the dashboard reports that state instead of presenting substitute terms. A general Data Processing Agreement is never presented as a BAA.
+
+## From the API
+
+The same flow is available programmatically. Platform serves the offered agreement; your client must read the offered version and echo it back rather than hardcoding one.
+
+### Read the current state
+
+```bash
+# App
+curl https://id.tangle.tools/v1/apps/APP_ID/compliance \
+  -H "Authorization: Bearer $TANGLE_API_KEY"
+
+# Team
+curl https://id.tangle.tools/v1/teams/TEAM_ID/compliance \
+  -H "Authorization: Bearer $TANGLE_API_KEY"
+```
+
+Both return `agreement` (the offered document URL and version), `acceptance` (the stored acceptance, if any), and `compliance` (the effective protection state):
+
+```json
+{
+  "agreement": {
+    "url": "https://.../baa-v1.pdf",
+    "version": "2026-10-01"
+  },
+  "acceptance": null,
+  "compliance": { "hipaa": false }
+}
+```
+
+### Accept the offered agreement
+
+Submit the exact `version` from the `agreement` you just read:
+
+```bash
+curl -X PUT https://id.tangle.tools/v1/apps/APP_ID/compliance \
+  -H "Authorization: Bearer $TANGLE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"hipaa": true, "agreementVersion": "2026-10-01"}'
+```
+
+The team endpoint takes the same body at `/v1/teams/TEAM_ID/compliance`.
+
+### Responses to expect
+
+| Response                 | Meaning                                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `200` with `acceptance`  | Accepted (or already accepted). Concurrent retries return the same acceptance — the call is idempotent.            |
+| `503 BAA_UNAVAILABLE`    | No approved BAA is configured for this deployment. Enrollment is closed; do not treat any other document as a BAA. |
+| `409 COMPLIANCE_LATCHED` | A request tried to clear an existing protection. The acceptance record is append-only and cannot be downgraded.    |
+| `403`                    | The caller is not the app owner or current team owner.                                                             |
+
+Removing enrollment configuration from a deployment never clears protections that were already accepted.
+
+## From the SDK
+
+The SDK exposes the same flow for apps:
+
+```ts
+const { agreement, acceptance, compliance } = await hub.apps.getCompliance(appId);
+if (!acceptance && agreement) {
+  // Present agreement.url to the owner; on accept:
+  await hub.apps.setCompliance(appId, {
+    hipaa: true,
+    agreementVersion: agreement.version,
+  });
+}
+```
+
+Always read the offered agreement instead of hardcoding a version — a stale hardcoded version is rejected.
+
+## After enrollment
+
+- **New sandboxes** created under the app's or team's keys are pinned with origin and compliance labels. See [Sandbox compliance pinning](/gateway/hipaa/sandbox-pinning).
+- **Inference** from registered HIPAA origin apps dispatches with forced zero data retention. For per-request control on mixed workloads, see [Per-request ZDR](/gateway/hipaa/per-request-zdr).
+- **Existing resources** are untouched: enrollment does not modify existing sandboxes, retained files, or historical logs.

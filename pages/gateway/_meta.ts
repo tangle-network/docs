@@ -26,6 +26,7 @@ const meta: Meta = {
   authentication: "Authentication",
   zdr: "Zero Data Retention",
   "no-train": "Disallow Prompt Training",
+  hipaa: "HIPAA",
   guardrails: "Guardrails",
   "rate-limiting": "Rate Limiting",
   "-- billing": {
