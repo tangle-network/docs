@@ -1,3 +1,4 @@
+import { socialMetadata } from "@tangle-network/brand/social";
 import { useRouter } from "next/router";
 import { DocsThemeConfig, ThemeSwitch, useConfig } from "nextra-theme-docs";
 import Footer from "./components/Footer";
@@ -6,6 +7,17 @@ import HelpDiscordBtn from "./components/HelpDiscordBtn";
 import Navigation from "./components/Navigation";
 
 const SITE_ROOT = "https://docs.tangle.tools";
+
+// These are the committed, inspected 1200 x 630 PNG cards. Keep an added
+// front-matter image's facts here before advertising it in a social preview.
+const posterAlt: Record<string, string> = {
+  "/images/og/default.png": "Tangle Docs: AI agent infrastructure, documented",
+  "/images/og/integrations-hub.png": "Integration Hub: Connect the tools your business uses",
+  "/images/og/cloudbeds.png": "Connect Cloudbeds: Property data, housekeeping, and folios",
+  "/images/og/pricelabs.png": "Connect PriceLabs: Pricing data, costs, and setup requirements",
+  "/images/og/deepgram.png": "Connect Deepgram: Voice notes for staff and vendors",
+  "/images/og/whatsapp.png": "WhatsApp business line: Choose a number and verify your phone",
+};
 
 function Head() {
   const router = useRouter();
@@ -34,12 +46,25 @@ function Head() {
   // repo-relative path like /images/og/example.png); otherwise the shared
   // branded card is used. Keep the asset local — external hosts can rot or
   // rebrand and break every link preview at once.
-  const defaultImage = `${SITE_ROOT}/images/og/default.png`;
-  const frontMatterImage =
-    typeof frontMatter.image === "string" && frontMatter.image.startsWith("/")
-      ? `${SITE_ROOT}${frontMatter.image}`
-      : undefined;
-  const image = frontMatterImage ?? defaultImage;
+  const imagePath = typeof frontMatter.image === "string"
+    ? frontMatter.image
+    : "/images/og/default.png";
+  if (!Object.hasOwn(posterAlt, imagePath)) {
+    throw new Error(`Add verified social poster facts for ${imagePath}`);
+  }
+  const social = socialMetadata({
+    url: fullUrl,
+    title,
+    description,
+    siteName: "Tangle Network",
+    image: {
+      url: `${SITE_ROOT}${imagePath}`,
+      type: "image/png",
+      width: 1200,
+      height: 630,
+      alt: posterAlt[imagePath],
+    },
+  });
 
   return (
     <>
@@ -69,23 +94,16 @@ function Head() {
       <link rel="shortcut icon" href={`/images/favicon/favicon.ico`} />
       <meta name="msapplication-TileColor" content="#000000" />
       <meta name="theme-color" content="#1F1D2B" />
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:site" content="@tangle_network" />
       <meta name="twitter:creator" content="@tanglenetwork" />
       {/* One title per page: search results and browser tabs name the page,
           not the site. Every page used to share `tabTitle`. */}
       <title>{title}</title>
       <meta name="description" content={description} />
-      <meta property="og:title" content={title} />
-      <meta property="og:description" content={description} />
-      <link rel="canonical" href={fullUrl} />
-      <meta property="og:type" content="website" />
-      <meta property="twitter:image" content={image} />
-      <meta property="og:image" content={image} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
+      <link rel="canonical" href={social.canonicalUrl} />
+      {social.tags.map((tag) => (
+        <meta key={"property" in tag ? tag.property : tag.name} {...tag} />
+      ))}
       <meta property="og:locale" content="en_US" />
-      <meta property="og:site_name" content="Tangle Network" />
       <link rel="prefetch" href="/" as="document" />
     </>
   );
