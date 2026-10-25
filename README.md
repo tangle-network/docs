@@ -26,6 +26,14 @@ This repository serves as the **documentation** for the **[Tangle Network](https
 
 ### Updating or Adding Content
 
+Merge `origin/main` before qualification. For content-only changes, check changed links, examples, and formatting. For affected rendering or integration paths, retain the former build through the canonical local gate:
+
+```bash
+beelink-gate auto https://github.com/tangle-network/docs.git <full-sha> -- yarn build
+```
+
+The launcher uses the repository's pinned Corepack/Yarn and performs the immutable install. `yarn build` includes the Next build, sitemap, and Pagefind search output. Automatic develop/staging/main build CI is retired; a local build is not publication proof. Verify the affected served page through the existing publication owner before claiming a documentation deployment. Workflow and documentation-only changes use YAML and content checks.
+
 For updating or adding content to the docs site, builders simply need to follow the below instructions. Please note,
 if image assets are added to a given section you must provide both a dark and light version of the image.
 
