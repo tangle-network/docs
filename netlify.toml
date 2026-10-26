@@ -6,7 +6,7 @@
 
 [[redirects]]
 from = "/restake"
-to = "/restake/introduction"
+to = "/staking/introduction"
 status = 301
 
 [[redirects]]
