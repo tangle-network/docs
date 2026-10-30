@@ -30,7 +30,8 @@ Headless agents can also ask questions or request approvals when you enable thos
 
 Set `TANGLE_API_KEY` and `TANGLE_SANDBOX_ID` to a running sandbox you own.
 Install the [TypeScript SDK](/sandbox/sdk/typescript), or `pip install httpx` for Python.
-These examples leave the sandbox running.
+These examples leave the sandbox running and use its default harness, which runs on the Tangle Router.
+Claude Code and Codex run on your own plan: see [cloud agents](/sandbox/cloud-agents).
 For a [budgeted fleet](/sandbox/sdk/fleets#run-agents-with-a-budget), obtain `box` with `await fleet.sandbox(machineId)` from the original `fleet` instance.
 
 <CodeDisplay examples={[
@@ -55,7 +56,7 @@ For work that must continue after the caller exits, use a [durable turn](#reconn
 ## Enable questions and approvals
 
 Enable the interaction kinds your application handles with `backend.interactions`.
-This example lets Codex ask a question and prints requests while the agent runs.
+This example lets Codex ask a question and prints requests while the agent runs; Codex needs your ChatGPT plan stored as a [cloud agents](/sandbox/cloud-agents) credential.
 Keep this stream open while another process or your application sends the answer.
 
 <CodeDisplay language="typescript" code={agentModeExamples.questions} />
