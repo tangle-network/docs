@@ -13,7 +13,6 @@ export const agentModeExamples = {
 const sessionId = crypto.randomUUID();
 const result = await box.prompt("Report the installed Node.js version.", {
   sessionId,
-  backend: { type: "codex" },
 });
 console.log(sessionId, result.status, result.response ?? result.error);`,
   headlessPython: `import base64
@@ -32,7 +31,6 @@ with httpx.Client(
 ) as client:
     response = client.post(f"/v1/sandboxes/{sandbox_id}/runtime/agents/run", json={
         "id": "default", "sessionId": session_id, "timeoutMs": 120000,
-        "backend": {"type": "codex"},
         "parts": [{"type": "text", "text": prompt}],
     }).raise_for_status().json()
     print(session_id, response["data"])`,
@@ -43,7 +41,6 @@ const sessionId = crypto.randomUUID();
 const outcome = createAgentRunOutcomeTracker();
 for await (const event of box.streamPrompt("Report the installed Node.js version.", {
   sessionId,
-  backend: { type: "claude-code" },
 })) {
   outcome.observe(event);
   console.log(event);
