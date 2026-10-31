@@ -33,6 +33,20 @@ This example creates a uniquely named secret, injects only that secret, checks i
 
 For existing secrets, pass their names in `client.create({ secrets: [...] })`.
 Avoid `secrets: "all"` when a workload only needs specific credentials.
+
+## Hold a secret at the proxy (custody)
+
+A bare name delivers the stored value into the box environment.
+For credentials that should never enter the box, declare a **proxy custody
+binding** instead: the value stays at the sandbox's egress proxy and is
+redeemed only within the binding's scope — the bound hosts, optional HTTP
+methods and paths, a presentation (bearer, basic, header, or query), and a
+TTL. The box reads a placeholder under the same name.
+
+<CodeDisplay language="typescript" code={sandboxPlatformExamples.proxySecrets} />
+
+The CLI equivalent is `tangle sandbox create --proxy-secret '<binding JSON>'`
+(or `--proxy-secret @bindings.json`, repeatable).
 `box.setRuntimeEnv()` updates application variables for new processes; it does not change saved creation settings.
 
 ## Browser access

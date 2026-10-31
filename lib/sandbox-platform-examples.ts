@@ -112,6 +112,37 @@ try {
 } finally {
   await client.secrets.delete(secretName);
 }`,
+  proxySecrets: `${client}
+
+const serviceToken = process.env.SERVICE_TOKEN;
+if (!serviceToken) throw new Error("Set SERVICE_TOKEN");
+const secretName = "DOCS_PROXY_" + crypto.randomUUID().toUpperCase().replaceAll("-", "_");
+await client.secrets.create(secretName, serviceToken);
+try {
+  // Proxy custody: the value stays at the sandbox's egress proxy and is
+  // redeemed only toward the bound host — the box reads a placeholder.
+  const box = await client.create({
+    maxLifetimeSeconds: 900,
+    proxySecrets: [
+      {
+        envName: secretName,
+        secretRef: { kind: "secret-ref", key: secretName },
+        presentation: { type: "bearer" },
+        hosts: ["api.example.org"],
+      },
+    ],
+  });
+  try {
+    // Inside the box the env var holds a placeholder; requests to the bound
+    // host carry the real token after the proxy swaps it.
+    const result = await box.exec('test -n "$' + secretName + '"');
+    console.log(result.exitCode === 0 ? "Placeholder present" : "Missing");
+  } finally {
+    await box.delete();
+  }
+} finally {
+  await client.secrets.delete(secretName);
+}`,
   instance: `${client}
 
 const customerId = process.env.TANGLE_CUSTOMER_ID;
