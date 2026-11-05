@@ -72,7 +72,7 @@ Use `interrupt()` or `cancelRun()` to stop work, and `delete()` to remove a sess
 | `client.teams`                                      | Teams, invitations, member roles, team secrets, and templates.    |
 | `box.permissions`                                   | Manage sandbox users, directory permissions, and access policies. |
 | `box.mintScopedToken()`                             | Issue short-lived access for runtime or session clients.          |
-| `box.grantNativeCredential()`                       | Grant a named native credential to an agent backend.              |
+| `box.grantNativeCredential()`                       | Name a stored subscription seat to a running backend; no value crosses, and a seat the box was not created with answers 409. |
 | `box.collaborate()`, `.refreshCollaborationToken()` | Authorize shared document editing.                                |
 | `createConfidentialSandbox()`                       | Provision with a compatible confidential operator.                |
 

@@ -56,6 +56,25 @@ console.log(result.response);
 
 From a terminal, `tangle sandbox create --backend claude-code --cli-auth CLAUDE_TOKEN` starts the same agent, and `tangle agent prompt <sandbox-id> "..." --session main --stream` talks to it.
 
+### Subscription seats never enter the box
+
+A `cliAuth` seat is held at the sandbox's egress proxy automatically — you
+don't declare a binding for it. The proxy swaps the real credential into
+requests to the vendor hosts only (`api.anthropic.com` for Claude;
+`chatgpt.com` and `auth.openai.com` for Codex). Inside the box the CLI reads
+a placeholder, and its auth file carries no refresh token, so a leaked
+sandbox leaks nothing real. See [Hold a secret at the proxy
+(custody)](./sdk/access#hold-a-secret-at-the-proxy-custody) for the same
+model spelled for arbitrary credentials.
+
+To rotate a login, update the stored secret
+(`client.secrets.update(...)`); live proxies pick up the new value on their
+next re-key, and boxes keep working without recreation. A running box
+cannot switch seats: `box.grantNativeCredential()` names a seat it was
+created with and sends no value; any other seat answers
+409 `NATIVE_CREDENTIAL_SEAT_SWITCH_UNSUPPORTED` — create a new sandbox
+instead.
+
 ## Coding plans
 
 OpenCode reaches Z.ai's GLM Coding Plan directly and any OpenAI-compatible endpoint through `openai-compat`.
