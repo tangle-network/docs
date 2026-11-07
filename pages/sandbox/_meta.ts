@@ -16,6 +16,19 @@ const meta: Meta = {
   comparison: {
     title: "vs e2b / Daytona / Modal",
   },
+  "-- runtime": {
+    type: "separator",
+    title: "Agent Runtime",
+  },
+  "agent-runtime": {
+    title: "Run agents with agent-runtime",
+  },
+  "other-providers": {
+    title: "Run on E2B, Daytona, or Boat",
+  },
+  evaluation: {
+    title: "Evaluate agents with agent-eval",
+  },
   "-- cloud-agents": {
     type: "separator",
     title: "Cloud agents",
