@@ -1,0 +1,221 @@
+# TypeScript SDK
+
+`@tangle-network/sandbox` is the ESM TypeScript client for sandbox
+lifecycle, exact processes, files, durable Agent sessions, fleets,
+snapshots, GPU leases, and browser delegation.
+
+## Install
+
+```bash
+pnpm add @tangle-network/sandbox
+```
+
+## Choose an entrypoint
+
+| Need | Import |
+|---|---|
+| Full trusted-server client | `@tangle-network/sandbox` |
+| Edge-safe client without chain dependencies | `@tangle-network/sandbox/core` |
+| Browser/Worker runtime with a scoped token | `@tangle-network/sandbox/runtime` |
+| Reconnecting browser Agent-event stream | `@tangle-network/sandbox/session-gateway` |
+| Multiple managed Agents and framework tool packs | `@tangle-network/sandbox/agent` |
+| OpenAI-compatible translation | `@tangle-network/sandbox/openai` |
+| Collaboration/Yjs bridge | `@tangle-network/sandbox/collaboration` |
+| Direct Tangle operations | `@tangle-network/sandbox/tangle` |
+
+Optional integrations have optional peer dependencies. Install only the
+framework package you use.
+
+## Trusted-server client
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: process.env.SANDBOX_BASE_URL!,
+  timeoutMs: 30_000,
+});
+```
+
+The account API key can create and destroy compute.
+Keep it out of browser bundles. See [Authentication and browser access](/docs/authentication).
+
+## Create a Sandbox
+
+```ts
+const box = await client.create({
+  name: "repo-review",
+  git: {
+    url: "https://github.com/acme/service.git",
+    ref: "main",
+  },
+  resources: {
+    cpuCores: 4,
+    memoryMB: 8192,
+    diskGB: 40,
+  },
+  maxLifetimeSeconds: 3600,
+  idleTimeoutSeconds: 900,
+});
+```
+
+To clone a private repository your account has connected through the Tangle
+GitHub App, ask for a read grant instead of passing a token. The API key must
+hold the `git:grant` scope (create it with `scopes: ["git:grant"]`); a key
+without it is refused with `GIT_GRANT_SCOPE_REQUIRED` (403) before any token is
+minted, so a key issued only for compute cannot read your repositories:
+
+```ts
+const box = await client.create({
+  git: { url: "https://github.com/acme/private-service", auth: { grant: "read" } },
+});
+```
+
+The platform mints a short-lived token for that one repository, read only, and
+uses it for the clone. It is never returned to you or written to a log. The
+create fails with `GIT_GRANT_NOT_CONNECTED` when your account has not connected
+the repository and `GIT_GRANT_ACCESS_DENIED` when GitHub does not show you
+access to it. `grant` and `token` are exclusive, and an
+`ownerContext: "isolated"` create refuses a grant.
+
+Omit `environment` to use the server's default image. Set it only when you
+need a custom container image or an image ID returned by the image builder:
+
+```ts
+const pythonBox = await client.create({ environment: "python:3.12-slim" });
+```
+
+`client.environments.list()` returns the named environments and the `runtimes` each accepts;
+`runtime: "firecracker"` runs a microVM instead of a container; omit it for the platform default.
+Language names such as `python` or `node` do not select versioned images.
+
+- `bare: true`: exact process execution and lifecycle only.
+- `agent: false`: managed files, terminals, processes, telemetry, and
+  sessions without a default Agent.
+- `backend`: configure the default Agent shorthand.
+
+## Commands and files
+
+```ts
+const result = await box.exec("pnpm test", {
+  cwd: "/home/agent/service",
+  timeoutMs: 10 * 60 * 1000,
+});
+if (result.exitCode !== 0) throw new Error(result.stderr);
+
+await box.write("/home/agent/service/config.json", '{"enabled":true}\n');
+const text = await box.read("/home/agent/service/config.json");
+const matches = await box.search("TODO", {
+  path: "/home/agent/service/src",
+});
+```
+
+Use the chunked upload API for content larger than the single-request
+limit. File writes support preconditions; use them when concurrent actors
+may edit the same path.
+
+## One durable Agent session
+
+```ts
+const sessionId = "review-v1";
+
+const first = await box.prompt("Inspect the repository.", { sessionId });
+const second = await box
+  .session(sessionId)
+  .prompt("Implement the fix and run its tests.");
+
+console.log(first.executionId, second.response);
+```
+
+`dispatchPrompt(message, { sessionId, turnId })` returns after admission and
+lets the run continue after the caller disconnects. Keep the returned
+`executionId`; use it for exact result replay and cancellation.
+
+## Several Agents in one Sandbox
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox/agent";
+
+const managed = await client.create({
+  agent: false,
+});
+
+const [planner, builder] = await managed.agents.startMany([
+  {
+    id: "planner-v1",
+    backend: { type: "opencode", profile: plannerProfile },
+  },
+  {
+    id: "builder-v1",
+    backend: { type: "claude-code", profile: builderProfile },
+  },
+]);
+```
+
+These are existing durable `SandboxSession` handles, not another
+orchestration engine. Read the complete
+[Multiple Agents guide](/docs/agents/multiple).
+
+## Browser and Worker access
+
+Mint on your backend:
+
+```ts
+const scoped = await box.mintScopedToken({
+  scope: "session-runtime",
+  sessionId: ownedRuntimeSessionId,
+  ttlMinutes: 5,
+});
+```
+
+Construct in the browser:
+
+```ts
+import { createSandboxRuntimeClient } from "@tangle-network/sandbox/runtime";
+
+const runtime = createSandboxRuntimeClient({
+  baseUrl: scopedResponse.baseUrl,
+  token: scopedResponse.token,
+});
+```
+
+The browser receives the scoped token and proxy URL—not the account API
+key. Use `SessionGatewayClient` for reconnect and replay.
+
+## Snapshots and lifecycle
+
+```ts
+const snapshot = await box.snapshot({ tags: ["green-tests"] });
+
+await box.stop();
+await box.waitFor("stopped");
+await box.resume();
+await box.waitFor("running");
+await box.delete();
+```
+
+A snapshot copies filesystem state. `session.fork()` copies conversation
+history. An isolated Agent creates a Git worktree. These are different
+branching operations.
+
+## Parallel compute
+
+- Use [`box.agents`](/docs/agents/multiple) when trusted Agents should share
+  one computer.
+- Use [Fleets](/docs/agents/fleet) for separate machines, failure domains,
+  or hard resource boundaries.
+- Use `runBatch()` for ad-hoc parallel tasks that do not need stable fleet
+  membership.
+- Use [GPU leases](/docs/gpu-leases) to attach temporary accelerators with
+  explicit spend and lifetime caps.
+
+## Errors and retries
+
+The SDK throws typed errors such as `ValidationError`, `AuthError`,
+`NotFoundError`, `StateError`, `QuotaError`, `CapabilityError`,
+`TimeoutError`, and `PartialFailureError`.
+
+Reuse an idempotency key only for the same logical request. For Agent turns,
+a stable `sessionId` preserves context; a deterministic `turnId` is the
+durable turn-level retry key.

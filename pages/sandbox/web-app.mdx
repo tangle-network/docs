@@ -1,0 +1,106 @@
+# Dashboard Guide
+
+The dashboard is a visual workspace for every sandbox you own. Most flows available in the SDK and CLI have a dashboard equivalent: plus team administration, batch runs, billing, and settings.
+
+Sign in at the [dashboard home](/dashboard) to reach the pages below.
+
+## Sandboxes
+
+The default landing page after sign-in. Lists every sandbox on your account with live status, uptime, image, and quick actions (open, stop, resume, delete).
+
+- Click a sandbox to open the full session view with terminal, file tree, and agent chat.
+- Switch workspace scope to view personal or team sandboxes.
+- The "New Sandbox" button opens the provisioning wizard.
+
+A sandbox's **Settings** tab has three sections:
+
+- **Environment**: the runtime environment, status, creation time and runtime connection; the variables the sandbox starts with and a link to your secrets; and its running processes.
+- **Network**: exposed ports, and the egress policy with any destinations it has blocked.
+- **Agent**: the agent session, its model and provider, and the MCP servers the agent can call.
+
+## New Sandbox
+
+Provisioning wizard. Configure:
+
+- **Image**: default agent runtime, `universal`, or a qualified custom image reference.
+- **Resources**: CPU, memory, disk.
+- **Environment**: inline environment variables. Account secrets reach a sandbox through a startup script's injected secrets, or through `secrets` on an SDK or CLI create.
+- **Startup scripts**: bash scripts that run on boot (see [Startup Scripts](/docs/web-app#startup-scripts) below).
+- **Access and scope**: SSH key selection, personal or team ownership, and optional egress policy override.
+
+The wizard validates each step before submission and streams progress live once the sandbox starts provisioning.
+
+## Batch
+
+Run the same agent prompt across many sandboxes in parallel.
+Use this for evaluations, fleet-wide refactors, and regression sweeps.
+
+- Pick a set of sandboxes (or create them from a template).
+- Write one prompt or task.
+- Watch progress stream in per-sandbox panes with aggregate success/failure counts.
+
+The same flow is available through `client.runBatch` in the SDKs.
+
+## Templates
+
+Save a configured sandbox as a template and reuse it. Templates capture:
+
+- The image and installed tooling.
+- Files written during setup.
+- Environment and startup scripts.
+
+Use templates to standardize the starting state for agent runs, eval harnesses, or team onboarding.
+
+## Secrets
+
+Encrypted key/value pairs injected into sandboxes at boot. Manage them once here instead of shipping keys in code.
+
+- Create, list, and delete personal secrets from the UI.
+- Team secrets are managed from the Team page; saving a secret with an existing name overwrites that value.
+- Reference secrets in startup scripts and agent prompts via `${MY_SECRET}`.
+- Secrets are scoped to your account; team roles control access.
+
+## Startup Scripts
+
+Bash scripts that run before the sandbox is marked ready. Use them to clone repos, install dependencies, or set up language versions.
+
+- Scripts are ordered: each must exit 0 before the next runs.
+- Environment variables from Secrets are available in startup scripts.
+- Failed startup scripts mark the sandbox as `error`; logs are captured in the session view.
+
+## Team
+
+Invite collaborators and manage roles. Supported roles:
+
+| Role | Can view | Can edit sandboxes | Can manage team | Can manage billing |
+| --- | --- | --- | --- | --- |
+| Owner | Yes | Yes | Yes | Yes |
+| Admin | Yes | Yes | Yes | No |
+| Member | Yes | Yes | No | No |
+| Viewer | Yes | No | No | No |
+
+Invitations are sent by email. Users who accept an invitation join your team and share its sandboxes, templates, and secrets.
+
+## Billing
+
+View your current plan, usage, credits, and resource rates. From this page you can:
+
+- See Active Sandboxes, Sandboxes Created, Messages Sent, API Calls Today, Balance, and Resource Rates.
+- Open the platform plan page at `id.tangle.tools/app/plans` to upgrade or downgrade.
+- Open the platform billing page at `id.tangle.tools/app/billing` to top up credits and manage billing.
+
+For plan changes that aren't available self-serve, contact [support@tangle.tools](mailto:support@tangle.tools).
+
+### Egress
+
+Egress is outbound traffic from a sandbox, counted per calendar month (UTC). Inbound traffic is free.
+
+Each plan's monthly allowance and the price beyond it are on the [pricing page](/pricing#egress), which reads them from `GET /v1/pricing/egress`. That endpoint [publishes them as JSON](https://sandbox.tangle.tools/v1/pricing/egress) with no credential required.
+
+## Settings
+
+Account settings have three sections, each at its own address:
+
+- **Account** (`/dashboard/settings`): your photo, display name, email and plan; a link to manage API keys at [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys); and deleting your account, which removes your API keys, sandboxes and usage history.
+- **Security** (`/dashboard/settings/security`): two-factor authentication with an authenticator app, and the SSH public keys you use to reach sandboxes.
+- **Notifications** (`/dashboard/settings/notifications`): whether Tangle emails you security alerts and product updates.

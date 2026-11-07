@@ -1,0 +1,120 @@
+# Authentication and browser access
+
+Tangle Sandbox has one simple authority rule:
+
+> Keep account credentials on a trusted server or in the CLI. Give browsers
+> only short-lived tokens scoped to the exact session or runtime access they
+> need.
+
+Never put `TANGLE_API_KEY`, a sandbox connection token, or a provider API key
+into browser JavaScript, local storage, a URL, or a client-visible error.
+
+## Credential types
+
+| Credential | Use it from | What it can do |
+|---|---|---|
+| Account API key (`sk-tan-…`) | Trusted backend, CI, or CLI | Create, fetch, stop, resume, and delete sandboxes; mint delegated tokens |
+| `session` token | Browser `SessionGatewayClient` | Read and replay one browser session mapped to one durable runtime session |
+| `project` token | Browser `SessionGatewayClient` | Read project-level gateway streams |
+| `session-runtime` token | Browser/Worker `SandboxRuntimeClient` | Short-lived read, workspace, and terminal access bound to one runtime session |
+| `read-only` token | Browser/Worker `SandboxRuntimeClient` | Short-lived read-only runtime access bound to the sandbox project |
+| Capability token | MCP or another explicit integration | Only the named capability, such as `computer_use` |
+
+Scoped tokens expire in minutes. They do not replace the account key; they
+reduce what a delegated client can reach if that client is compromised.
+
+## Server: mint a runtime token
+
+Authenticate your application user, verify that the requested sandbox and
+session belong to them, then mint on the server:
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: process.env.SANDBOX_BASE_URL!,
+});
+
+const box = await client.get(ownedSandboxId);
+if (!box) throw new Error("Sandbox not found");
+
+const scoped = await box.mintScopedToken({
+  scope: "session-runtime",
+  sessionId: ownedRuntimeSessionId,
+  ttlMinutes: 5,
+});
+
+// Return only these delegated fields to the authenticated browser.
+return {
+  token: scoped.token,
+  expiresAt: scoped.expiresAt.toISOString(),
+  baseUrl: scoped.sidecarProxyUrl,
+};
+```
+
+The server—not the browser—chooses `ownedRuntimeSessionId`. Do not accept an
+arbitrary session ID and mint for it without an ownership check.
+
+## Browser: use the scoped runtime client
+
+```ts
+import { createSandboxRuntimeClient } from "@tangle-network/sandbox/runtime";
+
+const delegated = await fetch("/api/sandbox/runtime-token", {
+  method: "POST",
+  credentials: "include",
+}).then((response) => response.json());
+
+const runtime = createSandboxRuntimeClient({
+  baseUrl: delegated.baseUrl,
+  token: delegated.token,
+});
+
+const status = await runtime.health();
+const messages = await runtime.messages("reviewer-v1");
+```
+
+`SandboxRuntimeClient.updateToken(nextToken)` replaces an expiring token
+without rebuilding every consumer.
+
+## Browser event streaming and replay
+
+For a reconnecting browser chat, mint `scope: "session"` with both IDs:
+
+```ts
+const token = await box.mintScopedToken({
+  scope: "session",
+  sessionId: browserSessionId,
+  runtimeSessionId: ownedRuntimeSessionId,
+  ttlMinutes: 5,
+});
+```
+
+- `sessionId` is the stable ID owned by your browser application.
+- `runtimeSessionId` is the real durable Agent session inside the sandbox.
+- Your backend must recover and authorize the mapping between them.
+
+Use the returned token with `SessionGatewayClient`, refresh it from your
+authenticated backend, and persist replay state in the browser. See the
+`browser-streaming-resume.ts` SDK example for the complete reconnect loop.
+
+## Multiple Agents
+
+`box.agents.start()`, `startMany()`, `stop()`, and sandbox lifecycle methods
+remain owner operations. Keep them on the trusted side of your application.
+
+A delegated session token can observe or operate only through the routes its
+scope permits. It does not become a general `box.agents` administrator and
+cannot cross from one session-bound token into a sibling session.
+
+## Operational rules
+
+- Mint the narrowest scope that satisfies the UI.
+- Keep TTLs short and refresh through an authenticated backend endpoint.
+- Bind every session ID to your own authorization model before minting.
+- Never log bearer tokens or put them in query strings.
+- Treat sibling Agents as one sandbox trust domain; use separate sandboxes
+  for separate tenants or mutually untrusted workloads.
+- Use separate provider credentials or AgentProfiles when model authority
+  differs, even when the Agents share a sandbox.

@@ -1,0 +1,72 @@
+# Python
+
+Use HTTPX to call the Sandbox API from Python.
+The Python SDK package is not published on PyPI yet.
+
+## Install
+
+```bash
+pip install httpx
+```
+
+Set `TANGLE_API_KEY` to your [account API key](/docs/authentication).
+Keep it in your server or local environment.
+
+## Run a command
+
+This program creates a sandbox, waits for it to start, runs a command, and deletes it when the block exits.
+
+```python
+import os
+import time
+from contextlib import ExitStack
+import httpx
+
+with httpx.Client(
+    base_url="https://sandbox.tangle.tools", timeout=180,
+    headers={"Authorization": f"Bearer {os.environ['TANGLE_API_KEY']}"},
+) as tangle, ExitStack() as cleanup:
+    box = tangle.post("/v1/sandboxes", json={
+        "maxLifetimeSeconds": 900,
+    }).raise_for_status().json()
+    path = f"/v1/sandboxes/{box['id']}"
+    cleanup.callback(lambda: tangle.delete(path).raise_for_status())
+    for _ in range(60):
+        if box["status"] == "running":
+            break
+        if box["status"] not in ("pending", "provisioning"):
+            raise RuntimeError(box.get("error") or box["status"])
+        time.sleep(2)
+        box = tangle.get(path).raise_for_status().json()
+    else:
+        raise TimeoutError("Sandbox did not start")
+
+    result = tangle.post(f"{path}/runtime/process/spawn", json={
+        "executable": "/bin/sh", "args": ["-c", "node --version"],
+        "blocking": True, "timeoutMs": 30000,
+    }).raise_for_status().json()
+    print(result["data"]["stdout"])
+```
+
+## List sandboxes
+
+```python
+import os
+import httpx
+
+with httpx.Client(
+    base_url="https://sandbox.tangle.tools",
+    headers={"Authorization": f"Bearer {os.environ['TANGLE_API_KEY']}"},
+    timeout=30,
+) as client:
+    response = client.get("/v1/sandboxes").raise_for_status().json()
+    for sandbox in response["sandboxes"]:
+        print(sandbox["id"], sandbox["status"])
+```
+
+## More examples
+
+- [Read and write files](https://docs.tangle.tools/sandbox/sdk/commands-files#read-and-write-files)
+- [Run an agent](https://docs.tangle.tools/sandbox/sdk/agents-sessions#run-an-agent)
+- [Parallel agents](https://docs.tangle.tools/sandbox/sdk/parallel#run-parallel-agents)
+- [API reference](/docs/api-reference)

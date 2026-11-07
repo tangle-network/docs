@@ -1,0 +1,80 @@
+# Overview
+
+Tangle Sandbox gives applications isolated Linux computers for code,
+agents, evaluation, CI, and remote development. A sandbox may run through a
+managed container, a microVM, or an operator-backed driver; the SDK presents
+the same lifecycle and runtime surface across them.
+
+A **Sandbox is the computer, resource envelope, and trust boundary**. A
+managed Sandbox can host zero, one, or many durable Agent sessions without
+allocating a separate machine for every AgentProfile.
+
+## Start here
+
+- **Run a coding agent in the cloud**: [Start a cloud agent](/docs/cloud-agents)
+  with your Claude subscription, ChatGPT plan, coding plan, or no credential
+  at all.
+- **Run code in a sandbox from your app**: [Quickstart](/docs/quickstart).
+- **Automate it on a trigger**: [Workflows](/docs/workflows).
+
+## Product surfaces
+
+- **TypeScript SDK** creates sandboxes and drives lifecycle,
+  processes, files, sessions, snapshots, fleets, and delegated access.
+- **HTTP API** supports Python and other languages.
+- **CLI** is the terminal-first surface for operators and developers.
+- **Dashboard** is the visual surface for sandboxes, templates, teams,
+  secrets, billing, and session inspection.
+- **Scoped browser clients** use short-lived delegated tokens. Account API
+  keys stay server-side.
+
+These surfaces share the same API and durable session model. A sandbox
+created from one surface can be fetched and operated from another, subject
+to the same ownership checks.
+
+## Core concepts
+
+- **Sandbox**: one isolated computer with a filesystem, network policy,
+  compute allocation, lifecycle, and optional managed runtime.
+- **Managed runtime**: the sidecar that serves files, terminals, processes,
+  Agent sessions, events, and other typed runtime capabilities.
+- **Bare Sandbox**: compute and lifecycle without the managed session
+  runtime. Use it for exact process workloads, not managed Agents.
+- **Agent session**: a durable conversation and execution identity inside a
+  managed Sandbox. Different session IDs may execute concurrently; turns
+  within one session remain serialized.
+- **AgentProfile**: the exact harness, model, instructions, tools,
+  permissions, connections, and credentials used by an Agent session.
+- **Template and snapshot**: reusable starting state and captured filesystem
+  state. They are not the same thing as conversation history.
+- **Scoped token**: a short-lived delegated credential for one browser
+  session, one runtime session, project-level reads, or one named
+  capability.
+- **Fleet**: several Sandboxes under one policy and lifecycle when workloads
+  need separate machines or failure domains.
+- **Workflow**: a durable platform automation whose graph can provision
+  Sandboxes, drive Agents, run code and integrations, wait for human
+  decisions, and resume.
+
+## Choose the right shape
+
+| Need | Start with |
+|---|---|
+| One command or exact process | `box.exec()` |
+| A coding agent on your own subscription | [`backend.cliAuth`](/docs/cloud-agents) |
+| One durable Agent conversation | `box.prompt()` or `box.session(id)` |
+| Several trusted Agents sharing one computer | `box.agents` |
+| Independent machines or hard resource boundaries | a Fleet |
+| A lead that delegates to workers in their own sandboxes | [agent graphs](/docs/agents/graphs) |
+| Browser observation or interaction | a short-lived scoped token |
+
+## Where to go next
+
+- [Quickstart](/docs/quickstart)
+- [Authentication and browser access](/docs/authentication)
+- [TypeScript SDK](/docs/sdk/typescript)
+- [Multiple Agents](/docs/agents/multiple)
+- [Python](/docs/sdk/python)
+- [CLI](/docs/cli)
+- [Dashboard Guide](/docs/web-app)
+- [Workflows](/docs/workflows)

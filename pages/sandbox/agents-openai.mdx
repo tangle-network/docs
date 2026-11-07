@@ -1,0 +1,139 @@
+# Agents: OpenAI
+
+Give GPT models secure code execution via function calling. The same tool registry that powers the Anthropic pack maps directly onto OpenAI's tool format.
+
+## Install
+
+```bash
+pnpm add openai @tangle-network/sandbox
+```
+
+## Minimal example
+
+```ts
+import OpenAI from "openai";
+import { Sandbox } from "@tangle-network/sandbox";
+import { openaiTools } from "@tangle-network/sandbox/agent";
+
+const openai = new OpenAI();
+const sandbox = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+const box = await sandbox.create();
+const { tools, handleAssistantMessage } = openaiTools(box, { sessionId: "s1" });
+
+const messages: any[] = [
+  { role: "user", content: "Plot sin(x) for x in [0, 2π]." },
+];
+for (let step = 0; step < 6; step++) {
+  const r = await openai.chat.completions.create({
+    model: "gpt-5.4",
+    tools,
+    messages,
+  });
+  const m = r.choices[0].message;
+  messages.push(m);
+  if (!m.tool_calls?.length) break;
+  messages.push(...(await handleAssistantMessage(m)));
+}
+```
+
+`handleAssistantMessage` dispatches every `tool_call` on the assistant message in parallel and returns a `role: "tool"` message per call. Spread them into the conversation before the next turn.
+
+## Tool format
+
+Tools are emitted as:
+
+```ts
+[
+  {
+    type: "function",
+    function: {
+      name: "sandbox_run_code",
+      description: "Execute code in a persistent language kernel ...",
+      parameters: { type: "object", properties: { ... }, required: ["language", "source"] },
+    },
+  },
+  // ...sandbox_exec, sandbox_read, sandbox_write, sandbox_list, sandbox_search
+]
+```
+
+## Restricting tools
+
+```ts
+openaiTools(box, { allow: ["sandbox_run_code"] });
+```
+
+## Argument parsing
+
+OpenAI sends `function.arguments` as a JSON string. The dispatcher accepts JSON objects, including `{}` for tools without arguments.
+It returns a tool error for blank, malformed, scalar, array, or `null` input before calling a handler.
+Send `{}` when a tool needs no arguments.
+
+## Responses API
+
+The same tool definitions also work with the Responses API. Wire `handleToolCall` (singular) directly into your Response item loop: its return type is a chat-completions tool message but the `tool_call_id` + `content` shape carries over.
+
+## Type reference
+
+```ts
+import type {
+  OpenAITool,
+  OpenAIToolCall,
+  OpenAIToolPack,
+  OpenAIToolPackOptions,
+  OpenAIToolResultMessage,
+  CodeExecutionResult,
+  CodeResultPart,
+} from "@tangle-network/sandbox/agent";
+
+// OpenAIToolCall: what a model emits inside choices[0].message.tool_calls:
+//   { id: string, type?: "function", function: { name: string, arguments: string } }
+//
+// OpenAIToolResultMessage: what you append before the next chat completion:
+//   { role: "tool", tool_call_id: string, content: string }
+//
+// CodeResultPart: discriminated union inside `CodeExecutionResult.results`:
+//   text | json | image (base64) | html | dataframe | error
+```
+
+## Durability & resume
+
+> **Don't reinvent stream durability.** The SDK already buffers every event for every session server-side; if you're sketching a Durable Object / KV / Redis ring buffer to "survive a reload," stop and use the primitives below.
+
+The `sessionId` passed to `openaiTools(box, { sessionId })` scopes the **code-execution kernel**: variables persist across calls. To make the **outer tool-call loop** survive a Worker restart, browser reload, or driver crash, wrap it in `box.dispatchPrompt` + `box.session(id).events({ since })`. Pass a stable `turnId` alongside `sessionId`: a retry from a fresh process then hits the completed-turn cache and the agent never re-runs. `sessionId` on its own only stops a second agent while the first is still in flight — once the turn finishes it is no longer a retry key.
+
+```ts
+// In your /chat handler: survives Worker isolate eviction and browser reload.
+const turnId = req.headers.get("x-turn-id") ?? crypto.randomUUID();
+const sessionId = turnId;
+const lastEventId = req.headers.get("last-event-id") ?? undefined;
+
+// turnId is the retry key: a completed turn is a cache lookup, not a second
+// agent run. sessionId alone only blocks a concurrent dispatch.
+await box.dispatchPrompt(userMessage, {
+  sessionId,
+  turnId,
+  metadata: { framework: "openai-tool-use" },
+});
+
+for await (const event of box.session(sessionId).events({ since: lastEventId })) {
+  res.write(`id: ${event.id}\ndata: ${JSON.stringify(event)}\n\n`);
+}
+```
+
+For browser-direct streaming, use `SessionGatewayClient` from `@tangle-network/sandbox/session-gateway`: auto-reconnect, sequence-gap replay, `lastEventId` persistence across reloads, no Durable Object needed. See the SDK's [session resume guide](https://www.npmjs.com/package/@tangle-network/sandbox#resume-a-session).
+
+## Idempotency & retry
+
+Pass `idempotencyKey` to dedup a single `runCode` call within a 15-minute window. Concurrent retries with the same `(sessionId, idempotencyKey)` collapse onto one execution; sequential retries return the cached result without re-running. Thrown infra errors are not cached.
+
+```ts
+const result = await box.runCode("python", source, {
+  sessionId: "s1",
+  idempotencyKey: req.headers.get("idempotency-key") ?? undefined,
+});
+```
+
+For exactly-once across the **outer tool-use loop**, wrap with `box.dispatchPrompt({ sessionId, turnId })`: that dedups the entire conversation including every `runCode` inside it.

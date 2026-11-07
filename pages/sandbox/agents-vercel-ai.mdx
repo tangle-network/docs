@@ -1,0 +1,114 @@
+# Agents: Vercel AI SDK
+
+`vercelAiTools(box, ...)` returns a `Record<string, Tool>` ready to spread into `generateText` or `streamText`. The Vercel runtime handles the multi-turn loop: you don't write the conversation harness yourself.
+
+## Install
+
+```bash
+pnpm add ai @ai-sdk/anthropic @tangle-network/sandbox
+# or @ai-sdk/openai, @ai-sdk/google, etc.
+```
+
+## Minimal example
+
+```ts
+import { generateText } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { Sandbox } from "@tangle-network/sandbox";
+import { vercelAiTools } from "@tangle-network/sandbox/agent";
+
+const sandbox = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+const box = await sandbox.create();
+const tools = await vercelAiTools(box, { sessionId: "s1" });
+
+const { text } = await generateText({
+  model: anthropic("claude-opus-4-7"),
+  tools,
+  prompt: "Plot sin(x) for x in [0, 2π].",
+  maxSteps: 6,
+});
+console.log(text);
+```
+
+`vercelAiTools` is `async` because the `ai` package is loaded via dynamic import: the Tangle SDK doesn't bundle it.
+
+## Streaming
+
+`streamText` works the same way. Tool calls execute as the model emits them; their results re-enter the conversation transparently.
+
+```ts
+const { textStream } = streamText({
+  model: anthropic("claude-opus-4-7"),
+  tools,
+  prompt: "Train a linear model on the iris dataset, then plot residuals.",
+  maxSteps: 12,
+});
+for await (const delta of textStream) process.stdout.write(delta);
+```
+
+## Restricting tools
+
+```ts
+const tools = await vercelAiTools(box, {
+  sessionId: "s1",
+  allow: ["sandbox_run_code", "sandbox_read"],
+});
+```
+
+## How input schemas work
+
+We use `ai.jsonSchema(...)` to keep input descriptions framework-agnostic. The Vercel AI SDK accepts both Zod and JSON Schema; we use the latter so the Tangle SDK has no Zod runtime dependency.
+
+## Durability & resume
+
+> **Don't bolt a Durable Object onto this.** The SDK already buffers every event for every session server-side; the primitives below are how you survive a reload, a Worker eviction, or a deploy mid-stream.
+
+The `sessionId` passed to `vercelAiTools(box, { sessionId })` scopes the **code-execution kernel**: variables persist across `runCode` calls. To make the **outer `generateText`/`streamText` invocation** survive a Worker restart, browser reload, or driver crash, wrap it in `box.dispatchPrompt` + `box.session(id).events({ since })`. Pass a stable `turnId` alongside `sessionId`: a retry from a fresh process then hits the completed-turn cache and the tool loop is never re-billed. `sessionId` on its own only stops a second agent while the first is still in flight.
+
+```ts
+import { generateText } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
+
+// Dispatch first to claim the sessionId. The turnId is what makes a retry
+// safe: a completed turn is a cache lookup, not a second agent run.
+const turnId = req.headers.get("x-turn-id") ?? crypto.randomUUID();
+const sessionId = turnId;
+await box.dispatchPrompt(req.body.prompt, { sessionId, turnId });
+
+// Pass the same sessionId into the tool pack so the code-exec kernel is shared.
+const tools = await vercelAiTools(box, { sessionId });
+
+const { text } = await generateText({
+  model: anthropic("claude-opus-4-7"),
+  tools,
+  prompt: req.body.prompt,
+  maxSteps: 12,
+});
+
+// Reconnect path: a different process / fresh Worker can replay the same
+// session without re-executing tool calls.
+for await (const event of box.session(sessionId).events({
+  since: req.headers.get("last-event-id") ?? undefined,
+})) {
+  res.write(`id: ${event.id}\ndata: ${JSON.stringify(event)}\n\n`);
+}
+```
+
+For browser-direct streaming, use `SessionGatewayClient` from `@tangle-network/sandbox/session-gateway`.
+It reconnects automatically, replays sequence gaps, and persists `lastEventId`.
+See the SDK's [resumed-session guide](https://www.npmjs.com/package/@tangle-network/sandbox#resume-a-session).
+
+## Idempotency & retry
+
+The tool pack's underlying `box.runCode` accepts an `idempotencyKey` per call. The agent's tool-execute callback doesn't surface this option directly; if you need per-call dedup, pass `idempotencyKey` when invoking `box.runCode` outside the tool pack, or use `dispatchPrompt` to dedup the entire generateText invocation.
+
+```ts
+await box.dispatchPrompt(prompt, { sessionId, turnId: deterministicKey });
+const tools = await vercelAiTools(box, { sessionId });
+const { text } = await generateText({ model, tools, prompt, maxSteps: 12 });
+```
+
+The `dispatchPrompt` layer collapses the whole multi-step loop on retry; the per-call `idempotencyKey` is for direct `runCode` callers.

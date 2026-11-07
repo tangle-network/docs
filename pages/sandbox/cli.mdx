@@ -1,0 +1,264 @@
+# Sandbox CLI
+
+`tangle` is a terminal-first client for Tangle Sandbox.
+It covers lifecycle, command execution, agent prompts, SSH, secrets, and snapshots so you can script flows in shell or explore interactively.
+
+## Install
+
+```bash
+curl -fsSL https://sandbox.tangle.tools/install.sh | sh
+```
+
+Or install directly with your package manager:
+
+```bash
+npm install -g @tangle-network/sandbox-cli
+# or
+pnpm add -g @tangle-network/sandbox-cli
+```
+
+After install, `tangle --help` lists every command group.
+
+## Authenticate
+
+The CLI reads credentials in this order: `--api-key`, `TANGLE_API_KEY`, then the active profile written by `tangle auth login`.
+Login stores the key in the OS keychain; on a Linux server without one, export `TANGLE_API_KEY` instead, or set `TANGLE_ALLOW_PLAINTEXT_CREDENTIALS=1` to write a `0600` credentials file.
+
+```bash
+tangle auth login --api-key sk-tan-...
+tangle auth status
+tangle auth logout
+```
+
+## Sandbox lifecycle
+
+```bash
+# Create
+tangle sandbox create --name my-box --ssh
+
+# Create with a profile (skills, tools, MCP — see Agent profiles)
+tangle sandbox create --name reviewer --backend claude-code --profile code-reviewer
+tangle sandbox create --name custom --backend claude-code --profile ./my-profile.json
+
+# Inspect
+tangle sandbox list
+tangle sandbox list --status running
+tangle sandbox get sbx_a8f3c2d1
+
+# Lifecycle
+tangle sandbox stop sbx_a8f3c2d1
+tangle sandbox resume sbx_a8f3c2d1
+tangle sandbox delete sbx_a8f3c2d1
+```
+
+## Execute commands
+
+```bash
+tangle exec sbx_a8f3c2d1 "npm test"
+tangle exec sbx_a8f3c2d1 --cwd /home/agent/app "pytest -q"
+```
+
+## Temporary GPUs
+
+Keep the base sandbox cheap and attach a GPU only while the accelerated command runs.
+Omit `--provider` to let Tangle choose the cheapest configured GPU cloud.
+Always set a spend cap and lifetime.
+
+```bash
+# Attach, run one command, and destroy the lease.
+tangle sandbox gpu run sbx_a8f3c2d1 \
+  --accelerator-kind nvidia-3090 \
+  --accelerator-memory 24000 \
+  --max-spend-usd 1 \
+  --max-lifetime 900 \
+  --idle-timeout 120 \
+  -- python eval.py
+```
+
+For multiple GPU commands, use the manual lifecycle:
+
+```bash
+tangle sandbox gpu attach sbx_a8f3c2d1 \
+  --accelerator-kind nvidia-3090 \
+  --accelerator-memory 24000 \
+  --max-spend-usd 1 \
+  --max-lifetime 900 \
+  --idle-timeout 120
+
+tangle sandbox gpu list sbx_a8f3c2d1
+tangle sandbox gpu exec sbx_a8f3c2d1 gpu_abc -- python eval.py
+tangle sandbox gpu detach sbx_a8f3c2d1 gpu_abc
+```
+
+The final detach output includes billed seconds and customer cost.
+See [GPU Leases](/docs/gpu-leases) for provider choice, fleet usage, and billing fields.
+
+## Run an AI agent
+
+```bash
+# Send a prompt
+tangle agent prompt sbx_a8f3c2d1 "Summarize this repo"
+
+# Stream events to stdout, and keep the conversation under a session id
+tangle agent prompt sbx_a8f3c2d1 "Refactor to TypeScript" --session refactor --stream
+```
+
+## Start a cloud agent on your subscription
+
+Store your subscription once, then start Claude Code or Codex on it with
+`--cli-auth`:
+
+```bash
+# Claude Pro or Max: `claude setup-token` prints the token
+tangle secret create CLAUDE_TOKEN --value-stdin <<< "$CLAUDE_CODE_OAUTH_TOKEN"
+tangle sandbox create --name claude-agent --backend claude-code --cli-auth CLAUDE_TOKEN \
+  --git-url https://github.com/your-org/your-repo --idle-timeout 900
+
+# ChatGPT plan: `codex login` writes ~/.codex/auth.json
+tangle secret create CODEX_AUTH --value-stdin < ~/.codex/auth.json
+tangle sandbox create --name codex-agent --backend codex --cli-auth CODEX_AUTH
+
+tangle agent prompt <sandbox-id> "Find the failing test and fix it." --session main --stream
+```
+
+`--cli-auth` names the secret; the token never appears in the request. See
+[Start a cloud agent](/docs/cloud-agents) for coding plans, profiles, and
+spin-down.
+
+## SSH
+
+```bash
+tangle ssh sbx_a8f3c2d1
+tangle ssh sbx_a8f3c2d1 -- "uname -a"
+```
+
+`tangle ssh` invokes your system `ssh` through the Sandbox API WebSocket proxy. It uses `tangle ssh-proxy` as the OpenSSH `ProxyCommand` and passes your API key through `TANGLE_SSH_PROXY_AUTH_TOKEN`; no private key file is written by the CLI. You can pass standard OpenSSH flags after `--`.
+
+Direct SSH is observable as sandbox runtime activity. Full raw trace and insight export is available through the Sandbox SDK/API and Fleet SDK/API. SSH-only sessions still need a traced CLI/session wrapper before command intent, artifacts, and semantic agent steps can be turned into the same insight envelope.
+
+## Secrets
+
+Secrets are encrypted key/value pairs injected into the sandbox environment at boot.
+
+```bash
+tangle secret list
+tangle secret create OPENAI_API_KEY --value-stdin <<< "$OPENAI_API_KEY"
+tangle secret delete OPENAI_API_KEY
+```
+
+`tangle sandbox create --secret NAME` injects the value. `--secret NAME@host` keeps the value out of the sandbox and sends it to that host only; see [Network egress rules](/docs/egress).
+
+## Filesystem and processes
+
+```bash
+tangle fs ls sbx_a8f3c2d1 /home/agent
+tangle fs cat sbx_a8f3c2d1 /home/agent/README.md
+tangle fs upload sbx_a8f3c2d1 ./local.txt /home/agent/remote.txt
+
+tangle process list sbx_a8f3c2d1
+```
+
+## Snapshots
+
+```bash
+tangle snapshot create sbx_a8f3c2d1 --tags green-tests
+tangle snapshot list sbx_a8f3c2d1
+tangle snapshot restore sbx_a8f3c2d1 snap_123
+tangle snapshot revert sbx_a8f3c2d1 snap_123
+```
+
+`snapshot restore` creates a new sandbox from a snapshot. `snapshot revert` rolls the existing sandbox back to the snapshot in place.
+
+## Usage and keys
+
+```bash
+tangle usage                           # today's usage, credit balance, and plan
+tangle keys create ci-agents --budget-usd 25   # an API key that stops at $25
+```
+
+See [Cost, limits & spin-down](/docs/cost) for a live cost meter.
+
+## Network egress
+
+The CLI has no egress flag yet. Set a policy at create time from the SDK, or
+change it on a running sandbox over HTTP; see
+[Network egress rules](/docs/egress).
+
+## Workflows
+
+For a guided create → run → inspect loop from the terminal, TypeScript, or HTTP, see [Run, inspect & trace](/docs/workflows/run).
+
+Tangle Workflows is the durable graph workflow engine — one YAML file (a trigger plus a graph of nodes) that the platform runs every time the trigger fires. The full authoring contract is the [Workflow YAML reference](/docs/workflows/yaml); the guided intro is [Workflows](/docs/workflows). Workflows live on the platform hub, so these commands use the same `sk-tan-*` API key and take `--base-url <url>` (or `TANGLE_BASE_URL`, or `TANGLE_HUB_URL` inside a sandbox) to target a non-production deployment.
+
+Author and deploy:
+
+```bash
+tangle workflows validate hello.yml                 # compile dry-run; fix every error it reports
+tangle workflows validate hello.yml --structural    # structure-only check, no connection resolution
+tangle workflows schema                             # the machine-readable JSON Schema
+tangle workflows create hello.yml                   # create; prints the new workflow id
+tangle workflows apply hello.yml                    # create-or-update in one step (idempotent deploy)
+tangle workflows update wf_abc hello.yml            # replace the definition (appends a revision)
+tangle workflows update wf_abc hello.yml --note "tighten the loop budget"
+tangle workflows delete wf_abc                      # --force skips the confirmation prompt
+```
+
+Inspect and drive runs:
+
+```bash
+tangle workflows list
+tangle workflows fleet                              # every workflow's run tallies over a trailing window, failing-first (--window 24h|7d|30d)
+tangle workflows get wf_abc                         # definition + compiled triggers
+tangle workflows get wf_abc --yaml                  # just the definition YAML (for re-apply)
+tangle workflows run wf_abc --wait                  # trigger a run now; --input key=value seeds the trigger
+tangle workflows runs wf_abc --all                  # run history, newest first
+tangle workflows run-detail wf_abc <runId>          # one run, step by step
+tangle workflows events wf_abc <runId>              # tail live progress until it finishes
+tangle workflows cancel wf_abc <runId>              # cancel a queued or in-progress run
+tangle workflows retry wf_abc <runId> --wait        # re-run a failed/cancelled run with the same trigger context (--timeout/--poll-interval tune the wait)
+tangle workflows enable wf_abc / disable wf_abc     # pause or resume its triggers
+```
+
+Templates, revisions, and human decisions:
+
+```bash
+tangle workflows templates                          # the curated starter catalog
+tangle workflows init <template-id> --param repo=owner/name --file wf.yml
+tangle workflows revisions wf_abc                   # definition history, newest first
+tangle workflows revision wf_abc 3                  # one revision's metadata + YAML
+tangle workflows rollback wf_abc 3                  # restore a revision as the new head
+tangle workflows decisions wf_abc                   # pending human approvals
+tangle workflows decision-resolve wf_abc <runId> --choice approve
+```
+
+Cross-run state and run artifacts (see [Artifacts and KV state](/docs/workflows/yaml#artifacts-and-kv-state)):
+
+```bash
+tangle workflows kv list wf_abc
+tangle workflows kv get wf_abc <key>
+tangle workflows kv set wf_abc <key> '{"cursor":123}'   # --cas <version> for compare-and-swap
+tangle workflows kv delete wf_abc <key>
+tangle workflows artifacts wf_abc <runId>               # metadata only, never the bytes
+tangle workflows artifact-download wf_abc <runId> <artifactId> --out report.csv
+```
+
+Every workflow command accepts `--json` for scripting.
+
+## Command groups at a glance
+
+| Group | What it does |
+| --- | --- |
+| `auth` | Log in, check status, log out. |
+| `sandbox` | Create, list, get, stop, resume, delete. |
+| `exec` | Run a shell command in a sandbox. |
+| `agent` | Prompt an agent (`prompt`, with `--session` and `--stream`), connect agent frameworks, and manage profiles. |
+| `fleet` | Create coordinated groups of sandboxes for parallel work. |
+| `ssh` | Open an interactive SSH session. |
+| `fs` | `upload`, `download`, `ls`, `stat`, `cat`, `rm`, `mkdir`, and `exists`. |
+| `process` | List and inspect sandbox processes. |
+| `secret` | Create, list, delete injected environment secrets. |
+| `snapshot` | Snapshot and restore sandbox state. |
+| `workflows` | Author, run, and inspect durable graph workflows (see [Workflows](#workflows)). |
+| `usage` | Account usage and subscription info. |
+
+Run `tangle <group> --help` for the full option set on any group.

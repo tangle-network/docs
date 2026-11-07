@@ -1,0 +1,91 @@
+# Agents: Mastra
+
+`mastraTools(box, ...)` returns a `Record<id, Tool>` you pass into `new Agent({ tools })`. Mastra handles the orchestration; the Tangle SDK provides the sandbox-backed tool implementations.
+
+## Install
+
+```bash
+pnpm add @mastra/core @tangle-network/sandbox
+```
+
+## Minimal example
+
+```ts
+import { Agent } from "@mastra/core/agent";
+import { Sandbox } from "@tangle-network/sandbox";
+import { mastraTools } from "@tangle-network/sandbox/agent";
+
+const sandbox = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+const box = await sandbox.create();
+const tools = await mastraTools(box, { sessionId: "s1" });
+
+const agent = new Agent({
+  name: "sandbox-coder",
+  instructions:
+    "You execute code in a sandbox to answer questions. " +
+    "Prefer sandbox_run_code with the same session for stateful work.",
+  tools,
+});
+const result = await agent.generate("Build a tiny vitest test for fizzbuzz and run it.");
+console.log(result.text);
+```
+
+`mastraTools` is `async` because `@mastra/core` is dynamically imported.
+
+## One sandbox, both languages
+
+The default image carries Python 3.12 with numpy, pandas, matplotlib and scikit-learn, and Node 22 with pnpm and tsx. The kernel registry inside the sandbox is keyed by `(sessionId, language)`, so a single Mastra agent can drive `sandbox_run_code` against Python and Node turns concurrently: useful when an agent needs to build a Node frontend and a Python backend in one workflow.
+
+## Restricting tools
+
+```ts
+const tools = await mastraTools(box, {
+  sessionId: "s1",
+  allow: ["sandbox_run_code", "sandbox_exec", "sandbox_write"],
+});
+```
+
+## Workflow integration
+
+Mastra workflows compose tools across steps. The Tangle tool pack drops in unchanged: each step's `tools` field accepts what `mastraTools` returns.
+
+## Durability & resume
+
+> **Don't add a Durable Object / KV / Redis ring buffer around the Agent loop.** The SDK already buffers every event for every session server-side; use the primitives below to survive a Worker restart, browser reload, or process crash.
+
+The `sessionId` passed to `mastraTools(box, { sessionId })` scopes the **code-execution kernel**: variables persist across calls. To make the **outer `agent.generate()` / `agent.stream()` invocation** survive a Worker restart, browser reload, or driver crash, wrap it in `box.dispatchPrompt` + `box.session(id).events({ since })`. Pass a stable `turnId` alongside `sessionId`: a retry from a fresh process then hits the completed-turn cache and the tool loop never re-runs. `sessionId` on its own only stops a second agent while the first is still in flight.
+
+```ts
+const turnId = req.headers.get("x-turn-id") ?? crypto.randomUUID();
+const sessionId = turnId;
+// turnId is the retry key: a completed turn is a cache lookup, not a second
+// agent run. sessionId alone only blocks a concurrent dispatch.
+await box.dispatchPrompt(prompt, { sessionId, turnId });
+
+const tools = await mastraTools(box, { sessionId });
+const agent = new Agent({ name: "coder", instructions: "...", tools });
+const result = await agent.generate(prompt);
+
+// On reconnect, replay buffered events instead of re-running the agent loop.
+for await (const event of box.session(sessionId).events({
+  since: req.headers.get("last-event-id") ?? undefined,
+})) {
+  res.write(`id: ${event.id}\ndata: ${JSON.stringify(event)}\n\n`);
+}
+```
+
+For browser-direct streaming use `SessionGatewayClient` from `@tangle-network/sandbox/session-gateway`. See the SDK's [session resume guide](https://www.npmjs.com/package/@tangle-network/sandbox#resume-a-session).
+
+## Idempotency & retry
+
+For per-call dedup of a single `runCode`, pass `idempotencyKey` directly through `box.runCode`. For exactly-once across an entire `agent.generate()`, wrap with `box.dispatchPrompt({ sessionId, turnId })`: that dedups the multi-step run end-to-end.
+
+```ts
+await box.dispatchPrompt(prompt, { sessionId, turnId: deterministicKey });
+const tools = await mastraTools(box, { sessionId });
+const agent = new Agent({ name: "coder", instructions: "...", tools });
+const result = await agent.generate(prompt);
+```
