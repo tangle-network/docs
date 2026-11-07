@@ -1,24 +1,127 @@
 import type { Meta } from "nextra";
 
 const meta: Meta = {
-  index: {
+  overview: {
     title: "Overview",
   },
   quickstart: {
     title: "Quickstart",
   },
-  "cloud-agents": {
-    title: "Cloud agents on your subscription",
+  authentication: {
+    title: "Authentication & browser access",
   },
-  profiles: {
+  cost: {
+    title: "Cost, limits & spin-down",
+  },
+  comparison: {
+    title: "vs e2b / Daytona / Modal",
+  },
+  "-- cloud-agents": {
+    type: "separator",
+    title: "Cloud agents",
+  },
+  "cloud-agents": {
+    title: "Start a cloud agent",
+  },
+  "cloud-agents-claude-code": {
+    title: "Claude Code subscription",
+  },
+  "cloud-agents-codex": {
+    title: "Codex & ChatGPT plan",
+  },
+  "cloud-agents-coding-plans": {
+    title: "Coding plans (GLM, Kimi, MiniMax)",
+  },
+  "cloud-agents-profiles": {
     title: "Agent profiles",
   },
-  "sdk-reference": {
-    title: "SDK reference",
-    display: "hidden",
+  "-- scale": {
+    type: "separator",
+    title: "Scale out",
   },
-  sdk: {
-    title: "SDK & API",
+  "agents-multiple": {
+    title: "Multiple agents in one sandbox",
+  },
+  "agents-fleet": {
+    title: "Fleets",
+  },
+  "agents-graphs": {
+    title: "Agent graphs",
+  },
+  "-- sdk": {
+    type: "separator",
+    title: "SDK",
+  },
+  "sdk-typescript": {
+    title: "TypeScript SDK",
+  },
+  "sdk-python": {
+    title: "Python",
+  },
+  "-- capabilities": {
+    type: "separator",
+    title: "Capabilities",
+  },
+  egress: {
+    title: "Network egress rules",
+  },
+  "gpu-leases": {
+    title: "GPU leases",
+  },
+  "templates-gallery": {
+    title: "Templates",
+  },
+  "-- frameworks": {
+    type: "separator",
+    title: "Agent frameworks",
+  },
+  "agents-anthropic": {
+    title: "Anthropic (Claude)",
+  },
+  "agents-openai": {
+    title: "OpenAI",
+  },
+  "agents-vercel-ai": {
+    title: "Vercel AI SDK",
+  },
+  "agents-mastra": {
+    title: "Mastra",
+  },
+  "agents-mcp": {
+    title: "MCP (hosted + local)",
+  },
+  "-- cli": {
+    type: "separator",
+    title: "CLI",
+  },
+  cli: {
+    title: "tangle CLI",
+  },
+  "-- workflows": {
+    type: "separator",
+    title: "Workflows",
+  },
+  workflows: {
+    title: "Overview & quickstart",
+  },
+  "workflows-run": {
+    title: "Run, inspect & trace",
+  },
+  "workflows-yaml": {
+    title: "YAML reference",
+  },
+  "workflows-templates": {
+    title: "Workflow templates",
+  },
+  "-- reference": {
+    type: "separator",
+    title: "Reference",
+  },
+  "api-reference": {
+    title: "API reference (OpenAPI)",
+  },
+  "web-app": {
+    title: "Dashboard guide",
   },
 };
 

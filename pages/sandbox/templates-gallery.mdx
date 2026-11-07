@@ -1,0 +1,72 @@
+# Templates
+
+A public template is a published snapshot that anyone can start a sandbox from. The default image already carries Python 3.12 with numpy, pandas, matplotlib and scikit-learn, and Node 22 with pnpm and tsx, so publish a template when your agents need more than that.
+
+## Use a template
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+const [template] = await client.publicTemplates.list();
+if (!template) throw new Error("No public template is published yet");
+const box = await client.create({ publicTemplateId: template.id });
+```
+
+Or via CLI:
+
+```bash
+tangle template list                      # browse published templates
+tangle template get <slug>                # see the manifest + tags
+tangle sandbox create --public-template <slug>
+tangle sandbox create --public-template <slug> --public-template-version <version-id>
+```
+
+## Build your own
+
+### Publish an existing snapshot
+
+Public snapshots pass through an asynchronous publication job. The SDK returns the template or version after that job is ready and the published artifact is visible:
+
+```ts
+const input = {
+  name: "My harness",
+  snapshotId,
+  sourceSandboxId: box.id,
+};
+const controller = new AbortController();
+const template = await client.publicTemplates.publish(input, {
+  onProgress: (job) => console.log(job.id, job.status),
+  signal: controller.signal,
+});
+```
+
+Keep the accepted job ID. An interrupted wait raises `PublicTemplatePublishError` with `job`; the publication can still be running. Continue that job with `client.publicTemplates.publish(input, { resumeJobId: error.job.id })`. Use the same input and source snapshot. `publishVersion` accepts the same wait and recovery options.
+
+The CLI exposes recovery on the existing commands:
+
+```bash
+tangle template publish <name> <snapshot-id> <sandbox-id> --json
+tangle template publish <name> <snapshot-id> <sandbox-id> --resume-job <job-id> --json
+tangle template publish-version <id-or-slug> <snapshot-id> <sandbox-id> --resume-job <job-id> --json
+```
+
+Progress goes to stderr; JSON errors preserve the accepted job. The dashboard's **Stop waiting** keeps that receipt, and **Continue publication** resumes it after closing or reloading the dialog. A blocked or failed scan does not count as a published template.
+
+For direct HTTP callers, the publication POST returns `202` with `{ job, artifact }`. Read `/v1/public-templates/publish-jobs/{jobId}` for progress; an accepted request is not a completed publication.
+
+## Forking a template
+
+Templates are versioned. Pin a sandbox to a specific version when stability matters:
+
+```ts
+const template = await client.publicTemplates.get("<slug>");
+const box = await client.create({
+  publicTemplateId: template.id,
+  publicTemplateVersionId: template.latestVersion!.id,
+});
+```
+
+Or fork a published template into your team's namespace as a starting point: `client.publicTemplates.publish({ forkedFromTemplateId: "tmpl_..." })`.

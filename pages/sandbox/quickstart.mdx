@@ -1,47 +1,139 @@
----
-title: Quickstart
-description: Create a sandbox and run a command with TypeScript or Python.
----
-
-import CodeDisplay from '/components/CodeDisplay';
-import { sandboxCode } from '/lib/sandbox-code';
-
 # Quickstart
 
-Create a sandbox, run a command, and delete it when the work finishes.
+Create a managed Sandbox, run exact code, then add a durable Agent session.
 
-## Get an API key
+## 1. Create an account API key
 
-Create a key at [id.tangle.tools](https://id.tangle.tools) and add credit to your account.
-Set `TANGLE_API_KEY` in your environment.
-Keep this key on your server.
-See [Authentication](/platform/authentication) for key setup.
+Sign in to the dashboard and create a key at
+[id.tangle.tools/app/keys](https://id.tangle.tools/app/keys).
 
-## Install
+```bash
+export TANGLE_API_KEY="sk-tan-..."
+export SANDBOX_BASE_URL="https://sandbox.tangle.tools"
+```
 
-<CodeDisplay examples={[
-  { language: "bash", title: "TypeScript", code: sandboxCode.installSdk },
-  { language: "bash", title: "Python", code: "pip install httpx" },
-]} />
+`TANGLE_API_KEY` is an account credential. Keep it in a trusted backend, CI
+secret store, or CLI configuration. **Never expose it to browser code.**
+Browser applications use short-lived scoped tokens described in
+[Authentication and browser access](/docs/authentication).
 
-TypeScript and JavaScript use the Sandbox SDK.
-Python uses the HTTP API through HTTPX.
+## 2. Create and use a Sandbox from TypeScript
 
-## Run a command
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
 
-Save TypeScript as `example.ts`. With Node.js 22 or later, run `npm pkg set type=module` in your project, then `npx tsx example.ts`.
-For JavaScript, use `example.mjs` and `node example.mjs`.
-For Python, use `example.py` and `python example.py`.
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: process.env.SANDBOX_BASE_URL!,
+});
 
-<CodeDisplay examples={[
-  { language: "typescript", code: sandboxCode.createSandbox },
-  { language: "python", code: sandboxCode.pythonExec },
-]} />
+const box = await client.create({
+  agent: false,
+  maxLifetimeSeconds: 3600,
+});
 
-## Continue building
+try {
+  await box.waitFor("running");
 
-- [Run an agent](/sandbox/sdk/agents-sessions).
-- [Read and write files](/sandbox/sdk/commands-files).
-- [Open an app preview](/sandbox/sdk/previews-snapshots).
-- [Manage sandbox lifetime](/sandbox/sdk/lifecycle).
-- [Run parallel work](/sandbox/sdk/parallel).
+  const result = await box.exec("node -e 'console.log(1 + 1)'");
+  if (result.exitCode !== 0) throw new Error(result.stderr);
+  console.log(result.stdout); // 2
+} finally {
+  await box.delete();
+}
+```
+
+Omitting `environment` uses the server's default image.
+
+`agent: false` means “managed runtime, no default Agent.” Files, processes,
+terminals, telemetry, and later Agent sessions remain available. `bare:
+true` is different: it removes the managed runtime.
+
+## 3. Run a durable Agent conversation
+
+Create the Sandbox with a backend, or add a session later. Reuse the session
+ID to continue the same conversation:
+
+```ts
+const agentBox = await client.create({
+  backend: {
+    type: "opencode",
+    profile: {
+      name: "builder",
+      prompt: { appendSystemPrompt: "Run tests before finishing." },
+    },
+  },
+});
+
+try {
+  const sessionId = "repo-review-v1";
+
+  const first = await agentBox.prompt("Inspect the repository.", {
+    sessionId,
+  });
+  const second = await agentBox
+    .session(sessionId)
+    .prompt("Fix the highest-severity issue and run its tests.");
+
+  console.log(first.response);
+  console.log(second.response);
+} finally {
+  await agentBox.delete();
+}
+```
+
+To run the agent on your own Claude subscription, ChatGPT plan, or coding
+plan instead of the Tangle Router, see [Start a cloud agent](/docs/cloud-agents).
+
+For several AgentProfiles sharing one computer, use
+[`box.agents`](/docs/agents/multiple). For separate machines or hard
+resource isolation, use a Fleet.
+
+## 4. Use the CLI
+
+```bash
+curl -fsSL https://sandbox.tangle.tools/install.sh | sh
+tangle auth login --api-key "$TANGLE_API_KEY"
+tangle sandbox create --name hello --ssh
+tangle sandbox list
+```
+
+`--ssh` authorizes your `~/.ssh/id_ed25519.pub` (or `id_ecdsa.pub`, `id_rsa.pub`); `tangle ssh hello` then opens a shell. On a Linux server without a keychain, see [CLI authentication](/docs/cli).
+
+## 5. Use Python
+
+Install HTTPX with `pip install httpx`.
+
+```python
+import os
+import httpx
+
+with httpx.Client(
+    base_url="https://sandbox.tangle.tools",
+    headers={"Authorization": f"Bearer {os.environ['TANGLE_API_KEY']}"},
+    timeout=30,
+) as client:
+    response = client.get("/v1/sandboxes").raise_for_status().json()
+    for sandbox in response["sandboxes"]:
+        print(sandbox["id"], sandbox["status"])
+```
+
+See [Python](/docs/sdk/python) to create a sandbox and run commands.
+
+## Lifecycle
+
+- `stop()` suspends supported Sandboxes while preserving state.
+- `resume()` brings a stopped Sandbox back.
+- `delete()` is permanent.
+- Stable Agent session IDs let another process re-fetch the Sandbox and
+  reattach while the Sandbox still exists.
+
+## Next
+
+- [Start a cloud agent](/docs/cloud-agents)
+- [Authentication and browser access](/docs/authentication)
+- [TypeScript SDK](/docs/sdk/typescript)
+- [Multiple Agents](/docs/agents/multiple)
+- [Python](/docs/sdk/python)
+- [CLI](/docs/cli)
+- [Workflows](/docs/workflows)

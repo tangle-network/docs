@@ -1,0 +1,61 @@
+# Comparison: Tangle vs e2b, Daytona, Modal
+
+Honest comparison. We use these tools too; we describe what each platform actually does today, not strawmen of last year's state.
+
+## At a glance
+
+| Capability | Tangle | e2b | Daytona | Modal |
+|---|---|---|---|---|
+| Code exec with structured results (image / dataframe / json / html) | ✓ | ✓ | partial | ✓ |
+| Persistent kernel per session (variables across calls) | ✓ | ✓ | ✓ | ✓ |
+| Multi-language (Python, JS, TS, Bash) | ✓ | ✓ | ✓ | Python-first |
+| Shell exec, fs.*, git.* on the same sandbox | ✓ | ✓ | ✓ | partial |
+| Snapshot + restore | ✓ | ✓ | ✓ | ✓ |
+| Public template gallery | ✓ | ✓ | ✓ | ✓ |
+| Fleets (coordinator + N workers, shared workspace) | ✓ |: |: | partial (Function fan-out) |
+| Durable session replay (`Last-Event-ID`, browser-reload-safe) | ✓ |: |: |: |
+| Browser-safe WebSocket gateway | ✓ | partial |: |: |
+| Hosted MCP endpoint (paste-into-Claude) | ✓ |: |: |: |
+| Local MCP server bridge (stdio for Cursor / Zed) | ✓ |: |: |: |
+| OAuth / API integration runtime (Activepieces-style catalog) | ✓ |: |: |: |
+| Per-call dedup on `runCode` via `idempotencyKey` (in-flight collapse + cached result within 15 min) | ✓ |: |: |: |
+| Exactly-once dedup on outer agent loop (`dispatchPrompt({sessionId, turnId})`) | ✓ |: |: |: |
+| TEE attestation, sealed-secret encryption | ✓ |: |: |: |
+| Framework tool packs (Anthropic / OpenAI / Vercel AI / Mastra) | ✓ | partial |: |: |
+
+The above is maintained against what each platform's docs say today. If you find something inaccurate, open an issue: we'd rather correct the table than win a row dishonestly.
+
+## When to pick what
+
+- **You want the smallest surface, only Python data science:** any of the four work. e2b's Python notebook UX is the most polished.
+- **You're building an agent product across many models / frameworks:** Tangle's tool packs and MCP surfaces remove the per-framework glue code.
+- **You're running large parallel campaigns (hundreds of experiments):** Tangle's fleet primitive is built for this; Modal's Function fan-out is comparable for stateless workloads.
+- **You're deploying agents that need OAuth-bound external actions (GitHub, Slack, Stripe, etc.):** Tangle's integrations runtime is the only one of the four that ships this as a first-class primitive.
+- **You're deploying into TEE / confidential compute:** Tangle is the only one with platform-level attestation today.
+- **You're long-running and need browser reload to not lose progress:** Tangle's durable session gateway is the differentiator.
+
+## What we don't (yet) ship
+
+- **A polished notebook UI in the dashboard.** The web app has a terminal and an agent view; "click cells, see plots inline" is a v2 surface. `runCode` already returns the right structured results, so a notebook layer is purely client-side work.
+- **True Jupyter kernels.** Our custom kernel shim speaks the same display protocol (matplotlib base64 PNG, pandas frames, JSON via `display()`), so the result-type contract matches Jupyter. We'll swap to first-class IPyKernel under the hood when the operational complexity earns its keep.
+- **Per-call cost metering on `runCode`.** Costs are tracked per sandbox-second today. A breakdown per `runCode` call is on the roadmap once enough customers report needing it.
+
+## Migrating from e2b
+
+The mental model is the same: spawn a sandbox, run code in a kernel, get typed results. The headline mapping:
+
+| e2b | Tangle |
+|---|---|
+| `Sandbox.create(...)` | `client.create()` |
+| `sandbox.runCode(code)` | `box.runCode("python", code, { sessionId })` |
+| `result.results[0].png` | `result.results.find(r => r.type === "image").data` |
+| `sandbox.commands.run("...")` | `box.exec("...")` |
+| `sandbox.filesystem.write/read` | `box.write(path, content)` / `box.read(path)` |
+
+Tool packs and MCP bridges are additive on top of this surface; you don't have to use them to use the sandbox.
+
+## Migrating from Modal
+
+Modal is excellent for stateless GPU functions and batch jobs. If your workload is "fire-and-forget a Python function, get a result" Modal is the right tool. If it's "an agent needs an interactive sandbox with files, git, browser, and persistent kernel state across many tool calls," that's where Tangle's surface shines.
+
+For long-running parallel campaigns, both work: Tangle gives you a coordinator and shared workspace; Modal gives you per-call container reuse and very fast cold start. Pick by what you need most: shared state (Tangle) or function granularity (Modal).

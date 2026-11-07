@@ -1,0 +1,85 @@
+# Workflow templates
+
+The curated starter catalog opens an editable draft with safe defaults and a graph preview. **Use this template** renders the definition; it does not create or run anything. New drafts start paused. Review the trigger, connections, runtime inputs, and actions before explicitly enabling a workflow.
+
+Schedules have defaults. Optional notification destinations live in Advanced settings: leave them blank to retain results in the run without a webhook delivery. Human approval gates remain in place. Real execution targets, such as a repository and issue, a child workflow, or a ph0ny agent and caller number, still need your values. Example values are never used as defaults.
+
+Templates are also the fastest way to learn the format: instantiate one, then read and edit its YAML. The [YAML reference](/docs/workflows/yaml) explains every construct they use. Triggers that listen to a provider (`github`, `gmail`, …) need that provider connected on the hub first.
+
+## Code Review
+
+### PR Review
+
+Every pull request that is opened or marked ready gets a review from four specialists working in parallel: correctness, security, tests, and design. Each reviewer runs in its own sandbox on the PR head and looks at one dimension only. Each is followed by its own verifier, which re-reads the code behind every finding and marks it confirmed or refuted with evidence. A synthesizer joins the four verified lists and posts one review of the confirmed findings, as the GitHub App. Draft PRs are skipped until they are ready. The reference shape for `needs` fan-out, per-lane verification, and a join.
+
+### Review via sub-workflow
+
+Composability in one lesson: a webhook-triggered parent workflow hands the review to a *separate child workflow* (`workflow.run`) and parks until the child finishes, then posts the verdict. Use it when the review logic has its own lifecycle — reused by several repos, versioned independently, or maintained by another team. Parameters: the review workflow's id, and an optional webhook URL to post the verdict to.
+
+## Triage
+
+### Issue Triage
+
+Every newly opened GitHub issue is read by an agent granted hub access (`connections: [github]`), which triages it and posts a concise assessment back as a comment — the canonical read-decide-act-in-one-step pattern, where the agent itself calls hub actions from inside its sandbox. No parameters; needs a connected GitHub account.
+
+### Inbound email support
+
+Point your mail provider's inbound webhook (or relay) at the workflow's hook URL: each inbound support email is triaged, a reply is drafted — and a **human gate** (`decision`) holds the run until someone approves, so no customer ever gets an unreviewed machine reply. The reference for `on: webhook` + `decision` + guarded send.
+
+### Outbound call (ph0ny)
+
+For each lead posted to the workflow's hook, place a consented outbound ph0ny voice call, then **park the run** (`wait.event`) until the call-complete callback arrives, and post the follow-up with the outcome. The reference for event-driven suspension: how a run waits hours for an external system and resumes exactly where it left off. Parameters: the ph0ny agent id, the caller number, and an optional follow-up webhook URL.
+
+## Reports
+
+### Email security digest
+
+A daily briefing: every morning an agent pulls the last day of security/development email, summarizes it into one digest, and posts it as a comment on a tracking GitHub issue. Use it for any "read a firehose, post a summary" job. Parameters: the cron schedule, plus the owner/repo/issue that collects the digest.
+
+### Hub ops digest
+
+Code mode meets the hub: a `script.run` node granted a Gmail connection searches and invokes hub actions directly (`HubClient` — no per-provider HTTP to write), summarizes the last day's mail, and posts the digest to your webhook. The reference for hub codemode from a script. The schedule has a default; webhook delivery is optional.
+
+## Multi-agent
+
+### Ralph loop
+
+The guarded-cycle teaching example, no connections required: a drafter writes release notes, a reviewer returns `VERDICT: approve` or `VERDICT: revise`, a steering editor turns revise verdicts into notes for the next draft — looping through a guarded back-edge until approval, when the final draft is posted to your webhook. Every loop construct (`needs[].when`, `if` routing, `maxNodeVisits`) in 40 lines. Optional parameter: the publish webhook URL.
+
+### Fanout review
+
+Multi-model comparison on a schedule: one builder drafts a report, three specialist reviewers score it in parallel, and a synthesizer merges the verdicts into a final assessment. The reference for both graph-level parallelism (`needs` fan-out) and reading `parallel`-style branch outputs. No parameters, no connections.
+
+### Trace steer loop
+
+Self-improving agents: run an agent, feed its archived execution trace to the platform's trace analyst (`trace.analyze`), and steer it again whenever the analyst finds failure modes — looping until the trace comes back clean, then posting the result. The reference for `traceRef` wiring and quality-gated loops. Optional parameter: the result webhook URL.
+
+### Code-mode supervisor
+
+A whole agentic system inside one node: post a brief to the workflow's hook URL, and a single `script.run` uses the bundled loop engine (`loops.mjs`) and sandbox SDK to fan the brief out to three sandbox workers, score their answers, and return the winner. When your orchestration logic is easier to express as code than as YAML, this is the escape hatch. No parameters.
+
+### Feature dev loop
+
+The full autonomous-development shape: a labeled GitHub issue triggers a draft/review loop on a **persistent dev sandbox** (`sandbox.spawn` with `resume: true` + `sandbox.snapshot`, so the work survives across runs), and a human `decision` gates posting the proposed patch as an issue comment. Draft, review, steer, re-draft — with durable disk and human review before publication. This template does not merge a pull request. No parameters; needs a connected GitHub account.
+
+### Software factory
+
+An issue-to-merge workflow with in-app human approvals by default. Add the trigger label (`factory` by default) to an issue and a System One model triages it as a typed choice with probabilities: build it (only when it picks automatable with p ≥ 0.8), write a spec first, ask the owner a question, or park it. Questions, spec approvals, and ship decisions wait in the app. Optionally configure both a Hub line and member in Advanced settings to receive coded texts and reply there; omitting them does not remove any approval gate. A build runs the implementer, then three reviewers (correctness, security, tests) and a verifier in parallel, each in its own fresh sandbox on the pull request head. A review gate joins them into one verdict; anything short of an approve and a passing verification goes back to a fixer without asking anyone, and each round is posted on the pull request. Only a change that passed both reaches the owner: a ship decision merges exactly the head the verifier passed, and hold sends the note to a fixer and asks again, and silence parks after 72 hours, never ships. After “Delay before follow-up checks” (one hour by default), a monitor agent makes one follow-up check of the merged change, and a regression becomes a new labeled issue, which starts the loop again. An output the factory cannot route, or a failed step, is reported on the issue. The decision-model picker uses the deployment’s supported native-evaluation catalog. Advanced settings contain the label, follow-up delay, and optional text delivery. A connected GitHub account is required to save it. Text delivery additionally requires a real authorized line/member and the existing owner-session or Line-authority checks. Workflow ownership comes from the signed-in account, never a form field.
+
+The implementer and fixers push with `source.push: true`, a token that can write any branch. Protect the default branch before enabling this template; on an unprotected branch the owner's ship decision is enforced only by the agents' instructions.
+
+### Senior engineering audit
+
+Run it on demand against a repository: five lenses audit the codebase in parallel (architecture, reliability, security, performance, tests and operability), each in its own sandbox. Every lens is followed by a verifier that re-checks its findings against the code. A synthesizer ranks the confirmed findings, each with a number to beat, and files them as one GitHub issue. Parameters: the repository owner and name.
+
+### Senior design audit
+
+Run it on demand against a URL: five lenses review the product in parallel (visual hierarchy and typography, interaction and flows, accessibility, responsive layout at phone, tablet and desktop widths, and copy). Each opens the page in a sandboxed browser and works from its own screenshots, and each is followed by a verifier that re-checks its findings on the live page. A synthesizer writes one ranked report. Delivery is optional: a webhook, a GitHub issue, or both.
+
+### Workflow self-review
+
+The weekly schedule has a default. Choose the real workflow to review. Before running, configure `state.platformToken` through the authorized workflow KV API: reading requires an owner-scoped API key, and writing an approved proposal requires a SERVICE token. Choosing the template does not create credentials or grant access.
+
+## Beyond the catalog
+
+Every template is ordinary YAML — after instantiating, export it with `tangle workflows get <id>`, edit, and re-apply with `tangle workflows update <id> file.yml`. The platform hub's assistant can also author workflows conversationally (it teaches itself from these same templates), and the [YAML reference](/docs/workflows/yaml) documents the complete surface.

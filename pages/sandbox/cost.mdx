@@ -1,0 +1,148 @@
+# Cost, limits & spin-down
+
+A running sandbox is billed per second from your prepaid credit. You can price
+a sandbox before you start it, watch its cost while it runs, cap what a key
+may spend, and make every agent stop itself when nobody is using it.
+
+## What you pay for
+
+| Charge | How it is metered | Where the rate lives |
+|---|---|---|
+| Compute | Per second while the sandbox runs: vCPU, memory, and disk, never below an hourly minimum. | [`/v1/pricing/sandboxes`](https://sandbox.tangle.tools/v1/pricing/sandboxes) |
+| Egress | Outbound bytes beyond the plan's per-account monthly allowance, shared by its sandboxes. | [`/v1/pricing/egress`](https://sandbox.tangle.tools/v1/pricing/egress) |
+| Model tokens | Only when the agent uses the Tangle Router. Your own subscription or key bills its provider instead. | [Tangle Router](https://router.tangle.tools) |
+| GPU leases | Per second while a lease is attached, with a spend cap you set. | [GPU leases](/docs/gpu-leases) |
+
+Both pricing endpoints are public and need no key. A stopped sandbox does not
+accrue compute.
+
+## A live cost meter
+
+The hourly compute rate of a sandbox is
+`max(minChargeHourUsd, cpuCores × cpuCoreHourUsd + memoryGiB × memoryGBHourUsd + diskGB × diskGBHourUsd)`.
+Read the rates once, read the sandbox's granted shape, and multiply by the
+time it has been running:
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+type PoolRates = {
+  cpuCoreHourUsd: number;
+  memoryGBHourUsd: number;
+  diskGBHourUsd: number;
+  minChargeHourUsd: number;
+};
+
+const { pools } = (await fetch(
+  "https://sandbox.tangle.tools/v1/pricing/sandboxes",
+).then((response) => response.json())) as { pools: Record<string, PoolRates> };
+
+const box = await client.create({ name: "metered", idleTimeoutSeconds: 600 });
+await box.waitFor("running");
+
+const shape = box.resources!;
+const rates = pools[shape.pool ?? "general"] ?? pools.general;
+const hourlyUsd = Math.max(
+  rates.minChargeHourUsd,
+  shape.cpuCores * rates.cpuCoreHourUsd +
+    (shape.memoryMB / 1024) * rates.memoryGBHourUsd +
+    shape.diskGB * rates.diskGBHourUsd,
+);
+
+const startedAt = Date.now();
+const meter = setInterval(() => {
+  const hours = (Date.now() - startedAt) / 3_600_000;
+  process.stdout.write(`\r${box.id}  $${(hours * hourlyUsd).toFixed(5)}  ($${hourlyUsd.toFixed(4)}/h)`);
+}, 1000);
+
+try {
+  await box.prompt("Set up a Vite app and run its tests.", { sessionId: "main" });
+} finally {
+  clearInterval(meter);
+  await box.delete();
+}
+```
+
+This is an estimate of compute from published rates. The billed amount is what
+your credit balance records, below.
+
+## Model cost per turn
+
+When the agent runs on the Tangle Router, each result reports the model cost
+the provider charged for that turn:
+
+```ts
+const result = await box.prompt("Explain the build failure.", { sessionId: "main" });
+console.log(result.costUsd); // USD for this turn's model usage, when reported
+```
+
+With your own [Claude](/docs/cloud-agents/claude-code) or
+[ChatGPT](/docs/cloud-agents/codex) subscription, model usage goes to that plan
+and costs your Tangle credit nothing.
+
+## What you have spent
+
+```ts
+const usage = await client.usage();        // today (UTC): compute minutes, GPU cost, sandbox counts
+const plan = await client.subscription();  // credit balance and plan limits
+console.log(usage.computeMinutes, usage.activeSandboxes, plan.creditsAvailableUsd);
+```
+
+From a terminal:
+
+```bash
+tangle usage            # today's usage and your plan
+tangle usage --json     # the same, for scripts
+```
+
+Each sandbox also reports its own egress for the month, with the amount
+charged:
+
+```ts
+const egress = await box.egress.usage();
+console.log(egress.bytes, egress.chargeUsd);
+```
+
+## Make agents stop themselves
+
+| Option | Effect |
+|---|---|
+| `idleTimeoutSeconds` | Stops the sandbox after this long with no activity. |
+| `maxLifetimeSeconds` | Stops the sandbox this long after it starts, busy or not. |
+| `coldTimeoutSeconds` | How long a stopped sandbox stays quick to resume. |
+| `deleteAfterStoppedSeconds` | Deletes a stopped sandbox after this long. |
+
+An option you leave unset takes the platform default, which the TypeScript
+SDK documents on `CreateSandboxOptions`. Set `idleTimeoutSeconds` on every
+agent you start, so an abandoned one stops on your schedule.
+
+A stopped sandbox keeps its files and sessions. `box.resume()` brings it back;
+`box.delete()` removes it for good.
+
+```ts
+const agent = await client.create({
+  backend: { type: "opencode" },
+  idleTimeoutSeconds: 600,          // stop after 10 idle minutes
+  maxLifetimeSeconds: 4 * 3600,     // never run longer than 4 hours
+  deleteAfterStoppedSeconds: 86400, // clean up a day after stopping
+});
+```
+
+The CLI sets the first two with `tangle sandbox create --idle-timeout <s>
+--lifetime <s>`.
+
+## Cap what can be spent
+
+| Scope | Cap |
+|---|---|
+| An API key | `tangle keys create ci-agents --budget-usd 25`: calls with that key stop when it has spent its budget. |
+| A fleet | `budgetUsd` on `client.fleets.create()`; read it back with `fleet.spend()`. See [Fleets](/docs/agents/fleet). |
+| A GPU lease | `maxSpendUsd`, `maxLifetimeSeconds`, and `idleTimeoutSeconds` on every lease. See [GPU leases](/docs/gpu-leases). |
+
+Give each automation its own budgeted key. A runaway loop then stops at that
+key's budget instead of draining the account.

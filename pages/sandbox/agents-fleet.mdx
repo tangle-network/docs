@@ -1,0 +1,213 @@
+# Agents: Fleets
+
+A fleet runs N agents over M sandboxes.
+You choose how agents share sandboxes, and each fleet carries its own spend cap.
+An agent can spawn a child fleet, so fleets nest.
+
+## Run a fleet of agents
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({ apiKey: process.env.TANGLE_API_KEY! });
+
+const fleet = await client.fleets.create({
+  agents: 50,
+  placement: "auto",
+  defaults: {
+    resources: { memoryMB: 4096 },
+    backend: { type: "opencode", model: { model: "gpt-4.1-mini" } },
+  },
+  budgetUsd: 3,
+});
+
+try {
+  for await (const event of fleet.run(
+    (agent) => `You are ${agent.agentId}. Review shard ${agent.agentId}.`,
+  )) {
+    if (event.type === "agent.finished") {
+      const { agentId, status, result } = event.result;
+      console.log(agentId, status, result?.traceId, result?.response);
+    }
+    if (event.type === "fleet.finished") console.log(event.spend);
+  }
+} finally {
+  await fleet.delete();
+}
+```
+
+`fleet.run()` streams one `agent.started` and one `agent.finished` event per agent, then `fleet.finished` with every result and, for a budgeted fleet, its metered spend.
+`fleet.runAll()` takes the same arguments and returns the results when every agent is done.
+With no message, each agent runs its own `task`.
+Pass `agents: ["agent-3", "agent-7"]` to run a subset.
+Each agent keeps its own session, so a second `run()` continues each agent's conversation.
+
+Measured on production with `gpt-4.1-mini`:
+
+| Fleet | Sandboxes | Create | Run (all agents) | Completed |
+|---|---|---|---|---|
+| 10 agents, 5 per sandbox | 2 | 4.7 s | 29.5 s | 10/10 |
+| 50 agents, `auto` at 4 GiB | 9 | 6.1 s | 32.8 s | 50/50 |
+| 3 fleets × 20 agents at once | 12 | 4.2-5.1 s | 27-56 s | 60/60 |
+
+## Each agent's own profile
+
+Every agent can run its own harness, model, profile and task.
+Fleet `defaults.backend` fills whatever an agent leaves unset.
+
+```ts
+const fleet = await client.fleets.create({
+  agents: [
+    {
+      agentId: "researcher",
+      harness: "opencode",
+      model: "gpt-4.1-mini",
+      profile: {
+        name: "researcher",
+        prompt: { instructions: ["You research questions and cite sources."] },
+        resources: { skills: [{ kind: "inline", name: "citations", content: citationSkill }] },
+      },
+      task: "Find three sources on tidal energy.",
+    },
+    {
+      agentId: "reviewer",
+      harness: "codex",
+      // Codex reaches the router with the sandbox's own key by reference.
+      model: { model: "gpt-4.1-mini", apiKeyEnv: "OPENAI_API_KEY" },
+      profile: { profileId: "code-reviewer" },
+      task: "Review the diff in ~/change.patch.",
+    },
+  ],
+  budgetUsd: 2,
+});
+const results = await fleet.runAll();
+```
+
+- `profile` is an inline `AgentProfile` or a saved profile from the agent-profile catalog, `{ profileId, revision? }`.
+  A saved profile is read once at create; with `revision`, create refuses a catalog that has moved on.
+- Each turn sends the profile as `backend.profile`, the same path as `box.prompt({ backend: { profile } })`.
+  The runtime writes its skills, instructions and MCP config to disk for the agent's harness; skills stay files, not prompt text.
+- `model` is a model id, or a model config whose key is named with `apiKeyEnv`; fleets refuse a raw key in an agent spec, because agent specs are stored in sandbox metadata.
+- `tangle fleet run --agents agents.json` reads the same specs from a file.
+
+Measured on production: one fleet ran an OpenCode researcher (gpt-4.1-mini), an OpenCode coder (gpt-4.1-nano), a Codex reviewer (gpt-4.1-mini) and a Codex agent on the saved `code-reviewer` profile.
+Each session reported its own harness and model, each skill-bearing agent answered with a codeword only its own skill held, and the saved-profile agent described the catalog profile's role.
+On that day Claude Code, Hermes, Pi, Kimi Code and OpenClaw failed on production before their first model call, and Codex needed `apiKeyEnv`.
+
+## Placement
+
+| `placement` | Sandboxes |
+|---|---|
+| `"auto"` (default) | As many agents per sandbox as its memory holds, by each agent's harness: an idle sandbox uses 180 MiB, an OpenCode agent 570 MiB, a Codex agent 256 MiB. A 4 GiB sandbox holds 6 OpenCode agents. An agent whose harness has no measurement gets its own sandbox. |
+| `"dedicated"` | One sandbox per agent. |
+| `{ agentsPerSandbox: n }` | Exactly `n` agents per sandbox. |
+
+A per-agent spec overrides the fleet: `agents: [{ agentId: "writer", placement: "dedicated" }, {}, {}]`.
+
+Agents in one sandbox share its filesystem, CPU and memory, and can read each other's files.
+Give an agent a dedicated sandbox when it writes a repository or runs untrusted code.
+The runtime writes a profile's skills and instructions into the sandbox's home by harness (`.opencode/`, `.codex/`, `AGENTS.md`, `CLAUDE.md`), so two agents of one harness family share a sandbox only when their profiles are identical; otherwise one would read the other's skills.
+Agents of different families share freely: an OpenCode agent and a Codex agent can share a sandbox.
+The `auto` numbers come from measured memory: an idle sandbox uses about 180 MiB and one OpenCode agent 450-570 MiB in a long session.
+A 4 GiB sandbox packed with 12 agents lost 4 of them to the OOM killer.
+
+## Budgets
+
+`budgetUsd` gives the fleet a budget the Platform enforces.
+The fleet mints its own Platform key with that budget, creates every sandbox with it, and drives every turn with it, so every model call and compute charge made through the fleet counts against the budget.
+
+- A turn the Platform refuses for a spent budget ends with status `budget_exhausted`, and the run starts no more agents.
+- The router pre-authorizes each call's worst-case cost against the budget, so a fleet stops before its budget, never after it.
+  Many agents in flight reserve many worst cases at once: four concurrent `gpt-4.1-mini` agents under a $0.25 budget stopped at $0.014 spent.
+  Size the budget well above agents × one call's worst case.
+- `fleet.spend()` reads the key's metered spend: `spentUsd` (settled charges), `inFlightUsd` (what calls in flight hold), `reservedForChildrenUsd` and `remainingUsd` (what the Platform still admits).
+- A run sets each agent's `costUsd` to what the ledger charged its sandbox, model calls and compute, so agents alone on their sandboxes add up to `spentUsd`.
+  `result.costUsd` is the harness's own estimate at its own prices: Claude Code on `glm-5.3` estimated $8.24 for a run the ledger charged $3.53.
+- Only the client that created the fleet holds its key.
+  A handle from `list()` in another process can read, cancel and delete the fleet, but refuses to run its agents, because its turns would bill its own key.
+- The budget covers charges made through the fleet.
+  A turn sent to one of the fleet's sandboxes with another key, from the CLI, the web app, `client.get(id)` or the API's fleet prompt dispatch, bills that key, outside the budget.
+  The fleet handle refuses `dispatchPrompt*` on a budgeted fleet for that reason.
+- `budgetUsd` is also the fleet's `policy.maxSpendUsd`, so `create` refuses a budget below the fleet's worst-case compute over its lifetime; shorten `maxLifetimeSeconds` or use fewer sandboxes for a small budget.
+- `policy.maxSpendUsd` without `budgetUsd` stays what it was: that same create-time estimate check, with no key.
+
+## Child fleets
+
+An agent spawns a child fleet by naming itself as the parent:
+
+```ts
+const child = await client.fleets.create({
+  agents: 20,
+  defaults: { backend: { type: "opencode", model: { model: "gpt-4.1-mini" } } },
+  budgetUsd: 0.5,
+  parent: { fleetId: fleet.fleetId, agentId: "agent-3" },
+});
+```
+
+- Under a budgeted parent the child must set `budgetUsd`, no larger than the parent's.
+  Its key is minted with the parent's key, which reserves the child's budget from the parent's remaining budget, and every charge of the child also counts against the parent.
+- Deleting a child revokes its key, which returns only its unspent budget, so the child's spend stays counted against the parent.
+  A $0.30 parent admitted two $0.12 children and refused a third while both were reserved.
+- `fleet.children()` lists a fleet's children.
+  `fleet.delete()` deletes the whole tree; the API keeps a fleet's record while any of its or its descendants' machines remains, and retries a failed machine.
+  `fleet.cancel()` interrupts every agent in the fleet and its children and reports each failure without stopping the rest.
+
+The agent tool packs expose this as `sandbox_fleet_run`, with per-agent `agent_specs`.
+Pass `parent` to the tool pack so every fleet the agent spawns is a child:
+
+```ts
+import { anthropicFleetTools } from "@tangle-network/sandbox/agent";
+
+const { tools, handleToolUse } = anthropicFleetTools(client, {
+  allow: ["sandbox_fleet_run"],
+  parent: { fleetId: fleet.fleetId, agentId: "agent-3" },
+});
+```
+
+## Addressing, streaming, cancelling
+
+- `client.fleets.list({ fleetId })` returns a handle to an existing fleet from any process.
+- `fleet.agents` lists every agent with its `machineId`, `sandboxId` and `sessionId`.
+- `fleet.sandbox(machineId)` returns the sandbox, and `box.session(agent.sessionId)` reads that agent's messages, events and execution ledger.
+- Every turn carries its own trace id (`result.traceId`), recorded by the API, the orchestrator, the runtime and the router.
+- `fleet.cancel()` stops the fleet's work and keeps its sandboxes; `fleet.delete()` removes them.
+- `tangle fleet run "<prompt>" --agents 50 --model gpt-4.1-mini --max-spend-usd 3` runs a fleet with a $3 budget from the CLI; `tangle fleet cancel <fleet-id>` cancels one.
+
+## Limits
+
+The fleet has no limit on agents, sandboxes or fleets.
+These limits remain, each for money, time or safety:
+
+| Limit | Value | Protects |
+|---|---|---|
+| `budgetUsd` | yours | Money: the fleet's budget, enforced on the fleet's Platform key. |
+| Fleet key lifetime | longest sandbox lifetime + 1 hour | Money: no key with budget left outlives its fleet for long. |
+| Sandbox creates in flight | 8 (`maxConcurrentCreates`) | Safety: every create mints two Platform keys, and about 25 in flight locked the key store for every customer. |
+| First turns per sandbox at once | 3 | Safety: each agent's first turn boots its own OpenCode server with a 20 s ready deadline; six at once in a 4 GiB sandbox missed it. |
+| `timeoutMs` per turn | yours | Time: bounds one agent turn. |
+| Sandbox `maxLifetimeSeconds` | 1 hour by default | Money: a forgotten fleet stops paying at its lifetime. |
+| Exec dispatch `timeoutMs` | 10 min maximum | Time: bounds one command and the API request that waits on it. |
+| Exec dispatch `retry.attempts` | 5 maximum | Money: every attempt reruns the command. |
+| `driveTurns` passes at once | 4 (`concurrency`) | Safety: keeps a wide fan-out inside the API rate budget. |
+| Fleet delete retries | 2, after 1 s and 3 s | Safety: a transient 5xx does not strand a billing fleet. |
+
+## Shell commands across machines
+
+A fleet made from `machines` instead of `agents` runs shell commands:
+
+```ts
+const fleet = await client.fleets.createWithCoordinator({
+  workers: Array.from({ length: 16 }, (_, i) => ({ machineId: `worker-${i}` })),
+});
+const results = await fleet.dispatchExec("python run_one.py");
+await fleet.delete();
+```
+
+The API runs exec dispatch on a Cloudflare Worker, which keeps at most six upstream connections open per request.
+Branches past six queue: twelve 8-second commands took 17.8 s, and six took 9.7 s.
+
+## Durability
+
+`fleet.run()` holds one stream per agent, and a turn stops when your process drops its stream.
+For work that must outlive the calling process, drive agents with `fleet.driveTurns()`: each call dispatches or polls every agent's detached turn once and returns, so a cron, queue consumer or workflow step can re-invoke it until every turn settles.
+Keep your own checkpoint of finished agents when a campaign spans hours.

@@ -13,10 +13,10 @@ const startingPoints = [
     href: "/gateway",
   },
   {
-    name: "Intelligence",
+    name: "Platform",
     state: "Live service",
-    description: "Send agent traces to inspect runs and compare changes.",
-    href: "/intelligence",
+    description: "One account, one API key, one balance behind every product.",
+    href: "/platform",
   },
 ];
 
@@ -27,9 +27,8 @@ const LandingPage = () => {
         Build and run AI agents on Tangle
       </h1>
       <p className="mt-6 max-w-3xl text-lg leading-relaxed text-gray-700 dark:text-gray-300">
-        Tangle provides five layers for AI agents: Sandbox, Runtime, Router,
-        Integrations, and observability through Intelligence. Evaluation is part
-        of each layer and the products built on them.
+        One key. One bill. Compute sandboxes, model inference, and the platform
+        that binds them — on any cloud.
       </p>
 
       <section className="mt-16" aria-labelledby="start-here">
@@ -62,44 +61,33 @@ const LandingPage = () => {
         </ul>
       </section>
 
-      <section className="mt-10 max-w-3xl" aria-labelledby="hosted-assistants">
-        <h2
-          id="hosted-assistants"
-          className="text-2xl font-semibold text-gray-900 dark:text-white"
-        >
-          Hosted assistants are a preview
+      <section className="mt-10 max-w-3xl">
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+          What can you do?
         </h2>
-        <p className="mt-4 text-gray-700 dark:text-gray-300">
-          Tangle&apos;s first packaged use case is a hospitality assistant.
-          Agent Builder is expected to provide the creation and approved channel
-          setup path. The first completed text reply and full
-          request-to-resolution flow have not yet been verified.
-        </p>
+        <div className="mt-5 space-y-4 text-gray-700 dark:text-gray-300">
+          <p>
+            <strong className="text-gray-900 dark:text-white">Run any coding agent.</strong>{" "}
+            Claude Code, Codex, OpenCode, Kimi Code and more — each in its own
+            isolated Linux sandbox. <a href="/sandbox/cloud-agents" className="text-blue-700 underline dark:text-blue-300">Start an agent →</a>
+          </p>
+          <p>
+            <strong className="text-gray-900 dark:text-white">Build multi-agent systems.</strong>{" "}
+            Fleets, graphs, and workflows that compose planner, worker, and
+            reviewer agents. <a href="/sandbox/agents-graphs" className="text-blue-700 underline dark:text-blue-300">Agent graphs →</a>
+          </p>
+          <p>
+            <strong className="text-gray-900 dark:text-white">Route inference.</strong>{" "}
+            One OpenAI-compatible API to 68+ providers, with BYOK, spend caps,
+            and operator routing. <a href="/gateway/getting-started" className="text-blue-700 underline dark:text-blue-300">Get started →</a>
+          </p>
+          <p>
+            <strong className="text-gray-900 dark:text-white">Pay once.</strong>{" "}
+            Every product draws from one balance with one key.{" "}
+            <a href="/platform" className="text-blue-700 underline dark:text-blue-300">Platform →</a>
+          </p>
+        </div>
       </section>
-      <p className="mt-5 max-w-3xl text-gray-700 dark:text-gray-300">
-        See how the five layers fit in the{" "}
-        <a
-          className="text-blue-700 underline dark:text-blue-300"
-          href="/vision/architecture"
-        >
-          infrastructure architecture
-        </a>
-        . For an in-browser coding workspace, see the{" "}
-        <a
-          className="text-blue-700 underline dark:text-blue-300"
-          href="/blueprint-agent/introduction"
-        >
-          Blueprint Agent
-        </a>
-        . To inspect agent runs and compare changes, see{" "}
-        <a
-          className="text-blue-700 underline dark:text-blue-300"
-          href="/intelligence"
-        >
-          Intelligence
-        </a>
-        .
-      </p>
     </main>
   );
 };

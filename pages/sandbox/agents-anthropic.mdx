@@ -1,0 +1,143 @@
+# Agents: Anthropic (Claude)
+
+Give Claude secure code execution in 30 seconds. The `@tangle-network/sandbox/agent` subpath produces ready-to-use `tools` for the Messages API and dispatches `tool_use` blocks back to the sandbox.
+
+## Install
+
+```bash
+pnpm add @anthropic-ai/sdk @tangle-network/sandbox
+```
+
+## Minimal example
+
+```ts
+import Anthropic from "@anthropic-ai/sdk";
+import { Sandbox } from "@tangle-network/sandbox";
+import { anthropicTools } from "@tangle-network/sandbox/agent";
+
+const claude = new Anthropic();
+const sandbox = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+const box = await sandbox.create();
+const { tools, handleAssistantMessage } = anthropicTools(box, { sessionId: "s1" });
+
+const messages: any[] = [
+  { role: "user", content: "Plot sin(x) for x in [0, 2π]." },
+];
+for (let step = 0; step < 6; step++) {
+  const r = await claude.messages.create({
+    model: "claude-opus-4-7",
+    max_tokens: 4096,
+    tools,
+    messages,
+  });
+  messages.push({ role: "assistant", content: r.content });
+  if (r.stop_reason !== "tool_use") break;
+  messages.push({ role: "user", content: await handleAssistantMessage(r.content) });
+}
+```
+
+What happens:
+
+1. Claude calls `sandbox_run_code` with `language: "python"` and Python source.
+2. The persistent kernel executes it. Variables stay alive between calls.
+3. The result includes typed `results[]`: any matplotlib figure arrives as `{ type: "image", format: "png", data: <base64> }`: Claude reads it and can hand it back to the user.
+4. Subsequent turns reuse the same kernel; `df`, `x`, models, etc. persist.
+
+## Picking which tools to expose
+
+```ts
+const { tools, handleAssistantMessage } = anthropicTools(box, {
+  sessionId: "s1",
+  allow: ["sandbox_run_code", "sandbox_read", "sandbox_write"],
+});
+```
+
+Defaults to all six tools: `sandbox_run_code`, `sandbox_exec`, `sandbox_read`, `sandbox_write`, `sandbox_list`, `sandbox_search`.
+
+## Streaming
+
+`anthropicTools` is transport-agnostic. With `client.messages.stream(...)`, collect content blocks as they arrive and call `handleAssistantMessage(content)` once the message is complete: Claude's streaming API still finalizes tool-use blocks before `message_stop`.
+
+## Errors
+
+If Claude calls an unknown tool, the dispatcher returns a `tool_result` block with `is_error: true`. SDK errors become `is_error: true` blocks with the error message as `content`. The kernel itself is not killed by user-code exceptions: the next call uses the same kernel state.
+
+## Durability & resume
+
+> **Don't wrap this loop in a Cloudflare Durable Object or a Redis ring buffer.** The SDK already buffers every event for every session server-side; if you're about to add state to "survive a reload," stop and use the primitives below.
+
+The `sessionId` passed to `anthropicTools(box, { sessionId })` scopes the **code-execution kernel** so variables persist across calls. To make the **outer tool-use loop** survive a Worker restart, browser reload, or laptop crash, wrap the loop in `box.dispatchPrompt` + `box.session(id).events({ since })` from the existing durability surface. Pass a stable `turnId` alongside `sessionId`: a retry from a fresh process then hits the completed-turn cache instead of re-billing the work. `sessionId` on its own only stops a second agent while the first is still in flight.
+
+```ts
+// In your /chat handler: survives Worker isolate eviction and browser reload.
+const turnId = req.headers.get("x-turn-id") ?? crypto.randomUUID();
+const sessionId = turnId;
+const lastEventId = req.headers.get("last-event-id") ?? undefined;
+
+// The turnId is the retry key: a completed turn is a cache lookup, not a
+// second agent run. sessionId alone only blocks a concurrent dispatch.
+await box.dispatchPrompt(userMessage, {
+  sessionId,
+  turnId,
+  metadata: { framework: "anthropic-tool-use" },
+});
+
+// Replay buffered events from where the client left off, then continue live.
+for await (const event of box.session(sessionId).events({ since: lastEventId })) {
+  // Stream each Claude turn (incl. tool_use + tool_result) back to the browser.
+  res.write(`id: ${event.id}\ndata: ${JSON.stringify(event)}\n\n`);
+}
+```
+
+For browser-direct streaming (no proxy through your server), use `SessionGatewayClient` from `@tangle-network/sandbox/session-gateway`.
+It reconnects with exponential backoff, persists `lastEventId` across tab reloads, and handles sequence-gap replay.
+See the SDK's [resumed-session guide](https://www.npmjs.com/package/@tangle-network/sandbox#resume-a-session).
+
+**Anti-pattern to avoid:** a Worker that runs the `anthropicTools` loop, hits its 30s wall-clock, and dies: then a fresh Worker restarts the conversation from message-history because there's no `sessionId` anchor. The fresh Worker double-bills every prior `runCode` call. The dispatch-by-sessionId pattern above prevents this.
+
+## Idempotency & retry
+
+Pass `idempotencyKey` to dedup a single `runCode` call within a 15-minute window. Concurrent retries with the same `(sessionId, idempotencyKey)` collapse onto one execution; sequential retries return the cached result without re-running. User-code failures (raised exceptions) are cached too: the contract is "same key → same result," not "same key → success." Thrown infra errors (timeouts, kernel crashes) are not cached; a retry gets a fresh attempt.
+
+```ts
+const result = await box.runCode("python", source, {
+  sessionId: "s1",
+  idempotencyKey: req.headers.get("idempotency-key") ?? undefined,
+});
+```
+
+Without `idempotencyKey`, `runCode` is at-least-once: the persistent kernel scoped to `sessionId` makes re-execution safe iff the user code is idempotent (`df = pd.read_csv(...)` typically is; `x = x + 1` isn't). For exactly-once across the **outer agent loop** (a whole tool-use turn, not just one `runCode`), wrap with `box.dispatchPrompt({ sessionId, turnId })`: that dedups the entire conversation, including every tool call inside it.
+
+## Type reference
+
+The pack exports these types alongside `anthropicTools`:
+
+```ts
+import type {
+  AnthropicTool,
+  AnthropicToolPack,
+  AnthropicToolPackOptions,
+  AnthropicToolUseBlock,
+  AnthropicToolResultBlock,
+  CodeExecutionResult,
+  CodeResultPart,
+} from "@tangle-network/sandbox/agent";
+
+// AnthropicToolUseBlock: what Claude emits when it wants to call a tool:
+//   { type: "tool_use", id: string, name: string, input: Record<string, unknown> }
+//
+// AnthropicToolResultBlock: what you append to the next user message:
+//   { type: "tool_result", tool_use_id: string, content: string, is_error?: boolean }
+//
+// CodeResultPart: discriminated union inside `CodeExecutionResult.results`:
+//   text | json | image (base64) | html | dataframe | error
+```
+
+The block shapes mirror the Anthropic Messages API: they're re-exported so a downstream library accepting our tool pack can type its inputs and outputs against a single import.
+
+## Where this fits
+
+`anthropicTools` is one of four framework packs in `@tangle-network/sandbox/agent`. The others are [OpenAI](/docs/agents/openai), [Vercel AI SDK](/docs/agents/vercel-ai), and [Mastra](/docs/agents/mastra). All four share one tool registry, so the same six capabilities exist everywhere. For MCP clients (Claude Desktop, Cursor, Zed), see [MCP](/docs/agents/mcp).

@@ -1,0 +1,154 @@
+# Agent graphs on sandboxes
+
+An agent graph is a team with a fixed shape: a lead that plans and delegates,
+workers that do the work, and a check that decides when the job is done.
+`runGraph` from `@tangle-network/agent-runtime` runs the graph, and each
+worker node runs in its own Tangle sandbox, created when the lead delegates
+and deleted when the worker settles.
+
+Use a graph when the roles and their order are known ahead of time. For many
+independent agents doing the same kind of task, a [fleet](/docs/agents/fleet)
+is simpler. For several agents sharing one machine, see
+[Multiple agents](/docs/agents/multiple).
+
+## Install
+
+```bash
+npm install @tangle-network/agent-runtime @tangle-network/sandbox
+```
+
+## A lead and a coder
+
+The lead runs on the Tangle Router and delegates once. The coder runs
+OpenCode inside a sandbox, runs a command, and reports the file it wrote.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+import { promptHandle, runGraph } from "@tangle-network/agent-runtime/kernel";
+
+const apiKey = process.env.TANGLE_API_KEY!;
+const sandbox = new Sandbox({ apiKey, baseUrl: "https://sandbox.tangle.tools" });
+
+// Every profile names a concrete model.
+const model = { provider: "tangle-router", default: "glm-5.3" };
+
+const graph = {
+  nodes: [
+    {
+      id: "lead",
+      profile: {
+        name: "lead", // must equal the node id
+        harness: "cli-base", // the root runs on the router
+        model,
+        tools: { agent_runtime_coordination_spawn_worker: true },
+        prompt: {
+          systemPrompt:
+            "You coordinate. Spawn the coder once, wait for it to settle, then repeat its output.",
+        },
+      },
+    },
+    {
+      id: "coder",
+      profile: {
+        name: "coder",
+        harness: "opencode", // runs in a Tangle sandbox
+        model,
+        prompt: { systemPrompt: "You are a coding agent working in a Linux sandbox." },
+      },
+    },
+  ],
+  edges: [
+    {
+      kind: "delegates" as const,
+      from: "lead",
+      to: "coder",
+      directive: promptHandle("delegates/worker-brief/v1"),
+    },
+  ],
+  deliverable: {
+    describe:
+      "Have the coder run `echo ANSWER=$((6*7)) > out.txt && cat out.txt` in its working directory and reply with the output.",
+    check: (out: unknown) => JSON.stringify(out ?? "").includes("ANSWER=42"),
+  },
+  budget: { maxIterations: 10, maxTokens: 400_000, deadlineMs: 8 * 60_000 },
+};
+
+const { result, ledger } = await runGraph(graph, {
+  backend: { backend: "sandbox", sandboxClient: sandbox }, // where worker nodes run
+  router: { routerBaseUrl: "https://router.tangle.tools/v1", routerKey: apiKey },
+  perWorker: { maxIterations: 2, maxTokens: 200_000 },
+});
+
+console.log(result.kind); // "winner" when the deliverable check passed
+console.log(ledger);      // one row per delegation, with its outcome
+```
+
+## Rules the runtime enforces
+
+| Rule | Why |
+|---|---|
+| Exactly one root: a node that delegates and is never delegated to. | The root owns the plan and the stop decision. |
+| The root's profile sets `tools.agent_runtime_coordination_spawn_worker: true`. | Delegation is a tool the root must be allowed to call. |
+| Only the root delegates. | Workers cannot spawn further workers. |
+| `profile.name` equals the node id. | The lead spawns a worker by name. |
+| Every profile has `harness`, `model.provider`, and a concrete `model.default`. | A graph is refused before it runs if a model is left to a default. |
+| `backend` places worker nodes. | The root runs on the router (`router`), or on a harness through `driverBackend`. |
+
+## Budgets
+
+`budget` bounds the whole graph by iterations, tokens, and a deadline;
+`perWorker` bounds each worker. Bound sandbox workers with tokens and a
+deadline. In the current release a dollar cap (`maxUsd`) fails sandbox
+workers, because they report token usage but not a dollar cost.
+
+## Control the worker sandboxes
+
+`sandboxClient` is any object with the SDK's `create` (and, optionally,
+`list`). Wrap the client to set create options the runtime does not, such as
+a lifetime cap or an egress policy:
+
+```ts
+const sandboxClient = {
+  create: (options: Parameters<typeof sandbox.create>[0], request?: Parameters<typeof sandbox.create>[1]) =>
+    sandbox.create(
+      {
+        ...options,
+        maxLifetimeSeconds: 600,
+        egressPolicy: { mode: "strict", allowDomains: ["registry.npmjs.org"] },
+      },
+      request,
+    ),
+  list: (options?: Parameters<typeof sandbox.list>[0]) => sandbox.list(options),
+};
+```
+
+The runtime deletes each worker sandbox when the worker settles.
+
+## Read why a run failed
+
+`result.kind` is `"winner"` when the deliverable check passed. When a worker
+fails, the reason is in the spawn journal. Pass a journal and a blob store to
+keep it:
+
+```ts
+import {
+  InMemoryResultBlobStore,
+  InMemorySpawnJournal,
+} from "@tangle-network/agent-runtime/kernel";
+
+const journal = new InMemorySpawnJournal();
+const blobs = new InMemoryResultBlobStore();
+await runGraph(graph, {
+  backend: { backend: "sandbox", sandboxClient: sandbox },
+  router: { routerBaseUrl: "https://router.tangle.tools/v1", routerKey: apiKey },
+  journal,
+  blobs,
+});
+```
+
+## Related
+
+- [Agent profiles](/docs/cloud-agents/profiles): the profile fields each node
+  uses.
+- [Fleets](/docs/agents/fleet): many independent agents under one budget.
+- [Network egress rules](/docs/egress): limit what worker sandboxes reach.

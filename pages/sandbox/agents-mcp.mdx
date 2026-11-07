@@ -1,0 +1,132 @@
+# Agents: Model Context Protocol (MCP)
+
+Tangle ships two complementary MCP surfaces:
+
+| Variant | Path | Best for |
+|---|---|---|
+| **Hosted MCP endpoint** | `box.getMcpEndpoint()` | Anywhere the client can reach the public internet over HTTPS+JWT (Claude API tool wiring, server-side agents, hosted IDE plugins) |
+| **Local MCP server** | `createMcpServer(box, …)` + stdio | Desktop MCP clients that spawn a subprocess (Claude Desktop, Cursor, Zed) |
+
+Both surfaces expose the same six tools (`sandbox_run_code`, `sandbox_exec`, `sandbox_read`, `sandbox_write`, `sandbox_list`, `sandbox_search`) and dispatch back to the same persistent kernel.
+
+## Hosted MCP
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const sandbox = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+const box = await sandbox.create();
+const mcp = await box.getMcpEndpoint({
+  capabilities: ["computer_use"], // optional capability scope
+  serverName: "my-sandbox",
+  ttlMinutes: 60,
+});
+console.log(mcp.config); // paste-able snippet for Claude API / claude.ai
+console.log(mcp.token);  // short-lived JWT
+```
+
+The hosted endpoint is the right choice when the consumer is a long-running service or another remote agent. The JWT expires; refresh by calling `getMcpEndpoint()` again before TTL.
+
+## Local MCP (stdio)
+
+```ts
+// tangle-mcp-server.mjs
+import { Sandbox } from "@tangle-network/sandbox";
+import { createMcpServer } from "@tangle-network/sandbox/agent";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+
+const sandbox = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+const box = await sandbox.get(process.env.SANDBOX_ID);
+const { connect } = await createMcpServer(box, { sessionId: "claude-desktop" });
+await connect(new StdioServerTransport());
+```
+
+Install the SDK in your own project: `pnpm add @modelcontextprotocol/sdk @tangle-network/sandbox`: the Tangle SDK does not bundle the MCP SDK.
+
+### Claude Desktop
+
+`~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+
+```json
+{
+  "mcpServers": {
+    "tangle-sandbox": {
+      "command": "node",
+      "args": ["/absolute/path/to/tangle-mcp-server.mjs"],
+      "env": { "TANGLE_API_KEY": "tng_...", "SANDBOX_ID": "sbx_..." }
+    }
+  }
+}
+```
+
+### Cursor
+
+`~/.cursor/mcp.json` (or Settings → Features → Model Context Protocol). Same JSON shape as Claude Desktop.
+
+### Zed
+
+`~/.config/zed/settings.json`:
+
+```json
+{
+  "context_servers": {
+    "tangle-sandbox": {
+      "command": "node",
+      "args": ["/absolute/path/to/tangle-mcp-server.mjs"],
+      "env": { "TANGLE_API_KEY": "tng_...", "SANDBOX_ID": "sbx_..." }
+    }
+  }
+}
+```
+
+## CLI shortcut
+
+`tangle mcp serve <sandbox-id>` spawns the local MCP server using the active CLI auth context. Wire it directly into any of the above configs:
+
+```json
+{
+  "mcpServers": {
+    "tangle-sandbox": {
+      "command": "tangle",
+      "args": ["mcp", "serve", "sbx_..."]
+    }
+  }
+}
+```
+
+The CLI reads `TANGLE_API_KEY` from the environment the desktop client launches the subprocess in: or from `tangle auth login`'s saved credentials when called directly.
+
+## Durability & resume
+
+MCP is request/response per tool call: the MCP transport itself is short-lived (a stdio pipe lives only while the client process is running), so there's no "stream that needs to survive a reload" at the MCP layer. **But the persistent kernel behind `sandbox_run_code` is stateful.** When a fresh MCP server bridge connects to the same `box` with the same `sessionId`, the kernel variables, open files, and matplotlib state from the previous bridge are still there.
+
+Two practical durability rules for MCP:
+
+1. **Pin `sessionId` to your MCP client identity, not your MCP server PID.** A Claude Desktop user closing and reopening the app should land back in the same kernel. Pass `{ sessionId: "claude-desktop-${user_id}" }` in `createMcpServer(box, ...)` rather than letting it default per-process.
+
+2. **For long-running agent workflows hosted under MCP, prefer the [hosted MCP endpoint](#hosted-mcp).** The hosted endpoint sits behind the same `dispatchPrompt` durability surface as the framework tool packs: if the client process dies, reconnecting to the same hosted URL replays buffered events. The local stdio bridge has no equivalent because there's no buffer between two processes pipe-connected to the same Node runtime.
+
+> **Don't build a separate "tool call cache" around the MCP bridge.** The sandbox already records every kernel call's state on the running container. Reconnecting with the same `sessionId` is the cache.
+
+## Idempotency & retry
+
+`sandbox_run_code` and every other tool the MCP server exposes resolve to `box.*` calls inside the bridge process. Per-call `idempotencyKey` isn't on the MCP tool-call protocol surface, so MCP-driven retries re-execute by default: the kernel scoped to `sessionId` makes this safe iff the user code itself is idempotent. If your MCP client wraps tool calls in a transport that supplies a stable per-call key, build a custom tool spec that forwards it as `idempotencyKey` into `box.runCode`.
+
+## Generate any of these snippets with one command
+
+```bash
+tangle agent connect anthropic
+tangle agent connect openai
+tangle agent connect vercel-ai
+tangle agent connect mastra
+tangle agent connect mcp-local
+tangle agent connect claude-desktop
+tangle agent connect cursor
+tangle agent connect zed
+```

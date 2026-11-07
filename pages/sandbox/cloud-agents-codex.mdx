@@ -1,0 +1,149 @@
+# Codex on your ChatGPT plan or OpenAI key
+
+Run OpenAI's Codex CLI in a cloud sandbox. Sign it in with your ChatGPT plan,
+so usage counts against that plan, or give it an OpenAI API key.
+
+## With your ChatGPT plan
+
+### 1. Sign in locally
+
+```bash
+codex login
+```
+
+Codex writes your login to `~/.codex/auth.json`. That file is a credential:
+anyone holding it can use your ChatGPT plan.
+
+### 2. Store the login as a secret
+
+```bash
+tangle secret create CODEX_AUTH --value-stdin < ~/.codex/auth.json
+```
+
+Or from TypeScript:
+
+```ts
+import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+
+await client.secrets.create(
+  "CODEX_AUTH",
+  readFileSync(join(homedir(), ".codex/auth.json"), "utf8"),
+);
+```
+
+### 3. Start the agent
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const agent = await client.create({
+  name: "codex-on-my-plan",
+  backend: {
+    type: "codex",
+    model: {
+      cliAuth: { account: "me", secretEnv: "CODEX_AUTH", format: "bundle" },
+    },
+  },
+  secrets: ["CODEX_AUTH"],
+  git: { url: "https://github.com/your-org/your-repo" },
+  idleTimeoutSeconds: 900,
+});
+await agent.waitFor("running");
+
+const result = await agent.prompt("Add input validation to the signup handler.", {
+  sessionId: "main",
+});
+console.log(result.success, result.response);
+```
+
+From a terminal:
+
+```bash
+tangle sandbox create --name codex-on-my-plan --backend codex --cli-auth CODEX_AUTH
+tangle agent prompt <sandbox-id> "Add input validation to the signup handler." \
+  --session main --stream
+```
+
+`format: "bundle"` means the secret holds the contents of `auth.json`. The
+sandbox writes it to `~/.codex/auth.json` with owner-only permissions before
+Codex starts. The platform does not mint a Tangle model key for the sandbox.
+
+## With an OpenAI API key
+
+Store the key as a secret and reference it with `apiKeyEnv`. The key stays out
+of the create request.
+
+```ts
+await client.secrets.create("OPENAI_KEY", process.env.OPENAI_API_KEY!);
+
+const agent = await client.create({
+  backend: {
+    type: "codex",
+    model: {
+      apiKeyEnv: "OPENAI_KEY",
+      baseUrl: "https://api.openai.com/v1",
+    },
+  },
+  secrets: ["OPENAI_KEY"],
+});
+```
+
+Set `baseUrl` to OpenAI's API. Without it, Codex sends requests to the Tangle
+Router, which does not accept an OpenAI key.
+
+`apiKeyEnv` must name a secret listed in `secrets`; otherwise the request is
+refused, because the sandbox would hold no such variable.
+
+## From HTTP
+
+Credential fields sit under `backend.model` on the wire:
+
+```bash
+curl -X POST https://sandbox.tangle.tools/v1/sandboxes \
+  -H "Authorization: Bearer $TANGLE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "backend": {
+      "type": "codex",
+      "model": {
+        "cliAuth": { "account": "me", "secretEnv": "CODEX_AUTH", "format": "bundle" }
+      }
+    },
+    "secrets": ["CODEX_AUTH"]
+  }'
+```
+
+## In a workflow
+
+A workflow's `agent.run` runs on the same login when its profile declares
+`model.metadata.credentialSource: subscription` on a `codex` profile and your
+account stored the login as `CODEX_AUTH`. The run creates its sandbox with
+`backend.cliAuth` (format `bundle`) and `CODEX_AUTH` in `secrets`, and mints no
+Router key.
+
+## Rotate or revoke
+
+Secret names cannot be overwritten. After `codex login` writes a new file,
+replace the secret:
+
+```bash
+tangle secret delete CODEX_AUTH --force
+tangle secret create CODEX_AUTH --value-stdin < ~/.codex/auth.json
+```
+
+To cut access everywhere, sign out of the session in your ChatGPT account
+settings.
+
+## Related
+
+- [Start a cloud agent](/docs/cloud-agents): streaming, sessions, and
+  spin-down.
+- [Claude Code subscription](/docs/cloud-agents/claude-code)
+- [Coding plans (GLM, Kimi, MiniMax)](/docs/cloud-agents/coding-plans)
