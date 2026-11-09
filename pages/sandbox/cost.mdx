@@ -11,7 +11,7 @@ may spend, and make every agent stop itself when nobody is using it.
 | Compute | Per second while the sandbox runs: vCPU, memory, and disk, never below an hourly minimum. | [`/v1/pricing/sandboxes`](https://sandbox.tangle.tools/v1/pricing/sandboxes) |
 | Egress | Outbound bytes beyond the plan's per-account monthly allowance, shared by its sandboxes. | [`/v1/pricing/egress`](https://sandbox.tangle.tools/v1/pricing/egress) |
 | Model tokens | Only when the agent uses the Tangle Router. Your own subscription or key bills its provider instead. | [Tangle Router](https://router.tangle.tools) |
-| GPU leases | Per second while a lease is attached, with a spend cap you set. | [GPU leases](/docs/gpu-leases) |
+| GPU leases | Per second while a lease is attached, with a spend cap you set. | [GPU leases](/sandbox/gpu-leases) |
 
 Both pricing endpoints are public and need no key. A stopped sandbox does not
 accrue compute.
@@ -81,8 +81,8 @@ const result = await box.prompt("Explain the build failure.", { sessionId: "main
 console.log(result.costUsd); // USD for this turn's model usage, when reported
 ```
 
-With your own [Claude](/docs/cloud-agents/claude-code) or
-[ChatGPT](/docs/cloud-agents/codex) subscription, model usage goes to that plan
+With your own [Claude](/sandbox/cloud-agents-claude-code) or
+[ChatGPT](/sandbox/cloud-agents-codex) subscription, model usage goes to that plan
 and costs your Tangle credit nothing.
 
 ## What you have spent
@@ -141,8 +141,8 @@ The CLI sets the first two with `tangle sandbox create --idle-timeout <s>
 | Scope | Cap |
 |---|---|
 | An API key | `tangle keys create ci-agents --budget-usd 25`: calls with that key stop when it has spent its budget. |
-| A fleet | `budgetUsd` on `client.fleets.create()`; read it back with `fleet.spend()`. See [Fleets](/docs/agents/fleet). |
-| A GPU lease | `maxSpendUsd`, `maxLifetimeSeconds`, and `idleTimeoutSeconds` on every lease. See [GPU leases](/docs/gpu-leases). |
+| A fleet | `budgetUsd` on `client.fleets.create()`; read it back with `fleet.spend()`. See [Fleets](/sandbox/agents-fleet). |
+| A GPU lease | `maxSpendUsd`, `maxLifetimeSeconds`, and `idleTimeoutSeconds` on every lease. See [GPU leases](/sandbox/gpu-leases). |
 
 Give each automation its own budgeted key. A runaway loop then stops at that
 key's budget instead of draining the account.

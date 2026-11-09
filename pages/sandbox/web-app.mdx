@@ -2,7 +2,7 @@
 
 The dashboard is a visual workspace for every sandbox you own. Most flows available in the SDK and CLI have a dashboard equivalent: plus team administration, batch runs, billing, and settings.
 
-Sign in at the [dashboard home](/dashboard) to reach the pages below.
+Sign in at the [dashboard home](https://sandbox.tangle.tools/dashboard) to reach the pages below.
 
 ## Sandboxes
 
@@ -25,7 +25,7 @@ Provisioning wizard. Configure:
 - **Image**: default agent runtime, `universal`, or a qualified custom image reference.
 - **Resources**: CPU, memory, disk.
 - **Environment**: inline environment variables. Account secrets reach a sandbox through a startup script's injected secrets, or through `secrets` on an SDK or CLI create.
-- **Startup scripts**: bash scripts that run on boot (see [Startup Scripts](/docs/web-app#startup-scripts) below).
+- **Startup scripts**: bash scripts that run on boot (see [Startup Scripts](/sandbox/web-app#startup-scripts) below).
 - **Access and scope**: SSH key selection, personal or team ownership, and optional egress policy override.
 
 The wizard validates each step before submission and streams progress live once the sandbox starts provisioning.
@@ -95,7 +95,7 @@ For plan changes that aren't available self-serve, contact [support@tangle.tools
 
 Egress is outbound traffic from a sandbox, counted per calendar month (UTC). Inbound traffic is free.
 
-Each plan's monthly allowance and the price beyond it are on the [pricing page](/pricing#egress), which reads them from `GET /v1/pricing/egress`. That endpoint [publishes them as JSON](https://sandbox.tangle.tools/v1/pricing/egress) with no credential required.
+Each plan's monthly allowance and the price beyond it are on the [pricing page](https://sandbox.tangle.tools/pricing#egress), which reads them from `GET /v1/pricing/egress`. That endpoint [publishes them as JSON](https://sandbox.tangle.tools/v1/pricing/egress) with no credential required.
 
 ## Settings
 

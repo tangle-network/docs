@@ -15,7 +15,7 @@ export SANDBOX_BASE_URL="https://sandbox.tangle.tools"
 `TANGLE_API_KEY` is an account credential. Keep it in a trusted backend, CI
 secret store, or CLI configuration. **Never expose it to browser code.**
 Browser applications use short-lived scoped tokens described in
-[Authentication and browser access](/docs/authentication).
+[Authentication and browser access](/sandbox/authentication).
 
 ## 2. Create and use a Sandbox from TypeScript
 
@@ -83,10 +83,10 @@ try {
 ```
 
 To run the agent on your own Claude subscription, ChatGPT plan, or coding
-plan instead of the Tangle Router, see [Start a cloud agent](/docs/cloud-agents).
+plan instead of the Tangle Router, see [Start a cloud agent](/sandbox/cloud-agents).
 
 For several AgentProfiles sharing one computer, use
-[`box.agents`](/docs/agents/multiple). For separate machines or hard
+[`box.agents`](/sandbox/agents-multiple). For separate machines or hard
 resource isolation, use a Fleet.
 
 ## 4. Use the CLI
@@ -98,7 +98,7 @@ tangle sandbox create --name hello --ssh
 tangle sandbox list
 ```
 
-`--ssh` authorizes your `~/.ssh/id_ed25519.pub` (or `id_ecdsa.pub`, `id_rsa.pub`); `tangle ssh hello` then opens a shell. On a Linux server without a keychain, see [CLI authentication](/docs/cli).
+`--ssh` authorizes your `~/.ssh/id_ed25519.pub` (or `id_ecdsa.pub`, `id_rsa.pub`); `tangle ssh hello` then opens a shell. On a Linux server without a keychain, see [CLI authentication](/sandbox/cli).
 
 ## 5. Use Python
 
@@ -118,7 +118,7 @@ with httpx.Client(
         print(sandbox["id"], sandbox["status"])
 ```
 
-See [Python](/docs/sdk/python) to create a sandbox and run commands.
+See [Python](/sandbox/sdk-python) to create a sandbox and run commands.
 
 ## Lifecycle
 
@@ -130,10 +130,10 @@ See [Python](/docs/sdk/python) to create a sandbox and run commands.
 
 ## Next
 
-- [Start a cloud agent](/docs/cloud-agents)
-- [Authentication and browser access](/docs/authentication)
-- [TypeScript SDK](/docs/sdk/typescript)
-- [Multiple Agents](/docs/agents/multiple)
-- [Python](/docs/sdk/python)
-- [CLI](/docs/cli)
-- [Workflows](/docs/workflows)
+- [Start a cloud agent](/sandbox/cloud-agents)
+- [Authentication and browser access](/sandbox/authentication)
+- [TypeScript SDK](/sandbox/sdk-typescript)
+- [Multiple Agents](/sandbox/agents-multiple)
+- [Python](/sandbox/sdk-python)
+- [CLI](/sandbox/cli)
+- [Workflows](/sandbox/workflows)
