@@ -5,12 +5,12 @@ description: Use Tangle's documentation as an agent: start from llms.txt, naviga
 
 # Use Tangle Docs
 
-Tangle Docs (https://docs.tangle.tools/) covers Tangle Sandbox, Tangle Router, Tangle Platform accounts and API keys, and release notes.
+Tangle Docs (https://docs.tangle.tools/) explains how to run coding agents in Tangle Sandbox, call models through Tangle Router, and use one Tangle account and key for both.
 
 ## 1. Start from the agent surfaces
 
 - Fetch https://docs.tangle.tools/llms.txt first. It is the index of the docs' most useful pages for an agent.
-- Fetch https://docs.tangle.tools/.well-known/tangle-agent.json for the machine-readable manifest: recommended first reads and the scoped npm packages (`@tangle-network/tcloud`, `@tangle-network/sandbox`, `@tangle-network/browser-agent-driver`).
+- Fetch https://docs.tangle.tools/.well-known/tangle-agent.json for the machine-readable manifest: recommended first reads and the scoped packages (`@tangle-network/sandbox` and `@tangle-network/tcloud` on npm, `tangle-sandbox` on PyPI).
 - The cross-product manifest at https://tangle.tools/.well-known/tangle-agent.json lists every Tangle product.
 
 ## 2. Navigate the docs
@@ -26,6 +26,8 @@ Cite docs pages by their canonical URL, `https://docs.tangle.tools/<path>`. The 
   - Error codes: https://docs.tangle.tools/sandbox/errors
 - Router: https://docs.tangle.tools/gateway: the model-routing gateway; its OpenAPI document is at https://router.tangle.tools/openapi.json.
 - Platform: https://docs.tangle.tools/platform: one account, API key and balance across products.
+- Benchmarks: https://tangle.tools/benchmarks: measured sandbox and coding-agent times.
+- Protocol and Blueprint SDK: https://github.com/tangle-network/blueprint.
 - Release notes: https://docs.tangle.tools/release-notes.
 
 The site has a built-in search box (Pagefind); there is no public search API, so prefer fetching llms.txt and following links.

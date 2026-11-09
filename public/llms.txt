@@ -1,6 +1,6 @@
 # Tangle Docs
 
-> Tangle Docs cover Tangle Sandbox (isolated Linux sandboxes for code and coding agents), Tangle Router (one API for many models), Tangle Platform accounts and API keys, and release notes.
+> Tangle Docs explain how to run coding agents in Tangle Sandbox, call models through Tangle Router, and use one Tangle account, key and balance for both.
 
 ## Start here
 
@@ -8,8 +8,10 @@
 - [Sandbox overview](https://docs.tangle.tools/sandbox/overview): what Tangle Sandbox is and how to drive it from TypeScript, Python, the CLI or REST.
 - [Sandbox quickstart](https://docs.tangle.tools/sandbox/quickstart): create a sandbox, run a command, prompt a coding agent and delete the sandbox.
 - [Router](https://docs.tangle.tools/gateway): one API for supported models, with provider and Tangle operator routes.
+- [Router quickstart](https://docs.tangle.tools/gateway/getting-started): your first Router call.
 - [Platform](https://docs.tangle.tools/platform): one Tangle account, API key and balance behind every product.
 - [Release notes](https://docs.tangle.tools/release-notes): dated release notes for each product line.
+- [Benchmarks](https://tangle.tools/benchmarks): measured sandbox and coding-agent times.
 
 ## Sandbox: get started
 
@@ -146,5 +148,5 @@
 - Use the docs setup skill at https://docs.tangle.tools/agent-setup.md.
 - Use the Tangle product manifest at https://tangle.tools/.well-known/tangle-agent.json.
 - Use the Sandbox OpenAPI document at https://docs.tangle.tools/sandbox-openapi.json and the Router OpenAPI document at https://router.tangle.tools/openapi.json.
-- Install scoped packages only: `@tangle-network/sandbox`, `@tangle-network/sandbox-cli`, `@tangle-network/tcloud` and `@tangle-network/browser-agent-driver` from npm, and `tangle-sandbox` from PyPI.
+- Install scoped packages only: `@tangle-network/sandbox`, `@tangle-network/sandbox-cli` and `@tangle-network/tcloud` from npm, and `tangle-sandbox` from PyPI.
 - Send `TANGLE_API_KEY` as a bearer token, and pass `https://sandbox.tangle.tools` as the Sandbox base URL.
