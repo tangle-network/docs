@@ -87,7 +87,7 @@ Request: `POST /auth/cli/exchange`
 tangle auth login
 ```
 
-- Browser flow: opens `<base-url>`/auth/cli/login?callback_url=http://127.0.0.1:`<port>`/callback?state=`<nonce>`, waits up to 2 minutes, then POST /auth/cli/exchange.
+- Browser flow: opens `<base-url>/auth/cli/login?callback_url=http://127.0.0.1:<port>/callback?state=<nonce>`, waits up to 2 minutes, then POST /auth/cli/exchange.
 - Device flow: POST /auth/cli/device/start, then polls POST /auth/cli/device/poll at the server interval (default 5 s) for up to 15 minutes.
 - `--app` solve always uses the device flow against the fixed platform host and also opens the prefilled URL unless `--no-browser`.
 - API keys must start with sk_ or sk-tan-; anything else exits 1 before any request.
