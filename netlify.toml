@@ -40,3 +40,8 @@ status = 301
 from = "/workbench"
 to = "/blueprint-agent/introduction"
 status = 301
+# Intelligence has no docs section yet; its product site is the right page.
+[[redirects]]
+from = "/intelligence"
+to = "https://intelligence.tangle.tools/"
+status = 301
