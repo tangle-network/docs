@@ -1,0 +1,222 @@
+# Agents reference: prompts, sessions and interactive control
+
+Every member for running a coding agent in a sandbox: one-shot prompts, streams, durable sessions, human answers, the agent's own terminal UI, and several agents side by side.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  backend: { type: "claude-code" },
+});
+try {
+  const result = await box.prompt("Explain what this repository does in three sentences.", {
+    sessionId: "explain",
+  });
+  if (!result.success) throw new Error(`${result.errorCode}: ${result.error}`);
+  console.log(result.response);
+} finally {
+  await box.delete();
+}
+```
+
+## Choose the coding agent
+
+`backend` on `create`, or per prompt, selects the coding agent:
+
+```ts
+backend: {
+  type: "claude-code",
+  profile: agentProfile,
+  model: { model, provider, apiKey, baseUrl, apiKeyEnv, cliAuth, authMode, authFiles },
+  interactions: { permission, question, plan },
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `type` | The coding agent. `client.listBackends()` returns the types your sandboxes can run. |
+| `profile` | An agent profile: instructions, model, skills, files, MCP servers and proxy secrets. See [Agent profiles](/sandbox/cloud-agents-profiles). |
+| `model.model`, `model.provider` | The model. `GET /v1/router-models` with your Sandbox API key lists the models your account can run; see [Models](/gateway/models). |
+| `model.apiKeyEnv` | The name of a stored secret that holds your own provider key. |
+| `model.cliAuth` | Run on your Claude or ChatGPT plan. See [Coding plans](/sandbox/cloud-agents-coding-plans). |
+| `interactions` | Whether the agent asks you for permission, questions and plan approval. |
+
+| Member | Returns |
+|---|---|
+| `client.listBackends()` | `{ backends }`, each with `type`, `name`, `description` and `capabilities`. |
+| `client.getBackend(type)` | One entry, or `undefined`. |
+| `box.primeProfile(profile, { preserveManagedProfile? })` | The profile's SHA-256. Later turns send the hash instead of the whole profile. |
+| `validateProfileForCreate(profile, harness, { maxProfileBytes? })` | `{ ok: true }` or `{ ok: false, error }`, checked locally before any sandbox exists. Codes: `PROFILE_UNSUPPORTED`, `PAYLOAD_TOO_LARGE` or a file-mount code. |
+| `box.grantNativeCredential({ harness, cliAuth })` | Grants a stored plan credential to a running sandbox. The value stays out of the sandbox. |
+
+## Prompt and wait: `box.prompt`
+
+`prompt(message, options?): Promise<PromptResult>`. `message` is a string or a list of input parts. Route: `POST /v1/sandboxes/{id}/runtime/agents/run/stream`.
+
+`prompt` never throws for a failed run; check `result.success`.
+
+| `PromptResult` field | Meaning |
+|---|---|
+| `success` | Whether the turn finished well. |
+| `status` | The run's final status; `unknown` when the stream was lost. |
+| `response` | The agent's final text. |
+| `error`, `errorCode` | Why it failed. |
+| `executionId` | The run id. |
+| `toolInvocations` | The tools the agent called. |
+| `usage` | Token counts. |
+| `costUsd` | Model spend for the turn. |
+| `durationMs`, `traceId` | Timing and the trace to look up. |
+
+| Option | Meaning |
+|---|---|
+| `sessionId` | Keeps conversation context across turns and processes. |
+| `model`, `backend` | Per-turn overrides. Pass `backend` again on the first prompt after a resume. |
+| `timeoutMs` | How long to wait for the turn. |
+| `executionId`, `lastEventId` | Rejoin an existing run and replay after an event, without sending the prompt again. |
+| `turnId` | An idempotency key: a retry with the same `turnId` in the same session returns the first result. |
+| `detach` | A closed reader does not cancel the run. |
+| `context` | Extra structured context for the turn. |
+| `traceId` | Your own id, to join platform records to yours. |
+| `signal` | Cancels the call. |
+
+## Stream: `box.streamPrompt`
+
+`streamPrompt(message, options?): AsyncGenerator<SandboxEvent>`. Each event is `{ type, data, id }`. Breaking out of the loop before the final event cancels the run unless `detach: true`. A lost connection yields an `error` event with `STREAM_INTERRUPTED`; rejoin with `executionId` and `lastEventId`. See [Streaming](/sandbox/streaming).
+
+## Dispatch: `box.dispatchPrompt`
+
+`dispatchPrompt(message, { sessionId?, keepEvents?, ...promptOptions })` returns once the run is admitted:
+
+| `DispatchedSession` field | Meaning |
+|---|---|
+| `sessionId`, `executionId` | The session and the run. |
+| `runControlRef` | The exact reference for controlling this run. |
+| `status` | The run's status at admission. |
+| `alreadyExisted` | `true` when the session id named an existing session. |
+| `dispatched` | Whether this call started a run. |
+| `events` | The event stream, when `keepEvents` is set. |
+
+Read the result later with `box.session(sessionId).result({ executionId })`.
+
+## Retry-safe turns
+
+| Member | Use |
+|---|---|
+| `findCompletedTurn(turnId, { sessionId })` | The finished turn, or `null`. |
+| `driveTurn(options)`, `driveConversationTurn(message, options)` | Drive one turn by `turnId` from a caller that is re-invoked, such as a queue consumer or a workflow step. The same `turnId` settles that turn instead of starting a second. |
+
+## Sessions
+
+| Member | Returns |
+|---|---|
+| `box.session(id)` | A `SandboxSession` handle. No request is made. |
+| `box.createSession({ sessionId?, title?, backend?, retention? })` | `{ session, info }`. |
+| `box.sessions({ status?, backend? })` | Session records. |
+| `box.deleteSession(id)` | `void`. |
+| `box.messages({ sessionId, limit?, offset?, since? })` | `SessionMessage[]`: `{ id, role, timestamp, parts, metadata }`. |
+| `box.taskSession(id)` | A `SandboxTaskSession` handle for a background task. |
+
+`SandboxSession` members:
+
+| Member | Returns |
+|---|---|
+| `prompt(message, options?)` | A `PromptResult` in this session. |
+| `sendMessage(request, options?)` | Queues a message. |
+| `status()` | The session record. |
+| `events({ since?, executionId?, signal? })` | Live events, resuming after an event id. |
+| `runs()` | `{ executionId, sessionId, status, startedAt, completedAt, eventCount, lastEventId }[]`. |
+| `result({ executionId })` | The `PromptResult` of one run. |
+| `messages(options?)` | The conversation. |
+| `interrupt({ executionId })` | Stops that run. |
+| `cancelRun(request)` | Cancels a run by its exact reference. |
+| `fork(options?)` | `{ session, info }`: a copy of the conversation. |
+| `delete()` | `void`. |
+| `exportRawEvidence(destination, options)` | Writes the agent's native session files locally. |
+
+`SandboxTaskSession` adds `changes()`, the files the task changed, and `commit()`.
+
+## Answer the agent
+
+When `interactions` asks for it, the agent pauses for you.
+
+| Member | Use |
+|---|---|
+| `session.interactions()` | Pending permission requests, questions and plans. |
+| `session.respondToPermission(permissionId, options)` | Allow or deny one tool call. |
+| `session.answer(interactionId, answers)` | Answer a question. |
+| `session.respondToInteraction(command)` | Answer any interaction by its exact reference. |
+| `session.plan()` | The current plan. |
+| `session.approvePlan(planId?)`, `session.rejectPlan(feedback, planId?)` | Decide it. Omit `planId` for the current plan. |
+
+## Interactive sessions
+
+`box.session(id).interactive(options?)` runs the coding agent's own terminal UI instead of a headless turn.
+
+| Handle member | Use |
+|---|---|
+| `start(options)` | Starts the terminal UI bound to an exact run reference. |
+| `sendPrompt(command)` | Types a prompt into it. |
+| `attach(request?)` | A live `TerminalStream`, taking control. |
+| `observe(request?)` | A read-only `TerminalStream`; its input is refused with `OBSERVER_READ_ONLY`. |
+| `status()` | Whether it runs and who has control. |
+| `claimControl(request)` | Takes control from another holder. |
+| `stop(command)` | Ends it. |
+
+`BrowserInteractiveSessionController` from `@tangle-network/sandbox/interactive-control` does the same from a browser with a scoped token. See [Interactive mode](/sandbox/interactive).
+
+## Several agents: `box.agents`
+
+`box.agents` exists after `import "@tangle-network/sandbox/agent"`.
+
+```ts
+import "@tangle-network/sandbox/agent";
+
+const reviewer = await box.agents.start({ id: "reviewer", backend: { type: "claude-code" } });
+const fixer = await box.agents.start({
+  id: "fixer",
+  backend: { type: "codex" },
+  workspace: { mode: "isolated" },
+});
+```
+
+| Member | Returns |
+|---|---|
+| `start({ id?, name?, backend, workspace? })` | A `SandboxSession`, or a `SandboxTaskSession` on its own git worktree with `workspace: { mode: "isolated" }`. |
+| `startMany(specs)` | One handle per spec, started in parallel. |
+| `get(id)`, `task(id)`, `list()` | Find agents. |
+| `stop(id)` | `{ agentId, outcome: "stopped" \| "not-found" }`. |
+
+Different ids run in parallel; turns in one agent run one at a time. See [Run several agents](/sandbox/agents-multiple).
+
+## Tools for your own agent
+
+`@tangle-network/sandbox/agent` also gives an agent you run elsewhere the sandbox as tools: `sandbox_exec`, `sandbox_run_code`, `sandbox_read`, `sandbox_write`, `sandbox_list` and `sandbox_search`.
+
+| Export | Returns |
+|---|---|
+| `openaiTools(box, options?)` | `{ tools, handleToolCall, handleAssistantMessage }`. |
+| `anthropicTools(box, options?)` | The same for Anthropic's tool format. |
+| `await vercelAiTools(box, options?)`, `await mastraTools(box, options?)` | Tools for the Vercel AI SDK and Mastra. Both are async. |
+| `createMcpServer(box, { allow?, sessionId?, name? })` | An MCP server over the same tools. |
+
+See [OpenAI](/sandbox/agents-openai), [Anthropic](/sandbox/agents-anthropic), [Vercel AI](/sandbox/agents-vercel-ai), [Mastra](/sandbox/agents-mastra) and [MCP](/sandbox/agents-mcp).
+
+## Python and REST
+
+Python has `box.prompt(...)` and `box.stream_prompt(...)`. It has no sessions, dispatch, interactions, interactive sessions or `agents`. Call session routes through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+client.fetch("GET", f"/v1/sandboxes/{box.id}/runtime/agents/sessions")
+```
+
+## Next
+
+- [Coding agents in the cloud](/sandbox/cloud-agents)
+- [Keep conversations across turns and processes](/sandbox/sessions)
+- [Resources reference](/sandbox/sdk-typescript/resources)

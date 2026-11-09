@@ -1,0 +1,1401 @@
+---
+title: Sandboxes and GPU routes
+description: REST reference for creating, listing, stopping, resuming, snapshotting, branching and deleting sandboxes, and for GPU leases.
+---
+
+# Sandboxes and GPU routes
+
+Create and manage sandboxes, their snapshots, branches and egress rules, and attach GPU leases.
+
+Every route is on `https://sandbox.tangle.tools` and takes your account API key as `Authorization: Bearer <key>` unless it says otherwise. Errors use the shape in [Error codes](/sandbox/errors).
+This page is generated from the [OpenAPI document](/sandbox-openapi.json), which also has every response schema.
+
+## Sandboxes
+
+| Route | Does |
+|---|---|
+| `POST /v1/sandboxes` | Create a new sandbox |
+| `GET /v1/sandboxes` | List sandboxes |
+| `GET /v1/sandboxes/admission` | Check whether the default placement pool can admit a new sandbox |
+| `POST /v1/sandboxes/batch/run` | Run multiple tasks in parallel |
+| `POST /v1/sandboxes/delete-matching` | Delete every sandbox whose metadata matches |
+| `GET /v1/sandboxes/runs/{run}` | List the sandbox compute generations created for a caller run |
+| `GET /v1/sandboxes/self/identity` | Get the ID of the calling sandbox |
+| `GET /v1/sandboxes/{id}` | Get sandbox details |
+| `DELETE /v1/sandboxes/{id}` | Delete a sandbox |
+| `POST /v1/sandboxes/{id}/branch` | Branch a running sandbox into copy-on-write children |
+| `GET /v1/sandboxes/{id}/driver` | Get sandbox driver info |
+| `PATCH /v1/sandboxes/{id}/egress` | Update sandbox egress policy |
+| `GET /v1/sandboxes/{id}/egress/activity` | List the hosts a sandbox reached |
+| `GET /v1/sandboxes/{id}/egress/denials` | List recent egress denials |
+| `GET /v1/sandboxes/{id}/egress/usage` | Get a sandbox's egress for a calendar month |
+| `GET /v1/sandboxes/{id}/env-recovery` | Read caller credential recovery policy |
+| `PUT /v1/sandboxes/{id}/env-recovery` | Replace or dry-run a stopped sandbox's caller resupply policy |
+| `GET /v1/sandboxes/{id}/events` | Subscribe to sandbox events (SSE) |
+| `POST /v1/sandboxes/{id}/images` | Publish the sandbox workspace as an image |
+| `GET /v1/sandboxes/{id}/mcp` | Get an MCP endpoint for this sandbox |
+| `POST /v1/sandboxes/{id}/native-credentials` | Install a native CLI credential in a sandbox |
+| `GET /v1/sandboxes/{id}/operations/{operationId}` | Get an accepted stop, snapshot or delete |
+| `GET /v1/sandboxes/{id}/placement-attestation` | Read verified HIPAA placement evidence |
+| `POST /v1/sandboxes/{id}/rebuild` | Rebuild a stopped sandbox runtime |
+| `POST /v1/sandboxes/{id}/resume` | Resume a stopped sandbox |
+| `POST /v1/sandboxes/{id}/rollouts` | Fork a running agent sandbox N ways and run the same turn in each |
+| `GET /v1/sandboxes/{id}/rollouts/{rolloutId}` | Poll a rollout's status and scored per-child results |
+| `GET /v1/sandboxes/{id}/runtime/{path}` | Send a GET request to the sandbox runtime |
+| `HEAD /v1/sandboxes/{id}/runtime/{path}` | Send a HEAD request to the sandbox runtime |
+| `POST /v1/sandboxes/{id}/runtime/{path}` | Send a POST request to the sandbox runtime |
+| `PUT /v1/sandboxes/{id}/runtime/{path}` | Send a PUT request to the sandbox runtime |
+| `PATCH /v1/sandboxes/{id}/runtime/{path}` | Send a PATCH request to the sandbox runtime |
+| `DELETE /v1/sandboxes/{id}/runtime/{path}` | Send a DELETE request to the sandbox runtime |
+| `POST /v1/sandboxes/{id}/scoped-token` | Mint a scoped consumer-side token for direct sandbox access |
+| `POST /v1/sandboxes/{id}/snapshot` | Create a snapshot of sandbox state |
+| `POST /v1/sandboxes/{id}/snapshots` | Create a snapshot of sandbox state |
+| `GET /v1/sandboxes/{id}/snapshots` | List snapshots for a sandbox |
+| `GET /v1/sandboxes/{id}/snapshots/jobs/{jobId}` | Get sandbox snapshot restore job status |
+| `DELETE /v1/sandboxes/{id}/snapshots/{snapshotId}` | Delete a sandbox snapshot |
+| `POST /v1/sandboxes/{id}/snapshots/{snapshotId}/restore` | Restore a sandbox from a snapshot |
+| `POST /v1/sandboxes/{id}/stop` | Stop a sandbox (keeps state) |
+| `GET /v1/sandboxes/{id}/trace` | Export sandbox trace and intelligence envelope |
+| `POST /v1/sandboxes/{id}/workspace-operations/lookup` | Look up an idempotent workspace operation |
+| `GET /v1/shapes` | List sandbox shape presets and the caller's ceiling |
+
+### Create a new sandbox
+
+`POST /v1/sandboxes`
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | string | No |  |
+| `ownerContext` | "inherit" \| "isolated" | No |  |
+| `funding` | "wallet" \| "referral_credit" | No |  |
+| `driver` | object | No |  |
+| `runtime` | "docker" \| "firecracker" | No |  |
+| `environment` | string | No |  |
+| `git` | object | No |  |
+| `cwd` | object | No |  |
+| `bare` | boolean | No |  |
+| `agent` | boolean | No |  |
+| `requireNativeSessionCapture` | boolean | No |  |
+| `sessionCapture` | "discard" | No |  |
+| `skipWarmPool` | boolean | No |  |
+| `capacityClass` | "spare_only" | No |  |
+| `confidential` | object | No |  |
+| `env` | object | No |  |
+| `envRecovery` | object | No |  |
+| `resources` | object | No |  |
+| `gpuLease` | object | No |  |
+| `backend` | object | No |  |
+| `sshEnabled` | boolean | No |  |
+| `sshPublicKeys` | array of object | No |  |
+| `sshKeyIds` | array of object | No |  |
+| `webTerminalEnabled` | boolean | No |  |
+| `proxySecrets` | object | No |  |
+| `secrets` | "all" or array of object or null | No |  |
+| `maxLifetimeSeconds` | number | No |  |
+| `idleTimeoutSeconds` | number | No |  |
+| `coldTimeoutSeconds` | integer | No |  |
+| `deleteAfterStoppedSeconds` | integer | No |  |
+| `retain` | object | No |  |
+| `metadata` | object | No |  |
+| `storage` | object | No |  |
+| `ephemeral` | boolean | No |  |
+| `fromSnapshot` | string | No |  |
+| `fromSandboxId` | string | No |  |
+| `startupScriptIds` | array of object | No |  |
+| `teamId` | string | No |  |
+| `capabilities` | array of object | No |  |
+| `privacy` | object | No |  |
+| `compliance` | object or array of object | No |  |
+| `egressPolicy` | object | No |  |
+| `templateId` | string | No |  |
+| `publicTemplateId` | string | No |  |
+| `publicTemplateVersionId` | string | No |  |
+| `idempotencyKey` | string | No |  |
+| `billingOwnerId` | string | No |  |
+
+| Status | Meaning |
+|---|---|
+| 201 | Sandbox created |
+| 400 | Invalid request |
+| 401 | Platform refused the caller's credential |
+| 402 | Subscription inactive |
+| 403 | Driver not allowed, platform refused authorization, PROFILE_SECRET_ISOLATION_UNAVAILABLE: a new sandbox cannot declare backend.metadata.profileSecretIsolation; declare it on a session of a running sandbox, or COMPLIANCE_NOT_ENTITLED: the body asks for `compliance.hipaa` but the caller's credential carries no HIPAA entitlement |
+| 404 | Template not found |
+| 409 | Template artifact not ready |
+| 413 | Request payload too large or restore snapshot exceeds its quota |
+| 422 | GIT_CLONE_REFUSED: the repository refused the clone's credentials. Terminal: a retry with the same Idempotency-Key answers the same refusal. PROFILE_FILE_MOUNT_OUTSIDE_ROOTS: a backend.profile.resources.files path is outside the sandbox's writable roots; `path` names it. Terminal, answered before provisioning |
+| 429 | Quota exceeded |
+| 500 | Internal error |
+| 501 | Templates not configured |
+| 502 | Upstream service failed |
+| 503 | Dependent service unavailable, or COMPLIANCE_CELL_UNAVAILABLE: the selected, source or recorded placement pool does not admit the caller's current compliance entitlement, or no enabled HIPAA-designated placement pool can take the create now (none configured, disabled, down or full); it was not placed in any other placement pool. Retry-After is set |
+
+### List sandboxes
+
+`GET /v1/sandboxes`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `resolveCreate` | query | No | "true" \| "false" |  |
+| `expectedCellId` | query | No | string |  |
+| `billingOwnerId` | query | No | string |  |
+| `status` | query | No | "pending" \| "provisioning" \| "running" \| "stopped" \| "failed" \| "expired" \| "deleted" or array of "pending" \| "provisioning" \| "running" \| "stopped" \| "failed" \| "expired" \| "deleted" |  |
+| `limit` | query | No | integer or null |  |
+| `offset` | query | No | integer or null |  |
+| `scope` | query | No | string |  |
+| `run` | query | No | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | List of sandboxes |
+| 400 | Invalid create-resolution identity or scope |
+| 403 | Sandbox credential cannot list account-wide sandboxes |
+| 503 | A sandbox backend or create-resolution billing authority did not answer; retry |
+
+### Check whether the default placement pool can admit a new sandbox
+
+`GET /v1/sandboxes/admission`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `runtime` | query | No | "docker" \| "firecracker" |  |
+| `room` | query | No | "true" \| "false" |  |
+| `runtimeBackend` | query | No | "docker" \| "firecracker" | Deprecated on 2026-11-05 and removed from current SDK releases: send `runtime` and omit `driver`. |
+| `billingOwnerId` | query | No | string |  |
+| `routing` | query | No | "true" \| "false" |  |
+| `ownerId` | query | No | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Read-only admission snapshot; a ready result does not reserve a host |
+| 403 | Sandbox-bound credentials cannot inspect placement pool admission, or the caller may not bill the named billingOwnerId |
+| 503 | Admission state could not be checked |
+
+### Run multiple tasks in parallel
+
+`POST /v1/sandboxes/batch/run`
+
+Without Idempotency-Key, disconnecting stops the batch. With a key, the exact-body run continues and later matching requests join or replay it. Persistent reuseKey selects stable workspaces independently.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `Idempotency-Key` | header | No | string | Opt-in retry identity. The keyed batch continues after disconnect; matching retries join or replay it. |
+
+Request body (`application/json`): one of 2 shapes; see the [OpenAPI document](/sandbox-openapi.json).
+
+| Status | Meaning |
+|---|---|
+| 200 | SSE stream of batch progress |
+| 400 | Invalid batch request |
+| 401 | Authentication required or invalid |
+| 403 | Caller is not allowed to run the batch |
+| 409 | Retry identity or persistent workspace state conflicts |
+| 413 | Batch request payload is too large |
+| 429 | Batch rate, concurrency, or capacity limit exceeded |
+| 500 | Batch execution failed |
+| 502 | Sandbox service request failed |
+| 503 | Batch service or compute capacity is unavailable |
+| 504 | Sandbox service request timed out |
+
+### Delete every sandbox whose metadata matches
+
+`POST /v1/sandboxes/delete-matching`
+
+Deletes the caller's own sandboxes whose metadata values start with the given prefixes, at most 25 per call in ID order, and reports each one. When matches remain, pass `next` as `after` to attempt them. Repeating the call is safe: a confirmed-gone sandbox no longer matches. Stop creating matching sandboxes before calling, and call again once in-flight creates have settled: `complete` covers only the sandboxes this call listed.
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `metadataPrefix` | object | Yes | Metadata key to required value prefix. A sandbox matches when every named key holds a string value that starts with its prefix. |
+| `cascade` | boolean | No |  |
+| `until` | "removed" | No |  |
+| `after` | string | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Per-sandbox delete results |
+| 400 | Invalid request |
+| 403 | Sandbox credential cannot select account-wide deletes |
+
+### List the sandbox compute generations created for a caller run
+
+`GET /v1/sandboxes/runs/{run}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `run` | path | Yes | string |  |
+| `limit` | query | No | integer | Generations per page (default 1000). |
+| `cursor` | query | No | string | The `nextCursor` of the previous page. |
+
+| Status | Meaning |
+|---|---|
+| 200 | Generations created for the run, oldest first |
+| 400 | The cursor is malformed |
+| 403 | Sandbox credential cannot read account-wide sandboxes |
+| 501 | This runtime does not index generations by caller run |
+
+### Get the ID of the calling sandbox
+
+`GET /v1/sandboxes/self/identity`
+
+Needs a credential bound to one sandbox. An account API key gets 403: select the sandbox by ID instead. The response is not cached.
+
+| Status | Meaning |
+|---|---|
+| 200 | ID of the sandbox the credential is bound to |
+| 401 | No authenticated caller (UNAUTHORIZED) |
+| 403 | The credential is not bound to a sandbox (SANDBOX_SELF_UNBOUND) |
+
+### Get sandbox details
+
+`GET /v1/sandboxes/{id}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+
+| Status | Meaning |
+|---|---|
+| 200 | Sandbox details |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox not found |
+| 500 | Internal server error |
+
+### Delete a sandbox
+
+`DELETE /v1/sandboxes/{id}`
+
+Deletes the sandbox. A sandbox with live branch children is refused (409 CHILDREN_EXIST) unless `cascade=true`, which deletes the whole lineage children-first. Platform-managed snapshot repositories are reclaimed after the deleted-retention window for internal accounts only; customer repositories remain until explicitly deleted by their owner. Preservation holds and active exports/restores are honored. With `wait=false` it may instead answer 202 as soon as the delete is durably accepted: poll `operation.statusUrl` (or `Location`) until the operation is `succeeded` (with `result.deleted`) or `failed`. The runtime runs and bills until the delete kills it. An `Idempotency-Key` names the delete for a retry whose 202 was lost. With `until=removed`, that status URL keeps polling through physical reclaim. Cascades keep the synchronous answer; a 200 means the delete finished.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `retireCreate` | query | No | "true" \| "false" |  |
+| `run` | query | No | string |  |
+| `expectedCellId` | query | No | string |  |
+| `billingOwnerId` | query | No | string |  |
+| `cascade` | query | No | "true" \| "false" |  |
+| `until` | query | No | "removed" |  |
+| `wait` | query | No | "true" \| "false" |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Sandbox deleted, or already absent |
+| 202 | Delete accepted (`wait=false`); it finishes in the background. Or create retirement is pending |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox not found |
+| 409 | Sandbox has live branch children, lacks a confirmed final snapshot, could not prove absence, is under an operator retention hold, or its Idempotency-Key names a different delete |
+| 500 | Delete failed |
+| 503 | Sandbox billing state is temporarily unavailable |
+
+### Branch a running sandbox into copy-on-write children
+
+`POST /v1/sandboxes/{id}/branch`
+
+Forks a RUNNING sandbox's live memory into `count` copy-on-write children that share the parent's pages at branch time (Firecracker UFFD copy-on-write). The parent stays running. Fails loud when the active driver cannot branch live memory; it never degrades to fresh, empty sandboxes.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `Idempotency-Key` | header | No | string | Opt-in retry identity. A retry with this key and the same body replays the stored result instead of running a second operation. |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `count` | integer | No |  |
+| `env` | object | No |  |
+| `metadata` | object | No |  |
+| `idempotencyKey` | string | No | Opt-in retry identity. A retry with this key and the same body replays the stored result instead of running a second operation. |
+
+| Status | Meaning |
+|---|---|
+| 200 | Children materialized, or the stored result of an earlier branch |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox not found |
+| 409 | Another request holds this idempotency key, or the key is bound to a different request body |
+| 429 | Concurrent session limit exceeded, or the operation ledger is full |
+| 500 | Internal server error |
+| 503 | Active driver does not support live branching |
+
+### Get sandbox driver info
+
+`GET /v1/sandboxes/{id}/driver`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+
+| Status | Meaning |
+|---|---|
+| 200 | Driver info |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox not found |
+| 500 | Internal server error |
+
+### Update sandbox egress policy
+
+`PATCH /v1/sandboxes/{id}/egress`
+
+Update the egress (outbound network) policy for a running sandbox. The proxy is restarted with the new policy (~2-5s downtime).
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `mode` | "open" \| "strict" \| "blocked" | No |  |
+| `allowDomains` | array of string or object | No |  |
+| `includeImplicitDomains` | boolean | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Policy updated |
+| 400 | Invalid request |
+| 403 | Forbidden |
+| 404 | Sandbox not found |
+| 409 | Driver does not support runtime policy updates |
+| 500 | Internal error |
+
+### List the hosts a sandbox reached
+
+`GET /v1/sandboxes/{id}/egress/activity`
+
+Every destination this sandbox's egress proxy allowed or refused in the inspected window, and whether that observation can be trusted. This is the OPPOSITE question to /egress/denials, and unlike that route it is deliberately not best-effort: it exists to support the negative claim 'this sandbox reached nothing', which an empty list cannot carry on its own. `destinations: []` with `complete: true` is evidence; `destinations: []` with `complete: false` is an absence of evidence, and `incompleteReasons` names what was missing. A hop that could not reach the host reports `hop-unreachable` rather than an empty list, so an unreadable path can never be read as a clean sandbox.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `limit` | query | No | integer |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | What the sandbox reached, and whether that is decidable |
+| 403 | Forbidden |
+| 404 | Sandbox not found |
+| 409 | Egress is not enabled for this sandbox |
+
+### List recent egress denials
+
+`GET /v1/sandboxes/{id}/egress/denials`
+
+Destinations this sandbox tried to reach that its egress policy refused, newest first. The sandbox's 403 body names each refusal's host and policy (the same pair as `rejectedBy`); this keeps the history. Best-effort: an empty list means either nothing was refused or the proxy is no longer readable.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `limit` | query | No | integer |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Refused destinations |
+| 403 | Forbidden |
+| 404 | Sandbox not found |
+
+### Get a sandbox's egress for a calendar month
+
+`GET /v1/sandboxes/{id}/egress/usage`
+
+Bytes this sandbox sent in one calendar month (UTC), the account's allowance it shares (2 TB per account per month on paid plans, 100 GiB on Free), the account's total and overage, and the USD the meter charged or reserved for this sandbox's captures.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `month` | query | No | string | Calendar month, `YYYY-MM` in UTC. Defaults to the current month. |
+
+| Status | Meaning |
+|---|---|
+| 200 | The sandbox's egress for the month |
+| 403 | Forbidden |
+| 404 | Sandbox not found |
+
+### Read caller credential recovery policy
+
+`GET /v1/sandboxes/{id}/env-recovery`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Credential recovery metadata (no values) |
+| 400 | Invalid policy |
+| 401 | Authentication required |
+| 403 | Owner or team admin required |
+| 404 | Sandbox not found |
+| 409 | Sandbox must be stopped |
+| 500 | Policy unavailable |
+| 502 | Invalid upstream response |
+| 503 | Upstream unavailable |
+
+### Replace or dry-run a stopped sandbox's caller resupply policy
+
+`PUT /v1/sandboxes/{id}/env-recovery`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `envRecovery` | object | Yes |  |
+| `dryRun` | boolean | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Credential recovery metadata (no values) |
+| 400 | Invalid policy |
+| 401 | Authentication required |
+| 403 | Owner or team admin required |
+| 404 | Sandbox not found |
+| 409 | Sandbox must be stopped |
+| 500 | Policy unavailable |
+| 502 | Invalid upstream response |
+| 503 | Upstream unavailable |
+
+### Subscribe to sandbox events (SSE)
+
+`GET /v1/sandboxes/{id}/events`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+
+| Status | Meaning |
+|---|---|
+| 200 | SSE stream of sandbox events |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox not found |
+
+### Publish the sandbox workspace as an image
+
+`POST /v1/sandboxes/{id}/images`
+
+Builds the Dockerfile in the sandbox workspace and pushes the image to the registry named in repository, with the credentials in auth. The sandbox must be running, and filesystemIncarnationId must be the value its details report. The request can take up to 15 minutes. Send an Idempotency-Key to make a retry safe; reusing a key with different inputs fails with IDEMPOTENCY_KEY_REUSED. A key is generated when you omit one, and the response returns it.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `Idempotency-Key` | header | No | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `contextPath` | string | No |  |
+| `dockerfilePath` | string | No |  |
+| `repository` | string | Yes |  |
+| `auth` | object | Yes |  |
+| `platform` | "linux/amd64" \| "linux/arm64" | No |  |
+| `filesystemIncarnationId` | string | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Image pushed |
+| 400 | Invalid request or Idempotency-Key (INVALID_REQUEST, INVALID_IDEMPOTENCY_KEY), the sandbox's driver cannot be routed, or the build refused an input such as the context path or repository |
+| 403 | The credential or team role cannot use this sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN, INSUFFICIENT_ROLE, SANDBOX_ACCESS_DENIED) |
+| 404 | Sandbox not found (PROJECT_NOT_FOUND) |
+| 408 | The publication was cancelled (IMAGE_PUBLISH_CANCELLED) |
+| 409 | The sandbox is not ready or running, its filesystem changed since filesystemIncarnationId was read, or another publication is active (SANDBOX_NOT_READY, SANDBOX_NOT_RUNNING, FILESYSTEM_TRANSITIONING, FILESYSTEM_INCARNATION_CHANGED, WORKSPACE_IMAGE_OPERATION_IN_PROGRESS, IDEMPOTENCY_KEY_REUSED) |
+| 429 | The registry or the image builder is throttling |
+| 500 | Build or push failed (IMAGE_BUILD_FAILED, IMAGE_PUBLISH_FAILED) |
+| 501 | The sandbox driver cannot publish images (DRIVER_CAPABILITY_MISSING) |
+| 502 | The sandbox service returned an invalid result, or the publication failed for an unlisted reason (INVALID_IMAGE_PUBLISH_RESPONSE, IMAGE_PUBLISH_FAILED) |
+| 503 | Publication is unavailable, or its outcome could not be confirmed; retry with the same Idempotency-Key (IMAGE_PUBLISH_UNAVAILABLE, IMAGE_PUBLISH_OUTCOME_UNKNOWN) |
+
+### Get an MCP endpoint for this sandbox
+
+`GET /v1/sandboxes/{id}/mcp`
+
+Returns a paste-able MCP host config (Claude Desktop, Cursor, claude-code, codex, …) plus a freshly-minted, capability-scoped JWT. The token is short-lived and can ONLY call MCP routes; it cannot reach admin endpoints (/exec, /files, …) on the sandbox. Call again to rotate.
+
+`?capabilities=computer_use` is also the mint route for desktop control: the resulting token is what `POST /computer-use/action`, `/a11y`, and `/mcp` require. `POST /v1/sandboxes/{id}/scoped-token` cannot grant it; that route covers session reads, files, and terminals only.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `capabilities` | query | No | string |  |
+| `serverName` | query | No | string |  |
+| `ttlMinutes` | query | No | integer |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | MCP endpoint config + scoped token |
+| 400 | Invalid request |
+| 403 | Driver not allowed or sandbox not yours |
+| 404 | Sandbox not found |
+| 502 | Invalid sandbox service response |
+| 503 | Sandbox public edge is still attaching; retry shortly |
+
+### Install a native CLI credential in a sandbox
+
+`POST /v1/sandboxes/{id}/native-credentials`
+
+Names a stored secret; no secret value is sent or returned. claude-code takes a token reference, codex a bundle or files reference. Needs write access to the sandbox, and a personal sandbox must be owned by the caller. Isolated sandboxes are refused. The grant is recorded as a sandbox.native_credential.grant audit event.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `harness` | "claude-code" \| "codex" | Yes |  |
+| `cliAuth` | object | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The reference is echoed back. A legacy seat replies installed: true. A canonical seat replies with its proxySecretReceipt and no installed field; status proxy-installed means the egress proxy admitted the seat and HOME delivery is still pending. |
+| 400 | Invalid credential reference, or the sandbox's driver cannot be routed |
+| 403 | The credential or team role cannot use this sandbox, the sandbox is isolated, or the caller does not own it (SANDBOX_KEY_RESOURCE_FORBIDDEN, INSUFFICIENT_ROLE, SANDBOX_ACCESS_DENIED) |
+| 409 | A held seat cannot switch live (NATIVE_CREDENTIAL_SEAT_SWITCH_UNSUPPORTED) |
+| 503 | Installation was not confirmed, or the sandbox service did not answer (NATIVE_CREDENTIAL_GRANT_UNAVAILABLE, HOST_UNAVAILABLE) |
+
+### Get an accepted stop, snapshot or delete
+
+`GET /v1/sandboxes/{id}/operations/{operationId}`
+
+Reports an operation a `wait=false` stop, snapshot or delete accepted. Poll until `state` is `succeeded` or `failed`. Still readable after the sandbox is deleted: a delete is authorized from the scope it was accepted under (its owner, or a current member of its team). Unknown ids and ids of other tenants answer the same 404. `waitMs` holds the read while it runs; a delete holds 10 s.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `operationId` | path | Yes | string | Operation ID |
+| `until` | query | No | "removed" |  |
+| `waitMs` | query | No | integer or null |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Operation |
+| 400 | Invalid request |
+| 403 | Not allowed |
+| 404 | Operation not found |
+| 500 | Failed to read the operation |
+| 502 | Invalid sandbox service response |
+| 503 | The sandbox service is unavailable |
+
+### Read verified HIPAA placement evidence
+
+`GET /v1/sandboxes/{id}/placement-attestation`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Server-issued placement evidence |
+| 400 | Invalid sandbox target |
+| 403 | Sandbox access forbidden |
+| 404 | Sandbox or placement evidence not found |
+| 503 | Evidence unavailable |
+
+### Rebuild a stopped sandbox runtime
+
+`POST /v1/sandboxes/{id}/rebuild`
+
+Requires a stopped sandbox. Confirms a durable snapshot, then creates a new runtime under the same sandbox ID. The optional env body resupplies public values that are not stored at rest. A refused rebuild keeps the stopped runtime.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+
+| Status | Meaning |
+|---|---|
+| 200 | Sandbox resumed |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox not found |
+| 409 | Sandbox is not in a resumable lifecycle state, a new runtime needs env values only the caller holds (RESUME_ENV_REQUIRED), or its workspace could not be restored into a new runtime (RESUME_RESTORE_REFUSED) |
+| 429 | Concurrent session limit exceeded |
+| 500 | Internal server error |
+| 502 | Integration bundle refresh failed |
+| 503 | Platform integrations unavailable |
+
+### Resume a stopped sandbox
+
+`POST /v1/sandboxes/{id}/resume`
+
+Resumes a stopped sandbox. A sandbox that is already running answers 200 with its current state. The optional JSON body `{ "env": { "KEY": "value" } }` resupplies public env values that are not stored at rest, such as a per-run coordination token or a secret passed at create. A resume that must build a new runtime without them answers 409 `RESUME_ENV_REQUIRED` with `missingEnvKeys`. The values are used only when the resume builds a new runtime.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+
+| Status | Meaning |
+|---|---|
+| 200 | Sandbox resumed |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox not found |
+| 409 | Sandbox is not in a resumable lifecycle state, a new runtime needs env values only the caller holds (RESUME_ENV_REQUIRED), or its workspace could not be restored into a new runtime (RESUME_RESTORE_REFUSED) |
+| 429 | Concurrent session limit exceeded |
+| 500 | Internal server error |
+| 502 | Integration bundle refresh failed |
+| 503 | Platform integrations unavailable |
+
+### Fork a running agent sandbox N ways and run the same turn in each
+
+`POST /v1/sandboxes/{id}/rollouts`
+
+Speculative rollouts: branches the RUNNING sandbox into `n` copy-on-write children, sends the same message `parts` to a fresh agent session in every child in parallel, and (optionally) scores each child by running `scorer.command` inside it; exit 0 passes and stdout is parsed as the numeric score. Responds once the children exist; poll `GET /v1/sandboxes/{id}/rollouts/{rolloutId}` for turn results, per-child errors, and the winner. Children are KEPT for the caller to promote or delete: they are first-class sandboxes that live independently of the parent (deleting the parent reaps only the shared branch-base snapshots once the children are gone; a parent with live children refuses delete without `cascade=true`).
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `n` | integer | Yes |  |
+| `parts` | array of object | Yes |  |
+| `scorer` | object | No |  |
+
+| Status | Meaning |
+|---|---|
+| 202 | Children materialized; turns running |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox not found |
+| 429 | Concurrent session limit exceeded, or provisioning saturated |
+| 500 | Internal server error |
+| 503 | Active driver does not support live branching |
+
+### Poll a rollout's status and scored per-child results
+
+`GET /v1/sandboxes/{id}/rollouts/{rolloutId}`
+
+Failed or timed-out children appear as result entries with `error` set and no score; partial results are never dropped. `winner` is the child with the highest numeric score (command scorer only).
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `rolloutId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Rollout state |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox or rollout not found |
+| 500 | Internal server error |
+
+### Send a GET request to the sandbox runtime
+
+`GET /v1/sandboxes/{id}/runtime/{path}`
+
+Forwards the request to the sandbox runtime at the same sub-path and relays its status, headers and body. Accepts an account API key or a scoped sandbox token from POST /v1/sandboxes/\{id\}/scoped-token. Needs read access to the sandbox. A GET with Upgrade: websocket to terminals/\{connectionId\}/ws or ssh opens a WebSocket and answers 101; a scoped token can open only the terminal socket. A request that starts paid compute, such as an agent run or exec, is refused with 402 or 429 while the paying account has debt or is below the balance floor, and it resumes a suspended sandbox first. Runtime error bodies are returned in the standard error shape.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `path` | path | Yes | string | Runtime sub-path, such as agents/run or files/tree. It cannot contain .. or start with a slash. |
+
+| Status | Meaning |
+|---|---|
+| 101 | WebSocket upgrade accepted (terminal and SSH sub-paths) |
+| 200 | The runtime's response, relayed with its own status, headers and body |
+| 400 | Invalid sandbox ID or sub-path, an execution time limit above the deployment maximum, or a request the runtime refused (INVALID_REQUEST, EXECUTION_TTL_EXCEEDS_LIMIT) |
+| 401 | A WebSocket upgrade needs a signed-in user |
+| 402 | The paying account has recorded debt, or the model credential's budget is spent (INSUFFICIENT_BALANCE) |
+| 403 | The credential or team role cannot use this sandbox, a scoped token cannot use this sub-path, or secret isolation could not be proved |
+| 404 | Sandbox not found or already ended |
+| 413 | The request body is over the proxy limit |
+| 429 | The plan's runtime request rate is reached, or the paying account is below the admission floor (RATE_LIMIT_EXCEEDED, QUOTA_EXCEEDED) |
+| 500 | Internal error |
+| 502 | An agent run's event stream ended without a result (AGENT_RUN_STREAM_INCOMPLETE) |
+| 503 | The sandbox service or the runtime did not answer; retry after Retry-After |
+
+### Send a HEAD request to the sandbox runtime
+
+`HEAD /v1/sandboxes/{id}/runtime/{path}`
+
+Forwards the request to the sandbox runtime at the same sub-path and relays its status, headers and body. Accepts an account API key or a scoped sandbox token from POST /v1/sandboxes/\{id\}/scoped-token. Needs read access to the sandbox. A request that starts paid compute, such as an agent run or exec, is refused with 402 or 429 while the paying account has debt or is below the balance floor, and it resumes a suspended sandbox first. Runtime error bodies are returned in the standard error shape.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `path` | path | Yes | string | Runtime sub-path, such as agents/run or files/tree. It cannot contain .. or start with a slash. |
+
+| Status | Meaning |
+|---|---|
+| 200 | The runtime's response, relayed with its own status, headers and body |
+| 400 | Invalid sandbox ID or sub-path, an execution time limit above the deployment maximum, or a request the runtime refused (INVALID_REQUEST, EXECUTION_TTL_EXCEEDS_LIMIT) |
+| 402 | The paying account has recorded debt, or the model credential's budget is spent (INSUFFICIENT_BALANCE) |
+| 403 | The credential or team role cannot use this sandbox, a scoped token cannot use this sub-path, or secret isolation could not be proved |
+| 404 | Sandbox not found or already ended |
+| 413 | The request body is over the proxy limit |
+| 429 | The plan's runtime request rate is reached, or the paying account is below the admission floor (RATE_LIMIT_EXCEEDED, QUOTA_EXCEEDED) |
+| 500 | Internal error |
+| 502 | An agent run's event stream ended without a result (AGENT_RUN_STREAM_INCOMPLETE) |
+| 503 | The sandbox service or the runtime did not answer; retry after Retry-After |
+
+### Send a POST request to the sandbox runtime
+
+`POST /v1/sandboxes/{id}/runtime/{path}`
+
+Forwards the request to the sandbox runtime at the same sub-path and relays its status, headers and body. Accepts an account API key or a scoped sandbox token from POST /v1/sandboxes/\{id\}/scoped-token. Needs write access to the sandbox. POST agents/run answers when the run finishes, with \{ success: true, data \} or \{ success: false, error \} under the run's status. POST agents/run/stream answers with an event stream. A request that starts paid compute, such as an agent run or exec, is refused with 402 or 429 while the paying account has debt or is below the balance floor, and it resumes a suspended sandbox first. Runtime error bodies are returned in the standard error shape.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `path` | path | Yes | string | Runtime sub-path, such as agents/run or files/tree. It cannot contain .. or start with a slash. |
+
+Request body: `application/json`.
+
+| Status | Meaning |
+|---|---|
+| 200 | The runtime's response, relayed with its own status, headers and body |
+| 400 | Invalid sandbox ID or sub-path, an execution time limit above the deployment maximum, or a request the runtime refused (INVALID_REQUEST, EXECUTION_TTL_EXCEEDS_LIMIT) |
+| 402 | The paying account has recorded debt, or the model credential's budget is spent (INSUFFICIENT_BALANCE) |
+| 403 | The credential or team role cannot use this sandbox, a scoped token cannot use this sub-path, or secret isolation could not be proved |
+| 404 | Sandbox not found or already ended |
+| 413 | The request body is over the proxy limit |
+| 429 | The plan's runtime request rate is reached, or the paying account is below the admission floor (RATE_LIMIT_EXCEEDED, QUOTA_EXCEEDED) |
+| 500 | Internal error |
+| 502 | An agent run's event stream ended without a result (AGENT_RUN_STREAM_INCOMPLETE) |
+| 503 | The sandbox service or the runtime did not answer; retry after Retry-After |
+
+### Send a PUT request to the sandbox runtime
+
+`PUT /v1/sandboxes/{id}/runtime/{path}`
+
+Forwards the request to the sandbox runtime at the same sub-path and relays its status, headers and body. Accepts an account API key or a scoped sandbox token from POST /v1/sandboxes/\{id\}/scoped-token. Needs write access to the sandbox. A request that starts paid compute, such as an agent run or exec, is refused with 402 or 429 while the paying account has debt or is below the balance floor, and it resumes a suspended sandbox first. Runtime error bodies are returned in the standard error shape.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `path` | path | Yes | string | Runtime sub-path, such as agents/run or files/tree. It cannot contain .. or start with a slash. |
+
+Request body: `application/json`.
+
+| Status | Meaning |
+|---|---|
+| 200 | The runtime's response, relayed with its own status, headers and body |
+| 400 | Invalid sandbox ID or sub-path, an execution time limit above the deployment maximum, or a request the runtime refused (INVALID_REQUEST, EXECUTION_TTL_EXCEEDS_LIMIT) |
+| 402 | The paying account has recorded debt, or the model credential's budget is spent (INSUFFICIENT_BALANCE) |
+| 403 | The credential or team role cannot use this sandbox, a scoped token cannot use this sub-path, or secret isolation could not be proved |
+| 404 | Sandbox not found or already ended |
+| 413 | The request body is over the proxy limit |
+| 429 | The plan's runtime request rate is reached, or the paying account is below the admission floor (RATE_LIMIT_EXCEEDED, QUOTA_EXCEEDED) |
+| 500 | Internal error |
+| 502 | An agent run's event stream ended without a result (AGENT_RUN_STREAM_INCOMPLETE) |
+| 503 | The sandbox service or the runtime did not answer; retry after Retry-After |
+
+### Send a PATCH request to the sandbox runtime
+
+`PATCH /v1/sandboxes/{id}/runtime/{path}`
+
+Forwards the request to the sandbox runtime at the same sub-path and relays its status, headers and body. Accepts an account API key or a scoped sandbox token from POST /v1/sandboxes/\{id\}/scoped-token. Needs write access to the sandbox. A request that starts paid compute, such as an agent run or exec, is refused with 402 or 429 while the paying account has debt or is below the balance floor, and it resumes a suspended sandbox first. Runtime error bodies are returned in the standard error shape.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `path` | path | Yes | string | Runtime sub-path, such as agents/run or files/tree. It cannot contain .. or start with a slash. |
+
+Request body: `application/json`.
+
+| Status | Meaning |
+|---|---|
+| 200 | The runtime's response, relayed with its own status, headers and body |
+| 400 | Invalid sandbox ID or sub-path, an execution time limit above the deployment maximum, or a request the runtime refused (INVALID_REQUEST, EXECUTION_TTL_EXCEEDS_LIMIT) |
+| 402 | The paying account has recorded debt, or the model credential's budget is spent (INSUFFICIENT_BALANCE) |
+| 403 | The credential or team role cannot use this sandbox, a scoped token cannot use this sub-path, or secret isolation could not be proved |
+| 404 | Sandbox not found or already ended |
+| 413 | The request body is over the proxy limit |
+| 429 | The plan's runtime request rate is reached, or the paying account is below the admission floor (RATE_LIMIT_EXCEEDED, QUOTA_EXCEEDED) |
+| 500 | Internal error |
+| 502 | An agent run's event stream ended without a result (AGENT_RUN_STREAM_INCOMPLETE) |
+| 503 | The sandbox service or the runtime did not answer; retry after Retry-After |
+
+### Send a DELETE request to the sandbox runtime
+
+`DELETE /v1/sandboxes/{id}/runtime/{path}`
+
+Forwards the request to the sandbox runtime at the same sub-path and relays its status, headers and body. Accepts an account API key or a scoped sandbox token from POST /v1/sandboxes/\{id\}/scoped-token. Needs write access to the sandbox. A request that starts paid compute, such as an agent run or exec, is refused with 402 or 429 while the paying account has debt or is below the balance floor, and it resumes a suspended sandbox first. Runtime error bodies are returned in the standard error shape.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `path` | path | Yes | string | Runtime sub-path, such as agents/run or files/tree. It cannot contain .. or start with a slash. |
+
+Request body: `application/json`.
+
+| Status | Meaning |
+|---|---|
+| 200 | The runtime's response, relayed with its own status, headers and body |
+| 400 | Invalid sandbox ID or sub-path, an execution time limit above the deployment maximum, or a request the runtime refused (INVALID_REQUEST, EXECUTION_TTL_EXCEEDS_LIMIT) |
+| 402 | The paying account has recorded debt, or the model credential's budget is spent (INSUFFICIENT_BALANCE) |
+| 403 | The credential or team role cannot use this sandbox, a scoped token cannot use this sub-path, or secret isolation could not be proved |
+| 404 | Sandbox not found or already ended |
+| 413 | The request body is over the proxy limit |
+| 429 | The plan's runtime request rate is reached, or the paying account is below the admission floor (RATE_LIMIT_EXCEEDED, QUOTA_EXCEEDED) |
+| 500 | Internal error |
+| 502 | An agent run's event stream ended without a result (AGENT_RUN_STREAM_INCOMPLETE) |
+| 503 | The sandbox service or the runtime did not answer; retry after Retry-After |
+
+### Mint a scoped consumer-side token for direct sandbox access
+
+`POST /v1/sandboxes/{id}/scoped-token`
+
+Session/project tokens read SessionGateway streams. Runtime tokens grant `session-runtime`: read + workspace + terminal, or `read-only`: sandbox-wide read. Set `access: read-only` on session-runtime for session-bound read alone; the response must echo that restriction. Runtime read includes screenshots; workspace adds file writes and terminal adds its WebSocket. No scope here grants desktop input, /a11y or /mcp: mint computer_use separately at `GET /v1/sandboxes/{id}/mcp?capabilities=computer_use`. Missing-capability 403 responses identify the required capability and its mint route.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+
+Request body (`application/json`): one of 3 shapes; see the [OpenAPI document](/sandbox-openapi.json).
+
+| Status | Meaning |
+|---|---|
+| 200 | Scoped token issued |
+| 400 | Invalid scope or missing sessionId for session scope |
+| 403 | Caller does not own this sandbox |
+| 404 | Sandbox not found |
+| 500 | Internal server error |
+| 502 | Invalid sandbox service response |
+
+### Create a snapshot of sandbox state
+
+`POST /v1/sandboxes/{id}/snapshot`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `wait` | query | No | "true" \| "false" |  |
+| `Idempotency-Key` | header | No | string | Opt-in retry identity. A retry with this key and the same body replays the stored result instead of running a second operation. |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `tags` | array of string | No |  |
+| `idempotencyKey` | string | No | Opt-in retry identity. A retry with this key and the same body replays the stored result instead of running a second operation. |
+
+| Status | Meaning |
+|---|---|
+| 200 | Snapshot created, or the stored result of an earlier create |
+| 202 | Snapshot accepted; it is captured in the background |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox not found |
+| 409 | Snapshot limit reached, or this idempotency key is bound to a different request body |
+| 500 | Snapshot failed |
+| 502 | Upstream snapshot service returned success without a snapshot ID |
+| 503 | Snapshot quota check unavailable |
+
+### Create a snapshot of sandbox state
+
+`POST /v1/sandboxes/{id}/snapshots`
+
+Answers 202 once capture is durably accepted. Poll `operation.statusUrl` until `succeeded` or `failed`; a successful result names the snapshot. Writes made before the request are included. Wait for completion before writing data that must remain outside the snapshot.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `wait` | query | No | "true" \| "false" |  |
+| `Idempotency-Key` | header | No | string | Opt-in retry identity. A retry with this key and the same body replays the stored result instead of running a second operation. |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `tags` | array of string | No |  |
+| `idempotencyKey` | string | No | Opt-in retry identity. A retry with this key and the same body replays the stored result instead of running a second operation. |
+
+| Status | Meaning |
+|---|---|
+| 200 | Snapshot created, or the stored result of an earlier create |
+| 202 | Snapshot accepted; it is captured in the background |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox not found |
+| 409 | Snapshot limit reached, or this idempotency key is bound to a different request body |
+| 500 | Snapshot failed |
+| 502 | Upstream snapshot service returned success without a snapshot ID |
+| 503 | Snapshot quota check unavailable |
+
+### List snapshots for a sandbox
+
+`GET /v1/sandboxes/{id}/snapshots`
+
+For a deleted sandbox whose final snapshot is retained, its owner gets that snapshot alone, marked `final`, with `deleted: true`. Anyone else, a team member included, gets 404, as for a sandbox with no retained snapshot.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+
+| Status | Meaning |
+|---|---|
+| 200 | List of snapshots |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox not found |
+| 500 | Snapshot listing failed |
+| 501 | Snapshot backend unavailable |
+| 503 | Retryable snapshot service failure |
+
+### Get sandbox snapshot restore job status
+
+`GET /v1/sandboxes/{id}/snapshots/jobs/{jobId}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `jobId` | path | Yes | string | Restore job ID |
+| `waitMs` | query | No | integer or null | Hold the answer until the job finishes, up to this many milliseconds |
+
+| Status | Meaning |
+|---|---|
+| 200 | Restore job status |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox or job not found |
+| 500 | Failed to fetch restore job status |
+| 501 | Restore job queue unavailable |
+
+### Delete a sandbox snapshot
+
+`DELETE /v1/sandboxes/{id}/snapshots/{snapshotId}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `snapshotId` | path | Yes | string | Snapshot ID |
+
+| Status | Meaning |
+|---|---|
+| 200 | Snapshot deleted, or already absent |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox not found |
+| 500 | Delete failed |
+| 501 | Snapshot backend unavailable |
+| 503 | Host restarting or unreachable; retry |
+
+### Restore a sandbox from a snapshot
+
+`POST /v1/sandboxes/{id}/snapshots/{snapshotId}/restore`
+
+Restores the whole workspace from the snapshot. The optional JSON body `{ "paths": ["relative/path"] }` restores only those workspace-relative paths and leaves every other file untouched; an empty body restores the whole workspace. A body that is present but is not that JSON object answers 400, and nothing is restored. With `waitMs` the 202 is held until the job finishes and carries its status, so the caller needs no poll. A repeat under the same `Idempotency-Key` answers the same job for an hour after it ends; the same key with another snapshot or paths is another restore.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `snapshotId` | path | Yes | string | Snapshot ID |
+| `waitMs` | query | No | integer or null | Hold the answer until the job finishes, up to this many milliseconds |
+| `Idempotency-Key` | header | No | string | Opt-in retry identity. A retry with this key and the same body replays the stored result instead of running a second operation. |
+
+| Status | Meaning |
+|---|---|
+| 200 | Snapshot restored |
+| 202 | Restore accepted |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox or snapshot not found |
+| 500 | Restore failed |
+| 501 | Snapshot backend unavailable |
+| 502 | Invalid sandbox service response |
+
+### Stop a sandbox (keeps state)
+
+`POST /v1/sandboxes/{id}/stop`
+
+Answers once the sandbox is stopped and its final workspace generation is durable. With `wait=false` it may instead answer 202 as soon as the stop is durably accepted: poll `operation.statusUrl` (or `Location`) until the operation is `succeeded` or `failed`. Billing runs until the runtime is actually stopped, and a resume issued meanwhile waits for the stop. A 200 to a `wait=false` request means the stop already finished synchronously. A synchronous stop accepts `{ "retain": { "paths": ["relative/path"] } }` to export its exact remotely confirmed stopped workspace before answering.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `wait` | query | No | "true" \| "false" |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Sandbox stopped |
+| 202 | Stop accepted; it finishes in the background |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox not found |
+| 409 | Refused with a typed end: SUSPEND_REQUIRES_MANAGED_HOME, RUNTIME_GONE, FINAL_SUSPEND_UNCONFIRMED or RUN_SESSION_CAPTURE_PENDING; `retryable: false` answers every repeat the same |
+| 500 | Internal server error |
+| 503 | Sandbox billing state is temporarily unavailable |
+
+### Export sandbox trace and intelligence envelope
+
+`GET /v1/sandboxes/{id}/trace`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `includeIntelligence` | query | No | "true" \| "false" |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Sandbox trace export |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Sandbox not found |
+| 500 | Internal server error |
+
+### Look up an idempotent workspace operation
+
+`POST /v1/sandboxes/{id}/workspace-operations/lookup`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `kind` | "checkpoint" \| "fork" | Yes |  |
+| `idempotencyKey` | string | Yes | Opt-in retry identity. A retry with this key and the same body replays the stored result instead of running a second operation. |
+| `request` | object | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Operation lookup outcome |
+| 400 | Invalid request |
+
+### List sandbox shape presets and the caller's ceiling
+
+`GET /v1/shapes`
+
+Returns the named sandbox sizes, which one is the platform's default, and the largest shape this account can be granted on this deployment. Presets are the platform's numbers and are not clamped per account: a preset above `ceiling` (the default `small` on a plan whose ceiling sits below it) is granted clamped to the ceiling when the create names no size or marks the size advisory, and refused with RESOURCES_EXCEED_LIMIT when the create names that preset's numbers explicitly. `default` names the platform's default preset: a create that sends no `resources` receives that preset's CPU and memory, but its disk is currently held at 2 GiB (the host warm-seed quota) rather than the preset's, so name `resources.diskGB` when you need more.
+
+| Status | Meaning |
+|---|---|
+| 200 | Shapes retrieved successfully |
+| 500 | Internal error |
+
+## GPU
+
+| Route | Does |
+|---|---|
+| `GET /v1/sandboxes/{id}/gpu/leases` | List GPU leases |
+| `POST /v1/sandboxes/{id}/gpu/leases` | Attach a GPU lease |
+| `PATCH /v1/sandboxes/{id}/gpu/leases/{leaseId}` | Renew a GPU lease |
+| `DELETE /v1/sandboxes/{id}/gpu/leases/{leaseId}` | Detach a GPU lease |
+| `GET /v1/sandboxes/{id}/gpu/leases/{leaseId}/endpoint/{path}` | Send a GET request to a GPU lease endpoint |
+| `POST /v1/sandboxes/{id}/gpu/leases/{leaseId}/endpoint/{path}` | Send a POST request to a GPU lease endpoint |
+| `PUT /v1/sandboxes/{id}/gpu/leases/{leaseId}/endpoint/{path}` | Send a PUT request to a GPU lease endpoint |
+| `PATCH /v1/sandboxes/{id}/gpu/leases/{leaseId}/endpoint/{path}` | Send a PATCH request to a GPU lease endpoint |
+| `DELETE /v1/sandboxes/{id}/gpu/leases/{leaseId}/endpoint/{path}` | Send a DELETE request to a GPU lease endpoint |
+| `POST /v1/sandboxes/{id}/gpu/leases/{leaseId}/exec` | Run a command on a GPU lease |
+| `GET /v1/sandboxes/{id}/gpu/providers` | List GPU providers |
+
+### List GPU leases
+
+`GET /v1/sandboxes/{id}/gpu/leases`
+
+Needs read access to the sandbox. Each lease's endpointUrl is its serving URL on this API. A destroyed lease in the list has its final charge recorded once.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+
+| Status | Meaning |
+|---|---|
+| 200 | GPU leases |
+| 400 | The sandbox's driver cannot be routed |
+| 403 | The credential or team role cannot use this sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN, INSUFFICIENT_ROLE, SANDBOX_ACCESS_DENIED, DRIVER_NOT_ALLOWED) |
+| 404 | Sandbox or lease not found |
+| 500 | The leases could not be listed (GPU_LEASE_LIST_FAILED) |
+| 503 | The lease store is unavailable, or the sandbox service did not answer; retry after Retry-After |
+
+### Attach a GPU lease
+
+`POST /v1/sandboxes/{id}/gpu/leases`
+
+Needs admin access to the sandbox and a paid seat or funded balance. The plan's accelerator limit applies per sandbox. maxSpendUsd and maxLifetimeSeconds end the lease when reached.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `provider` | string | No |  |
+| `image` | string | No |  |
+| `env` | object | No |  |
+| `diskGb` | integer | No |  |
+| `volumeGb` | integer | No |  |
+| `volumeMountPath` | string | No |  |
+| `region` | string | No |  |
+| `manifest` | object | No |  |
+| `command` | array of string | No |  |
+| `ports` | array of integer | No |  |
+| `endpoint` | object | No |  |
+| `allowSpot` | boolean | No |  |
+| `maxHourlyUsd` | number | No |  |
+| `weights` | object | No |  |
+| `arms` | array of object | No |  |
+| `maxSpendUsd` | number | Yes |  |
+| `maxLifetimeSeconds` | integer | Yes |  |
+| `idleTimeoutSeconds` | integer | No |  |
+| `accelerator` | object | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 201 | GPU lease attached |
+| 400 | Invalid request, the plan's accelerator limit or the spend cap refused it, or the sandbox's driver cannot be routed (INVALID_REQUEST, ACCELERATOR_LIMIT_EXCEEDED, GPU_SPEND_CAP_EXCEEDED) |
+| 402 | The account has no paid seat or funded balance (PAYMENT_REQUIRED, INSUFFICIENT_BALANCE) |
+| 403 | The credential or team role cannot use this sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN, INSUFFICIENT_ROLE, SANDBOX_ACCESS_DENIED, DRIVER_NOT_ALLOWED) |
+| 404 | Sandbox or lease not found |
+| 409 | The lease is not ready |
+| 429 | The paying account's balance is below the admission floor (QUOTA_EXCEEDED) |
+| 500 | GPU lease operation failed |
+| 502 | The GPU provider failed (GPU_PROVIDER_ERROR) |
+| 503 | No GPU provider is configured (GPU_PROVIDER_NOT_CONFIGURED lists each provider and the variables it needs), the provider or the lease store is unavailable, or the sandbox service did not answer; retry after Retry-After |
+
+### Renew a GPU lease
+
+`PATCH /v1/sandboxes/{id}/gpu/leases/{leaseId}`
+
+Sets a new lifetime or spend cap. Send at least one of maxLifetimeSeconds and maxSpendUsd. Needs admin access to the sandbox and a paid seat or funded balance.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `leaseId` | path | Yes | string | GPU lease ID |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `maxSpendUsd` | number | No |  |
+| `maxLifetimeSeconds` | integer | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | GPU lease renewed |
+| 400 | Invalid request, or the spend cap refused it (INVALID_REQUEST, GPU_SPEND_CAP_EXCEEDED) |
+| 402 | The account has no paid seat or funded balance (PAYMENT_REQUIRED, INSUFFICIENT_BALANCE) |
+| 403 | The credential or team role cannot use this sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN, INSUFFICIENT_ROLE, SANDBOX_ACCESS_DENIED, DRIVER_NOT_ALLOWED) |
+| 404 | Sandbox or lease not found |
+| 409 | The lease is not ready |
+| 500 | GPU lease operation failed |
+| 502 | The GPU provider failed (GPU_PROVIDER_ERROR) |
+| 503 | No GPU provider is configured (GPU_PROVIDER_NOT_CONFIGURED lists each provider and the variables it needs), the provider or the lease store is unavailable, or the sandbox service did not answer; retry after Retry-After |
+
+### Detach a GPU lease
+
+`DELETE /v1/sandboxes/{id}/gpu/leases/{leaseId}`
+
+Needs write access to the sandbox. Destroys the lease and records its final charge. The response carries the lease's billing summary.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `leaseId` | path | Yes | string | GPU lease ID |
+
+| Status | Meaning |
+|---|---|
+| 200 | GPU lease detached |
+| 400 | The sandbox's driver cannot be routed |
+| 403 | The credential or team role cannot use this sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN, INSUFFICIENT_ROLE, SANDBOX_ACCESS_DENIED, DRIVER_NOT_ALLOWED) |
+| 404 | Sandbox or lease not found |
+| 409 | The lease is not ready |
+| 500 | GPU lease operation failed |
+| 502 | The GPU provider failed (GPU_PROVIDER_ERROR) |
+| 503 | No GPU provider is configured (GPU_PROVIDER_NOT_CONFIGURED lists each provider and the variables it needs), the provider or the lease store is unavailable, or the sandbox service did not answer; retry after Retry-After |
+
+### Send a GET request to a GPU lease endpoint
+
+`GET /v1/sandboxes/{id}/gpu/leases/{leaseId}/endpoint/{path}`
+
+Forwards the request to the lease's HTTPS serving endpoint, with its query string, body, Content-Type and Accept. The response status, headers and body are the endpoint's. Needs write access to the sandbox. A request in flight counts as lease activity.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `leaseId` | path | Yes | string | GPU lease ID |
+| `path` | path | Yes | string | Path on the serving endpoint, without a leading slash; empty for its root |
+
+| Status | Meaning |
+|---|---|
+| 200 | The serving endpoint's response, relayed with its own status, headers and body |
+| 400 | The path leaves the serving endpoint |
+| 403 | The credential or team role cannot use this sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN, INSUFFICIENT_ROLE, SANDBOX_ACCESS_DENIED, DRIVER_NOT_ALLOWED) |
+| 404 | Sandbox or lease not found |
+| 409 | The lease has no serving endpoint, or its credential is unavailable |
+| 500 | GPU lease operation failed |
+| 502 | The GPU provider failed (GPU_PROVIDER_ERROR) |
+| 503 | No GPU provider is configured (GPU_PROVIDER_NOT_CONFIGURED lists each provider and the variables it needs), the provider or the lease store is unavailable, or the sandbox service did not answer; retry after Retry-After |
+
+### Send a POST request to a GPU lease endpoint
+
+`POST /v1/sandboxes/{id}/gpu/leases/{leaseId}/endpoint/{path}`
+
+Forwards the request to the lease's HTTPS serving endpoint, with its query string, body, Content-Type and Accept. The response status, headers and body are the endpoint's. Needs write access to the sandbox. A request in flight counts as lease activity.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `leaseId` | path | Yes | string | GPU lease ID |
+| `path` | path | Yes | string | Path on the serving endpoint, without a leading slash; empty for its root |
+
+Request body: `application/json`.
+
+| Status | Meaning |
+|---|---|
+| 200 | The serving endpoint's response, relayed with its own status, headers and body |
+| 400 | The path leaves the serving endpoint |
+| 403 | The credential or team role cannot use this sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN, INSUFFICIENT_ROLE, SANDBOX_ACCESS_DENIED, DRIVER_NOT_ALLOWED) |
+| 404 | Sandbox or lease not found |
+| 409 | The lease has no serving endpoint, or its credential is unavailable |
+| 500 | GPU lease operation failed |
+| 502 | The GPU provider failed (GPU_PROVIDER_ERROR) |
+| 503 | No GPU provider is configured (GPU_PROVIDER_NOT_CONFIGURED lists each provider and the variables it needs), the provider or the lease store is unavailable, or the sandbox service did not answer; retry after Retry-After |
+
+### Send a PUT request to a GPU lease endpoint
+
+`PUT /v1/sandboxes/{id}/gpu/leases/{leaseId}/endpoint/{path}`
+
+Forwards the request to the lease's HTTPS serving endpoint, with its query string, body, Content-Type and Accept. The response status, headers and body are the endpoint's. Needs write access to the sandbox. A request in flight counts as lease activity.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `leaseId` | path | Yes | string | GPU lease ID |
+| `path` | path | Yes | string | Path on the serving endpoint, without a leading slash; empty for its root |
+
+Request body: `application/json`.
+
+| Status | Meaning |
+|---|---|
+| 200 | The serving endpoint's response, relayed with its own status, headers and body |
+| 400 | The path leaves the serving endpoint |
+| 403 | The credential or team role cannot use this sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN, INSUFFICIENT_ROLE, SANDBOX_ACCESS_DENIED, DRIVER_NOT_ALLOWED) |
+| 404 | Sandbox or lease not found |
+| 409 | The lease has no serving endpoint, or its credential is unavailable |
+| 500 | GPU lease operation failed |
+| 502 | The GPU provider failed (GPU_PROVIDER_ERROR) |
+| 503 | No GPU provider is configured (GPU_PROVIDER_NOT_CONFIGURED lists each provider and the variables it needs), the provider or the lease store is unavailable, or the sandbox service did not answer; retry after Retry-After |
+
+### Send a PATCH request to a GPU lease endpoint
+
+`PATCH /v1/sandboxes/{id}/gpu/leases/{leaseId}/endpoint/{path}`
+
+Forwards the request to the lease's HTTPS serving endpoint, with its query string, body, Content-Type and Accept. The response status, headers and body are the endpoint's. Needs write access to the sandbox. A request in flight counts as lease activity.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `leaseId` | path | Yes | string | GPU lease ID |
+| `path` | path | Yes | string | Path on the serving endpoint, without a leading slash; empty for its root |
+
+Request body: `application/json`.
+
+| Status | Meaning |
+|---|---|
+| 200 | The serving endpoint's response, relayed with its own status, headers and body |
+| 400 | The path leaves the serving endpoint |
+| 403 | The credential or team role cannot use this sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN, INSUFFICIENT_ROLE, SANDBOX_ACCESS_DENIED, DRIVER_NOT_ALLOWED) |
+| 404 | Sandbox or lease not found |
+| 409 | The lease has no serving endpoint, or its credential is unavailable |
+| 500 | GPU lease operation failed |
+| 502 | The GPU provider failed (GPU_PROVIDER_ERROR) |
+| 503 | No GPU provider is configured (GPU_PROVIDER_NOT_CONFIGURED lists each provider and the variables it needs), the provider or the lease store is unavailable, or the sandbox service did not answer; retry after Retry-After |
+
+### Send a DELETE request to a GPU lease endpoint
+
+`DELETE /v1/sandboxes/{id}/gpu/leases/{leaseId}/endpoint/{path}`
+
+Forwards the request to the lease's HTTPS serving endpoint, with its query string, body, Content-Type and Accept. The response status, headers and body are the endpoint's. Needs write access to the sandbox. A request in flight counts as lease activity.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `leaseId` | path | Yes | string | GPU lease ID |
+| `path` | path | Yes | string | Path on the serving endpoint, without a leading slash; empty for its root |
+
+Request body: `application/json`.
+
+| Status | Meaning |
+|---|---|
+| 200 | The serving endpoint's response, relayed with its own status, headers and body |
+| 400 | The path leaves the serving endpoint |
+| 403 | The credential or team role cannot use this sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN, INSUFFICIENT_ROLE, SANDBOX_ACCESS_DENIED, DRIVER_NOT_ALLOWED) |
+| 404 | Sandbox or lease not found |
+| 409 | The lease has no serving endpoint, or its credential is unavailable |
+| 500 | GPU lease operation failed |
+| 502 | The GPU provider failed (GPU_PROVIDER_ERROR) |
+| 503 | No GPU provider is configured (GPU_PROVIDER_NOT_CONFIGURED lists each provider and the variables it needs), the provider or the lease store is unavailable, or the sandbox service did not answer; retry after Retry-After |
+
+### Run a command on a GPU lease
+
+`POST /v1/sandboxes/{id}/gpu/leases/{leaseId}/exec`
+
+Needs write access to the sandbox. Runs the command on the lease's accelerator host and answers when it exits. The call is recorded as a sandbox exec access event.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `leaseId` | path | Yes | string | GPU lease ID |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `command` | string | Yes |  |
+| `timeoutMs` | integer | No |  |
+| `env` | object | No |  |
+| `cwd` | string | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Command result |
+| 400 | Invalid request (INVALID_REQUEST), or the sandbox's driver cannot be routed |
+| 402 | The account that pays for the sandbox has recorded debt (INSUFFICIENT_BALANCE) |
+| 403 | The credential or team role cannot use this sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN, INSUFFICIENT_ROLE, SANDBOX_ACCESS_DENIED, DRIVER_NOT_ALLOWED) |
+| 404 | Sandbox or lease not found |
+| 409 | The lease is not ready |
+| 429 | The paying account's balance is below the admission floor (QUOTA_EXCEEDED) |
+| 500 | GPU lease operation failed |
+| 502 | The GPU provider failed (GPU_PROVIDER_ERROR) |
+| 503 | No GPU provider is configured (GPU_PROVIDER_NOT_CONFIGURED lists each provider and the variables it needs), the provider or the lease store is unavailable, or the sandbox service did not answer; retry after Retry-After |
+
+### List GPU providers
+
+`GET /v1/sandboxes/{id}/gpu/providers`
+
+Needs read access to the sandbox. Checks each provider's credential with a fresh read-only call. Send acceleratorKind to also get each provider's hourly price for that GPU.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Sandbox ID |
+| `acceleratorKind` | query | No | string |  |
+| `acceleratorCount` | query | No | number |  |
+| `acceleratorVramGb` | query | No | number |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | GPU provider health |
+| 400 | Invalid query (INVALID_REQUEST), or the sandbox's driver cannot be routed |
+| 403 | The credential or team role cannot use this sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN, INSUFFICIENT_ROLE, SANDBOX_ACCESS_DENIED, DRIVER_NOT_ALLOWED) |
+| 503 | Provider discovery is unavailable (GPU_PROVIDER_UNAVAILABLE), or the sandbox service did not answer; retry after Retry-After |
+
+## Next steps
+
+- [In-sandbox runtime routes](/sandbox/api-reference/runtime): commands, files and terminals inside a sandbox.
+- [Sessions and backends](/sandbox/api-reference/sessions): coding-agent sessions and the agents you can run.
+- [Create, stop and delete](/sandbox/lifecycle): the same operations from the SDKs and CLI.

@@ -1,0 +1,464 @@
+---
+title: Intelligence, trace and Solve commands
+description: Reference for tangle intelligence, traces, connect, opencode-exporter and solve: read sandbox and fleet reports, send local agent traces, and enter Solve competitions.
+---
+
+# Intelligence, trace and Solve commands
+
+Read intelligence reports for sandboxes and fleets, list and fetch traces, send a local coding agent's telemetry to Tangle Intelligence, and enter Solve competitions.
+
+```bash
+tangle intelligence sandbox my-box
+tangle traces list
+tangle connect claude-code --verify
+```
+
+`tangle connect` changes files on your machine. `connect codex` rewrites `~/.codex/config.toml` without asking (pass `--no-write` to only print).
+`connect claude-code` offers to append a block to `~/.zshrc` or `~/.bashrc`, and writes `~/.zshrc` when your shell is neither zsh nor bash.
+`connect --verify` waits in seconds, polling every 3 s, and exits 1 when nothing arrives before `--timeout` (default 120 s).
+
+`tangle traces` reads the Intelligence API, so `--base-url` on it points at that host; `TANGLE_INTELLIGENCE_BASE_URL` sets it for every call.
+
+## Commands on this page
+
+| Command | What it does |
+| --- | --- |
+| [`tangle intelligence connect`](#tangle-intelligence-connect) | Connect local agent CLIs to Tangle Intelligence |
+| [`tangle intelligence doctor`](#tangle-intelligence-doctor) | Check whether your agent traces carry CONTENT or are metadata-only |
+| [`tangle intelligence hook`](#tangle-intelligence-hook) | Emit one local agent hook event to Tangle Intelligence |
+| [`tangle intelligence sandbox`](#tangle-intelligence-sandbox) | Create an intelligence report for one sandbox |
+| [`tangle intelligence fleet`](#tangle-intelligence-fleet) | Create an intelligence report for a sandbox fleet |
+| [`tangle intelligence create`](#tangle-intelligence-create) | Create a trace intelligence report |
+| [`tangle intelligence get`](#tangle-intelligence-get) | Get an intelligence report |
+| [`tangle intelligence list`](#tangle-intelligence-list) | List intelligence reports |
+| [`tangle traces list`](#tangle-traces-list) | List trace summaries (one row per trace), newest first |
+| [`tangle traces get`](#tangle-traces-get) | Show one trace's spans. Streams NDJSON to stdout with `--ndjson`. |
+| [`tangle traces runs list`](#tangle-traces-runs-list) | List eval-runs, newest first |
+| [`tangle traces runs get`](#tangle-traces-runs-get) | Show a single eval-run |
+| [`tangle connect`](#tangle-connect) | Connect a local coding agent's telemetry to Tangle Intelligence, content on (for SDK integration snippets, see 'tangle agent connect') |
+| [`tangle opencode-exporter`](#tangle-opencode-exporter) | Export a running OpenCode's content to Tangle Intelligence (standalone shim) |
+| [`tangle solve clone`](#tangle-solve-clone) | Clone the pinned competition repository |
+| [`tangle solve run`](#tangle-solve-run) | Run the competition checker and record its evidence |
+| [`tangle solve submit`](#tangle-solve-submit) | Submit checker evidence through the device account and Tempo |
+| [`tangle solve account`](#tangle-solve-account) | Show the local Solve signing account |
+| [`tangle solve device list`](#tangle-solve-device-list) | List your devices and whether each may submit jobs on Tempo |
+| [`tangle solve device revoke`](#tangle-solve-device-revoke) | Permanently revoke a device; the local device is revoked with its own key |
+
+## Intelligence reports
+
+### `tangle intelligence connect`
+
+Connect local agent CLIs to Tangle Intelligence.
+
+Installs native hook files for local agent CLIs in a workspace so they emit traces to Tangle Intelligence, then sends a smoke trace.
+
+```bash
+tangle intelligence connect [agent] [options]
+```
+
+Aliases: `connect-agent`
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--endpoint <url>` | `https://intelligence.tangle.tools/v1/otlp` | OTLP endpoint base |
+| `--workspace <path>` | `.` | Workspace to write hook files into |
+| `--service-name <name>` |  | OTel service.name label |
+| `--environment <name>` | `local` | OTel deployment.environment label |
+| `--dry-run` |  | Print planned writes without changing files |
+| `--hook-command <command>` | `tangle intelligence hook` | Command native hooks should run |
+| `--no-smoke` |  | Skip the install smoke trace |
+
+```bash
+tangle intelligence connect codex --workspace ~/repo --no-smoke
+```
+
+- `--dry-run` prints the planned writes; `--no-smoke` skips the smoke trace.
+
+### `tangle intelligence doctor`
+
+Check whether your agent traces carry CONTENT or are metadata-only.
+
+```bash
+tangle intelligence doctor [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--endpoint <url>` | `https://intelligence.tangle.tools/v1/otlp` | OTLP endpoint base |
+
+### `tangle intelligence hook`
+
+Emit one local agent hook event to Tangle Intelligence.
+
+Emits one local agent hook event as OTLP; native agent hooks call it.
+
+```bash
+tangle intelligence hook [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--agent <agent>` |  | Agent name. Required. |
+| `--event <event>` |  | Hook event name. Required. |
+| `--payload <json>` |  | Hook payload JSON |
+| `--endpoint <url>` |  | OTLP endpoint base |
+| `--service-name <name>` |  | OTel service.name label |
+| `--environment <name>` |  | OTel deployment.environment label |
+| `--session-id <id>` |  | Session id override |
+| `--dry-run` |  | Build the OTLP request without sending it |
+| `--non-blocking` |  | Do not fail the parent agent process |
+
+- Reads the hook payload from piped stdin (max 65536 bytes) when `--payload` is absent.
+
+### `tangle intelligence sandbox`
+
+Create an intelligence report for one sandbox.
+
+```bash
+tangle intelligence sandbox <sandbox-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--mode <mode>` | `deterministic` | deterministic \| agentic |
+| `--max-usd <amount>` |  | Maximum customer charge for agentic analysis |
+| `--metadata <json>` |  | Metadata JSON object |
+
+Request: `POST /v1/intelligence/reports`
+
+```bash
+tangle intelligence sandbox my-box
+```
+
+### `tangle intelligence fleet`
+
+Create an intelligence report for a sandbox fleet.
+
+```bash
+tangle intelligence fleet <fleet-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--mode <mode>` | `deterministic` | deterministic \| agentic |
+| `--max-usd <amount>` |  | Maximum customer charge for agentic analysis |
+| `--metadata <json>` |  | Metadata JSON object |
+
+Request: `POST /v1/intelligence/reports`
+
+```bash
+tangle intelligence fleet fleet_1
+```
+
+### `tangle intelligence create`
+
+Create a trace intelligence report.
+
+Creates an intelligence report for a sandbox or fleet subject.
+
+```bash
+tangle intelligence create [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--subject-type <type>` |  | sandbox \| fleet. Required. |
+| `--subject-id <id>` |  | Subject identifier. Required. |
+| `--mode <mode>` | `deterministic` | deterministic \| agentic |
+| `--max-usd <amount>` |  | Maximum customer charge for agentic analysis |
+| `--metadata <json>` |  | Metadata JSON object |
+
+Request: `POST /v1/intelligence/reports`
+
+```bash
+tangle intelligence create --subject-type fleet --subject-id fleet_1
+```
+
+### `tangle intelligence get`
+
+Get an intelligence report.
+
+Shows one intelligence report.
+
+```bash
+tangle intelligence get <job-id>
+```
+
+Request: `GET /v1/intelligence/reports/{jobId}`
+
+```bash
+tangle intelligence get job_1
+```
+
+### `tangle intelligence list`
+
+List intelligence reports.
+
+Lists intelligence reports.
+
+```bash
+tangle intelligence list [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--subject-type <type>` |  | sandbox \| fleet |
+| `--subject-id <id>` |  | Subject identifier |
+| `--limit <count>` |  | Maximum reports to return |
+
+Request: `GET /v1/intelligence/reports`
+
+```bash
+tangle intelligence list
+```
+
+## Traces and runs
+
+### `tangle traces list`
+
+List trace summaries (one row per trace), newest first.
+
+Lists trace summaries, newest first, with filters.
+
+```bash
+tangle traces list [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--from <iso>` |  | ISO-8601 lower bound on received time (inclusive) |
+| `--to <iso>` |  | ISO-8601 upper bound on received time (inclusive) |
+| `--model <model>` |  | Exact model match (any span carried this model) |
+| `--run <runId>` |  | Exact run id match |
+| `--status <status>` |  | ERROR \| OK |
+| `-q, --query <text>` |  | Substring over span name |
+| `--cursor <cursor>` |  | Opaque pagination cursor from a prior page |
+| `--limit <count>` |  | Page size (clamped server-side to [1, 200]) |
+
+Request: `GET /v1/traces`
+
+```bash
+tangle traces list
+```
+
+- Global `--base-url` names the Intelligence API here; TANGLE_INTELLIGENCE_BASE_URL also sets it.
+
+### `tangle traces get`
+
+Show one trace's spans. Streams NDJSON to stdout with `--ndjson`.
+
+Shows one trace's spans; `--ndjson` streams all spans as NDJSON.
+
+```bash
+tangle traces get <traceId> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--ndjson` |  | Stream the full span set as NDJSON to stdout |
+| `--cursor <cursor>` |  | Opaque pagination cursor from a prior page |
+| `--limit <count>` |  | Spans per page |
+
+Request: `GET /v1/traces/{traceId}/spans`
+
+```bash
+tangle traces get trace_1 --json
+```
+
+- `--ndjson` reads GET /v1/traces/`{traceId}`/spans.ndjson.
+
+### `tangle traces runs list`
+
+List eval-runs, newest first.
+
+Lists eval runs, newest first.
+
+```bash
+tangle traces runs list [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--status <status>` |  | Run status filter |
+| `--gate <decision>` |  | Promotion-gate decision filter |
+| `--label <key:value>` |  | Match over the run's labels |
+| `--from <iso>` |  | ISO-8601 lower bound on received time |
+| `--to <iso>` |  | ISO-8601 upper bound on received time |
+| `-q, --query <text>` |  | Substring over run dir |
+| `--cursor <cursor>` |  | Opaque pagination cursor from a prior page |
+| `--limit <count>` |  | Page size |
+
+Request: `GET /v1/runs`
+
+```bash
+tangle traces runs list
+```
+
+### `tangle traces runs get`
+
+Show a single eval-run.
+
+Shows one eval run.
+
+```bash
+tangle traces runs get <runId>
+```
+
+Request: `GET /v1/runs/{runId}`
+
+```bash
+tangle traces runs get run_1
+```
+
+## Telemetry from a local coding agent
+
+### `tangle connect`
+
+Connect a local coding agent's telemetry to Tangle Intelligence, content on (for SDK integration snippets, see 'tangle agent connect').
+
+Configures a local coding agent (claude-code, codex, opencode, openclaw, hermes, nanoclaw) to send telemetry with content to Tangle Intelligence; `--verify` checks that content arrives.
+
+```bash
+tangle connect [agent] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--endpoint <url>` | `https://intelligence.tangle.tools/v1/otlp` | OTLP endpoint base |
+| `-p, --project <key>` |  | Project label (tangle.subject.key) to group runs; omit to set it yourself |
+| `--rc <path>` |  | Shell rc file to append the Claude Code env block to |
+| `--no-write` |  | Print the config instead of writing files (Claude Code / Codex) |
+| `--inline-key` |  | Embed the resolved API key literally in the config (default: keep $`{TANGLE_API_KEY}`) |
+| `--verify` |  | Poll onboarding status and report whether CONTENT is flowing |
+| `--timeout <seconds>` | `120` | Verify poll timeout in seconds |
+| `--run` |  | OpenCode only: run the content exporter against a live OpenCode server until interrupted |
+| `--opencode-url <url>` |  | OpenCode server base URL for `--run` (or set OPENCODE_BASE_URL) |
+| `--format <kind>` | `shell` | Claude Code output: shell (export block) \| env (.env / docker `--env-file`) \| dockerfile (ENV lines). env/dockerfile are the cron/container path, printed to stdout, no shell-rc edit, no TTY |
+| `--content <tier>` | `full` | Claude Code content tier: full (everything) \| prompts (task+prompts+tool-args) \| metadata (telemetry on, content off) |
+
+- This is Intelligence telemetry setup, not sandbox access; `tangle agent connect` prints SDK snippets.
+- codex: merges an [otel] block into ~/.codex/config.toml immediately, without a prompt, unless `--no-write`.
+- claude-code: prints an env block; on a terminal asks before appending it to the shell rc; `--format` env|dockerfile only prints.
+- `--verify` polls every 3 s up to `--timeout` SECONDS (default 120) and exits 1 unless content was seen.
+
+### `tangle opencode-exporter`
+
+Export a running OpenCode's content to Tangle Intelligence (standalone shim).
+
+Runs until Ctrl-C, forwarding a running OpenCode server's events with content to Tangle Intelligence.
+
+```bash
+tangle opencode-exporter [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--endpoint <url>` | `https://intelligence.tangle.tools/v1/otlp` | OTLP endpoint base |
+| `--opencode-url <url>` |  | OpenCode server base URL (or set OPENCODE_BASE_URL) |
+
+- Same as `tangle connect opencode --run`.
+- OPENCODE_BASE_URL or `--opencode-url` names the OpenCode server.
+
+## Solve
+
+### `tangle solve clone`
+
+Clone the pinned competition repository.
+
+Clones a competition's pinned repository.
+
+```bash
+tangle solve clone <competition> [directory] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--api-url <url>` |  | Solve API base URL |
+| `--profile <name>` | `solve` | Tangle profile |
+
+### `tangle solve run`
+
+Run the competition checker and record its evidence.
+
+Runs the competition checker in a directory and records its evidence.
+
+```bash
+tangle solve run [competition] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--directory <path>` |  | Competition directory (defaults to the current directory) |
+
+### `tangle solve submit`
+
+Submit checker evidence through the device account and Tempo.
+
+```bash
+tangle solve submit [competition] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--directory <path>` |  | Competition directory (defaults to the current directory) |
+| `--pr-url <url>` |  | GitHub pull request containing the submission |
+| `--model <name>` |  | Model used to produce the submission |
+| `--note <text>` |  | Short note shown with the accepted submission |
+| `--api-url <url>` |  | Solve API base URL |
+| `--profile <name>` | `solve` | Tangle profile |
+
+### `tangle solve account`
+
+Show the local Solve signing account.
+
+Shows the local Solve signing account; `--create` creates it.
+
+```bash
+tangle solve account [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--create` |  | Create the account if it does not exist |
+
+```bash
+tangle solve account --json
+```
+
+### `tangle solve device list`
+
+List your devices and whether each may submit jobs on Tempo.
+
+```bash
+tangle solve device list [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--api-url <url>` |  | Solve API base URL |
+| `--profile <name>` | `solve` | Tangle profile |
+
+### `tangle solve device revoke`
+
+Permanently revoke a device; the local device is revoked with its own key.
+
+Permanently revokes a device after confirmation.
+
+```bash
+tangle solve device revoke <address> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--reason <text>` |  | Why the device is revoked (shown to the account) |
+| `--yes` |  | Confirm the permanent revocation without a prompt |
+| `--api-url <url>` |  | Solve API base URL |
+| `--profile <name>` | `solve` | Tangle profile |
+
+- Without a terminal it refuses unless `--yes`.
+
+## Next
+
+- [Observability](/sandbox/observability)
+- [Evaluate agents](/sandbox/evaluation)
+- [tangle CLI](/sandbox/cli)

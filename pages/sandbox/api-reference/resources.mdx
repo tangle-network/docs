@@ -1,0 +1,2472 @@
+---
+title: Fleets, templates, secrets and teams routes
+description: REST reference for fleets, templates, public templates, images, instances, secrets, SSH keys, startup scripts, lines and teams.
+---
+
+# Fleets, templates, secrets and teams routes
+
+Manage fleets of sandboxes and the resources sandboxes start from or share: templates, images, instances, secrets, SSH keys, startup scripts, lines and teams.
+
+Every route is on `https://sandbox.tangle.tools` and takes your account API key as `Authorization: Bearer <key>` unless it says otherwise. Errors use the shape in [Error codes](/sandbox/errors).
+This page is generated from the [OpenAPI document](/sandbox-openapi.json), which also has every response schema.
+
+## Fleets
+
+| Route | Does |
+|---|---|
+| `GET /v1/fleets` | List sandbox fleets |
+| `POST /v1/fleets` | Create a sandbox fleet record |
+| `GET /v1/fleets/capabilities` | List fleet driver capabilities |
+| `POST /v1/fleets/estimate` | Estimate sandbox fleet cost before create |
+| `GET /v1/fleets/operations` | Summarize fleet operational risk for the current owner |
+| `POST /v1/fleets/reap-expired` | Delete expired sandbox fleets for the current owner |
+| `POST /v1/fleets/reconcile` | Find fleet machine records whose sandbox no longer exists |
+| `GET /v1/fleets/{fleetId}` | Get a sandbox fleet |
+| `DELETE /v1/fleets/{fleetId}` | Delete a sandbox fleet record |
+| `GET /v1/fleets/{fleetId}/cost` | Estimate current sandbox fleet cost |
+| `POST /v1/fleets/{fleetId}/dispatch` | Dispatch a command to fleet machines |
+| `POST /v1/fleets/{fleetId}/dispatch/stream` | Stream a command dispatch to fleet machines |
+| `POST /v1/fleets/{fleetId}/dispatch/{dispatchId}/cancel` | Cancel queued fleet dispatch branches |
+| `GET /v1/fleets/{fleetId}/dispatch/{dispatchId}/results` | Read buffered fleet dispatch results |
+| `POST /v1/fleets/{fleetId}/machines` | Add a machine to a sandbox fleet record |
+| `DELETE /v1/fleets/{fleetId}/machines/{machineId}` | Remove a machine from a sandbox fleet record |
+| `GET /v1/fleets/{fleetId}/manifest` | Get a fleet manifest for coordinator workflows |
+| `POST /v1/fleets/{fleetId}/token` | Mint a fleet-scoped agent token |
+| `GET /v1/fleets/{fleetId}/trace` | Export fleet trace and intelligence envelope |
+| `GET /v1/fleets/{fleetId}/usage` | Get fleet usage and intelligence summary |
+| `POST /v1/fleets/{fleetId}/workspace/reconcile` | Check fleet machines against the shared workspace mount |
+| `POST /v1/fleets/{fleetId}/workspace/snapshots` | Snapshot the fleet workspace |
+| `POST /v1/fleets/{fleetId}/workspace/snapshots/{snapshotId}/restore` | Restore the fleet workspace from a snapshot |
+
+### List sandbox fleets
+
+`GET /v1/fleets`
+
+| Status | Meaning |
+|---|---|
+| 200 | Fleets |
+| 500 | Internal error |
+
+### Create a sandbox fleet record
+
+`POST /v1/fleets`
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `id` | string | Yes |  |
+| `status` | "creating" \| "running" | No |  |
+| `metadata` | object | No |  |
+| `workspace` | object | No |  |
+| `policy` | object | No |  |
+| `resources` | object | No |  |
+| `maxConcurrentCreates` | integer | No |  |
+| `parent` | object | No |  |
+| `machines` | array of object | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 201 | Fleet created |
+| 400 | Validation error |
+| 403 | Forbidden |
+| 409 | Conflict |
+| 500 | Internal error |
+| 502 | Sandbox service verification failed |
+
+### List fleet driver capabilities
+
+`GET /v1/fleets/capabilities`
+
+| Status | Meaning |
+|---|---|
+| 200 | Fleet driver capabilities |
+
+### Estimate sandbox fleet cost before create
+
+`POST /v1/fleets/estimate`
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `machineCount` | integer | Yes |  |
+| `policy` | object | No |  |
+| `resources` | object | No |  |
+| `maxConcurrentCreates` | integer | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Fleet cost estimate |
+| 400 | Validation error |
+| 500 | Internal error |
+
+### Summarize fleet operational risk for the current owner
+
+`GET /v1/fleets/operations`
+
+| Status | Meaning |
+|---|---|
+| 200 | Fleet operations summary |
+| 500 | Internal error |
+
+### Delete expired sandbox fleets for the current owner
+
+`POST /v1/fleets/reap-expired`
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `dryRun` | boolean | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Expired fleet cleanup results |
+| 500 | Internal error |
+
+### Find fleet machine records whose sandbox no longer exists
+
+`POST /v1/fleets/reconcile`
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `dryRun` | boolean | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Fleet reconciliation result |
+| 500 | Internal error |
+
+### Get a sandbox fleet
+
+`GET /v1/fleets/{fleetId}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `fleetId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Fleet |
+| 400 | Bad request |
+| 404 | Not found |
+| 500 | Internal error |
+
+### Delete a sandbox fleet record
+
+`DELETE /v1/fleets/{fleetId}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `fleetId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Fleet deleted |
+| 500 | Internal error |
+| 502 | Fleet machine deprovision failed |
+
+### Estimate current sandbox fleet cost
+
+`GET /v1/fleets/{fleetId}/cost`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `fleetId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Fleet cost estimate |
+| 404 | Not found |
+| 500 | Internal error |
+
+### Dispatch a command to fleet machines
+
+`POST /v1/fleets/{fleetId}/dispatch`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `fleetId` | path | Yes | string |  |
+
+Request body (`application/json`): one of 2 shapes; see the [OpenAPI document](/sandbox-openapi.json).
+
+| Status | Meaning |
+|---|---|
+| 200 | Dispatch results |
+| 400 | Bad request |
+| 403 | PROFILE_SECRET_ISOLATION_UNAVAILABLE: backend.metadata.profileSecretIsolation needs every selected machine's runtime to seal the secret launch |
+| 404 | Not found |
+| 409 | Dispatch conflict |
+| 500 | Internal error |
+| 503 | PROFILE_SECRET_ISOLATION_UNAVAILABLE with reason sidecar_unreachable: a selected machine's runtime could not be asked; retry after Retry-After |
+
+### Stream a command dispatch to fleet machines
+
+`POST /v1/fleets/{fleetId}/dispatch/stream`
+
+Takes the same body as POST /v1/fleets/\{fleetId\}/dispatch and answers as server-sent events while the machines run. Each machine emits fleet.dispatch.branch.started and fleet.dispatch.branch.finished. The stream ends with fleet.dispatch.finished or fleet.dispatch.error. A failure before the stream starts is a JSON error instead. A dropped connection cancels the machines that have not started.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `fleetId` | path | Yes | string |  |
+
+Request body (`application/json`): one of 2 shapes; see the [OpenAPI document](/sandbox-openapi.json).
+
+| Status | Meaning |
+|---|---|
+| 200 | Server-sent events (text/event-stream). Each frame has an event name and a JSON data field, modeled by the schema. |
+| 400 | Invalid fleet ID or dispatch body (VALIDATION_ERROR) |
+| 402 | The account that pays for the fleet has recorded debt (INSUFFICIENT_BALANCE) |
+| 403 | The fleet token is not scoped to this fleet or lacks the exec or prompt action, or the backend's profile secret isolation is unavailable (FORBIDDEN, PROFILE_SECRET_ISOLATION_UNAVAILABLE) |
+| 404 | Fleet not found (NOT_FOUND) |
+| 409 | A dispatch with this dispatchId is already active (CONFLICT) |
+| 429 | The paying account's balance is below the admission floor (QUOTA_EXCEEDED) |
+| 503 | A selected machine could not be asked to prove secret isolation; retry after Retry-After (PROFILE_SECRET_ISOLATION_UNAVAILABLE) |
+
+### Cancel queued fleet dispatch branches
+
+`POST /v1/fleets/{fleetId}/dispatch/{dispatchId}/cancel`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `fleetId` | path | Yes | string |  |
+| `dispatchId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 202 | Dispatch cancel requested |
+| 403 | Forbidden |
+| 404 | Not found |
+| 500 | Internal error |
+
+### Read buffered fleet dispatch results
+
+`GET /v1/fleets/{fleetId}/dispatch/{dispatchId}/results`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `fleetId` | path | Yes | string |  |
+| `dispatchId` | path | Yes | string |  |
+| `cursor` | query | No | string |  |
+| `limit` | query | No | string |  |
+| `machine` | query | No | string or array of string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Buffered dispatch results |
+| 404 | Not found |
+| 500 | Internal error |
+
+### Add a machine to a sandbox fleet record
+
+`POST /v1/fleets/{fleetId}/machines`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `fleetId` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `machineId` | string | Yes |  |
+| `sandboxId` | string | Yes |  |
+| `status` | "creating" \| "running" \| "degraded" \| "deleting" \| "deleted" \| "failed" | No |  |
+| `role` | "coordinator" \| "worker" | No |  |
+| `driverType` | "docker" \| "firecracker" \| "host-agent" \| "tangle" | No |  |
+| `environment` | string | No |  |
+| `templateId` | string | No |  |
+| `publicTemplateId` | string | No |  |
+| `acceleratorCount` | integer | No |  |
+| `driverTimings` | object | No |  |
+
+| Status | Meaning |
+|---|---|
+| 201 | Machine added |
+| 400 | Validation error |
+| 403 | Forbidden |
+| 404 | Not found |
+| 409 | Conflict |
+| 500 | Internal error |
+| 502 | Sandbox service verification failed |
+
+### Remove a machine from a sandbox fleet record
+
+`DELETE /v1/fleets/{fleetId}/machines/{machineId}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `fleetId` | path | Yes | string |  |
+| `machineId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Machine removed |
+| 404 | Not found |
+| 500 | Internal error |
+| 502 | Fleet machine deprovision failed |
+
+### Get a fleet manifest for coordinator workflows
+
+`GET /v1/fleets/{fleetId}/manifest`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `fleetId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Fleet manifest |
+| 404 | Not found |
+| 500 | Internal error |
+
+### Mint a fleet-scoped agent token
+
+`POST /v1/fleets/{fleetId}/token`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `fleetId` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `actions` | array of "list" \| "create" \| "delete" \| "exec" \| "prompt" \| "read" \| "write" | No |  |
+| `policy` | object | No |  |
+| `ttlMinutes` | integer | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Fleet-scoped token |
+| 403 | Forbidden |
+| 404 | Not found |
+| 409 | Fleet expired |
+| 500 | Internal error |
+
+### Export fleet trace and intelligence envelope
+
+`GET /v1/fleets/{fleetId}/trace`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `fleetId` | path | Yes | string |  |
+| `includeIntelligence` | query | No | "true" \| "false" |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Fleet trace export |
+| 404 | Not found |
+| 500 | Internal error |
+
+### Get fleet usage and intelligence summary
+
+`GET /v1/fleets/{fleetId}/usage`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `fleetId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Fleet usage summary |
+| 404 | Not found |
+| 500 | Internal error |
+
+### Check fleet machines against the shared workspace mount
+
+`POST /v1/fleets/{fleetId}/workspace/reconcile`
+
+Compares each machine's recorded workspace mount path with the fleet's shared workspace mount path. It reads recorded state, contacts no machine and changes nothing. A fleet with no shared workspace mount path reports every machine as mounted. A fleet token needs the read action.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `fleetId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Mount check |
+| 400 | Invalid fleet ID (VALIDATION_ERROR) |
+| 403 | The fleet token is not scoped to this fleet or lacks the action (FORBIDDEN), or the credential is restricted to its sandbox |
+| 404 | Fleet not found (NOT_FOUND) |
+
+### Snapshot the fleet workspace
+
+`POST /v1/fleets/{fleetId}/workspace/snapshots`
+
+Acts on the workspace of the fleet's coordinator machine, or of its first machine when none is a coordinator. A fleet token needs the read action.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `fleetId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Snapshot captured |
+| 400 | Invalid fleet or snapshot ID, or the sandbox service refused the request (VALIDATION_ERROR) |
+| 403 | The fleet token is not scoped to this fleet or lacks the action (FORBIDDEN), or the credential is restricted to its sandbox |
+| 404 | Fleet not found, the fleet has no machines, or the sandbox service found no such sandbox or snapshot (NOT_FOUND) |
+| 409 | The sandbox service reported a conflict (CONFLICT) |
+| 429 | The sandbox service rate-limited or refused the request for quota (RATE_LIMITED, QUOTA_EXCEEDED) |
+| 502 | The sandbox service failed (UPSTREAM_ERROR) |
+
+### Restore the fleet workspace from a snapshot
+
+`POST /v1/fleets/{fleetId}/workspace/snapshots/{snapshotId}/restore`
+
+Acts on the workspace of the fleet's coordinator machine, or of its first machine when none is a coordinator. A fleet token needs the write action.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `fleetId` | path | Yes | string |  |
+| `snapshotId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Snapshot restored |
+| 202 | Restore accepted; it runs as a background job |
+| 400 | Invalid fleet or snapshot ID, or the sandbox service refused the request (VALIDATION_ERROR) |
+| 403 | The fleet token is not scoped to this fleet or lacks the action (FORBIDDEN), or the credential is restricted to its sandbox |
+| 404 | Fleet not found, the fleet has no machines, or the sandbox service found no such sandbox or snapshot (NOT_FOUND) |
+| 409 | The sandbox service reported a conflict (CONFLICT) |
+| 429 | The sandbox service rate-limited or refused the request for quota (RATE_LIMITED, QUOTA_EXCEEDED) |
+| 502 | The sandbox service failed (UPSTREAM_ERROR) |
+
+## Templates
+
+| Route | Does |
+|---|---|
+| `GET /v1/environments` | List environments |
+| `GET /v1/templates` | List user templates |
+| `POST /v1/templates` | Create a template from a snapshot |
+| `DELETE /v1/templates/{id}` | Delete a template |
+
+### List environments
+
+`GET /v1/environments`
+
+The credential is optional. Without one, the list holds the system environments. With one, it also holds the caller's templates; a failed template lookup leaves them out without an error.
+
+Authentication: an API key as a bearer token, optional.
+
+| Status | Meaning |
+|---|---|
+| 200 | Environments a sandbox can start from |
+
+### List user templates
+
+`GET /v1/templates`
+
+| Status | Meaning |
+|---|---|
+| 200 | List of templates |
+| 500 | Internal error |
+
+### Create a template from a snapshot
+
+`POST /v1/templates`
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | string | Yes |  |
+| `description` | string | No |  |
+| `snapshotId` | string | Yes |  |
+| `sourceSandboxId` | string | Yes |  |
+| `environment` | string | No |  |
+| `config` | object | No |  |
+
+| Status | Meaning |
+|---|---|
+| 201 | Template created |
+| 400 | Validation error |
+| 409 | Template already exists |
+| 500 | Internal error |
+
+### Delete a template
+
+`DELETE /v1/templates/{id}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Template deleted |
+| 404 | Not found |
+| 500 | Internal error |
+
+## Public templates
+
+| Route | Does |
+|---|---|
+| `POST /v1/public-templates` | Publish a snapshot as a public template |
+| `GET /v1/public-templates` | Search public templates |
+| `GET /v1/public-templates/artifacts/{artifactId}` | Get public template publish artifact status |
+| `GET /v1/public-templates/featured` | List featured public templates |
+| `GET /v1/public-templates/publish-jobs/{jobId}` | Get public template publish job status |
+| `GET /v1/public-templates/{id}` | Get a public template |
+| `GET /v1/public-templates/{id}/versions` | List versions for a public template |
+| `POST /v1/public-templates/{id}/versions` | Publish a new version for a public template |
+
+### Publish a snapshot as a public template
+
+`POST /v1/public-templates`
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | string | Yes |  |
+| `slug` | string | No |  |
+| `description` | string | No |  |
+| `websiteUrl` | string | No |  |
+| `snapshotId` | string | Yes |  |
+| `sourceSandboxId` | string | Yes |  |
+| `teamId` | string | No |  |
+| `readmeMarkdown` | string | No |  |
+| `tags` | array of string | No |  |
+| `releaseNotes` | string | No |  |
+| `forkedFromTemplateId` | string | No |  |
+
+| Status | Meaning |
+|---|---|
+| 202 | Publish queued |
+| 400 | Validation error |
+| 403 | Forbidden |
+| 404 | Snapshot not found |
+| 409 | Conflict |
+| 500 | Internal error |
+
+### Search public templates
+
+`GET /v1/public-templates`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `q` | query | No | string |  |
+| `tag` | query | No | string |  |
+| `featured` | query | No | boolean or null |  |
+| `limit` | query | No | integer |  |
+| `offset` | query | No | integer or null |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Templates |
+
+### Get public template publish artifact status
+
+`GET /v1/public-templates/artifacts/{artifactId}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `artifactId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Artifact |
+| 403 | Forbidden |
+| 404 | Not found |
+| 500 | Internal server error |
+
+### List featured public templates
+
+`GET /v1/public-templates/featured`
+
+| Status | Meaning |
+|---|---|
+| 200 | Templates |
+
+### Get public template publish job status
+
+`GET /v1/public-templates/publish-jobs/{jobId}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `jobId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Publish job |
+| 403 | Forbidden |
+| 404 | Not found |
+| 500 | Internal server error |
+
+### Get a public template
+
+`GET /v1/public-templates/{id}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Template |
+| 404 | Not found |
+| 500 | Internal error |
+
+### List versions for a public template
+
+`GET /v1/public-templates/{id}/versions`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Versions |
+| 404 | Not found |
+| 500 | Internal error |
+
+### Publish a new version for a public template
+
+`POST /v1/public-templates/{id}/versions`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `snapshotId` | string | Yes |  |
+| `sourceSandboxId` | string | Yes |  |
+| `readmeMarkdown` | string | No |  |
+| `tags` | array of string | No |  |
+| `releaseNotes` | string | No |  |
+
+| Status | Meaning |
+|---|---|
+| 202 | Version publish queued |
+| 400 | Validation error |
+| 403 | Forbidden |
+| 404 | Not found |
+| 500 | Internal error |
+
+## Images
+
+| Route | Does |
+|---|---|
+| `POST /v1/images` | Build an image |
+| `GET /v1/images` | List images |
+| `GET /v1/images/{id}` | Get an image |
+| `DELETE /v1/images/{id}` | Delete an image |
+| `POST /v1/images/{id}/tag` | Tag an image |
+
+### Build an image
+
+`POST /v1/images`
+
+Image builds are disabled. Every request is refused before its body is read.
+
+| Status | Meaning |
+|---|---|
+| 401 | Missing or invalid credential |
+| 403 | Image builds are disabled (IMAGE_BUILDS_DISABLED), or the credential is restricted to its own sandbox |
+| 503 | The image catalog did not answer; retry shortly |
+
+### List images
+
+`GET /v1/images`
+
+Image builds are disabled, so the list is empty.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `limit` | query | No | number |  |
+| `offset` | query | No | number or null |  |
+| `label` | query | No | string |  |
+| `includeCache` | query | No | boolean or null |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The images |
+| 401 | Missing or invalid credential |
+| 403 | The credential is restricted to its own sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN) |
+| 503 | The image catalog did not answer; retry shortly |
+
+### Get an image
+
+`GET /v1/images/{id}`
+
+Image builds are disabled, so no image exists to read, delete or tag: every id answers 404.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 401 | Missing or invalid credential |
+| 403 | The credential is restricted to its own sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN) |
+| 404 | No image has this id (NOT_FOUND) |
+| 503 | The image catalog did not answer; retry shortly |
+
+### Delete an image
+
+`DELETE /v1/images/{id}`
+
+Image builds are disabled, so no image exists to read, delete or tag: every id answers 404.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+| `force` | query | No | boolean or null |  |
+
+| Status | Meaning |
+|---|---|
+| 401 | Missing or invalid credential |
+| 403 | The credential is restricted to its own sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN) |
+| 404 | No image has this id (NOT_FOUND) |
+| 503 | The image catalog did not answer; retry shortly |
+
+### Tag an image
+
+`POST /v1/images/{id}/tag`
+
+Image builds are disabled, so no image exists to read, delete or tag: every id answers 404.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `tag` | string | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 401 | Missing or invalid credential |
+| 403 | The credential is restricted to its own sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN) |
+| 404 | No image has this id (NOT_FOUND) |
+| 503 | The image catalog did not answer; retry shortly |
+
+## Instances
+
+| Route | Does |
+|---|---|
+| `GET /v1/instances/{key}` | Get an instance |
+| `PATCH /v1/instances/{key}` | Update an instance |
+| `DELETE /v1/instances/{key}` | Release an instance key |
+| `PUT /v1/instances/{key}/binding` | Bind a sandbox to an instance |
+| `POST /v1/instances/{key}/replace` | Replace an instance's sandbox |
+
+### Get an instance
+
+`GET /v1/instances/{key}`
+
+An instance maps a key you choose to the sandbox that serves it now. Keys are scoped to the authenticated customer.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `key` | path | Yes | string | 1-200 characters: letters, digits and . _ : @ -, starting with a letter or digit. |
+
+| Status | Meaning |
+|---|---|
+| 200 | The instance record |
+| 400 | The key or the body is invalid (INVALID_INSTANCE_KEY, VALIDATION_ERROR) |
+| 401 | Missing or invalid credential |
+| 403 | The credential is restricted to its own sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN) |
+| 404 | The key has no record (INSTANCE_NOT_FOUND) |
+
+### Update an instance
+
+`PATCH /v1/instances/{key}`
+
+Changes the profile version that new sessions bind to, or marks or clears a failed start, on the sandbox of the given generation. A marked failed start keeps its first time. Send at least one of profileVersion and unstartable.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `key` | path | Yes | string | 1-200 characters: letters, digits and . _ : @ -, starting with a letter or digit. |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `generation` | integer | Yes |  |
+| `profileVersion` | string | No |  |
+| `unstartable` | "mark" \| "clear" | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The updated record |
+| 400 | The key or the body is invalid (INVALID_INSTANCE_KEY, VALIDATION_ERROR) |
+| 401 | Missing or invalid credential |
+| 403 | The credential is restricted to its own sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN) |
+| 404 | The key has no record (INSTANCE_NOT_FOUND) |
+| 409 | The record changed since it was read; instance holds the current record (INSTANCE_CONFLICT) |
+
+### Release an instance key
+
+`DELETE /v1/instances/{key}`
+
+Forgets the key. Its sandbox is left as it is.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `key` | path | Yes | string | 1-200 characters: letters, digits and . _ : @ -, starting with a letter or digit. |
+
+| Status | Meaning |
+|---|---|
+| 204 | The key was released |
+| 400 | The key or the body is invalid (INVALID_INSTANCE_KEY, VALIDATION_ERROR) |
+| 401 | Missing or invalid credential |
+| 403 | The credential is restricted to its own sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN) |
+| 404 | The key has no record (INSTANCE_NOT_FOUND) |
+
+### Bind a sandbox to an instance
+
+`PUT /v1/instances/{key}/binding`
+
+Records the sandbox that serves the key for the given generation. A key with no record starts at generation 1. Binding the sandbox that is already bound succeeds and clears a marked failed start. A member-paid line key can bind only the isolated sandbox it created.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `key` | path | Yes | string | 1-200 characters: letters, digits and . _ : @ -, starting with a letter or digit. |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `generation` | integer | Yes |  |
+| `sandboxId` | string | Yes |  |
+| `profileVersion` | string | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The bound record |
+| 400 | The key or the body is invalid (INVALID_INSTANCE_KEY, VALIDATION_ERROR) |
+| 401 | Missing or invalid credential |
+| 403 | The credential cannot use this sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN, MEMBER_PAID_BOX_FORBIDDEN) |
+| 409 | The record changed since it was read; instance holds the current record (INSTANCE_CONFLICT) |
+| 503 | Member sandbox authority could not be checked (MEMBER_PAID_BOX_UNAVAILABLE) |
+
+### Replace an instance's sandbox
+
+`POST /v1/instances/{key}/replace`
+
+Retires the key's sandbox of the given generation and opens the next generation with no sandbox. The retired sandbox is not deleted. A key with no record accepts generation 1 and starts at generation 2.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `key` | path | Yes | string | 1-200 characters: letters, digits and . _ : @ -, starting with a letter or digit. |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `generation` | integer | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The record at the next generation |
+| 400 | The key or the body is invalid (INVALID_INSTANCE_KEY, VALIDATION_ERROR) |
+| 401 | Missing or invalid credential |
+| 403 | The credential is restricted to its own sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN) |
+| 409 | The record changed since it was read; instance holds the current record (INSTANCE_CONFLICT) |
+
+## Secrets
+
+| Route | Does |
+|---|---|
+| `GET /v1/secrets` | List secrets (names only, no values) |
+| `POST /v1/secrets` | Create an encrypted secret |
+| `PUT /v1/secrets/{name}` | Replace a secret and re-key live sandboxes |
+| `DELETE /v1/secrets/{name}` | Delete a secret |
+
+### List secrets (names only, no values)
+
+`GET /v1/secrets`
+
+| Status | Meaning |
+|---|---|
+| 200 | List of secret names |
+| 500 | Internal error |
+
+### Create an encrypted secret
+
+`POST /v1/secrets`
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | string | Yes |  |
+| `value` | string | Yes |  |
+| `hosts` | array of string | No |  |
+| `header` | string | No |  |
+| `exposeInBox` | true | No |  |
+| `proxySecrets` | array of object | No |  |
+| `reason` | string | No |  |
+
+| Status | Meaning |
+|---|---|
+| 201 | Secret created |
+| 400 | Validation error |
+| 409 | Secret already exists |
+| 500 | Internal error |
+
+### Replace a secret and re-key live sandboxes
+
+`PUT /v1/secrets/{name}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `name` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `value` | string | Yes |  |
+| `hosts` | array of string | No |  |
+| `header` | string | No |  |
+| `exposeInBox` | true | No |  |
+| `proxySecrets` | array of object | No |  |
+| `reason` | string | No |  |
+| `expectedUpdatedAt` | string | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Secret created |
+| 400 | Validation error |
+| 404 | Not found |
+| 409 | Secret already exists |
+| 500 | Internal error |
+| 503 | Live re-key not acknowledged |
+
+### Delete a secret
+
+`DELETE /v1/secrets/{name}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `name` | path | Yes | string |  |
+| `expectedUpdatedAt` | query | No | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Secret deleted |
+| 404 | Not found |
+| 409 | Generation changed |
+| 500 | Internal error |
+
+## SSH keys
+
+| Route | Does |
+|---|---|
+| `GET /v1/ssh-keys` | List SSH keys |
+| `POST /v1/ssh-keys` | Add an SSH key |
+| `DELETE /v1/ssh-keys/{id}` | Delete an SSH key |
+
+### List SSH keys
+
+`GET /v1/ssh-keys`
+
+| Status | Meaning |
+|---|---|
+| 200 | List SSH keys |
+| 500 | Internal error |
+
+### Add an SSH key
+
+`POST /v1/ssh-keys`
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | string | Yes |  |
+| `publicKey` | string | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 201 | SSH key created |
+| 400 | Validation error |
+| 409 | Conflict |
+| 500 | Internal error |
+
+### Delete an SSH key
+
+`DELETE /v1/ssh-keys/{id}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | SSH key deleted |
+| 404 | Not found |
+| 500 | Internal error |
+
+## Startup scripts
+
+| Route | Does |
+|---|---|
+| `GET /v1/startup-scripts` | List startup scripts |
+| `POST /v1/startup-scripts` | Create a startup script |
+| `GET /v1/startup-scripts/{id}` | Get a startup script |
+| `PUT /v1/startup-scripts/{id}` | Update a startup script |
+| `DELETE /v1/startup-scripts/{id}` | Delete a startup script |
+| `PATCH /v1/startup-scripts/{id}/toggle` | Toggle a startup script enabled/disabled |
+
+### List startup scripts
+
+`GET /v1/startup-scripts`
+
+| Status | Meaning |
+|---|---|
+| 200 | List of startup scripts |
+| 500 | Internal error |
+
+### Create a startup script
+
+`POST /v1/startup-scripts`
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | string | Yes |  |
+| `description` | string | No |  |
+| `scriptType` | "bash" \| "python" \| "node" \| "ruby" \| "custom" | No |  |
+| `content` | string | Yes |  |
+| `environments` | array of string | No |  |
+| `minCpuCores` | number or null | No |  |
+| `minRamGB` | number or null | No |  |
+| `runOrder` | integer | No |  |
+| `timeoutSeconds` | integer | No |  |
+| `continueOnFailure` | boolean | No |  |
+| `runAsRoot` | boolean | No |  |
+| `injectSecrets` | array of string | No |  |
+| `enabled` | boolean | No |  |
+
+| Status | Meaning |
+|---|---|
+| 201 | Script created |
+| 400 | Validation error |
+| 403 | Tier restriction |
+| 500 | Internal error |
+
+### Get a startup script
+
+`GET /v1/startup-scripts/{id}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Script details |
+| 404 | Not found |
+| 500 | Internal error |
+
+### Update a startup script
+
+`PUT /v1/startup-scripts/{id}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | string | No |  |
+| `description` | string | No |  |
+| `scriptType` | "bash" \| "python" \| "node" \| "ruby" \| "custom" | No |  |
+| `content` | string | No |  |
+| `environments` | array of string | No |  |
+| `minCpuCores` | number or null | No |  |
+| `minRamGB` | number or null | No |  |
+| `runOrder` | integer | No |  |
+| `timeoutSeconds` | integer | No |  |
+| `continueOnFailure` | boolean | No |  |
+| `runAsRoot` | boolean | No |  |
+| `injectSecrets` | array of string | No |  |
+| `enabled` | boolean | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Script updated |
+| 400 | Validation error |
+| 403 | Tier restriction |
+| 404 | Not found |
+| 500 | Internal error |
+
+### Delete a startup script
+
+`DELETE /v1/startup-scripts/{id}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Script deleted |
+| 404 | Not found |
+| 500 | Internal error |
+
+### Toggle a startup script enabled/disabled
+
+`PATCH /v1/startup-scripts/{id}/toggle`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Script toggled |
+| 404 | Not found |
+| 500 | Internal error |
+
+## Lines
+
+| Route | Does |
+|---|---|
+| `GET /v1/lines` | List lines |
+| `POST /v1/lines` | Create a line from a connection |
+| `GET /v1/lines/context` | Get the current turn's line context |
+| `GET /v1/lines/execution-keys` | List execution keys |
+| `GET /v1/lines/numbers` | List a connection's phone numbers |
+| `GET /v1/lines/providers` | List line providers |
+| `GET /v1/lines/{lineId}` | Get a line |
+| `DELETE /v1/lines/{lineId}` | Release a line |
+| `PATCH /v1/lines/{lineId}` | Turn voice on or off |
+| `PUT /v1/lines/{lineId}/attachment` | Attach a line |
+| `DELETE /v1/lines/{lineId}/attachment` | Detach a line |
+| `PUT /v1/lines/{lineId}/attachment/reauthorize` | Change an attachment's execution key |
+| `DELETE /v1/lines/{lineId}/attachments/{attachmentId}` | Detach one attachment |
+| `GET /v1/lines/{lineId}/captures` | List owner captures |
+| `GET /v1/lines/{lineId}/members` | List line members |
+| `POST /v1/lines/{lineId}/members` | Add a line member |
+| `PATCH /v1/lines/{lineId}/members/{memberId}` | Update a line member |
+| `DELETE /v1/lines/{lineId}/members/{memberId}` | Remove a line member |
+| `GET /v1/lines/{lineId}/members/{memberId}/application` | Get a member's application |
+| `PUT /v1/lines/{lineId}/members/{memberId}/application` | Select a member's application |
+| `DELETE /v1/lines/{lineId}/members/{memberId}/application` | Clear a member's application |
+| `GET /v1/lines/{lineId}/members/{memberId}/reminders` | Get a member's reminder preferences |
+| `GET /v1/lines/{lineId}/messages/{messageId}` | Get a line message |
+| `POST /v1/lines/{lineId}/messages/{messageId}/application-dispatch/current` | Check an application dispatch |
+| `GET /v1/lines/{lineId}/outbox/{messageId}` | Get a send receipt |
+| `POST /v1/lines/{lineId}/remind` | Set a reminder for the current turn |
+| `POST /v1/lines/{lineId}/send` | Send a message to a member |
+| `POST /v1/lines/{lineId}/sender-verifications` | Start a sender verification |
+| `GET /v1/lines/{lineId}/sender-verifications/{testId}` | Get a sender verification |
+| `GET /v1/lines/{lineId}/threads` | List line threads |
+| `GET /v1/lines/{lineId}/threads/{threadId}/approvals` | List pending approvals |
+| `POST /v1/lines/{lineId}/threads/{threadId}/approvals` | Decide a pending approval |
+| `GET /v1/lines/{lineId}/threads/{threadId}/messages` | List thread messages |
+
+### List lines
+
+`GET /v1/lines`
+
+A sandbox key lists only lines attached to its own sandbox. A workspace key lists only its workspace's lines. `profileId` keeps lines attached with that profile and unattached lines whose `clientReference` starts with `profile:<profileId>:`.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `sandboxId` | query | No | string |  |
+| `profileId` | query | No | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The caller's lines |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | This key cannot list lines |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### Create a line from a connection
+
+`POST /v1/lines`
+
+The connection must be active and support the transport. A repeated `clientReference` returns the existing line. A 409 that carries `error.details.retryAfterSeconds` can be retried after that many seconds.
+
+Request body (`application/json`): one of 6 shapes; see the [OpenAPI document](/sandbox-openapi.json).
+
+| Status | Meaning |
+|---|---|
+| 200 | The line, new or existing |
+| 400 | The body is invalid, or the connection does not support the transport |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | Only an owner API key can do this |
+| 404 | The connection is not found (`HUB_CONNECTION_MISSING`) |
+| 409 | The connection is not active, or the reference, address or workspace already names another line |
+| 413 | The request body is larger than 256 KiB (PAYLOAD_TOO_LARGE) |
+| 422 | The provider refused the line (`HUB_PROVIDER_REJECTED`) |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 500 | The connection could not be rechecked after a WhatsApp scope change (`HUB_EXECUTOR_FAILURE`); read the line, then retry |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment, or the provider failed (`HUB_PROVIDER_FAILURE`) |
+
+### Get the current turn's line context
+
+`GET /v1/lines/context`
+
+Send the line token a member's sandbox receives for its current turn. Member addresses are never returned.
+
+| Status | Meaning |
+|---|---|
+| 200 | The turn's member, line, directory, capabilities and quotas |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | No current turn token was sent, or its turn has ended (`HUB_RELAY_DENIED`) |
+| 404 | The token's sandbox no longer serves this line |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### List execution keys
+
+`GET /v1/lines/execution-keys`
+
+Account owner only. Lists the account's active root Sandbox keys that can run an attached line. No key secret is returned.
+
+| Status | Meaning |
+|---|---|
+| 200 | Keys that can run a line |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | Only the account's root API key can do this |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### List a connection's phone numbers
+
+`GET /v1/lines/numbers`
+
+Account owner only. Reading inventory never reserves or buys a number. `exhaustive: false` means the provider returned one page, so an owned number can be missing; create the line with its exact ID.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `connectionId` | query | Yes | string |  |
+| `transport` | query | Yes | "imessage" \| "sms" \| "whatsapp" |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Numbers the connection owns |
+| 400 | `connectionId` or a phone `transport` is missing, or the provider does not support the transport |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | Only the account's root API key can do this |
+| 404 | The connection is not found |
+| 409 | The connection is not active, changed during the lookup, or needs its webhook first |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines or number discovery are not configured on this deployment, or the provider failed |
+
+### List line providers
+
+`GET /v1/lines/providers`
+
+Account owner only: send the account's root API key.
+
+| Status | Meaning |
+|---|---|
+| 200 | Provider and transport pairs this deployment binds |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | Only the account's root API key can do this |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### Get a line
+
+`GET /v1/lines/{lineId}`
+
+A sandbox key reads only a line attached to its own sandbox. A released line answers 404.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The line |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | This key cannot read lines |
+| 404 | The line is not found or not visible to this key |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### Release a line
+
+`DELETE /v1/lines/{lineId}`
+
+Detach the line and turn its voice off first. `released` is false when the line was already released.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The release result |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | Only an owner API key can do this |
+| 404 | The line is not found or not visible to this key |
+| 409 | The line is attached, has voice on, or belongs to a managed number order |
+| 413 | The request body is larger than 256 KiB (PAYLOAD_TOO_LARGE) |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### Turn voice on or off
+
+`PATCH /v1/lines/{lineId}`
+
+On a metered or role-policy line, only the account's root key can change voice.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `voice` | object | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The line with its voice state |
+| 400 | The body is invalid |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | Only an owner API key can change a line, and only the account's root key on a metered or role-policy line |
+| 404 | The line or its phone connection is not found |
+| 409 | The line is not active or is application-routed, or its connection is not active |
+| 413 | The request body is larger than 256 KiB (PAYLOAD_TOO_LARGE) |
+| 422 | The voice provider refused (`HUB_PROVIDER_REJECTED`) |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines or voice are not configured on this deployment, or the voice provider failed |
+
+### Attach a line
+
+`PUT /v1/lines/{lineId}/attachment`
+
+Pass one execution target: `sandboxId`, `instance`, `placement: "worker"`, a shared line with `respond.application`, or `respond.kind: "none"`. Declare at least one member, unless a shared Telegram line installs its own. The calling API key becomes the execution key. Repeating an identical attach returns the existing attachment with 200. An allowance meter needs a plan on that meter before attaching.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `runAsKeyId` | string | No | Execution key ID; an API key may name only itself |
+| `senderVerificationId` | string | No | A verified sender test, consumed on attach |
+| `sandboxId` | string | No | The sandbox every member runs in |
+| `instance` | object | No | Run each member in their own named instance instead |
+| `placement` | "worker" | No | Run turns without a sandbox, with the profile and `connections` only |
+| `connections` | array of string | No | Connection IDs a worker turn may call |
+| `mode` | "personal" \| "shared" | Yes | `personal`: one owner member. `shared`: one thread each |
+| `payer` | "owner" \| "member" | No |  |
+| `members` | array of object | Yes |  |
+| `unknownSenders` | "reject" \| "guest" | No |  |
+| `roles` | object | No | Keyed by role name: a lowercase word of up to 32 characters |
+| `respond` | object | No |  |
+| `limits` | object | No |  |
+| `clientReference` | string | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The existing attachment |
+| 201 | The new attachment |
+| 400 | The body is invalid, a role is unknown, or the allowance meter has no plan |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | This key cannot attach the line, run the sandbox, name another execution key, or set a role policy or allowance |
+| 404 | The line, sandbox or stored profile is not found |
+| 409 | The line is not active, was attached concurrently, or is attached differently; detach first |
+| 413 | The request body is larger than 256 KiB (PAYLOAD_TOO_LARGE) |
+| 422 | The line cannot verify senders (`HUB_SENDER_VERIFICATION_UNSUPPORTED`) |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines or a required service are not configured on this deployment, or that service failed |
+
+### Detach a line
+
+`DELETE /v1/lines/{lineId}/attachment`
+
+Detaches every attachment the line holds, or with `If-Match: "lat_…"` only that attachment. To detach only an attachment you observed, use `DELETE /v1/lines/{lineId}/attachments/{attachmentId}`.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | `detached` is false when nothing was attached |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | A metered or role-policy line needs the account's root key or the line's workspace key |
+| 404 | The line is not found or not visible to this key |
+| 409 | An application callback is still running; retry |
+| 413 | The request body is larger than 256 KiB (PAYLOAD_TOO_LARGE) |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### Change an attachment's execution key
+
+`PUT /v1/lines/{lineId}/attachment/reauthorize`
+
+Send the request with the replacement API key, which becomes the execution key. Both expected IDs must match the attachment as last read.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `expectedAttachmentId` | string | Yes |  |
+| `expectedRunAsKeyId` | string | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The attachment with its new execution key |
+| 400 | The body is invalid |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | Only an API key can reauthorize, it cannot run the sandbox, or the line needs the account's root key or its workspace key |
+| 404 | The line or sandbox is not found |
+| 409 | The expected attachment or execution key no longer matches |
+| 413 | The request body is larger than 256 KiB (PAYLOAD_TOO_LARGE) |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines or the sandbox service are not configured on this deployment, or it failed |
+
+### Detach one attachment
+
+`DELETE /v1/lines/{lineId}/attachments/{attachmentId}`
+
+Detaches only this attachment, so a retry never detaches its replacement.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+| `attachmentId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | `detached` is false when it was already detached |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | A metered or role-policy line needs the account's root key or the line's workspace key |
+| 404 | The line or attachment is not found |
+| 409 | An application callback is still running; retry |
+| 413 | The request body is larger than 256 KiB (PAYLOAD_TOO_LARGE) |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### List owner captures
+
+`GET /v1/lines/{lineId}/captures`
+
+Lists the texts the line's declared owner sent as `idea <text>`, oldest first. Pass the last page's `next` as `after` to resume.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+| `after` | query | No | string |  |
+| `limit` | query | No | integer |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | A page of captures |
+| 400 | `after` is not a cursor from this route, or `limit` is not an integer from 1 to 200 |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | A sandbox key or turn token cannot read this |
+| 404 | The line is not found or not visible to this key |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### List line members
+
+`GET /v1/lines/{lineId}/members`
+
+An API key gets the members of the line's current attachment. A turn's line token gets the member directory, which has no addresses.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The members or the turn's directory |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | A sandbox key cannot read members, or the turn token has ended |
+| 404 | The line is not found or not visible to this key |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### Add a line member
+
+`POST /v1/lines/{lineId}/members`
+
+Adding a member that exists with the same binding returns that member. A personal line has exactly one member.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `address` | string | Yes | E.164 number or email address the member sends from |
+| `role` | string | Yes |  |
+| `label` | string | No |  |
+| `subjectId` | string | No | Owner-authored customer identity, never a phone number |
+| `allowance` | object | No |  |
+| `voiceConsent` | object | No | Owner attestation of the member's consent; voice lines |
+
+| Status | Meaning |
+|---|---|
+| 201 | The member, new or existing |
+| 400 | The body is invalid, the role is unknown, the line is personal, or the address does not fit the transport |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | A metered or role-policy line needs the account's root key or the line's workspace key |
+| 404 | The line is not found or not attached |
+| 409 | The address or `subjectId` already belongs to another member binding |
+| 413 | The request body is larger than 256 KiB (PAYLOAD_TOO_LARGE) |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### Update a line member
+
+`PATCH /v1/lines/{lineId}/members/{memberId}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+| `memberId` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `role` | string | No |  |
+| `label` | string | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The updated member |
+| 400 | The body is invalid, the role is unknown, or the role does not fit the line |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | A metered or role-policy line needs the account's root key or the line's workspace key |
+| 404 | The line, attachment or member is not found |
+| 409 | An application callback for the member is still running, or a shared application line's owner changes only with a newly verified sender |
+| 413 | The request body is larger than 256 KiB (PAYLOAD_TOO_LARGE) |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### Remove a line member
+
+`DELETE /v1/lines/{lineId}/members/{memberId}`
+
+A personal line's member and a role-policy line's last owner cannot be removed; detach the line instead.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+| `memberId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The member is removed |
+| 400 | This member cannot be removed |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | A metered or role-policy line needs the account's root key or the line's workspace key |
+| 404 | The line, attachment or member is not found |
+| 409 | An application callback for the member is still running, or a shared application line's owner changes only with a newly verified sender |
+| 413 | The request body is larger than 256 KiB (PAYLOAD_TOO_LARGE) |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### Get a member's application
+
+`GET /v1/lines/{lineId}/members/{memberId}/application`
+
+Account owner only. Pass `memberRevision` as `expectedMemberRevision` when changing the selection.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+| `memberId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The member's revision and selection |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | Only the account's root API key can do this |
+| 404 | The line or active member is not found |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### Select a member's application
+
+`PUT /v1/lines/{lineId}/members/{memberId}/application`
+
+Account owner only. The change applies only while `expectedSelectionId` and `expectedMemberRevision` match. Bindings that start with `line-grant:` are reserved.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+| `memberId` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `expectedSelectionId` | string or null | Yes |  |
+| `expectedMemberRevision` | string | Yes |  |
+| `subjectId` | string | Yes |  |
+| `application` | object | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The new selection |
+| 400 | The body is invalid, the URL is not public HTTPS, or the binding is reserved |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | Only the account's root API key can select, or the member cannot use that application |
+| 404 | The line, active attachment or member is not found |
+| 409 | The selection or member revision changed |
+| 413 | The request body is larger than 256 KiB (PAYLOAD_TOO_LARGE) |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines or shared applications are not enabled on this deployment |
+
+### Clear a member's application
+
+`DELETE /v1/lines/{lineId}/members/{memberId}/application`
+
+Account owner only. The change applies only while both expected values match.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+| `memberId` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `expectedSelectionId` | string | Yes |  |
+| `expectedMemberRevision` | string | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The selection is cleared |
+| 400 | The body is invalid |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | Only the account's root API key can do this |
+| 404 | The line or active member is not found |
+| 409 | The selection or member revision changed |
+| 413 | The request body is larger than 256 KiB (PAYLOAD_TOO_LARGE) |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### Get a member's reminder preferences
+
+`GET /v1/lines/{lineId}/members/{memberId}/reminders`
+
+`enabled` is true once the member texts `REMINDERS ON` with a timezone on the current attachment.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+| `memberId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The member's reminder preferences |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | A sandbox key or turn token cannot read this |
+| 404 | The line or member is not found |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines or the line outbox are not configured on this deployment |
+
+### Get a line message
+
+`GET /v1/lines/{lineId}/messages/{messageId}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+| `messageId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The message |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | A sandbox key or turn token cannot read this |
+| 404 | The line or message is not found |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### Check an application dispatch
+
+`POST /v1/lines/{lineId}/messages/{messageId}/application-dispatch/current`
+
+Send the line application's callback secret as the `Bearer` token, not an API key. `current: false` means the dispatch is stale and must not be admitted.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+| `messageId` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `attachmentId` | string | Yes |  |
+| `memberId` | string | Yes |  |
+| `memberRevision` | string | Yes |  |
+| `senderAddress` | string | Yes |  |
+| `textSha256` | string | Yes |  |
+| `binding` | string | Yes |  |
+| `dispatchFence` | string | Yes |  |
+| `dispatchDeadline` | string | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Whether the dispatch may still be admitted |
+| 400 | The body is invalid |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | The callback secret is missing or wrong, or the application binding is inactive |
+| 413 | The body is larger than 4 KiB (`HUB_INVALID_INPUT`) |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### Get a send receipt
+
+`GET /v1/lines/{lineId}/outbox/{messageId}`
+
+`reply.answer` holds the first coded answer once the member replies.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+| `messageId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The send's receipt |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | A sandbox key or turn token cannot read this |
+| 404 | The line or send is not found |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines or the line outbox are not configured on this deployment, or the send's record is incomplete (`HUB_OUTBOX_MISSING`) |
+
+### Set a reminder for the current turn
+
+`POST /v1/lines/{lineId}/remind`
+
+Needs the line token of an owner's current turn, and the owner must have reminders on. The member's agent wakes at `notBefore` in the same session and writes the reminder.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `text` | string | Yes |  |
+| `notBefore` | string | Yes | A future time |
+| `idempotencyKey` | string | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 202 | The queued reminder |
+| 400 | The body is invalid, or `notBefore` is not in the future |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | No owner turn token was sent, or its turn has ended (`HUB_RELAY_DENIED`) |
+| 409 | Reminders are off, the key names another request, or the line's reply gate forbids it |
+| 413 | The request body is larger than 256 KiB (PAYLOAD_TOO_LARGE) |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### Send a message to a member
+
+`POST /v1/lines/{lineId}/send`
+
+Queues a proactive message; the receipt is not proof of delivery. The member must have texted `REMINDERS ON` with a timezone. Repeating an `idempotencyKey` returns the first send, and the same key with another request answers 409 `HUB_IDEMPOTENCY_CONFLICT`. An owner API key sends the owner body; a turn's line token sends the turn body.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+
+Request body (`application/json`): one of 2 shapes; see the [OpenAPI document](/sandbox-openapi.json).
+
+| Status | Meaning |
+|---|---|
+| 202 | The queued send |
+| 400 | The body is invalid, or `notBefore` is too far away |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | Only an owner API key or a current turn's line token can send, and the turn's role may not relay |
+| 404 | The line, attachment or member is not found |
+| 409 | The member has not opted in, is not active, or has no retained conversation, or the key, code, image or reply gate conflicts |
+| 413 | The request body is larger than 256 KiB (PAYLOAD_TOO_LARGE) |
+| 429 | Too many requests, or a recipient or line send limit is reached (`HUB_OUTBOX_LIMIT`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines or the line outbox are not configured on this deployment |
+
+### Start a sender verification
+
+`POST /v1/lines/{lineId}/sender-verifications`
+
+Needs an owner API key, and the line must be unattached. Text `testText` to the line from the handset to enroll before `expiresAt`, then answer the private code the line sends back. A new test replaces the open one. Attach with the verified `testId` as `senderVerificationId`.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+
+Request body: `application/json`.
+
+| Status | Meaning |
+|---|---|
+| 201 | The test to send |
+| 400 | The body is not empty or `{}` |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | Only an owner API key can do this |
+| 404 | The line is not found or not visible to this key |
+| 409 | The line is not active (`HUB_LINE_INACTIVE`), is attached, or its connection changed |
+| 413 | The request body is larger than 256 KiB (PAYLOAD_TOO_LARGE) |
+| 422 | The line's provider or transport cannot verify senders (`HUB_SENDER_VERIFICATION_UNSUPPORTED`) |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### Get a sender verification
+
+`GET /v1/lines/{lineId}/sender-verifications/{testId}`
+
+Needs the API key that started the test. `approvedSender` is present only in state `verified`; keep it out of browser-visible state.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+| `testId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The test's state and proof times |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | Only an owner API key can do this |
+| 404 | The line or test is not found for this key |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### List line threads
+
+`GET /v1/lines/{lineId}/threads`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Threads, most recent message first |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | A sandbox key or turn token cannot read this |
+| 404 | The line is not found or not visible to this key |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+### List pending approvals
+
+`GET /v1/lines/{lineId}/threads/{threadId}/approvals`
+
+Account owner only. Lists the agent actions in the thread's session that wait for the owner's decision.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+| `threadId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The pending requests |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | Only the account's root API key can do this |
+| 404 | The line is not attached, or the thread has no current approval session |
+| 409 | The thread's approval session changed |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Approvals are not available on this deployment |
+
+### Decide a pending approval
+
+`POST /v1/lines/{lineId}/threads/{threadId}/approvals`
+
+Only the account owner's signed-in browser session can decide, so every API key gets 403.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+| `threadId` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `decision` | "approve" \| "deny" | Yes |  |
+| `requestDigest` | string | Yes |  |
+| `csrf` | string | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The session's acknowledgement |
+| 400 | The body is invalid or larger than 4 KiB |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | Only the account owner's signed-in session can decide |
+| 404 | The line is not attached, or the thread has no current approval session |
+| 409 | The request is no longer awaiting approval |
+| 413 | The request body is larger than 256 KiB (PAYLOAD_TOO_LARGE) |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Approvals are not available on this deployment |
+
+### List thread messages
+
+`GET /v1/lines/{lineId}/threads/{threadId}/messages`
+
+Returns the latest messages, newest first, without paging.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `lineId` | path | Yes | string |  |
+| `threadId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The messages |
+| 401 | No `Bearer` token was sent (`LINES_API_KEY_REQUIRED`), or it is not valid (`HUB_UNAUTHENTICATED`) |
+| 403 | A sandbox key or turn token cannot read this |
+| 404 | The line or thread is not found |
+| 429 | Too many requests (`RATE_LIMITED`) |
+| 502 | Lines did not answer in time, failed or redirected (`PLATFORM_UNAVAILABLE`); retry |
+| 503 | Lines are not configured on this deployment |
+
+## Teams
+
+| Route | Does |
+|---|---|
+| `GET /v1/teams` | List teams the current user belongs to |
+| `POST /v1/teams` | Create a team owned by the current user |
+| `DELETE /v1/teams/invitations/{id}` | Revoke a pending invitation |
+| `GET /v1/teams/invitations/{token}` | Preview an invitation (team name + inviter) by token |
+| `POST /v1/teams/invitations/{token}/accept` | Accept a team invitation |
+| `GET /v1/teams/{id}` | Get a team the user belongs to |
+| `PATCH /v1/teams/{id}` | Update team metadata |
+| `DELETE /v1/teams/{id}` | Delete a team (owner only) |
+| `GET /v1/teams/{id}/egress` | Get team egress policy |
+| `PUT /v1/teams/{id}/egress` | Set team egress policy |
+| `DELETE /v1/teams/{id}/egress` | Clear team egress policy |
+| `GET /v1/teams/{id}/invitations` | List invitations for the team |
+| `POST /v1/teams/{id}/invitations` | Invite a user to the team by email |
+| `POST /v1/teams/{id}/leave` | Leave a team (non-owner members only) |
+| `GET /v1/teams/{id}/members` | List team members |
+| `PATCH /v1/teams/{id}/members/{memberId}` | Update a team member's role or status |
+| `DELETE /v1/teams/{id}/members/{memberId}` | Remove a team member |
+| `GET /v1/teams/{id}/secrets` | List team secret names (values never returned) |
+| `PUT /v1/teams/{id}/secrets/{name}` | Create or replace a team secret |
+| `DELETE /v1/teams/{id}/secrets/{name}` | Delete a team secret |
+| `POST /v1/teams/{id}/secrets/{name}/reveal` | Reveal the plaintext value (owner/admin only, audit-logged) |
+| `GET /v1/teams/{id}/templates` | List team golden-path templates |
+| `POST /v1/teams/{id}/templates` | Create a team golden-path template (owner/admin only) |
+| `DELETE /v1/teams/{id}/templates/{templateId}` | Delete a team golden-path template (owner/admin only) |
+| `POST /v1/teams/{id}/transfer` | Transfer team ownership (current owner only) |
+
+### List teams the current user belongs to
+
+`GET /v1/teams`
+
+| Status | Meaning |
+|---|---|
+| 200 | Teams list |
+| 500 | Internal error |
+
+### Create a team owned by the current user
+
+`POST /v1/teams`
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | string | Yes |  |
+| `orgId` | string | No |  |
+
+| Status | Meaning |
+|---|---|
+| 201 | Team created |
+| 400 | Validation error |
+| 500 | Internal error |
+
+### Revoke a pending invitation
+
+`DELETE /v1/teams/invitations/{id}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Revoked |
+| 403 | Insufficient permission |
+| 404 | Not found |
+| 409 | No longer pending |
+| 500 | Internal error |
+
+### Preview an invitation (team name + inviter) by token
+
+`GET /v1/teams/invitations/{token}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `token` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Invitation preview |
+| 404 | Not found |
+| 500 | Internal error |
+
+### Accept a team invitation
+
+`POST /v1/teams/invitations/{token}/accept`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `token` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Accepted |
+| 403 | Email mismatch |
+| 404 | Invitation not found |
+| 409 | Invitation terminal state |
+| 500 | Internal error |
+
+### Get a team the user belongs to
+
+`GET /v1/teams/{id}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Team |
+| 403 | Not a team member |
+| 404 | Not found |
+| 500 | Internal error |
+
+### Update team metadata
+
+`PATCH /v1/teams/{id}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | string | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Updated |
+| 400 | Validation error |
+| 403 | Insufficient permission |
+| 404 | Not found |
+| 500 | Internal error |
+
+### Delete a team (owner only)
+
+`DELETE /v1/teams/{id}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Deleted |
+| 403 | Insufficient permission |
+| 404 | Not found |
+| 500 | Internal error |
+
+### Get team egress policy
+
+`GET /v1/teams/{id}/egress`
+
+Returns the team's default egress policy, or null if none is set.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Egress policy retrieved |
+| 403 | Forbidden |
+| 404 | Team not found |
+| 500 | Internal error |
+
+### Set team egress policy
+
+`PUT /v1/teams/{id}/egress`
+
+Set or update the team's default egress policy. Only owners and admins.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `mode` | "open" \| "strict" \| "blocked" | Yes |  |
+| `allowDomains` | array of string or object | No |  |
+| `includeImplicitDomains` | boolean | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Policy updated |
+| 400 | Invalid policy |
+| 403 | Forbidden |
+| 404 | Team not found |
+| 500 | Internal error |
+
+### Clear team egress policy
+
+`DELETE /v1/teams/{id}/egress`
+
+Remove the team's custom egress policy. Sandboxes will fall back to platform defaults.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Policy cleared |
+| 403 | Forbidden |
+| 404 | Team not found |
+| 500 | Internal error |
+
+### List invitations for the team
+
+`GET /v1/teams/{id}/invitations`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Invitations |
+| 403 | Insufficient permission |
+| 500 | Internal error |
+
+### Invite a user to the team by email
+
+`POST /v1/teams/{id}/invitations`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `email` | string | Yes |  |
+| `role` | "admin" \| "member" \| "viewer" | Yes |  |
+| `ttlHours` | integer | No |  |
+
+| Status | Meaning |
+|---|---|
+| 201 | Invitation created |
+| 400 | Validation error |
+| 403 | Insufficient permission |
+| 409 | Duplicate or existing member |
+| 500 | Internal error |
+
+### Leave a team (non-owner members only)
+
+`POST /v1/teams/{id}/leave`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Left |
+| 400 | Validation error |
+| 404 | Not found |
+| 500 | Internal error |
+
+### List team members
+
+`GET /v1/teams/{id}/members`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Member list |
+| 403 | Not a team member |
+| 500 | Internal error |
+
+### Update a team member's role or status
+
+`PATCH /v1/teams/{id}/members/{memberId}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+| `memberId` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `role` | "admin" \| "member" \| "viewer" | No |  |
+| `status` | "active" \| "removed" | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Updated |
+| 400 | Validation error |
+| 403 | Insufficient permission |
+| 404 | Not found |
+| 500 | Internal error |
+
+### Remove a team member
+
+`DELETE /v1/teams/{id}/members/{memberId}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+| `memberId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Removed |
+| 400 | Validation error |
+| 403 | Insufficient permission |
+| 404 | Not found |
+| 500 | Internal error |
+
+### List team secret names (values never returned)
+
+`GET /v1/teams/{id}/secrets`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Secret list |
+| 403 | Not a team member |
+| 500 | Internal error |
+| 501 | Team secrets not configured |
+
+### Create or replace a team secret
+
+`PUT /v1/teams/{id}/secrets/{name}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+| `name` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `value` | string | Yes |  |
+| `hosts` | array of string | No |  |
+| `header` | string | No |  |
+| `exposeInBox` | true | No |  |
+| `proxySecrets` | array of object | No |  |
+| `reason` | string | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Upserted |
+| 400 | Validation error |
+| 403 | Insufficient permission |
+| 409 | Conflict |
+| 500 | Internal error |
+| 501 | Team secrets not configured |
+| 503 | Live re-key not acknowledged |
+
+### Delete a team secret
+
+`DELETE /v1/teams/{id}/secrets/{name}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+| `name` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Deleted |
+| 403 | Insufficient permission |
+| 404 | Not found |
+| 500 | Internal error |
+| 501 | Team secrets not configured |
+
+### Reveal the plaintext value (owner/admin only, audit-logged)
+
+`POST /v1/teams/{id}/secrets/{name}/reveal`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+| `name` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Plaintext value |
+| 403 | Insufficient permission |
+| 404 | Not found |
+| 500 | Internal error |
+| 501 | Team secrets not configured |
+
+### List team golden-path templates
+
+`GET /v1/teams/{id}/templates`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Template list |
+| 403 | Not a team member |
+| 500 | Internal error |
+| 501 | Team templates not configured |
+
+### Create a team golden-path template (owner/admin only)
+
+`POST /v1/teams/{id}/templates`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | string | Yes |  |
+| `description` | string | No |  |
+| `snapshotId` | string | Yes |  |
+| `sourceSandboxId` | string | Yes |  |
+| `environment` | string | No |  |
+| `config` | object | No |  |
+
+| Status | Meaning |
+|---|---|
+| 201 | Template created |
+| 400 | Validation error |
+| 403 | Insufficient permission |
+| 409 | Conflict |
+| 500 | Internal error |
+| 501 | Team templates not configured |
+
+### Delete a team golden-path template (owner/admin only)
+
+`DELETE /v1/teams/{id}/templates/{templateId}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+| `templateId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Deleted |
+| 403 | Insufficient permission |
+| 404 | Not found |
+| 500 | Internal error |
+| 501 | Team templates not configured |
+
+### Transfer team ownership (current owner only)
+
+`POST /v1/teams/{id}/transfer`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `newOwnerCustomerId` | string | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Ownership transferred (no content) |
+| 400 | Validation error |
+| 403 | Not the current owner |
+| 404 | Target not a member |
+| 500 | Internal error |
+
+## Next steps
+
+- [Account, usage and pricing](/sandbox/api-reference/account): your account, usage, billing and prices.
+- [Fleets](/sandbox/agents-fleet): fleets from the SDKs and CLI.
+- [Teams](/sandbox/teams): share sandboxes, secrets and templates.

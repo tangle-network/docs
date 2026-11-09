@@ -1,0 +1,344 @@
+---
+title: Fleet examples
+description: Complete programs that fan coding agents and commands out across many sandboxes, under a budget the platform enforces.
+---
+
+# Fleet examples
+
+Each TypeScript program is complete. Set `TANGLE_API_KEY`, install
+`@tangle-network/sandbox`, and run it with `npx tsx <file>.mts`. Each one
+deletes its fleet when it finishes. Model ids come from
+`GET /v1/router-models` with your Sandbox key, or the
+[model list](/gateway/models). The guide for all of them is
+[Fleets](/sandbox/agents-fleet).
+
+## Run four agents under one budget
+
+Four agents with their own tasks share one sandbox and one budget.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const fleet = await client.fleets.create({
+  agents: [
+    { agentId: "tests", task: "List the three slowest tests and why." },
+    { agentId: "todos", task: "Find every TODO and group them by file." },
+    { agentId: "deps", task: "Say what each dependency is used for." },
+    { agentId: "entry", task: "Name the entry point and the modules it loads." },
+  ],
+  placement: { agentsPerSandbox: 4 },
+  defaults: {
+    git: { url: "https://github.com/tangle-network/sandbox-demo" },
+    // Claude Code and Codex take a Router model the same way.
+    backend: { type: "opencode", model: { model: "glm-5.3" } },
+    maxLifetimeSeconds: 900,
+  },
+  budgetUsd: 1, // a charge past this is refused, mid-turn included
+});
+try {
+  const results = await fleet.runAll();
+  for (const r of results) console.log(r.agentId, r.status, r.result?.response);
+  console.log(await fleet.spend());
+} finally {
+  await fleet.delete();
+}
+```
+
+Prints each agent's status and answer, then the budget: cap, spent, in flight
+and remaining.
+
+## Review five packages at once
+
+One reviewer per package, each on its own sandbox. Findings arrive as each
+agent ends.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const packages = ["api", "web", "worker", "cli", "shared"];
+const fleet = await client.fleets.create({
+  agents: packages.map((name) => ({
+    agentId: name,
+    task: `Review packages/${name} for unhandled promise rejections. ` +
+      "Answer file:line per finding, or none.",
+  })),
+  placement: "dedicated",
+  defaults: {
+    git: { url: "https://github.com/tangle-network/sandbox-demo" },
+    backend: { type: "codex" },
+  },
+  budgetUsd: 3,
+});
+try {
+  const findings: Record<string, string> = {};
+  for await (const event of fleet.run()) {
+    if (event.type === "agent.started") console.log("started", event.agentId);
+    if (event.type === "agent.finished") {
+      const { agentId, result, status } = event.result;
+      findings[agentId] = result?.response ?? status;
+    }
+    if (event.type === "fleet.finished") console.log(event.durationMs, event.spend);
+  }
+  console.table(findings);
+} finally {
+  await fleet.delete();
+}
+```
+
+Prints a line as each agent starts, the run's duration and spend, then a table
+of findings by package.
+
+## Translate a README into five languages
+
+Each agent writes one file; the program collects the files from the agents'
+sandboxes.
+
+```ts
+import { writeFile } from "node:fs/promises";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const languages = { de: "German", fr: "French", ja: "Japanese", pt: "Portuguese", es: "Spanish" };
+const fleet = await client.fleets.create({
+  agents: Object.entries(languages).map(([code, name]) => ({
+    agentId: code,
+    task: `Translate README.md into ${name} and write it to README.${code}.md. Change nothing else.`,
+  })),
+  placement: "dedicated",
+  defaults: {
+    git: { url: "https://github.com/tangle-network/sandbox-demo" },
+    // Claude Code and Codex take a Router model the same way.
+    backend: { type: "opencode", model: { model: "glm-5.3" } },
+  },
+  budgetUsd: 2,
+});
+try {
+  await fleet.runAll();
+  const files = await fleet.collectArtifacts(
+    fleet.agents.map((a) => ({
+      machineId: a.machineId,
+      path: `/home/agent/sandbox-demo/README.${a.agentId}.md`,
+      label: a.agentId,
+    })),
+  );
+  for (const file of files) {
+    await writeFile(`README.${file.label}.md`, file.content);
+    console.log(file.label, file.content.split("\n")[0]);
+  }
+} finally {
+  await fleet.delete();
+}
+```
+
+Writes `README.de.md` through `README.es.md` next to the program and prints
+each file's first line.
+
+## Give each agent its own model
+
+Cheap models read; a stronger one fixes.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const fleet = await client.fleets.create({
+  agents: [
+    { agentId: "imports", model: "deepseek/deepseek-v4.1-flash", task: "List unused imports as file:line, or none." },
+    { agentId: "docs", model: "deepseek/deepseek-v4.1-flash", task: "Write one paragraph per package into PACKAGES.md." },
+    { agentId: "fix", model: "glm-5.3", task: "The test tagged timezone fails. Fix the cause; keep every other test green." },
+  ],
+  placement: "dedicated",
+  defaults: {
+    git: { url: "https://github.com/tangle-network/sandbox-demo" },
+    // Claude Code and Codex take per-agent models the same way.
+    backend: { type: "opencode" },
+  },
+  budgetUsd: 2,
+});
+try {
+  for (const r of await fleet.runAll()) {
+    console.log(r.agentId, r.model, r.status, r.costUsd?.toFixed(3), `${Math.round(r.durationMs / 1000)} s`);
+  }
+  console.log(await fleet.spend());
+} finally {
+  await fleet.delete();
+}
+```
+
+Prints each agent's model, status, cost and duration, then the fleet's spend.
+`costUsd` is set because each agent is alone on its sandbox.
+
+## Shard a test suite across machines
+
+No agents: five machines run one test file each, at the same time.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const files = ["cli", "dates", "format", "primes", "validate"];
+const fleet = await client.fleets.create({
+  machines: files.map((name) => ({ machineId: name })),
+  defaults: { git: { url: "https://github.com/tangle-network/sandbox-demo" } },
+});
+try {
+  const started = performance.now();
+  const results = await Promise.all(
+    files.map((name) => fleet.exec(name, `node --test test/${name}.test.js 2>&1 | tail -4`)),
+  );
+  files.forEach((name, i) =>
+    console.log(name, results[i].exitCode === 0 ? "pass" : "FAIL", results[i].stdout.trim().split("\n").at(-1)),
+  );
+  console.log(`${Math.round(performance.now() - started)} ms for all five`);
+} finally {
+  await fleet.delete();
+}
+```
+
+Prints pass or FAIL per file with the last line of its output, then the total
+time.
+
+## Stop everyone at a soft spending cap
+
+The platform refuses any charge past `budgetUsd`. To stop earlier, watch
+`spend()` and cancel.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const ideas = ["a lookup table", "a streaming parser", "fewer allocations",
+  "worker threads", "WebAssembly", "a hand written tokenizer"];
+const fleet = await client.fleets.create({
+  agents: ideas.map((idea) => ({
+    task: `Make bench/parse.js faster with ${idea}. Report the speedup.`,
+  })),
+  placement: "dedicated",
+  defaults: {
+    git: { url: "https://github.com/tangle-network/sandbox-demo" },
+    backend: { type: "claude-code" },
+  },
+  budgetUsd: 5,
+});
+
+const softCapUsd = 1;
+async function checkSpend() {
+  const { spentUsd } = await fleet.spend();
+  if (spentUsd < softCapUsd) return;
+  clearInterval(watch);
+  const { interrupted } = await fleet.cancel();
+  console.log(`$${spentUsd.toFixed(2)} spent, ${interrupted} agents stopped`);
+}
+const watch = setInterval(() => void checkSpend().catch(console.error), 5_000);
+
+try {
+  const results = await fleet.runAll();
+  for (const r of results) console.log(r.agentId, r.status, r.costUsd);
+} finally {
+  clearInterval(watch);
+  await fleet.delete();
+}
+```
+
+Prints how much was spent and how many agents were stopped once spend passes
+the soft cap, then each agent's status: `completed`, `cancelled` or
+`budget_exhausted`.
+
+## Run a command across machines from Python
+
+A coordinator and two workers under a create-time policy. Python fleets run
+commands; agent fleets with budgets are TypeScript and CLI only.
+
+```python
+import os
+import time
+
+from tangle_sandbox import (
+    CreateSandboxFleetWithCoordinatorOptions,
+    CreateSandboxOptions,
+    FleetExecDispatchOptions,
+    FleetRetryPolicy,
+    Sandbox,
+    SandboxFleetMachineSpec,
+    SandboxFleetPolicy,
+    SandboxResources,
+)
+
+with Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools") as client:
+    fleet = client.fleets.create_with_coordinator(
+        CreateSandboxFleetWithCoordinatorOptions(
+            fleet_id=f"research-{int(time.time())}",
+            defaults=CreateSandboxOptions(environment="universal", max_lifetime_seconds=30 * 60),
+            policy=SandboxFleetPolicy(
+                max_machines=3,
+                max_concurrent_creates=2,
+                max_total_cpu=6,
+                max_total_memory_mb=12_288,
+                max_spend_usd=2,
+                allow_accelerators=False,
+            ),
+            coordinator=SandboxFleetMachineSpec(
+                machine_id="coordinator",
+                options=CreateSandboxOptions(resources=SandboxResources(cpu_cores=1, memory_mb=1024)),
+            ),
+            workers=[
+                SandboxFleetMachineSpec(
+                    machine_id=f"worker-{n}",
+                    options=CreateSandboxOptions(resources=SandboxResources(cpu_cores=2, memory_mb=4096)),
+                )
+                for n in (1, 2)
+            ],
+        )
+    )
+    try:
+        results = fleet.dispatch_exec(
+            "printf '%s\\n' \"$HOSTNAME ready\"",
+            FleetExecDispatchOptions(
+                machines=fleet.ids,
+                max_concurrent=2,
+                retry=FleetRetryPolicy(attempts=2),
+                timeout_ms=30_000,
+            ),
+        )
+        for result in results:
+            output = result.get("result", {}).get("stdout") if result.get("ok") else result.get("error")
+            print(f"{result['machineId']}: {output}")
+        print(fleet.usage())
+    finally:
+        fleet.delete()
+```
+
+Install the `tangle-sandbox` package. Prints one ready line per machine, then
+the fleet's usage.
+
+## Next
+
+- [Fleets](/sandbox/agents-fleet)
+- [Coding agent examples](/sandbox/examples/coding-agents)
+- [Product examples](/sandbox/examples/products)

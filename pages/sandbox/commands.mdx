@@ -1,0 +1,249 @@
+import { Tabs, Callout } from "nextra/components";
+
+# Run commands and code
+
+Run a shell command and read its exit code and output, run Python or TypeScript in a kernel that keeps its variables, or start a long-running process and follow its logs.
+
+## Run a command
+
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create();
+try {
+  const { exitCode, stdout, stderr } = await box.exec(
+    "python3 -c 'import platform; print(platform.platform())'",
+  );
+  console.log(exitCode, stdout, stderr);
+} finally {
+  await box.delete();
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+box = client.create()
+try:
+    box.wait_for(SandboxStatus.RUNNING)
+    result = box.exec("python3 -c 'print(sum(range(1_000_000)))'")
+    print(result.exit_code, result.stdout)
+finally:
+    box.delete()
+    client.close()
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+tangle exec my-project -- python3 -c 'import platform; print(platform.platform())'
+echo $?   # the remote exit code
+```
+</Tabs.Tab>
+</Tabs>
+
+`exec` returns `{ exitCode, stdout, stderr }`. A non-zero exit code is a result, not an error, so check `exitCode` yourself. The command runs under `/bin/sh -c` in the workspace.
+
+| Option | Effect |
+|---|---|
+| `cwd` | Working directory. |
+| `env` | Extra environment variables for this command. |
+| `timeoutMs` | Ends the command after this long. The default and the ceiling are on [Limits](/sandbox/limits). |
+| `sessionId` | Resolves `cwd` inside that task session's isolated workspace. |
+| `signal` | An `AbortSignal` that cancels the call. |
+
+```ts
+const build = await box.exec("npm ci && npm test", {
+  cwd: "/home/agent/app",
+  env: { CI: "true" },
+  timeoutMs: 5 * 60_000,
+});
+if (build.exitCode !== 0) throw new Error(build.stderr || build.stdout);
+```
+
+For work longer than the exec ceiling, start a [background process](#run-a-long-running-process).
+
+### From the CLI
+
+`tangle exec <sandbox> -- <command>` writes the remote stdout and stderr to your local streams and exits with the remote exit code. Put `--` before the command so its flags are not read as `tangle` flags. One argument runs as a shell script; several arguments are each shell-quoted and joined.
+
+```bash
+tangle exec my-project --cwd /home/agent/app --env CI=true -- npm test
+tangle exec my-project -- 'cd app && npm ci && npm test'
+```
+
+## Run code in a kernel
+
+`runCode` runs source in a long-lived kernel for `python`, `node`, `typescript` or `bash`. Variables persist across calls that share a `sessionId` and language.
+
+```ts
+await box.runCode("python", "import pandas as pd\ndf = pd.DataFrame({'a': [1, 2, 3]})", {
+  sessionId: "analysis",
+});
+const run = await box.runCode("python", "print(df['a'].sum())", {
+  sessionId: "analysis",
+});
+console.log(run.exitCode, run.stdout); // 0 "6\n"
+```
+
+The result adds `durationMs` and `results` to the exit code and output. Each entry in `results` is typed: `text`, `json`, `image`, `html`, `dataframe` or `error`, so a chart or a table arrives as data rather than printed text.
+
+`cwd` applies when the kernel is created. `idempotencyKey` makes a retried call return the first call's result instead of running twice.
+
+A full example that writes a CSV and sums it:
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create();
+try {
+  await box.write("/home/agent/orders.csv", [
+    "customer,amount",
+    "acme,1200",
+    "globex,950",
+    "acme,300",
+  ].join("\n"));
+  const run = await box.runCode("python", `
+import csv, json
+from collections import defaultdict
+totals = defaultdict(float)
+for row in csv.DictReader(open("/home/agent/orders.csv")):
+    totals[row["customer"]] += float(row["amount"])
+print(json.dumps(sorted(totals.items(), key=lambda kv: -kv[1])))
+`);
+  console.log(run.exitCode, JSON.parse(run.stdout));
+} finally {
+  await box.delete();
+}
+```
+
+In the CLI, `tangle run` sends a file, or stdin with `-`, to the same kernels. The language comes from the file extension or `--lang`, and `--session` keeps state between calls. Image results are written to a local directory; `--save-images <dir>` picks it.
+
+```bash
+tangle run my-project analysis.py --session analysis
+echo 'print(df.shape)' | tangle run my-project - --lang python --session analysis
+```
+
+## Run a long-running process
+
+`process.spawn` starts a command in the background and returns a handle at once.
+
+```ts
+const server = await box.process.spawn("python3 -u -m http.server 8000");
+console.log(server.pid, await server.status());
+
+for await (const chunk of server.stdout()) {
+  if (chunk.includes("Serving HTTP")) break;
+}
+
+await server.kill("SIGTERM");
+console.log("exit code", await server.wait());
+```
+
+| Handle member | Returns |
+|---|---|
+| `pid`, `command` | The process id and command line. |
+| `status()` | The process record: state, start time and, once it ends, exit time and code. |
+| `wait()` | The exit code, when the process ends. |
+| `logs()` | Async iterable of `stdout`, `stderr` and `gap` entries; a gap reports `missedBytes` that were dropped. |
+| `stdout()`, `stderr()` | Async iterables of one stream's text. |
+| `kill(signal, { tree })` | Sends a signal; `tree: true` signals the whole process tree. |
+
+`box.process.list()` lists processes, and `box.process.get(pid)` returns a handle or `null` when the pid is unknown.
+
+### Exact arguments and stdin
+
+`spawnExact(executable, args, options)` runs a program without a shell, so arguments are passed exactly. Its `stdin` option writes those bytes and then closes stdin. For a program you need to type into, open a [terminal](/sandbox/terminals).
+
+```ts
+const proc = await box.process.spawnExact("python3", ["-c", "import sys; print(sys.stdin.read().upper())"], {
+  stdin: "hello from the caller\n",
+});
+console.log(await proc.wait());
+```
+
+### Jobs that survive restarts
+
+`process.jobs` runs a process the platform owns. It is admitted durably, retried by your restart policy, and readable from any client after your own process exits.
+
+```ts
+const spec = {
+  id: "nightly-index",
+  executable: "/bin/sh",
+  args: ["-c", "python3 build_index.py"],
+  cwd: ".",
+  envKeys: [],
+  deadlineAt: Date.now() + 30 * 60_000,
+  restart: {
+    maxAttempts: 3,
+    initialBackoffMs: 1_000,
+    maxBackoffMs: 10_000,
+    exitCodes: [75],
+    afterInterruption: true,
+  },
+};
+await box.process.jobs.submit(spec);
+
+const job = await box.process.jobs.get(spec.id);
+console.log(job?.state, job?.attempt, job?.lastExitCode);
+```
+
+States are `queued`, `running`, `retrying`, `stopping`, `succeeded`, `failed`, `cancelled` and `expired`. `jobs.cancel(id)` stops a job, and `jobs.resume(id, options)` retries a failed attempt with the same command, deadline and attempt budget.
+
+### Start a dev server
+
+`process.ensureDevServer({ cwd })` detects a Node, Rust, Go or Python project, installs dependencies when they are missing, and starts the dev process. A second call returns the running server. Publish its port with a [preview link](/sandbox/ports-previews).
+
+### From the CLI
+
+```bash
+tangle process spawn my-project 'python3 -m http.server 8000'   # prints the pid
+tangle process list my-project
+tangle process get my-project 4211
+tangle process logs my-project 4211          # until the process exits
+tangle process logs my-project 4211 --json   # one JSON entry per line
+tangle process kill my-project 4211
+```
+
+`tangle process spawn --blocking` waits like `tangle exec`. The command is one argument, so quote it.
+
+## Python and REST
+
+The Python `exec` runs the command under `bash`, merges stderr into stdout, raises on timeout, and silently ignores a `cwd` that does not exist. `ExecOptions` takes `cwd`, `env`, `timeout_ms` and `session_id`:
+
+```python
+from tangle_sandbox import ExecOptions
+
+result = box.exec("ls", ExecOptions(cwd="/tmp", env={"GREETING": "hi"}))
+```
+
+Python has no `run_code` or process manager. Call the runtime routes through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+response = client.fetch(
+    "POST",
+    f"/v1/sandboxes/{box.id}/runtime/code/exec",
+    json={"language": "python", "source": "print(2 + 2)"},
+)
+print(response.json())
+```
+
+## Next
+
+- [Stream command and agent output](/sandbox/streaming)
+- [Read, write and move files](/sandbox/files)
+- [Expose ports and share preview links](/sandbox/ports-previews)

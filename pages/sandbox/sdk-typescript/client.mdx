@@ -1,0 +1,228 @@
+# Sandbox client reference
+
+Every public member of the `Sandbox` client: construction, account reads, creating and finding sandboxes, and bulk deletion. Resource managers such as `client.secrets` are on [Resources](/sandbox/sdk-typescript/resources).
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+```
+
+## Construction
+
+### `new Sandbox(config)`
+
+```ts
+new Sandbox({
+  apiKey: string,
+  baseUrl: string,
+  platformUrl?: string,
+  timeoutMs?: number,
+  signal?: AbortSignal,
+  onTiming?: SdkTimingHook,
+  directExec?: boolean,
+})
+```
+
+| Option | Meaning |
+|---|---|
+| `apiKey` | Required. A missing key throws at construction. |
+| `baseUrl` | Required. A trailing slash is removed. |
+| `platformUrl` | The account API. Set automatically only when `baseUrl` is exactly `https://sandbox.tangle.tools`. `client.run()`, `client.runs`, fleet budget keys and prompt `costUsd` need it. |
+| `timeoutMs` | Default per-request timeout; see `SDK_TIMEOUTS.default`. |
+| `signal` | Cancels every request from this client. |
+| `onTiming` | Receives timing marks for each call. |
+| `directExec` | Send runtime calls straight to the sandbox when possible. On by default on servers and off in browsers. |
+
+### `client.withApiKey(apiKey): Sandbox`
+
+A new client with the same settings and another key.
+
+### `client.fetch(path, init?, options?): Promise<Response>`
+
+An authenticated request to any Sandbox API path, for routes the SDK does not wrap. `options.timeoutMs` overrides the client timeout for that request.
+
+```ts
+const res = await client.fetch("/v1/startup-scripts");
+console.log(res.status, await res.json());
+```
+
+## Account
+
+| Member | Returns | Route |
+|---|---|---|
+| `health()` | `boolean`: the API answers. | `GET /health` |
+| `getIdentity()` | `{ customerId, billingOwnerId, apiKeyId, billingDelegationAuthorized }`. | `GET /v1/me` |
+| `usage()` | Today's compute minutes, GPU seconds and cost, active and total sandboxes. | `GET /usage` |
+| `subscription()` | Plan, status, credits, concurrency limit and resource limits. | `GET /subscription` |
+| `shapes()` | `{ presets, default, ceiling }`: the size presets and your account's ceiling. | `GET /v1/shapes` |
+| `listBackends()` | `{ backends }`: the coding agents a sandbox can run. | `GET /v1/backends` |
+| `getBackend(type)` | One entry from `listBackends()`, or `undefined`. | `GET /v1/backends` |
+| `environments.list()` | Environments and your templates, with the runtimes each accepts. | `GET /v1/environments` |
+| `environments.get(id)` | One environment, or `null`. | `GET /v1/environments` |
+
+```ts
+const { backends } = await client.listBackends();
+console.log(backends.map((b) => b.type));
+
+const { presets, ceiling } = await client.shapes();
+console.log(presets, ceiling);
+```
+
+## Create
+
+### `client.create(options?, requestOptions?): Promise<SandboxInstance>`
+
+Creates a sandbox and resolves once it is running. `requestOptions` is `{ timeoutMs?, signal? }` for the whole create, including the wait. Route: `POST /v1/sandboxes`.
+
+```ts
+const box = await client.create({
+  name: "review-482",
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  backend: { type: "claude-code" },
+  resources: { cpuCores: 2, memoryMB: 4096 },
+  maxLifetimeSeconds: 3600,
+  metadata: { pr: "482" },
+  idempotencyKey: "review-482",
+});
+```
+
+A timeout leaves the provision running on the server; the error names the `idempotencyKey` to retry with so the retry joins it.
+
+#### Image, runtime and size
+
+| Option | Type | Meaning |
+|---|---|---|
+| `environment` | `string` | A catalog environment, `template:<id>`, or an image reference. |
+| `runtime` | `"docker" \| "firecracker"` | Container or microVM. Omit for the default. |
+| `resources` | `{ cpuCores?, memoryMB?, diskGB?, accelerator?, advisory? }` | Size; `accelerator` with `gpuLease` requests a [GPU lease](/sandbox/gpu-leases). |
+| `bare` | `boolean` | Command execution and lifecycle only, without the agent runtime. |
+| `agent` | `boolean` | `false` provisions no coding agent, model credentials or startup scripts. |
+| `driver` | `{ type: "tangle" }` | Run on Tangle network operators. Required for `confidential`. |
+| `capabilities` | `["computer_use"]` | Boot the desktop services a computer-use agent needs. Size `memoryMB` for them. |
+| `ephemeral` | `boolean` | A scratch home directory that need not survive restarts. |
+
+#### Lifetime
+
+| Option | Meaning |
+|---|---|
+| `maxLifetimeSeconds` | Stop the sandbox after this interval. Create and each resume start a new interval; activity does not extend it. |
+| `idleTimeoutSeconds` | Stop after this much inactivity. |
+| `coldTimeoutSeconds` | When a stopped sandbox's compute may be reclaimed; a later resume provisions it again. |
+| `deleteAfterStoppedSeconds` | Delete a stopped sandbox after this long. |
+
+#### Code, environment and credentials
+
+| Option | Meaning |
+|---|---|
+| `git` | `{ url, ref?, depth?, sparse?, auth?: { token } \| { grant: "read" } }`. See [Git](/sandbox/git). |
+| `cwd` | Working directory below the workspace; `.` is the cloned repository's root. |
+| `env` | Environment variables. |
+| `envRecovery` | Which withheld environment keys may be supplied again on resume. |
+| `secrets` | Stored secret names, or `"all"`. See [Secrets](/sandbox/secrets). |
+| `proxySecrets` | Proxy custody policies passed at create. |
+| `backend` | `{ type, profile?, model?, interactions? }`: the coding agent. See [Agents](/sandbox/sdk-typescript/agents). |
+| `confidential` | TEE requirements; see [Security](/sandbox/security#confidential-sandboxes-on-trusted-hardware). |
+| `gpuLease` | `{ maxSpendUsd, maxLifetimeSeconds, idleTimeoutSeconds?, provider? }`, with `resources.accelerator`. |
+
+#### Network, access and storage
+
+| Option | Meaning |
+|---|---|
+| `egressPolicy` | `{ mode, allowDomains?, includeImplicitDomains? }`. See [Egress](/sandbox/egress). |
+| `sshEnabled`, `sshPublicKeys`, `sshKeyIds` | SSH access. See [Terminals](/sandbox/terminals). |
+| `webTerminalEnabled` | The browser terminal. |
+| `storage` | Your own snapshot bucket. See [Snapshots](/sandbox/snapshots#keep-data-after-delete-or-share-it-between-sandboxes). |
+| `fromSnapshot`, `fromSandboxId` | Start from a snapshot; both are required together. |
+| `templateId`, `publicTemplateId`, `publicTemplateVersionId` | Start from a template. See [Templates](/sandbox/templates-gallery). |
+| `retain` | `{ paths }`: workspace paths kept with the coding agent's sessions. |
+
+#### Ownership, policy and retries
+
+| Option | Meaning |
+|---|---|
+| `name`, `metadata` | Your label and tags. |
+| `teamId` | Create in a team; membership is checked first. |
+| `ownerContext` | `"isolated"` runs without your secrets, scripts or Hub authority. Use `createIsolated`. |
+| `privacy` | `{ egress?: "redact" \| "block" \| "off", logs?: "on" \| "off" }`. |
+| `compliance` | `{ hipaa: true }` or `["hipaa"]`. Refused with `COMPLIANCE_NOT_ENTITLED` or `COMPLIANCE_CELL_UNAVAILABLE`. |
+| `idempotencyKey` | One logical create. A retry with the same key joins it. |
+| `retry` | `{ capacity: false }` returns `CAPACITY_EXHAUSTED` at once instead of retrying. |
+| `funding` | `"wallet"` or `"referral_credit"`. |
+
+### `client.createIsolated(options, requestOptions?): Promise<SandboxInstance>`
+
+`create` with `ownerContext: "isolated"`, no secrets and SSH off. See [Isolated sandboxes](/sandbox/security#isolated-sandboxes).
+
+## Find
+
+### `client.get(id): Promise<SandboxInstance | null>`
+
+`null` when the sandbox does not exist. Route: `GET /v1/sandboxes/{id}`.
+
+### `client.list(options?): Promise<SandboxInstance[]>`
+
+| Option | Meaning |
+|---|---|
+| `status` | One status or several. |
+| `scope` | `"personal"`, `"team"`, `"all"` or `` `team:${teamId}` ``. |
+| `limit`, `offset` | Paging. |
+| `run` | Only sandboxes created for this caller run id. |
+
+Route: `GET /v1/sandboxes`.
+
+### `client.waitForRunning(id, { timeoutMs?, signal? }): Promise<SandboxInstance>`
+
+Waits for an existing sandbox to run. Throws `NOT_FOUND` for an unknown id and `INVALID_STATE` when provisioning failed.
+
+### `client.runGenerations(run): Promise<SandboxRunGeneration[]>`
+
+Every compute generation recorded for one caller run: sandbox id, state, start and close times, and why it closed.
+
+## Delete
+
+### `client.delete(id, options?)`
+
+The same as `box.delete(options)` for a sandbox you have only the id of. With `{ wait: false }` it returns a `SandboxOperation`.
+
+### `client.deleteMatching(filter, options?)`
+
+```ts
+const result = await client.deleteMatching(
+  { metadataPrefix: { pr: "482" } },
+  { cascade: true, until: "removed" },
+);
+```
+
+Deletes every sandbox you own whose metadata value for each key in `metadataPrefix` starts with the given prefix. `cascade: true` also deletes branch children, which otherwise block a parent's delete with `CHILDREN_EXIST`. Each sandbox reports `destroyed`, `already_absent` or `failed`.
+
+## Session broadcast
+
+| Member | Effect |
+|---|---|
+| `broadcastSessionEvent(sessionId, event)` | Sends a server-originated event to a product session over the API's `/session` WebSocket. |
+| `broadcastSessionAgentEvent(sessionId, event)` | Delivers a payload through `SessionGatewayClient`'s `onAgentEvent`. |
+
+`box.registerSessionMapping` and `box.unregisterSessionMapping` map a product session to a sandbox.
+
+## Resource managers
+
+`client.secrets`, `client.sshKeys`, `client.teams`, `client.environments`, `client.publicTemplates`, `client.instances`, `client.fleets`, `client.runs`, `client.lines` and `client.intelligence` are on [Resources](/sandbox/sdk-typescript/resources), with `client.runBatch`, `client.streamBatch` and `client.run`.
+
+## Python and REST
+
+The Python client has `create`, `list`, `get`, `usage`, `subscription`, `health` and `close`. `create` returns before the sandbox runs; call `box.wait_for(SandboxStatus.RUNNING)`. It has no `create_isolated`, `shapes`, `list_backends`, `get_identity`, `wait_for_running`, `run_generations` or `delete_matching`. Call those routes through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+backends = client.fetch("GET", "/v1/backends").json()["backends"]
+shapes = client.fetch("GET", "/v1/shapes").json()
+```
+
+## Next
+
+- [Sandbox instance reference](/sandbox/sdk-typescript/sandbox)
+- [Runtime reference](/sandbox/sdk-typescript/runtime)
+- [Create, stop, resume and delete](/sandbox/lifecycle)

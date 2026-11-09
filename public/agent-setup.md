@@ -5,7 +5,7 @@ description: Use Tangle's documentation as an agent: start from llms.txt, naviga
 
 # Use Tangle Docs
 
-Tangle Docs (https://docs.tangle.tools/) explains how to build and operate services on Tangle: Blueprints, operators, the sandbox runtime, Router, and x402 payments.
+Tangle Docs (https://docs.tangle.tools/) covers Tangle Sandbox, Tangle Router, Tangle Platform accounts and API keys, and release notes.
 
 ## 1. Start from the agent surfaces
 
@@ -17,11 +17,15 @@ Tangle Docs (https://docs.tangle.tools/) explains how to build and operate servi
 
 Cite docs pages by their canonical URL, `https://docs.tangle.tools/<path>`. The main sections:
 
-- Build: https://docs.tangle.tools/developers — Blueprints, the CLI quickstart (https://docs.tangle.tools/developers/cli/quickstart), SDK, API, and testing.
-- Operate: https://docs.tangle.tools/operators — running operators, benchmarking, pricing, and the runbook.
-- Runtime: https://docs.tangle.tools/infrastructure — sandboxing (https://docs.tangle.tools/infrastructure/sandboxing), harnesses, and orchestration.
-- Router: https://docs.tangle.tools/gateway — the model-routing gateway; its OpenAPI spec is at https://router.tangle.tools/openapi.json.
-- Protocol: https://docs.tangle.tools/network and economic security at https://docs.tangle.tools/staking.
+- Sandbox: https://docs.tangle.tools/sandbox/overview: isolated Linux sandboxes for code and coding agents.
+  - Quickstart: https://docs.tangle.tools/sandbox/quickstart
+  - TypeScript SDK: https://docs.tangle.tools/sandbox/sdk-typescript
+  - Python SDK: https://docs.tangle.tools/sandbox/sdk-python
+  - CLI: https://docs.tangle.tools/sandbox/cli
+  - REST API: https://docs.tangle.tools/sandbox/api-reference, with the OpenAPI document at https://docs.tangle.tools/sandbox-openapi.json
+  - Error codes: https://docs.tangle.tools/sandbox/errors
+- Router: https://docs.tangle.tools/gateway: the model-routing gateway; its OpenAPI document is at https://router.tangle.tools/openapi.json.
+- Platform: https://docs.tangle.tools/platform: one account, API key and balance across products.
 - Release notes: https://docs.tangle.tools/release-notes.
 
 The site has a built-in search box (Pagefind); there is no public search API, so prefer fetching llms.txt and following links.

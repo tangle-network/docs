@@ -1,221 +1,157 @@
+import { Callout } from "nextra/components";
+
 # TypeScript SDK
 
-`@tangle-network/sandbox` is the ESM TypeScript client for sandbox
-lifecycle, exact processes, files, durable Agent sessions, fleets,
-snapshots, GPU leases, and browser delegation.
+`@tangle-network/sandbox` creates and drives sandboxes from your server, a Cloudflare Worker or, with a scoped token, a browser. This page covers install, the client, entrypoints, errors, retries and timeouts; the reference pages list every member.
 
 ## Install
 
 ```bash
-pnpm add @tangle-network/sandbox
+npm install @tangle-network/sandbox
 ```
 
-## Choose an entrypoint
+The package is ESM. Optional integrations, such as the agent framework tool packs, use optional peer dependencies: install only the framework you use.
 
-| Need | Import |
-|---|---|
-| Full trusted-server client | `@tangle-network/sandbox` |
-| Edge-safe client without chain dependencies | `@tangle-network/sandbox/core` |
-| Browser/Worker runtime with a scoped token | `@tangle-network/sandbox/runtime` |
-| Reconnecting browser Agent-event stream | `@tangle-network/sandbox/session-gateway` |
-| Multiple managed Agents and framework tool packs | `@tangle-network/sandbox/agent` |
-| OpenAI-compatible translation | `@tangle-network/sandbox/openai` |
-| Collaboration/Yjs bridge | `@tangle-network/sandbox/collaboration` |
-| Direct Tangle operations | `@tangle-network/sandbox/tangle` |
-
-Optional integrations have optional peer dependencies. Install only the
-framework package you use.
-
-## Trusted-server client
+## Create a client
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
 const client = new Sandbox({
   apiKey: process.env.TANGLE_API_KEY!,
-  baseUrl: process.env.SANDBOX_BASE_URL!,
-  timeoutMs: 30_000,
-});
-```
-
-The account API key can create and destroy compute.
-Keep it out of browser bundles. See [Authentication and browser access](/docs/authentication).
-
-## Create a Sandbox
-
-```ts
-const box = await client.create({
-  name: "repo-review",
-  git: {
-    url: "https://github.com/acme/service.git",
-    ref: "main",
-  },
-  resources: {
-    cpuCores: 4,
-    memoryMB: 8192,
-    diskGB: 40,
-  },
-  maxLifetimeSeconds: 3600,
-  idleTimeoutSeconds: 900,
-});
-```
-
-To clone a private repository your account has connected through the Tangle
-GitHub App, ask for a read grant instead of passing a token. The API key must
-hold the `git:grant` scope (create it with `scopes: ["git:grant"]`); a key
-without it is refused with `GIT_GRANT_SCOPE_REQUIRED` (403) before any token is
-minted, so a key issued only for compute cannot read your repositories:
-
-```ts
-const box = await client.create({
-  git: { url: "https://github.com/acme/private-service", auth: { grant: "read" } },
-});
-```
-
-The platform mints a short-lived token for that one repository, read only, and
-uses it for the clone. It is never returned to you or written to a log. The
-create fails with `GIT_GRANT_NOT_CONNECTED` when your account has not connected
-the repository and `GIT_GRANT_ACCESS_DENIED` when GitHub does not show you
-access to it. `grant` and `token` are exclusive, and an
-`ownerContext: "isolated"` create refuses a grant.
-
-Omit `environment` to use the server's default image. Set it only when you
-need a custom container image or an image ID returned by the image builder:
-
-```ts
-const pythonBox = await client.create({ environment: "python:3.12-slim" });
-```
-
-`client.environments.list()` returns the named environments and the `runtimes` each accepts;
-`runtime: "firecracker"` runs a microVM instead of a container; omit it for the platform default.
-Language names such as `python` or `node` do not select versioned images.
-
-- `bare: true`: exact process execution and lifecycle only.
-- `agent: false`: managed files, terminals, processes, telemetry, and
-  sessions without a default Agent.
-- `backend`: configure the default Agent shorthand.
-
-## Commands and files
-
-```ts
-const result = await box.exec("pnpm test", {
-  cwd: "/home/agent/service",
-  timeoutMs: 10 * 60 * 1000,
-});
-if (result.exitCode !== 0) throw new Error(result.stderr);
-
-await box.write("/home/agent/service/config.json", '{"enabled":true}\n');
-const text = await box.read("/home/agent/service/config.json");
-const matches = await box.search("TODO", {
-  path: "/home/agent/service/src",
-});
-```
-
-Use the chunked upload API for content larger than the single-request
-limit. File writes support preconditions; use them when concurrent actors
-may edit the same path.
-
-## One durable Agent session
-
-```ts
-const sessionId = "review-v1";
-
-const first = await box.prompt("Inspect the repository.", { sessionId });
-const second = await box
-  .session(sessionId)
-  .prompt("Implement the fix and run its tests.");
-
-console.log(first.executionId, second.response);
-```
-
-`dispatchPrompt(message, { sessionId, turnId })` returns after admission and
-lets the run continue after the caller disconnects. Keep the returned
-`executionId`; use it for exact result replay and cancellation.
-
-## Several Agents in one Sandbox
-
-```ts
-import { Sandbox } from "@tangle-network/sandbox/agent";
-
-const managed = await client.create({
-  agent: false,
+  baseUrl: "https://sandbox.tangle.tools",
 });
 
-const [planner, builder] = await managed.agents.startMany([
-  {
-    id: "planner-v1",
-    backend: { type: "opencode", profile: plannerProfile },
-  },
-  {
-    id: "builder-v1",
-    backend: { type: "claude-code", profile: builderProfile },
-  },
-]);
+const box = await client.create();
+try {
+  const { stdout } = await box.exec("echo hello from $(hostname)");
+  console.log(stdout);
+} finally {
+  await box.delete();
+}
 ```
 
-These are existing durable `SandboxSession` handles, not another
-orchestration engine. Read the complete
-[Multiple Agents guide](/docs/agents/multiple).
+`apiKey` and `baseUrl` are both required, and the SDK reads no environment variables: a missing `apiKey` or `baseUrl` throws when you construct the client. `TANGLE_API_KEY` in these docs is only a naming convention.
 
-## Browser and Worker access
+| Option | Effect |
+|---|---|
+| `apiKey` | Your Sandbox API key. It can create and delete compute, so keep it on servers. |
+| `baseUrl` | The Sandbox API, `https://sandbox.tangle.tools`. |
+| `platformUrl` | The account API used by `client.run()`, `client.runs`, fleet budget keys and prompt `costUsd`. Set automatically only when `baseUrl` is exactly `https://sandbox.tangle.tools`; set it yourself for any other `baseUrl`. |
+| `timeoutMs` | Default per-request timeout. |
+| `signal` | An `AbortSignal` that cancels every request from this client. |
+| `onTiming` | A hook that receives timing marks for each call. |
 
-Mint on your backend:
+`client.withApiKey(otherKey)` returns a client with the same settings and another key.
+
+<Callout type="warning">
+Never ship your API key or a sandbox's `connection.authToken` to a browser. Mint a [scoped token](/sandbox/authentication) on your server instead.
+</Callout>
+
+## Choose an entrypoint
+
+| Import | What it gives you |
+|---|---|
+| `@tangle-network/sandbox` | The full client for trusted servers. |
+| `@tangle-network/sandbox/core` | The client without on-chain dependencies, for Cloudflare Workers and other edge runtimes. |
+| `@tangle-network/sandbox/runtime` | `createSandboxRuntimeClient` for browsers and Workers, built from a scoped token. |
+| `@tangle-network/sandbox/session-gateway` | `SessionGatewayClient`: a browser event stream that resumes after a drop. |
+| `@tangle-network/sandbox/interactive-control` | `BrowserInteractiveSessionController` for driving a coding agent's terminal from a browser. |
+| `@tangle-network/sandbox/agent` | Importing it adds `box.agents`, and it exports tool packs for OpenAI, Anthropic, Vercel AI and Mastra and an MCP server. |
+| `@tangle-network/sandbox/public-templates` | `PublicTemplatesClient` and its publish types. |
+| `@tangle-network/sandbox/preview` | Preview operations and a preview MCP server for agents that publish their own work. |
+| `@tangle-network/sandbox/lines` | `LinesClient` and `SandboxLines` for phone and messaging addresses. |
+| `@tangle-network/sandbox/intelligence` | A browser-safe client for trace and run-session reads from Tangle Intelligence. |
+| `@tangle-network/sandbox/openai` | Functions that translate between OpenAI wire formats and sandbox runs, plus tool-call hooks. A library, not a hosted endpoint. |
+| `@tangle-network/sandbox/auth` | `ProductTokenIssuer` for issuing your own product tokens on a server. Needs `node:crypto`. |
+| `@tangle-network/sandbox/tangle` | `BlueprintSandboxClient` and operator sessions for creating sandboxes through Tangle network operators on-chain. |
+| `@tangle-network/sandbox/gpu-lease` | The GPU lease marketplace resolver for Tangle network operators: quotes, intents and operator selection. |
+| `@tangle-network/sandbox/select-seat/command` | A Node-only command transport for choosing which of your coding-plan seats a run uses. |
+| `@tangle-network/sandbox/collaboration` | Collaborative document helpers. The hosted service does not offer collaboration. |
+| `@tangle-network/sandbox/examples` | `quickstartExamples`, the runnable quickstart programs as data. |
+
+`@tangle-network/sandbox/agent` works by side effect: `box.agents` exists only after you import it.
 
 ```ts
-const scoped = await box.mintScopedToken({
-  scope: "session-runtime",
-  sessionId: ownedRuntimeSessionId,
-  ttlMinutes: 5,
-});
+import "@tangle-network/sandbox/agent";
 ```
 
-Construct in the browser:
+## Handle errors
+
+Every SDK failure is a `SandboxError`. Branch on `error.code`, the server's code, or `error.catalogCode`, the platform's error class. The subclasses such as `NotFoundError` and `StateError` are deprecated aliases.
 
 ```ts
-import { createSandboxRuntimeClient } from "@tangle-network/sandbox/runtime";
+import { SandboxError } from "@tangle-network/sandbox";
 
-const runtime = createSandboxRuntimeClient({
-  baseUrl: scopedResponse.baseUrl,
-  token: scopedResponse.token,
-});
+try {
+  await box.exec("make test");
+} catch (error) {
+  if (!(error instanceof SandboxError)) throw error;
+  if (error.catalogCode === "INVALID_STATE") {
+    await box.resume();
+  } else if (error.retryable) {
+    await new Promise((r) => setTimeout(r, error.retryAfterMs ?? 1_000));
+  } else {
+    console.error(error.code, error.nextStep, error.requestId);
+    throw error;
+  }
+}
 ```
 
-The browser receives the scoped token and proxy URL—not the account API
-key. Use `SessionGatewayClient` for reconnect and replay.
+| Field | Meaning |
+|---|---|
+| `code` | The server's code, such as `CHILDREN_EXIST` or `GPU_PROVIDER_NOT_CONFIGURED`. |
+| `catalogCode` | The platform class: `NOT_FOUND`, `INVALID_STATE`, `VALIDATION_ERROR`, `QUOTA_EXCEEDED` and others. |
+| `status` | HTTP status. |
+| `retryable`, `retryAfterMs`, `etaSeconds` | Whether and when a retry can succeed. |
+| `nextStep`, `docs` | What to do, and where it is explained. |
+| `requestId`, `traceId` | Quote these when you contact support. |
+| `missingEnvKeys`, `maxChildren` | Extra detail for `RESUME_ENV_REQUIRED` and `BRANCH_FANOUT_EXCEEDS_HOST`. |
 
-## Snapshots and lifecycle
+Every code and its fix is on [Error codes](/sandbox/errors).
+
+A few calls report failure in their result rather than by throwing:
+
+- `exec` returns a non-zero `exitCode`.
+- `prompt` returns `success: false` with `error` and `errorCode`, and `status: "unknown"` when the stream was lost. Check `result.success`.
+
+## Retries and idempotency
+
+The SDK resends a request only when sending it twice is safe: `GET`, `PUT`, `DELETE` and any request with an `Idempotency-Key`, after a dropped connection, a `502` to `504`, or a `429` with `Retry-After`. It never resends a code the platform marks non-retryable. `create()` adds its own retry for capacity refusals inside its time budget.
+
+Pass `idempotencyKey` to `create`, `snapshot`, `stop`, `delete`, `fork` and process jobs when your own code may retry. For coding agent turns, a stable `sessionId` keeps context and a `turnId` makes the turn safe to retry; see [Streaming](/sandbox/streaming#start-work-that-outlives-the-caller).
+
+## Timeouts
+
+`SDK_TIMEOUTS` exports the default timeout of each operation. Pass `timeoutMs` to a call to change it. The values are on [Limits](/sandbox/limits).
 
 ```ts
-const snapshot = await box.snapshot({ tags: ["green-tests"] });
+import { SDK_TIMEOUTS } from "@tangle-network/sandbox";
 
-await box.stop();
-await box.waitFor("stopped");
-await box.resume();
-await box.waitFor("running");
-await box.delete();
+const box = await client.create({}, { timeoutMs: SDK_TIMEOUTS.create * 2 });
 ```
 
-A snapshot copies filesystem state. `session.fork()` copies conversation
-history. An isolated Agent creates a Git worktree. These are different
-branching operations.
+## Things that catch people out
 
-## Parallel compute
+- A browser or Worker client built from a scoped token uses `scoped.sidecarProxyUrl` as its `baseUrl`, and a browser `SessionGatewayClient` uses it as its `url`.
+- `box.search()` and `box.fs.search()` yield matches; read them with `for await`.
+- A command on a stopped sandbox throws `INVALID_STATE`. Call `box.resume()` first.
+- `box.direct()` sends runtime calls straight to the sandbox and skips the API's credential refresh and secret checks. Never use it for prompts.
 
-- Use [`box.agents`](/docs/agents/multiple) when trusted Agents should share
-  one computer.
-- Use [Fleets](/docs/agents/fleet) for separate machines, failure domains,
-  or hard resource boundaries.
-- Use `runBatch()` for ad-hoc parallel tasks that do not need stable fleet
-  membership.
-- Use [GPU leases](/docs/gpu-leases) to attach temporary accelerators with
-  explicit spend and lifetime caps.
+## Python and REST
 
-## Errors and retries
+The [Python SDK](/sandbox/sdk-python) covers the core lifecycle, commands, files, git, snapshots, egress, prompts, batches, fleets and intelligence reports. Every TypeScript method maps to a REST route, listed on its reference page. From Python, call a route the SDK does not wrap through `client.fetch(method, path, json=, params=, headers=, timeout=)`, which returns the raw response and does not raise on an error status.
 
-The SDK throws typed errors such as `ValidationError`, `AuthError`,
-`NotFoundError`, `StateError`, `QuotaError`, `CapabilityError`,
-`TimeoutError`, and `PartialFailureError`.
+## Reference
 
-Reuse an idempotency key only for the same logical request. For Agent turns,
-a stable `sessionId` preserves context; a deterministic `turnId` is the
-durable turn-level retry key.
+- [Client](/sandbox/sdk-typescript/client): construction, account reads, `create` and every option, `get`, `list`, `deleteMatching`.
+- [Sandbox instance](/sandbox/sdk-typescript/sandbox): state, lifecycle, snapshots, branches, egress, GPU and access.
+- [Runtime](/sandbox/sdk-typescript/runtime): commands, processes, files, git, ports, previews, terminals and the browser clients.
+- [Agents](/sandbox/sdk-typescript/agents): prompts, streams, sessions, interactive control and `box.agents`.
+- [Resources](/sandbox/sdk-typescript/resources): secrets, SSH keys, teams, templates, images, instances, fleets, batches, runs and lines.
+
+## Next
+
+- [Quickstart](/sandbox/quickstart)
+- [Python SDK](/sandbox/sdk-python)
+- [tangle CLI](/sandbox/cli)

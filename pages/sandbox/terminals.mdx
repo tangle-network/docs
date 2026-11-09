@@ -1,0 +1,192 @@
+import { Tabs, Callout } from "nextra/components";
+
+# Open a shell with SSH, a PTY or a browser terminal
+
+Get a real interactive terminal in a sandbox: SSH from your laptop, a PTY driven from your code, or a terminal in your own web page.
+
+## SSH from your terminal
+
+<Tabs items={["CLI", "TypeScript", "Python"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+```bash
+tangle sandbox create --name dev --ssh
+tangle ssh dev
+tangle sandbox delete dev --force
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```ts
+import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  sshEnabled: true,
+  sshPublicKeys: [readFileSync(`${homedir()}/.ssh/id_ed25519.pub`, "utf8").trim()],
+});
+try {
+  const creds = await box.ssh();
+  console.log(creds.username, creds.port, creds.proxyCommand);
+} finally {
+  await box.delete();
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import os
+from pathlib import Path
+from tangle_sandbox import Sandbox, SandboxStatus
+
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+box = client.create(
+    ssh_enabled=True,
+    ssh_public_keys=[Path.home().joinpath(".ssh/id_ed25519.pub").read_text().strip()],
+)
+try:
+    box.wait_for(SandboxStatus.RUNNING)
+    creds = box.ssh()
+    print(creds.host, creds.port, creds.username)
+finally:
+    box.delete()
+    client.close()
+```
+</Tabs.Tab>
+</Tabs>
+
+`--ssh` with no key flag uploads the first of `~/.ssh/id_ed25519.pub`, `~/.ssh/id_ecdsa.pub` and `~/.ssh/id_rsa.pub`, and fails if none exists. Name a key with `--ssh-key <public-key>`, `--ssh-key-file <path>` or `--ssh-keys <stored-names>`.
+
+`tangle ssh` runs your local `ssh` through a proxy command that connects over the Sandbox API, so the sandbox needs no public SSH port. The API key travels in the `TANGLE_SSH_PROXY_AUTH_TOKEN` environment variable, never in argv. Host keys are not checked. A stopped sandbox is resumed first. Pass extra `ssh` arguments after the sandbox, `-i <path>` to pick a private key, or `--print` to print the command instead of connecting.
+
+```bash
+tangle ssh dev -- -L 5432:localhost:5432   # forward a port
+tangle ssh dev --print
+```
+
+### Stored keys
+
+Store a public key once and select it by name at create:
+
+```bash
+tangle ssh-keys add laptop --key-file ~/.ssh/id_ed25519.pub
+tangle ssh-keys list
+tangle sandbox create --ssh-keys laptop
+tangle ssh-keys delete laptop
+```
+
+```ts
+const key = await client.sshKeys.create("laptop", publicKey);
+const box = await client.create({ sshEnabled: true, sshKeyIds: [key.id] });
+```
+
+### Build the SSH command in code
+
+`box.sshCommand()` returns a ready `ssh` command and the environment it needs.
+
+```ts
+const { command, env } = await box.sshCommand();
+```
+
+<Callout type="warning">
+`env.TANGLE_SSH_PROXY_AUTH_TOKEN` holds your API key. Never log it, print it to a shared terminal, or send it to a browser.
+</Callout>
+
+`box.ssh()` throws `INVALID_STATE` when SSH was not enabled at create.
+
+## Drive a PTY from your code
+
+`box.terminals.attach` opens a live terminal over a WebSocket. Register your handlers in the call: a reattached terminal replays its screen as soon as it connects.
+
+```ts
+const output: string[] = [];
+const term = await box.terminals.attach("build-shell", {
+  cols: 120,
+  rows: 32,
+  handlers: {
+    onData: (bytes) => output.push(new TextDecoder().decode(bytes)),
+    onExit: (info) => console.log("exited", info),
+    onClose: (code, reason) => console.log("closed", code, reason),
+  },
+});
+
+term.write("cd /home/agent && ls -la\n");
+term.resize(160, 40);
+
+await term.close();
+```
+
+| Option | Effect |
+|---|---|
+| `cols`, `rows` | Terminal size. Change it later with `resize(cols, rows)`. |
+| `command` | What to start when the id has no live terminal. Defaults to a shell. |
+| `cwd`, `env` | Working directory and environment for that command. |
+| `handlers` | `onData`, `onReady`, `onExit`, `onError`, `onClose`. |
+
+The connection id names the terminal. Attaching with the same id reattaches to the running terminal and replays its history; a new id starts a new one. `close()` detaches and leaves the terminal running on the server for `term.ready.detachTimeoutMs`; reattach within that window with `term.reconnect()` or another `attach` with the same id.
+
+`attach` gets a short-lived terminal token for you, and each `reconnect()` gets a fresh one.
+
+### Send input without a socket
+
+The REST side of `box.terminals` works without holding a WebSocket open:
+
+```ts
+const created = await box.terminals.create({ name: "tests", cols: 80, rows: 24 });
+await box.terminals.input(created.sessionId, "make test\n");
+
+for (const t of await box.terminals.list()) console.log(t.sessionId, t.isRunning, t.lastActivityAt);
+const one = await box.terminals.get(created.sessionId); // null when it is gone
+```
+
+## A terminal in your web page
+
+There are two ways to put a terminal in a browser.
+
+**The built-in web terminal.** Create the sandbox with `webTerminalEnabled: true` (`--web-terminal` in the CLI). `box.url` returns its address, and `tangle sandbox get <sandbox>` prints it as `Web Terminal`.
+
+**Your own terminal UI.** Your server mints a short-lived token for one terminal, and the browser dials it. The token's `sessionId` must equal the terminal's connection id, and the token must not be restricted to read-only access.
+
+```ts
+// On your server, after checking the user may use this sandbox.
+const scoped = await box.mintScopedToken({ scope: "session-runtime", sessionId: "web-shell" });
+return Response.json({ token: scoped.token, proxyUrl: scoped.sidecarProxyUrl });
+```
+
+```ts
+// In the browser.
+import { TerminalStream } from "@tangle-network/sandbox";
+
+const term = await TerminalStream.connect({
+  url: `${proxyUrl}/terminals/web-shell/ws`,
+  connectionId: "web-shell",
+  token: async () => (await (await fetch("/api/terminal-token", { method: "POST" })).json()).token,
+  cols: 100,
+  rows: 30,
+  handlers: { onData: (bytes) => xterm.write(bytes) },
+});
+xterm.onData((data) => term.write(data));
+```
+
+Terminal tokens are short-lived. Passing a function as `token` lets every reconnect fetch a new one.
+
+## Python and REST
+
+Python has `ssh()`, which returns `host`, `port` and `username`, and the `ssh_enabled`, `ssh_public_keys`, `ssh_key_ids` and `web_terminal_enabled` create options. It has no PTY, terminal manager, stored SSH keys or web-terminal token. Call the routes with `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+client.fetch("POST", "/v1/ssh-keys", json={"name": "laptop", "publicKey": public_key})
+client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/terminals/{terminal_id}/input", json={"data": "ls\n"})
+```
+
+The CLI opens an interactive shell only through `tangle ssh`. To drive a coding agent's own terminal UI, see [Drive a coding agent interactively](/sandbox/interactive).
+
+## Next
+
+- [Drive a coding agent interactively](/sandbox/interactive)
+- [Authenticate with API keys, CLI login and browser tokens](/sandbox/authentication)
+- [Isolation, privacy and compliance](/sandbox/security)

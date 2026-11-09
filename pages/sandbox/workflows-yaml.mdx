@@ -1,46 +1,56 @@
+---
+title: Workflow YAML reference
+description: Every field of a Tangle workflow definition, with its triggers, steps, graph edges, conditions, expressions, artifacts, state and limits.
+---
+
 # Workflow YAML reference
 
-The complete authoring contract for workflow definition files. A definition is the durable source of truth: the platform compiles it at create/update time and rejects anything invalid with precise errors — so `tangle workflows validate file.yml` is the fastest way to check a draft.
-
-The machine-readable version is always available as JSON Schema via `tangle workflows schema`.
+This page lists every field a workflow definition accepts and the rule for each.
+Tangle Platform compiles a definition when you create or update it and rejects anything invalid with an error that names the path, so `tangle workflows validate file.yml` is the fastest way to check a draft.
+`tangle workflows schema` prints the same contract as JSON Schema.
 
 ## Top-level shape
 
 ```yaml
-name: pr-review                      # required, ≤ 100 chars
-description: Review every opened PR  # optional, ≤ 1000 chars
-enabled: true                        # optional; false parks the trigger
-on:                                  # required: one trigger, or a list of 1–10
+name: pr-review                      # required, at most 100 characters
+description: Review every opened PR  # optional, at most 1000 characters
+enabled: true                        # optional; false stops the triggers
+on:                                  # required: one trigger, or a list of 1 to 10
   schedule: { cron: "0 9 * * 1-5", timezone: UTC }
-do:                                  # required, 1–50 actions
-  - agent.run:                       # one single-key action object per entry
+do:                                  # required, 1 to 50 steps
+  - agent.run:                       # each entry is an object with one step kind
       topology: { inference: {} }
       profile:
         name: greeter
         prompt: { systemPrompt: "You write short greetings." }
       prompt: "Write a one-line greeting."
-maxNodeVisits: 25                    # optional; loop budget, 1–100 (default 25)
+maxNodeVisits: 25                    # optional; loop budget, 1 to 100
+maxRunCostUsd: 5                     # optional; spend cap for one run, at most 10000
 ```
 
 | Field | Rule |
-|---|---|
-| `name` | Required. Human label. |
+| --- | --- |
+| `name` | Required. A label for people. |
 | `description` | Optional free text. |
-| `enabled` | Optional, default `true`. A disabled workflow keeps its definition but fires no runs. |
-| `on` | One trigger object (`provider_event`, `schedule`, or `webhook`), or a list of 1–10 of them. A list is OR: whichever entry fires, the single `do` body runs — once, even when one delivery matches several entries. |
-| `do` | Ordered list of actions, 1–50. The cap counts *runtime* work: a `foreach` counts at its worst-case 50-item fan-out, a `parallel` counts its branches, and a `retry` multiplies its leaf. |
-| `maxNodeVisits` | Optional, default 25, hard cap 100. Each (re)entry of any node counts as one visit; exceeding the budget fails the run `CYCLE_BUDGET_EXCEEDED`. Only relevant for cyclic graphs — set it to a small multiple of your intended rounds. |
+| `enabled` | Optional, default `true`. A disabled workflow keeps its definition and starts no runs. |
+| `on` | One trigger object (`provider_event`, `schedule` or `webhook`), or a list of 1 to 10. A list means any of them: whichever entry fires, the one `do` body runs once, even when one delivery matches several entries. |
+| `do` | Ordered list of steps, 1 to 50. The cap counts work at run time: a `foreach` counts as its largest fan-out of 50, a `parallel` counts its branches, and a `retry` multiplies its step. |
+| `maxNodeVisits` | Optional, default 25, at most 100. Each entry into a step counts as one visit; a run that exceeds the budget fails with `CYCLE_BUDGET_EXCEEDED`. It matters only for graphs with loops; set it to a small multiple of the rounds you expect. |
+| `maxRunCostUsd` | Optional, a positive number up to 10000. Before each further billable step, the run compares the spend booked so far with the cap and fails with `RUN_COST_CAP_EXCEEDED` once the cap is reached. Without it, the service default applies; with no default the run has no cap. |
 
-Unknown keys are rejected (the schema is strict everywhere), so a typo'd field is an authoring error, not silently ignored config.
+Unknown keys are rejected everywhere, so a misspelled field is an error rather than ignored config.
 
 ## Triggers (`on`)
 
-### Multiple triggers — `on:` as a list
+### Several triggers in a list
 
-`on` also accepts a list of up to 10 trigger objects. A list is OR: whichever entry a delivery matches, the workflow's single `do` body runs once — even when one delivery matches several of your triggers. Kinds may mix freely (an event AND a schedule), and entries that would store the same trigger row (same event, action, and repo) are rejected at compile time. The 10-entry cap is not the only bound: each `provider_event` entry expands to one row per sub-action, and those rows are capped at 100 in total — so a handful of entries with long `actions` lists can hit that first. Different events carry different payload shapes, so coalesce in the body with `default(...)` (whose fallback accepts another path) instead of duplicating the workflow.
+`on` accepts a list of up to 10 trigger objects. Whichever entry a delivery matches, the single `do` body runs once, even when one delivery matches several of your triggers.
+Kinds can mix, such as an event and a schedule. Entries that would store the same trigger (same event, action and repository) are rejected when you save.
+Each `provider_event` entry stores one trigger per sub-action, and a workflow holds at most 100 of those in total, so a few entries with long `actions` lists can reach that limit first.
+Different events carry different payloads; combine them in the body with `default(...)`, whose fallback can be another path, instead of copying the workflow.
 
 ```yaml
-# Fire on a PR change OR an issue_comment mention — no duplicated workflow.
+# Run on a pull request change or on a comment that mentions @agent.
 on:
   - provider_event:
       connection: github
@@ -56,9 +66,9 @@ on:
         value: "@agent"
 ```
 
-### Switching one entry off — `enabled`
+### Switch one trigger off with `enabled`
 
-Every `on:` entry takes its own optional `enabled`, default `true`. It switches that one subscription off while its siblings keep firing, so you can silence a noisy `pull_request` entry and keep the nightly schedule — without deleting the entry and pasting it back later.
+Every `on` entry takes its own optional `enabled`, default `true`. It turns that one trigger off while the others keep firing, so you can silence a noisy `pull_request` entry and keep the nightly schedule without deleting the entry.
 
 ```yaml
 on:
@@ -70,186 +80,198 @@ on:
       connection: github
       event: issues
       actions: [opened]
-      enabled: false                 # authored off; the entry above still fires
+      enabled: false                 # off; the entry above still fires
 ```
 
-- It **composes** with the workflow's own `enabled` rather than replacing it: an entry fires only while the workflow is enabled AND the entry is. Pausing the workflow still silences every trigger, and resuming restores each entry to what you declared here instead of switching them all on.
-- A disabled entry is still an authored subscription, not a deletion. It counts toward the 10-entry and 100-row caps, a duplicate of it is still rejected, and its cron and connection are still validated — so switching it back on cannot fail on something that went unchecked while it was off.
-- A `schedule` that is off keeps the next occurrence it was last given, but nothing advances it and nothing fires it. Switching the entry back on arms it afresh from that moment, so it waits for the next cron slot rather than firing on the stale instant it was holding.
+- It combines with the workflow's own `enabled`: an entry fires only while both are on. Pausing the workflow silences every trigger, and resuming restores each entry to what you wrote here.
+- A disabled entry still counts. It counts toward the 10-entry and 100-trigger limits, a duplicate of it is still rejected, and its cron and connection are still checked, so turning it back on cannot fail on something unchecked.
+- A `schedule` that is off keeps its next time but never fires. Turning it back on waits for the next cron slot instead of firing at the old time.
 
-### `provider_event` — a connected provider fires the run
+### `provider_event`: a connected provider starts the run
 
 ```yaml
 on:
   provider_event:
-    connection: github                 # required: a provider you connected on the hub
-    event: pull_request                # required: verbatim from the provider's event catalog
-    actions: [opened, ready_for_review] # optional: sub-actions (GitHub only)
-    repo: owner/name                   # optional: narrow to one repository
-    enabled: true                      # optional; false switches this entry off
-    when:                              # optional: predicate over the raw payload
+    connection: github                 # required: a provider you connected
+    event: pull_request                # required: the provider's event id, exactly
+    actions: [opened, ready_for_review] # optional: sub-actions, GitHub only
+    repo: owner/name                   # optional: one repository only
+    enabled: true                      # optional; false turns this entry off
+    when:                              # optional: condition over the raw payload
       all:
-        # quote paths in flow mappings — an unquoted `[]` is YAML flow-sequence syntax
+        # Quote paths inside braces; an unquoted [] is YAML list syntax.
         - { path: "trigger.payload.pull_request.draft", op: eq, value: false }
         - { path: "trigger.payload.pull_request.labels[].name", op: contains, value: agent-review }
 ```
 
-- `connection` names a provider the owner has connected on the hub (`github`, `slack`, …). The compiler resolves it to a concrete connection at save time; a provider with no active connection fails validation.
-- `event` must be an event id the provider actually delivers — copy it verbatim from the provider's catalog (the assistant's schema surface lists them per deployment; only GitHub ids are prefix-less raw names like `pull_request`, others are namespaced like `slack.message`). An event the provider never sends means a trigger that silently never fires — it is validated at author time, so validate.
-- `actions` narrows to sub-actions and is **GitHub-only** — never set it for other providers. The compiler expands each action to its own trigger row; omitted matches any sub-action.
-- `enabled` switches this one entry off while its siblings keep firing — see [Switching one entry off](#switching-one-entry-off--enabled).
-- `when` is a [condition](#conditions) over `trigger.payload.*` (the raw webhook body), evaluated at ingress: the run is enqueued only when it holds. Combined with a broad `actions` list it expresses "fire on ready-for-review OR labeled, but only continue when the PR is non-draft AND carries label X".
+- `connection` names a provider you connected (`github`, `slack` and so on). It is resolved when you save, and a provider with no active connection fails validation.
+- `event` must be an event the provider delivers, copied exactly. GitHub ids are plain names such as `pull_request`; other providers use a namespace, such as `slack.message`. The id is checked when you save, so run `validate`.
+- `actions` narrows to sub-actions and applies to GitHub only. Each action becomes its own trigger; omit it to match any sub-action.
+- `enabled` turns this one entry off; see [Switch one trigger off](#switch-one-trigger-off-with-enabled).
+- `when` is a [condition](#conditions) over `trigger.payload.*`, the raw webhook body, checked as the delivery arrives: a run starts only when it holds. With a broad `actions` list it can say "on ready for review or labeled, and only when the pull request is not a draft and has label X".
 
-Common GitHub events and their payload accessors (`trigger.payload` is the raw GitHub webhook body):
+Common GitHub events and where to read their fields (`trigger.payload` is the raw GitHub webhook body):
 
 | Event | Sub-`actions` | Useful payload paths |
-|---|---|---|
-| `pull_request` | `opened`, `reopened`, `synchronize`, `closed`, `edited`, `ready_for_review`, `converted_to_draft`, `labeled`, `unlabeled` | `pull_request.{number,title,body,draft,head.ref,base.ref,user.login}`, `pull_request.labels[].name`, `label.name` (labeled/unlabeled) |
+| --- | --- | --- |
+| `pull_request` | `opened`, `reopened`, `synchronize`, `closed`, `edited`, `ready_for_review`, `converted_to_draft`, `labeled`, `unlabeled` | `pull_request.{number,title,body,draft,head.ref,base.ref,user.login}`, `pull_request.labels[].name`, `label.name` (labeled and unlabeled) |
 | `issues` | `opened`, `edited`, `closed`, `reopened`, `labeled` | `issue.{number,title,body,user.login}` |
 | `issue_comment` | `created`, `edited` | `comment.body`, `issue.number` |
-| `push` | — | `ref`, `before`, `after`, `head_commit.message`, `commits[]` |
+| `push` | none | `ref`, `before`, `after`, `head_commit.message`, `commits[]` |
 | `release` | `published`, `created` | `release.{tag_name,name,body,html_url}` |
 | `pull_request_review` | `submitted` | `review.{state,body}`, `pull_request.number` |
 | `workflow_run` | `completed` | `workflow_run.{name,conclusion,head_branch,html_url}` |
 
-Every GitHub payload also carries `repository.full_name` and `repository.owner.login`. The full deliverable set is larger than this table — these are the frequent ones.
+Every GitHub payload also carries `repository.full_name` and `repository.owner.login`. GitHub delivers more events than this table lists.
 
-### `schedule` — cron
+### `schedule`: cron
 
 ```yaml
 on:
   schedule:
     cron: "0 9 * * 1-5"
-    timezone: UTC        # required, an IANA timezone
+    timezone: UTC                  # required, an IANA time zone
     until: "2026-12-31T23:59:00Z"  # optional; RFC 3339 with an offset
-    enabled: true        # optional; false switches this entry off
+    enabled: true                  # optional; false turns this entry off
 ```
 
-A schedule trigger has **no payload** — `${trigger.payload.*}` resolves to nothing.
+A schedule has no payload, so `${trigger.payload.*}` resolves to nothing.
 
-`until` bounds the schedule: it never fires at or after that instant, and the scheduler switches it off when `until` passes. A save is refused if `until` is not in the future or the cron's first occurrence is not before it.
+`until` ends the schedule: it never fires at or after that time and turns off when `until` passes. A save is refused if `until` is not in the future or the cron's first time is not before it.
 
-A schedule fires under the authority that wrote it. When an API key writes the workflow, each schedule records that key, and the scheduler switches the schedule off once the key is revoked or expires. If the key has an expiry, every schedule must declare an `until` no later than it; otherwise the save fails with `WORKFLOW_INVALID`, error code `schedule_outlives_grant` at `on.schedule.until`. A schedule switched off this way reads `enabled: false`, `authoredEnabled: true`. Resuming the workflow is refused with `409 WORKFLOW_SCHEDULE_LAPSED` until the definition is saved again with a later `until` or a valid key. An owner session writes unbounded schedules.
+A schedule runs under the authority that wrote it. When an API key writes the workflow, each schedule records that key and turns off once the key is revoked or expires.
+If the key has an expiry, every schedule must set an `until` no later than it; otherwise the save fails with `WORKFLOW_INVALID`, error code `schedule_outlives_grant`, at `on.schedule.until`.
+A schedule turned off this way reads `enabled: false`, `authoredEnabled: true`, and resuming the workflow is refused with `409 WORKFLOW_SCHEDULE_LAPSED` until you save it again with a later `until` or a valid key.
+A workflow saved from a signed-in session can schedule with no end.
 
-### `webhook` — the workflow's own inbound hook
+### `webhook`: the workflow's own URL
 
 ```yaml
 on:
-  webhook: {}            # `webhook: { enabled: false }` switches this entry off
+  webhook: {}            # webhook: { enabled: false } turns this entry off
 ```
 
-No provider connection needed. Creating the workflow returns a hook URL (`POST /v1/hooks/:workflowId`) and a bearer token **in plaintext once** (only the hash is stored; rotate with `POST /v1/workflows/:id/hook-token/rotate`). Callers POST a JSON object with `Authorization: Bearer <token>`; the body becomes `${trigger.*}` — `${trigger.brief}` reads a posted `brief` field. Limits: 256 KiB body, 120 requests/minute per workflow, 24h dedupe on the `Idempotency-Key` header.
+No provider connection is needed. Creating the workflow returns its hook URL, `POST /v1/hooks/{workflowId}`, and a bearer token, shown once; rotate the token with `POST /v1/workflows/{id}/hook-token/rotate`.
+Callers post a JSON object with `Authorization: Bearer <token>`, and the body becomes `${trigger.*}`: `${trigger.brief}` reads a posted `brief` field.
+Limits: 256 KiB body, 120 requests a minute per workflow, and a repeat with the same `Idempotency-Key` header within 24 hours is dropped.
 
-## Action kinds (`do`)
+## Steps (`do`)
 
-Each `do` entry is a single-key object — exactly one action kind — plus optional graph (`id`/`needs`/`join`) and control-flow (`if`/`retry`/`onError`) siblings covered below.
+Each `do` entry is an object with exactly one step kind, plus optional graph fields (`id`, `needs`, `join`) and control fields (`if`, `retry`, `onError`) described below.
 
 | Kind | What it does | Step output |
-|---|---|---|
-| [`agent.run`](#agentrun) | Run an AI agent (sandboxed, or a no-sandbox model call) | `{ text, usage?, costUsd?, model?, traceRef }` (+ topology keys) |
-| [`script.run`](#scriptrun) | Your TypeScript in a fresh sandbox | the script's JSON return value |
-| [`sandbox.spawn`](#sandboxspawn) | Provision a sandbox (no agent) | `{ sandboxId }` |
-| [`sandbox.snapshot`](#sandboxsnapshot--resume) | Capture a spawned sandbox's disk | `{ snapshotId }` |
-| [`integration.invoke`](#integrationinvoke) | Call a connected provider host-side | the provider's raw response |
-| [`notify`](#notify) | Signed HTTPS POST | `{ status }` |
-| [`trace.analyze`](#traceanalyze) | Analyze an archived agent trace | `{ findings, rootCauses, analyzedAt }` |
-| [`decision`](#decision) | Pause for a human choice | `{ choice, note? }` |
+| --- | --- | --- |
+| [`agent.run`](#agentrun) | Run an agent in a sandbox, or make one model call with no sandbox | `{ text, usage?, costUsd?, model?, traceRef }`, plus topology keys |
+| [`script.run`](#scriptrun) | Run your TypeScript in a new sandbox | the script's JSON return value |
+| [`sandbox.spawn`](#sandboxspawn) | Start a sandbox with no agent | `{ sandboxId }` |
+| [`sandbox.snapshot`](#sandboxsnapshot-and-resume) | Save a started sandbox's disk | `{ snapshotId }` |
+| [`integration.invoke`](#integrationinvoke) | Call a connected provider | the provider's raw response |
+| [`notify`](#notify) | Post a signed HTTPS request | `{ status }` |
+| [`trace.analyze`](#traceanalyze) | Analyze a saved agent trace | `{ findings, rootCauses, analyzedAt }` |
+| [`decision`](#decision) | Wait for a person to choose | `{ choice, note? }` |
 | [`wait.timer`](#waittimer) | Resume after a delay | `{ waited: true, seconds }` |
 | [`wait.event`](#waitevent) | Resume on a matching event | the delivery's payload |
-| [`workflow.run`](#workflowrun) | Run a child workflow, wait for it | `{ status, steps }` |
-| [`parallel`](#parallel) | Run leaf branches concurrently | `{ branches: [{ status, output }] }` |
-| [`foreach`](#foreach) | Run one leaf per collection element | `{ items: [{ status, output }] }` |
+| [`workflow.run`](#workflowrun) | Run a child workflow and wait for it | `{ status, steps }` |
+| [`parallel`](#parallel) | Run steps at the same time | `{ branches: [{ status, output }] }` |
+| [`foreach`](#foreach) | Run one step per item of a list | `{ items: [{ status, output }] }` |
 
-A skipped action's `${steps[N]}` slot resolves to nothing; later positions are unchanged.
+A skipped step's `${steps[N]}` resolves to nothing; later positions do not shift.
 
 ### `agent.run`
 
-Provision a sandbox and run an agent to completion against a prompt, capturing its model/token/cost trace. The one required discipline: **give the agent a role** — at least one of `profile` or `skills`.
+Starts a sandbox and runs an agent on a prompt until it finishes, recording its model, tokens and cost. Give the agent a role: at least one of `profile` or `skills`.
 
 ```yaml
 - agent.run:
-    profile: code-reviewer           # a built-in capability id, a catalog profile id, OR an inline profile object
-    model: anthropic/claude-sonnet-4-5  # optional router slug; omit for the deployment default
-    harness: claude-code             # optional coding harness; default opencode
+    profile: code-reviewer           # a built-in id, a catalog profile id, or an inline profile
+    model: anthropic/claude-sonnet-5-5  # optional Router model; omit for the default
+    harness: claude-code             # optional coding agent; default opencode
     image: node-22                   # optional sandbox image
-    prompt: "Review PR #${trigger.payload.pull_request.number} …"
-    source:                          # optional: clone a repo/PR into the box first
+    prompt: "Review PR #${trigger.payload.pull_request.number}"
+    source:                          # optional: clone a repository or pull request first
       repo: "${trigger.payload.repository.full_name}"
       pr: "${trigger.payload.pull_request.number}"
       # ref: main                    # optional
-      # push: true                   # optional: grant repo-write (see warning below)
-    connections: [github]            # providers to grant the sandbox (hub access)
-    skills: [house-review-rubric]    # catalog skill ids, materialized as SKILL.md
-    env: { CI: "true" }              # ≤ 32 entries
-    maxRounds: 3                     # loop budget, 1–10 (see topologies)
-    timeout: 20m                     # wall-clock budget; default 10m, max 1h
-    size: small                      # named tier: nano | small | medium | large
-    # resources: { cpuCores: 4, memoryMB: 8192, diskGB: 40 }  # raw request — mutually exclusive with size
+      # push: true                   # optional: allow pushing to the repository
+    connections: [github]            # providers the sandbox may use
+    skills: [house-review-rubric]    # catalog skill ids, written as SKILL.md files
+    env: { CI: "true" }              # at most 32 entries
+    maxRounds: 3                     # loop budget, 1 to 10
+    timeout: 20m                     # default 10m, at most 1h
+    size: small                      # nano, small, medium or large
+    # resources: { cpuCores: 4, memoryMB: 8192, diskGB: 40 }  # instead of size
 ```
 
 Field rules:
 
-- `profile` — a string (built-in capability id or a catalog profile id) or an inline profile object (`{ name, prompt: { systemPrompt }, … }`). An authored profile may not declare MCP servers, hooks, or connections — grant hub access per-action with `connections` instead. Use an inline profile for a one-off persona; mint a catalog profile for a role reused across workflows.
-- `model` — a router `provider/model` slug, passed verbatim at run time and **not** checked at author time: an invented slug fails the run, not the save. Omit it to use the deployment default. Mutually exclusive with a `fanout` topology.
-- `source` — the only thing that clones a repo into the box. `repo` is `owner/repo` or an `https://github.com/owner/repo` URL; `pr` checks out the PR head (as a detached HEAD — the agent should produce its review/patch as output, never `git push`; post results host-side with `integration.invoke`). `push: true` opts the box into a repo-scoped write token — treat it like a GitHub Actions `GITHUB_TOKEN` and protect your default branch. A source-based run is **completion-gated**: with no explicit `topology` it runs as a loop (default budget 3 rounds) that retries until the agent self-reports done.
-- `connections` — provider names (or connection ids) the owner has connected; each must be active at run time. The in-box agent reaches the hub with `tangle hub exec <provider>.<action> '<json>'`. Grant `connections` for the READS an agent must do. An in-box agent authenticates as its sandbox, which may read a granted connection but has every write approval-gated, so a write it attempts parks on a human approval instead of completing. Let the agent decide in the box, then write host-side with `integration.invoke`.
-- `skills` — catalog skill ids (≤ 16), each materialized into the sandbox as a SKILL.md package.
-- `prompt` — required, ≤ 8192 chars as authored (≤ 100k after `${…}` expansion).
-- `timeout` — this step's wall-clock budget, as a duration (`20m`, `45m`) or raw milliseconds. Omitted, the step gets the deployment budget (10 minutes). A step that exceeds its budget is killed and returns **nothing**, so give a step whose work legitimately takes longer the budget it needs. Range 1000ms – 3600000ms (1 hour); an out-of-range value fails the save. A deployment may enforce a lower maximum (`WORKFLOW_AGENT_ACTION_TIMEOUT_MAX_MS`), in which case a longer declared budget is trimmed to it and the step's timeout failure names both numbers. Inside a `parallel`/`foreach` a branch declares its own `timeout` the same way, but the fan-out's own budget still bounds the whole group. An interactive run of the workflow ignores it in BOTH directions — a declared budget neither extends the session nor shortens it, because a human-driven session is bounded by the deployment's interactive ceiling instead. The budget is per ATTEMPT, so a step that also carries `retry` can spend it once per attempt.
+- `profile`: a built-in id or catalog profile id, or an inline profile object (`{ name, prompt: { systemPrompt }, ... }`). An inline profile may not declare MCP servers, hooks or connections; grant provider access per step with `connections`. Use an inline profile for a one-off role, and a catalog profile for a role several workflows share.
+- `model`: a Router `provider/model` id, used as written when the step runs. It is not checked when you save, so an invented id fails the run, not the save. Omit it to use the default. It cannot be combined with a `fanout` topology.
+- `source`: the only field that clones a repository. `repo` is `owner/repo` or `https://github.com/owner/repo`; `pr` checks out the pull request head as a detached HEAD.
+  The agent should return its review or patch as output, not `git push` it; post results with `integration.invoke`. `push: true` gives the sandbox a token that can write to that repository, so protect your default branch as you would for a CI token.
+  A step with `source` and no `topology` runs as a loop of up to 3 rounds that repeats until the agent reports it is done.
+- `connections`: providers, or connection ids, you connected; each must be active when the step runs. The agent in the sandbox calls them with `tangle hub exec <provider>.<action> '<json>'`.
+  Grant `connections` for the reads an agent needs. Every write from a sandbox waits for a person's approval, so let the agent decide in the sandbox and make the write with `integration.invoke`.
+- `skills`: up to 16 catalog skill ids, each written into the sandbox as a SKILL.md package.
+- `prompt`: required, at most 8192 characters as written and 100,000 after `${...}` expansion.
+- `timeout`: this step's time budget, as a duration (`20m`, `45m`) or milliseconds, from 1 second to 1 hour, default 10 minutes. A value out of range fails the save.
+  A step that runs past its budget is stopped and returns nothing, so give long work the budget it needs. The service can enforce a lower maximum; a longer budget is then cut to it, and the timeout error names both numbers.
+  Inside `parallel` or `foreach`, a branch sets its own `timeout`, and the group's budget still bounds the whole group. An interactive run ignores `timeout` and uses the interactive session limit. The budget applies to each attempt, so a step with `retry` can use it once per attempt.
 
 #### Topologies
 
-`topology` picks *how* the agent runs:
+`topology` picks how the agent runs:
 
 | Topology | Shape | Rules |
-|---|---|---|
-| *(omitted)* | One sandboxed run; with a `source`, a completion-gated `loop` | The default for repo work. |
-| `single: {}` | One ungated sandboxed run | Explicit opt-out of the loop default for a source run. |
-| `loop: {}` | Retry the same agent until it self-reports done (audit → fix → re-audit) | Needs `maxRounds >= 2`; each round is a fresh sandbox. |
-| `fanout: { models: […] }` | Same role across 2–4 distinct models in parallel | Mutually exclusive with top-level `model`. Output adds `{ winner, models: [{ model, text, status }] }` — read `${steps[N].models[k].text}`. |
-| `inference: {}` | One stateless model call, **no sandbox** | Prompt-only: `source`, `skills`, `env`, `connections`, `image`, `size`/`resources`, `fromSnapshot`/`fromSandboxId`/`resume` are all rejected. The profile must carry a system prompt only (set `model` on the action). |
+| --- | --- | --- |
+| omitted | One run in a sandbox; with `source`, a `loop` that repeats until done | The default for repository work. |
+| `single: {}` | One run in a sandbox, with no loop | Turns off the loop default for a `source` step. |
+| `loop: {}` | Repeat the same agent until it reports done | Needs `maxRounds` of 2 or more; each round gets a new sandbox. |
+| `fanout: { models: [...] }` | The same role on 2 to 4 different models at once | Cannot be combined with a top-level `model`. Output adds `{ winner, models: [{ model, text, status }] }`; read `${steps[N].models[k].text}`. |
+| `inference: {}` | One model call, no sandbox | Prompt only: `source`, `skills`, `env`, `connections`, `image`, `size`, `resources`, `fromSnapshot`, `fromSandboxId` and `resume` are rejected. The profile carries only a system prompt; set `model` on the step. |
 
-Prefer `inference` for any step whose whole job is turning its prompt into text (generate, summarize, classify) — a sandboxed topology bills compute a pure text step doesn't use. `maxRounds >= 2` is only meaningful with a loop; anywhere else it is an authoring error. A loop's output adds `{ topology: "loop", rounds, gatePassed }`.
+Use `inference` for a step whose whole job is turning a prompt into text, such as generating, summarizing or classifying; a sandbox adds compute that step does not use.
+`maxRounds` of 2 or more only makes sense with a loop and is an error anywhere else. A loop's output adds `{ topology: "loop", rounds, gatePassed }`.
 
-`agent.run` also supports durable-memory fields shared with `sandbox.spawn`: `resume: true` (restore this node's last snapshot from the workflow's registry; cold first run starts fresh), or an explicit `fromSnapshot` + `fromSandboxId` pair (`fromSandboxId` is required with `fromSnapshot`; `resume` and `fromSnapshot` are mutually exclusive).
+`agent.run` also takes the memory fields of `sandbox.spawn`: `resume: true` restores this step's last snapshot, and a first run starts fresh. Or name a snapshot with `fromSnapshot` and `fromSandboxId` together. `resume` and `fromSnapshot` cannot be combined.
 
 ### `script.run`
 
-Code mode: execute an author TypeScript module in a fresh sandbox (Node type-stripping, no build step).
+Runs your TypeScript module in a new sandbox, with Node type stripping and no build step.
 
 ```yaml
 - id: tally
   script.run:
-    input: { limit: 3 }              # any JSON; the script's single argument
-    timeoutMs: 120000                # optional, default 120000, max 600000
-    connections: [gmail]             # optional: grant hub access (see HubClient)
-    egress:                          # optional: extra exact hosts the script fetches
+    input: { limit: 3 }              # any JSON; passed as the script's one argument
+    timeoutMs: 120000                # optional, default 120000, at most 600000
+    connections: [gmail]             # optional: providers the script may call
+    egress:                          # optional: extra hosts the script fetches
       allowDomains: [listings.example.com]
     source: |
       export default async function run(input: { limit: number }) {
         return { doubled: input.limit * 2 };
       }
-# a later step reads ${steps.tally.doubled}
+# A later step reads ${steps.tally.doubled}.
 ```
 
-- `source` — required, ≤ 32 KiB UTF-8. The module must export a default (or named `run`) function `(input) => result`; the JSON-serialized return value is the step output. A throw or non-zero exit fails the action with the stderr tail.
-- **Critical:** `${…}` inside `source` is parsed as a *mapping expression* before the script ever runs — use string concatenation, never JS template literals containing `${}`.
-- The script's stdout is persisted on the step as `logs` (inline up to 64 KiB, auto-emitted as an artifact beyond that).
-- **Network.** The box is created with strict egress. It reaches the platform's default hosts (package registries, git hosts, model APIs) and the endpoints the run hands the script: the Sandbox API (`TANGLE_SANDBOX_API_URL`, for sibling spawn), the Platform API (artifacts and KV), and the Hub when `connections` are granted. Any other host must be listed in `egress.allowDomains`: exact lowercase public hostnames, at most 16, no wildcards, IP addresses, ports, or `localhost`. There is no open mode. An undeclared host fails with HTTP 403 from the egress proxy. `egress` is rejected with `execution: isolate`, which has no network.
+- `source`: required, at most 32 KiB of UTF-8. The module exports a default function, or one named `run`, that takes `input` and returns the result; the JSON return value is the step output. A throw or a nonzero exit fails the step with the end of stderr.
+- `${...}` inside `source` is read as a mapping expression before the script runs. Build strings by concatenation, never with JavaScript template literals that contain `${}`.
+- The script's stdout is kept on the step as `logs`, inline up to 64 KiB and as an artifact past that.
+- **Network.** The sandbox starts with strict network rules. It reaches the default hosts (package registries, git hosts, model APIs) and the endpoints the run gives the script: the Sandbox API (`TANGLE_SANDBOX_API_URL`) for starting more sandboxes, the Platform API for artifacts and state, and Tangle Hub when `connections` are granted.
+  List any other host in `egress.allowDomains`: exact lowercase public host names, at most 16, with no wildcards, IP addresses, ports or `localhost`. There is no open mode, and a host not listed fails with HTTP 403. `egress` is rejected with `execution: isolate`, which has no network.
 
-Bundled sibling modules are staged read-only one directory above the script (the script itself lands at `.wf-script/src/index.mts` in the box workspace):
+The script lands at `.wf-script/src/index.mts` in the sandbox, and these modules sit read-only one directory above it:
 
 | Import | Purpose |
-|---|---|
-| `import { emitFile, readArtifact } from "../artifacts.mjs"` | Emit large/binary output as downloadable artifacts; read artifact refs back. See [Artifacts](#artifacts-and-kv-state). |
-| `import * as state from "../state.mjs"` | The workflow's cross-run KV store. See [KV state](#artifacts-and-kv-state). |
-| `import { HubClient } from "../hub.mjs"` | Hub codemode — search, describe, and invoke the 500+ catalog actions. Requires `connections` on the action. |
-| `import { Sandbox } from "../sdk.mjs"` | Spawn sibling sandboxes from inside the script (the exec env carries the run-scoped `TANGLE_SANDBOX_API_KEY`; `TANGLE_API_KEY` is hub bearer auth and cannot spawn). |
-| `import { runAgentRounds, createSupervisor, defineStrategy, loopUntil } from "../loops.mjs"` | The agent-runtime loop engine — a code-mode node can carry a whole agentic supervisor loop inside itself. |
+| --- | --- |
+| `import { emitFile, readArtifact } from "../artifacts.mjs"` | Save large or binary output as downloadable artifacts and read artifacts back. See [Artifacts](#artifacts-and-state). |
+| `import * as state from "../state.mjs"` | The workflow's key-value store shared across runs. See [State](#artifacts-and-state). |
+| `import { HubClient } from "../hub.mjs"` | Search, describe and call the Tangle Hub actions of your connections. Needs `connections` on the step. |
+| `import { Sandbox } from "../sdk.mjs"` | Start more sandboxes from the script, with the run's `TANGLE_SANDBOX_API_KEY`. `TANGLE_API_KEY` is the Hub key and cannot create sandboxes. |
+| `import { runAgentRounds, createSupervisor, defineStrategy, loopUntil } from "../loops.mjs"` | The agent-runtime loop functions, so one script step can run a whole supervised agent loop. |
 
-Data rule: **small data by value, large data by reference.** Return small JSON summaries; emit reports, CSVs, and dumps as artifacts.
+Return small JSON summaries by value and save reports, CSV files and dumps as artifacts.
 
-Hub codemode is the default way a script touches a connected provider — no tokens, base URLs, or pagination quirks to guess:
+`HubClient` is the simplest way for a script to call a connected provider, with no tokens, base URLs or paging to handle:
 
 ```yaml
 - id: fetch
@@ -258,52 +280,52 @@ Hub codemode is the default way a script touches a connected provider — no tok
     source: |
       import { HubClient } from "../hub.mjs";
       export default async function run() {
-        const hub = HubClient.fromEnv();   // throws when the action granted no connections
+        const hub = HubClient.fromEnv(); // throws when the step granted no connections
         const { result } = await hub.tools.invoke("gmail.list_messages", { query: "newer_than:1d" });
         return { result };
       }
 ```
 
-Discover the right action with `hub.tools.search("list recent gmail messages", { provider: "gmail" })` and its input schema with `hub.tools.describe(path)`.
+Find an action with `hub.tools.search("list recent gmail messages", { provider: "gmail" })` and its input schema with `hub.tools.describe(path)`.
 
 ### `sandbox.spawn`
 
-Provision a sandbox and return its id as `${steps[N].sandboxId}`. It does **not** run an agent or capture output — its `prompt` is advisory metadata that is never executed. For a step that produces a result, use `agent.run`.
+Starts a sandbox and returns its id as `${steps[N].sandboxId}`. It does not run an agent or capture output; its `prompt` is a note that never runs. For a step that produces a result, use `agent.run`.
 
 ```yaml
 - id: box
   sandbox.spawn:
     template: node-22                # required: a sandbox image name
-    connections: [github]            # optional hub grants
+    connections: [github]            # optional providers
     env: { NODE_ENV: test }
-    resume: true                     # optional: restore this node's last snapshot
-    size: medium                     # or resources: { … } — not both
+    resume: true                     # optional: restore this step's last snapshot
+    size: medium                     # or resources: { ... }, not both
 ```
 
-`fromSnapshot` + `fromSandboxId` (both together) restore a specific snapshot instead of provisioning fresh; `resume` and `fromSnapshot` are mutually exclusive.
+`fromSnapshot` and `fromSandboxId`, together, restore a named snapshot instead of starting fresh. `resume` and `fromSnapshot` cannot be combined.
 
-### `sandbox.snapshot` + `resume`
+### `sandbox.snapshot` and `resume`
 
-Capture a spawned sandbox's disk into the workflow's snapshot registry, so later runs restore it instead of starting cold — the persistent-memory pattern:
+Saves a started sandbox's disk in the workflow's snapshot list, so later runs restore it instead of starting cold:
 
 ```yaml
 do:
   - id: box
-    sandbox.spawn: { template: node-22, resume: true }   # cold first run: fresh box
+    sandbox.spawn: { template: node-22, resume: true }       # first run starts fresh
   - id: snap
     sandbox.snapshot: { sandbox: "${steps.box.sandboxId}" }  # later runs resume this disk
 ```
 
-The snapshot is recorded in the registry under the node its `sandbox` ref **points at** (`${steps.box.sandboxId}` records under `box`). An `agent.run` or `sandbox.spawn` with `resume: true` resolves the entry under its *own* node id. Pair them exactly like this: one spawn with `resume: true`, one snapshot naming that spawn's sandbox.
+The snapshot is filed under the step its `sandbox` value points at: `${steps.box.sandboxId}` files it under `box`. A step with `resume: true` looks for a snapshot under its own id. So pair them exactly like this: one `sandbox.spawn` with `resume: true`, and one `sandbox.snapshot` naming that step's sandbox.
 
 ### `integration.invoke`
 
-Call a connected provider through the hub executor, host-side (no sandbox):
+Calls a connected provider from Tangle Platform, with no sandbox:
 
 ```yaml
 - integration.invoke:
-    path: github.pulls.reviews.create   # <provider>.<action…>
-    identity: app                       # optional: "user" (default) or "app"
+    path: github.pulls.reviews.create   # <provider>.<action>
+    identity: app                       # optional: user (default) or app
     input:
       owner: "${trigger.payload.repository.owner.login}"
       repo: "${trigger.payload.repository.name}"
@@ -312,58 +334,75 @@ Call a connected provider through the hub executor, host-side (no sandbox):
       body: "${steps[0].text}"
 ```
 
-The first path segment names the connection the owner must have connected. The output is the provider's raw response — shape is provider-defined, so read the field the action documents (check its output schema with the hub's describe tooling).
+The first path segment names the connection, which you must have connected. The output is the provider's raw response, shaped as the action defines; `tangle hub tools describe <path>` describes an action.
 
-`identity` selects the credential the call goes out under:
+`identity` picks the credential the call uses:
 
-- `user` (the default) uses the owner's connected OAuth token, so the write is attributed to that person.
-- `app` uses a short-lived, repo-scoped Tangle Hub GitHub App installation token, so the write is attributed to a bot.
+- `user`, the default, uses your connected OAuth token, so the write is attributed to you.
+- `app` uses a short-lived Tangle Hub GitHub App token scoped to the repository, so the write is attributed to a bot.
 
-Use `app` for a reviewer. Under the owner's own token every verdict carries that person's authority instead of a bot's, and GitHub refuses a `REQUEST_CHANGES` on a pull request that person opened themselves — which is exactly the work an always-on reviewer exists to cover.
+Use `app` for a reviewer. Under your own token every verdict carries your authority, and GitHub refuses a `REQUEST_CHANGES` from you on a pull request you opened, which is the case an always-on reviewer exists to cover.
 
-`event: APPROVE` is **not** available under `identity: app`, and a workflow that asks for it is rejected when you save it. The App's approval would count toward a branch-protection rule that requires an independent review — the one approval the workflow's author cannot give — so granting it would hand anyone who can write a workflow more authority than they hold themselves. Post `COMMENT` or `REQUEST_CHANGES` as the App, or make the approval under the connected user's own identity.
+`event: APPROVE` is not available under `identity: app`, and a workflow that asks for it is rejected when you save it.
+The App's approval would count toward a branch protection rule that requires an independent review, the one approval the workflow's author cannot give, so allowing it would give anyone who can write a workflow more authority than they hold.
+Post `COMMENT` or `REQUEST_CHANGES` as the App, or approve under your own identity.
 
-`identity: app` applies to these GitHub actions only: `pulls.get`, `pulls.list`, `pulls.listFiles`, `pulls.listReviews`, `pulls.listReviewComments`, `pulls.reviews.create` and `issues.createComment`. Each mints exactly the permissions its action needs. Three conditions must hold, and the action fails loud when one does not:
+`identity: app` works with these GitHub actions only: `pulls.get`, `pulls.list`, `pulls.listFiles`, `pulls.listReviews`, `pulls.listReviewComments`, `pulls.reviews.create` and `issues.createComment`. Each gets exactly the permissions its action needs.
+Two conditions must hold, and the step fails with an error when either does not:
 
-- The deployment has the Tangle Hub GitHub App configured.
-- The workflow owner's App installation covers the repository the `input` names.
-- The owner personally reaches that repository, with write access when the action writes.
+- Your Tangle Hub GitHub App installation covers the repository named in `input`.
+- You can reach that repository yourself, with write access when the action writes.
 
-A refusal never falls back to the owner's own token, because that is the identity the workflow ruled out.
+A refusal never falls back to your own token, because that is the identity the workflow ruled out.
 
 ### `notify`
 
-Outbound signed HTTPS POST:
+Posts a signed HTTPS request:
 
 ```yaml
 - notify:
-    url: "https://example.com/hook"     # https only; private/loopback/metadata targets rejected (SSRF)
-    secret: "wns_…"                     # the ID of a signing key you minted; the receiver holds its value
+    url: "https://example.com/hook"     # https only; private and loopback addresses are refused
+    secret: "wns_..."                   # id of a signing key you minted; the receiver holds the value
     payload: { text: "${steps.draft.text}" }
 ```
 
-The body is HMAC-signed by the runner. Output is `{ status }` — the HTTP status number. Any non-2xx response fails the step, and the runner never follows a redirect to an unvetted address, so a 3xx fails it too. The step's `retry` / `onError` then decide what the run does next.
+The body is signed with HMAC. The output is `{ status }`, the HTTP status number. Any response outside 2xx fails the step, and redirects are not followed, so a 3xx fails it too. The step's `retry` and `onError` then decide what happens.
 
-Every POST carries the signature, the event name and the delivery's identity:
+Every request carries the signature, the event name and the delivery's identity:
 
-```
+```text
 Content-Type: application/json
 X-Tangle-Event: workflow.notify
 X-Tangle-Signature: t=<unix-seconds>,v1=<hex>
 Idempotency-Key: wf_<runId>_a<step>
 ```
 
-`Idempotency-Key` names one step of one run. Every retry of that step sends the same value, and the signed body carries it again as `deliveryId`. A step whose response was lost may be retried, so a receiver that must act once records the key and treats a repeat as the same delivery. A retry of a `notify` step repeats only the POST, never the steps before it.
+`Idempotency-Key` names one step of one run, and every retry of that step sends the same value. A step whose response was lost may be retried, so a receiver that must act once records the key and treats a repeat as the same delivery.
+A retry of a `notify` step repeats only the request, never the steps before it.
 
-`v1` is HMAC-SHA256 over `<t>.<rawBody>` — the `t` value from the same header, a literal `.`, then the request body exactly as it arrived. Verify before you parse: re-serializing the JSON first changes the bytes, and the digest no longer matches.
+The body is your `payload` with every `${...}` expanded, plus the run's identity. `deliveryId` carries the same value as the `Idempotency-Key` header:
 
-Which key signs a delivery is the step's `secret` field.
+```json
+{
+  "workflowId": "wf_...",
+  "runId": "wfrun_...",
+  "deliveryId": "wf_wfrun_..._a3",
+  "payload": { "text": "..." },
+  "firedAt": "2025-01-01T00:00:00.000Z"
+}
+```
 
-**With `secret`** the key is yours, and it belongs to that one receiver. Mint one per receiver, hand each receiver its own value, and name the key's ID from the step that posts there. Each key is bound to its receiver's URL when you mint it, and a step that posts anywhere else cannot name it, so holding one key grants nothing against any other endpoint and a hosted delivery is verifiable.
+`v1` is HMAC-SHA256 over `<t>.<rawBody>`: the `t` value from the same header, a literal `.`, then the request body exactly as it arrived. Verify before you parse, because serializing the JSON again changes the bytes and the digest no longer matches.
 
-**Without `secret`** the delivery is signed with the deployment's key (`WORKFLOW_NOTIFY_SIGNING_SECRET`), which every receiver's delivery shares. A self-hosted operator verifies with the value they set. On the hosted platform that key belongs to the deployment and is not given out — handing it to one receiver would let that receiver forge deliveries to every other one — so a hosted delivery signed this way cannot be verified. Give the step a `secret`. Until you do, do not let the endpoint act on the payload alone: treat the delivery as a signal and read the authoritative state back from the API first. An unguessable path segment narrows who can reach the endpoint. It is still a bearer credential in a URL. Proxies, browser referrers and error trackers all record it, so keep it out of the query string and out of your logs.
+The step's `secret` field decides which key signs a delivery.
 
-#### Minting a signing key
+**With `secret`**, the key is yours and belongs to one receiver. Mint one key per receiver, give each receiver its own value, and name the key's id in the step that posts there.
+Each key is bound to its receiver's URL when you mint it, and a step that posts anywhere else cannot name it, so one receiver's key grants nothing against any other endpoint.
+
+**Without `secret`**, the delivery is signed with a key the service shares across every receiver and never gives out, so you cannot verify it. Give the step a `secret`.
+Until you do, treat a delivery as a signal only and read the real state back from the API before acting. An unguessable path segment narrows who can reach the endpoint, but it is still a credential in a URL: keep it out of query strings and logs.
+
+#### Mint a signing key
 
 ```bash
 curl -sX POST https://id.tangle.tools/v1/workflows/notify-secrets \
@@ -376,10 +415,10 @@ curl -sX POST https://id.tangle.tools/v1/workflows/notify-secrets \
 {
   "success": true,
   "data": {
-    "id": "wns_…",
+    "id": "wns_...",
     "label": "acme-billing-hook",
     "receiverUrl": "https://acme.example/hooks/billing",
-    "signingSecret": "whsec_…",
+    "signingSecret": "whsec_...",
     "createdAt": "2025-01-01T00:00:00.000Z",
     "updatedAt": "2025-01-01T00:00:00.000Z",
     "lastUsedAt": null,
@@ -388,37 +427,28 @@ curl -sX POST https://id.tangle.tools/v1/workflows/notify-secrets \
 }
 ```
 
-`signingSecret` is returned once, here and nowhere else. Give it to the receiver; put only `id` in the workflow. A `whsec_…` value in a definition is rejected — a definition is readable by everyone who can read the workflow, its revisions and its templates.
+`signingSecret` is returned once, here. Give it to the receiver and put only `id` in the workflow. A `whsec_` value in a definition is rejected, because everyone who can read the workflow, its revisions and its templates can read the definition.
 
-`receiverUrl` names the one receiver the key is for. Its origin, path AND query are kept — only the fragment is dropped — and that whole URL is the key's scope: a `notify` step posting anywhere else is rejected when you save the workflow, and again before the delivery is signed. This is what makes the isolation a property of the key rather than a rule you have to remember.
+`receiverUrl` names the one receiver the key is for. Its origin, path and query are kept and only the fragment is dropped, and that whole URL is the key's scope: a `notify` step that posts anywhere else is rejected when you save, and again before the delivery is signed.
 
-The path and query count because independent receivers often share an origin and differ only there — the normal shape for a multi-tenant webhook host, where `/catch/111/aaa` and `/catch/222/bbb`, or `?tenant=a` and `?tenant=b`, belong to different parties. If one key covered a whole origin, the tenant holding it could forge deliveries to every other tenant on that host. So mint one key per endpoint you post to: two hooks on your own domain are two receivers here, and they take two keys. The query is compared exactly as written, order included: it is opaque to the URL spec, so whether two orderings mean one endpoint is the receiver's call, not ours. Spell it the same way in the key and in the step; if you do not, the save error names that difference. A step whose `url` builds its PATH from a `${…}` expression names no single receiver, so it cannot name a key; it can still post with the deployment key. A `${…}` in the HOST is refused outright, key or not, because the url has to resolve to a vetted address when the workflow is saved.
+The path and query count because separate receivers often share a host and differ only there, as on a multi-tenant webhook host where `/catch/111/aaa` and `/catch/222/bbb`, or `?tenant=a` and `?tenant=b`, belong to different parties. One key per host would let one tenant forge deliveries to every other.
+So mint one key per endpoint: two hooks on your own domain are two receivers and take two keys.
+The query is compared exactly as written, order included, so spell it the same way in the key and in the step; the save error names any difference.
+A step whose `url` builds its path from a `${...}` expression names no single receiver, so it cannot name a key. A `${...}` in the host is refused outright, because the URL must resolve to a checked address when you save.
 
-`GET /v1/workflows/notify-secrets` lists your keys with the workflows that name each one, and never the values. `DELETE /v1/workflows/notify-secrets/<id>` removes a key no workflow names; while one does, the delete is refused, because a step whose key is gone fails rather than falling back to another key.
+`GET /v1/workflows/notify-secrets` lists your keys with the workflows that name each one, never the values. `DELETE /v1/workflows/notify-secrets/{id}` removes a key no workflow names; while one does, the delete is refused, because a step whose key is gone fails rather than using another key.
 
-#### Rotating a signing key
+#### Rotate a signing key
 
 ```bash
-curl -sX POST https://id.tangle.tools/v1/workflows/notify-secrets/wns_…/rotate \
+curl -sX POST https://id.tangle.tools/v1/workflows/notify-secrets/wns_.../rotate \
   -H "authorization: Bearer $TANGLE_API_KEY"
 ```
 
-Rotating replaces the value and keeps the ID, so no workflow needs an edit. For 24 hours the delivery carries a signature under BOTH the new value and the old one, which is why the sample verifier below reads every `v1=` in the header: the receiver adopts the new value whenever it is ready instead of at a synchronized cutover. `DELETE /v1/workflows/notify-secrets/<id>/previous` ends that window early — the right move when the old value leaked, since until then whoever holds it can still forge.
+Rotating replaces the value and keeps the id, so no workflow needs an edit. For 24 hours each delivery carries a signature under both the new value and the old one, so the receiver can switch to the new value whenever it is ready.
+`DELETE /v1/workflows/notify-secrets/{id}/previous` ends that window early, which is the right move when the old value leaked.
 
-Rotating the DEPLOYMENT key has no such window: every receiver that verifies with it breaks at once. That is why it is pinned stable, and the second reason to give each step a `secret` of its own.
-
-The body is your `payload` with every `${…}` expression already expanded, plus the run's identity:
-
-```json
-{
-  "workflowId": "wf_…",
-  "runId": "wfrun_…",
-  "payload": { "text": "…" },
-  "firedAt": "2025-01-01T00:00:00.000Z"
-}
-```
-
-A receiver verifies it like this:
+#### Verify a delivery
 
 ```ts
 import { createHmac, timingSafeEqual } from "node:crypto";
@@ -428,30 +458,21 @@ function verifyNotify(
   header: string | null | undefined,
   secret: string,
 ): boolean {
-  // A public endpoint receives unsigned requests routinely; that is a rejection,
-  // not an error.
   if (typeof header !== "string") return false;
-  // Anchor each field to a comma or an end of the header, so a `t=`-looking run
-  // inside some other field cannot stand in for the real one. Collect every `v1`:
-  // one verifying signature is enough, which is what a key rotation needs.
+  // Anchor each field so a t= inside another field cannot stand in for the real one.
   const t = /(?:^|,)\s*t=(\d+)\s*(?:,|$)/.exec(header)?.[1];
+  // Every v1 counts: during a rotation one of them is under the new value.
   const signatures = [...header.matchAll(/(?:^|,)\s*v1=([0-9a-f]+)\s*(?=,|$)/g)].map(
     (match) => match[1],
   );
-  // Validate the shapes before trusting them: `Buffer.from` drops a trailing
-  // half-byte rather than failing, so a short digest must not reach the compare.
   if (!t || !/^\d+$/.test(t)) return false;
+  // Buffer.from drops a trailing half byte, so check the length before comparing.
   const candidates = signatures.filter((v1) => /^[0-9a-f]{64}$/.test(v1));
   if (candidates.length === 0) return false;
   const seconds = Number(t);
   if (!Number.isFinite(seconds)) return false;
-  // The timestamp is inside the signed string, so a replayed delivery is still
-  // authentic. Bound how old one may be, and make your handler idempotent —
-  // see the note below the sample.
   if (Math.abs(Date.now() / 1000 - seconds) > 300) return false;
-  // Feed the body in as it arrived. Interpolating a Buffer into a template
-  // decodes and re-encodes it as UTF-8, which changes any byte sequence that is
-  // not valid UTF-8 — and the digest with it.
+  // Pass the body as it arrived; decoding a Buffer to a string can change its bytes.
   const expected = createHmac("sha256", secret)
     .update(t)
     .update(".")
@@ -465,17 +486,16 @@ function verifyNotify(
 }
 ```
 
-The runner sends one signature per live key, with `t` first, but the sample depends on neither the count nor the order. It reads every `v1` in the header and accepts the delivery when any of them verifies, which is what carries a receiver through a rotation's overlap window unchanged.
+The request carries one signature per live key, with `t` first, but the function depends on neither the count nor the order. It accepts the delivery when any `v1` verifies, which carries a receiver through a rotation unchanged.
 
-Verify over the bytes the request arrived as. Capture the raw body — `req.rawBody`, or a `Buffer` — and pass those same bytes to the HMAC. A body that has been decoded to a string, stripped of a BOM, or had its line endings normalised is no longer what was signed, and a genuine delivery will fail.
+Verify the bytes the request arrived as. Capture the raw body, such as `req.rawBody` or a `Buffer`, and pass those bytes to the HMAC. A body decoded to a string, stripped of a byte order mark or with its line endings changed is no longer what was signed.
 
-The age bound is not replay protection. Inside the tolerance window a captured delivery can be posted again, and it verifies, because the timestamp it carries is part of what was signed. Narrow the window if you can, and make the handler idempotent so a repeat is harmless.
-
-There is no per-delivery id to key that on yet. `runId` identifies the run, not the delivery, so two notify steps in one run and a retry of one step all share it. `firedAt` separates deliveries within a run, but nothing guarantees it is unique. Until a delivery id exists, key idempotency on whatever in your `payload` identifies the work, and treat a repeat as a no-op rather than a second effect.
+The age check does not stop replays. Within the 300-second window a captured delivery verifies again, because its timestamp is part of what was signed.
+Make the handler idempotent: record each `deliveryId` (or `Idempotency-Key`) you have acted on, and treat a repeat as a no-op.
 
 ### `trace.analyze`
 
-Run the platform's trace analyst over an archived action trace and return structured findings — the building block for self-steering loops:
+Runs Tangle's trace analyst over a saved step trace and returns structured findings, for loops that steer themselves:
 
 ```yaml
 - id: work
@@ -488,67 +508,72 @@ Run the platform's trace analyst over an archived action trace and return struct
 - id: analyze
   trace.analyze:
     trace: "${steps.work.traceRef.stepsPath}"   # every agent.run output carries traceRef
-    kinds: [failure-mode]                        # optional, ≤ 8; default ["failure-mode"]
-    # model: …                                  # optional analyst model override
+    kinds: [failure-mode]                        # optional, at most 8; default [failure-mode]
+    # model: ...                                 # optional analyst model
 ```
 
-Output is `{ findings, rootCauses, analyzedAt }`. `findings` is an array, so `{ path: "steps.analyze.findings", op: truthy }` holds exactly when the analyst found something.
+The output is `{ findings, rootCauses, analyzedAt }`. `findings` is a list, so `{ path: "steps.analyze.findings", op: truthy }` holds exactly when the analyst found something.
 
 ### `decision`
 
-Pause the run for a human choice — the human-in-the-loop step. The run parks (status `waiting`) until someone picks an option; the pick becomes the step output `${steps[N].choice}`, and a later action routes on it with an ordinary `if` guard.
+Pauses the run until a person picks an option. The run waits with status `waiting`; the pick becomes `${steps[N].choice}`, and a later step routes on it with an `if`.
 
 ```yaml
 - decision:
-    title: "Post this PR review?"        # required, ≤ 200 chars
-    prompt: "${steps[0].text}"           # optional context shown to the approver
-    options: [approve, reject]           # 2–20 options, each ≤ 64 chars
-    timeout: 24h                         # optional: ms number, or 30m / 24h / 7d
-    onTimeout: default                   # wait (default) | fail | default
-    default: reject                      # required when onTimeout: default; must be one of options
+    title: "Post this PR review?"        # required, at most 200 characters
+    prompt: "${steps[0].text}"           # optional context for the approver
+    options: [approve, reject]           # 2 to 20 options, each at most 64 characters
+    timeout: 24h                         # optional: milliseconds, or 30m, 24h, 7d
+    onTimeout: default                   # wait (default), fail or default
+    default: reject                      # required with onTimeout: default; one of options
 ```
 
-Timeout policy: `wait` never expires; `fail` fails the run at expiry; `default` auto-resolves with the `default` choice. A decision carries `if` but never `retry`/`onError` (a pause is not a fault), and is top-level only — it can't nest in a `parallel`/`foreach`.
+On timeout, `wait` never expires, `fail` fails the run, and `default` answers with the `default` option. A decision takes `if` but never `retry` or `onError`, and it is top level only: it cannot sit inside `parallel` or `foreach`.
 
 #### How an approver answers
 
-A parked decision can be resolved four ways — all equivalent, all resume the run with the picked option:
+A waiting decision can be answered four ways. Each resumes the run with the picked option.
 
-1. **The platform UI.** The run detail page (`https://id.tangle.tools/app/workflows/<id>/runs/<runId>` — linked from the workflow's page on the platform app) shows a decision panel while the run is parked: the `title`, the `prompt` context, and one button per option. Clicking a button resolves the decision and the run resumes immediately.
-2. **The CLI.** `tangle workflows decisions <id>` lists the workflow's pending decisions; `tangle workflows decision-resolve <id> <runId> --choice approve` answers the one a run is parked on (the CLI reads the pending decision first, so the answer always names the question it resolves).
-3. **A channel transport.** The `notify`/`resolve` blocks below post the ask to Slack, email, or another provider and let an allowlisted responder answer right in that channel (a ✅ reaction, a reply).
-4. **A Hub line.** `line` texts the ask from one of your Hub lines to one member, who answers with a coded text (see [Ask on a Hub line](#ask-on-a-hub-line)).
+1. **The Platform app.** The run page, `https://id.tangle.tools/app/workflows/<id>/runs/<runId>`, shows the `title`, the `prompt` and one button per option while the run waits. A click answers and the run resumes.
+2. **The CLI.** `tangle workflows decisions <id>` lists waiting decisions, and `tangle workflows decision-resolve <id> <runId> --choice approve` answers the one a run waits on. The CLI reads the waiting decision first, so the answer always names the question it resolves.
+3. **A channel.** The `notify` and `resolve` blocks below post the question to Slack, email or another provider, and an allowed responder answers there with a reaction or a reply.
+4. **A Hub line.** `line` texts the question from one of your Hub lines to one member, who answers with a coded text; see [Ask on a Hub line](#ask-on-a-hub-line).
 
-If nobody answers, the `timeout` + `onTimeout` policy decides: `wait` (the default) never expires — the run stays parked until a human answers; `fail` fails the run at expiry; `default` auto-resolves with the `default` option. A compliance gate that must not stall forever should always set `timeout` + `onTimeout: default` + a safe `default`, as in the example above.
+If nobody answers, `timeout` and `onTimeout` decide. A gate that must not wait forever should set `timeout`, `onTimeout: default` and a safe `default`, as above.
 
-Optional **transports** post the ask to a channel and let the answer come back over it:
+Post the question to a channel and take the answer from it:
 
 ```yaml
 - decision:
     title: "Deploy?"
     options: [deploy, abort]
-    notify:                              # ≤ 5 targets; where the ask is posted
+    notify:                              # at most 5 places to post the question
       - path: slack.chat.postMessage
         input: { channel: "#deploys", text: "${decision.title}" }
-        handle: { channel: "channel", ts: "ts" }   # fields of the RESULT identifying what it posted
-    resolve:                             # how an answer may come back over that channel
+        handle: { channel: "channel", ts: "ts" }   # result fields that identify the post
+    resolve:                             # how an answer comes back over that channel
       provider: slack
-      event: slack.reaction_added        # provider event ids are verbatim, in the provider's namespace
+      event: slack.reaction_added        # the provider's event id, exactly
       match:
         all:
           - { path: "trigger.payload.item.ts", op: eq, value: "${trigger.transport.handle.ts}" }
       answer:
         from: "trigger.payload.reaction"
-        map: { white_check_mark: deploy, x: abort }   # values must be options
-      actor: "trigger.payload.user"      # extracts the external responder id
-      approvers: ["U0123ABCDEF"]         # literal allowlist of external ids allowed to answer
+        map: { white_check_mark: deploy, x: abort }   # each value must be an option
+      actor: "trigger.payload.user"      # where the responder's id is in the event
+      approvers: ["U0123ABCDEF"]         # the ids allowed to answer, written out
 ```
 
-Rules: `resolve` needs at least one `notify` target with a `handle` (that is what an inbound event correlates against); `resolve.match` must reference `${trigger.transport.handle.…}` so it matches only the message this decision posted; every `answer.map` value must be one of `options`; `actor` + `approvers` are both required — the allowlist is literal by design (never an expression), because an unauthenticatable channel must not be answerable.
+Rules:
+
+- `resolve` needs at least one `notify` target with a `handle`, which is what an incoming event is matched against.
+- `resolve.match` must read `${trigger.transport.handle...}`, so it matches only the message this decision posted.
+- Every `answer.map` value must be one of `options`.
+- `actor` and `approvers` are both required, and `approvers` is a literal list, never an expression, so nobody outside it can answer.
 
 #### Ask on a Hub line
 
-`line` texts the question from one of your Hub lines to one member, and that member answers by text:
+`line` texts the question from one of your Hub lines to one member, who answers by text:
 
 ```yaml
 - decision:
@@ -561,103 +586,96 @@ Rules: `resolve` needs at least one `notify` target with a `handle` (that is wha
     line: { id: "lin_...", member: "+15551234567" }
 ```
 
-`line.id` is a line you own.
-`line.member` is the member's address or Hub member id on the line's current attachment.
-Both may be mapping expressions.
-A decision with `line` texts from the line, so it needs the same author authority as `line.send`.
-Save it with an owner session or a key with Line authority for that line; the send checks that authority again when the run parks, so a revoked key stops it.
-A literal pair is also checked when the workflow is saved; an expression is checked when the run parks.
-With `line`, every option must be 1–32 characters of `a-z`, `0-9`, `_` or `-`, start with a letter or digit, and differ from the others ignoring case.
+- `line.id` is a line you own, and `line.member` is the member's address or Hub member id on the line. Both can be mapping expressions.
+- A decision with `line` texts from the line, so it needs the same authority as `line.send`: save it from a signed-in session or with a key that has Line authority for that line. The authority is checked again when the run reaches the decision, so a revoked key stops it.
+- A literal line and member are checked when you save; expressions are checked when the run reaches the decision.
+- With `line`, every option must be 1 to 32 characters of `a-z`, `0-9`, `_` or `-`, start with a letter or digit, and differ from the others ignoring case.
 
-When the run parks, Platform sends one owner text from the line:
+When the run reaches the decision, Tangle sends one text from the line:
 
-```
+```text
 D42 · Ship build 1.4.2?
 <prompt, cut to fit>
 https://id.tangle.tools/app/workflows/<id>/runs/<runId>
 Reply D42 ship, D42 hold or D42 park. Words after the option are a note.
 ```
 
-The code is one letter and two digits derived from the decision id.
-If the member already has an open question with that code, Platform tries up to five alternates.
-The text is at most 1500 characters; the prompt is cut to fit.
-The code stays open for the decision's remaining time, from 1 minute to 7 days, and for 7 days when the decision has no `timeout`.
-Owner-send rules apply: the member must have texted the line and turned reminders on, quiet hours delay the text, and the line's send limits count it.
-A refused send, or a `line` whose expressions do not expand to a line and member, is a notify failure (`workflow.decision.notify_failed` in the audit log); the run stays parked and can be answered in the app.
-The ask is not withdrawn when the decision settles another way, and quiet hours can deliver it after the decision expired; an answer then gets the "already settled" reply.
+- The code is one letter and two digits taken from the decision id. If the member already has an open question with that code, up to five other codes are tried.
+- The text is at most 1500 characters, and the prompt is cut to fit.
+- The code stays open for the decision's remaining time, from 1 minute to 7 days, or 7 days when the decision has no `timeout`.
+- The usual line rules apply: the member must have texted the line and turned reminders on, quiet hours delay the text, and the line's send limits count it.
+- A refused send, or a `line` whose expressions do not expand to a line and a member, is logged as `workflow.decision.notify_failed`; the run keeps waiting and can be answered in the app.
+- The question is not withdrawn when the decision is answered another way, and quiet hours can deliver it after the decision expired; an answer then gets the "already settled" reply.
 
-The member answers `D42 ship` or `D42 ship tag it first`.
-The code and option compare case-insensitively, and the words after the option become the decision's `note` (`${steps[N].note}`).
-Only that member, on that line, can answer.
-A coded text that names no listed option gets one reply listing the choices, and the decision keeps waiting.
-A valid answer resolves the decision through the same guarded path as the app and resumes the run.
-The member then receives `D42: ship recorded.`, or `D42: already settled, so ship was not recorded.` when the decision was settled first.
-The decision records `resolvedVia: channel`, provider `hub-line`, and the member id as the external actor.
-The note is kept on the decision and in the run's step output like any decision note; it does not follow Hub's 30-day content retention.
-If the answer arrives while Platform cannot apply it, the decision sweep applies it within a sweep interval, before any timeout.
+The member answers `D42 ship` or `D42 ship tag it first`. The code and option are compared ignoring case, and the words after the option become the decision's `note` (`${steps[N].note}`). Only that member, on that line, can answer.
+
+- A coded text that names no listed option gets one reply listing the choices, and the decision keeps waiting.
+- A valid answer resolves the decision the same way the app does and resumes the run. The member then receives `D42: ship recorded.`, or `D42: already settled, so ship was not recorded.` when the decision was answered first.
+- The decision records `resolvedVia: channel`, provider `hub-line`, and the member id as the responder.
+- The note is kept on the decision and in the run's step output like any decision note, outside Hub's 30-day message retention.
+- An answer that arrives while it cannot be applied is applied by the next decision sweep, before any timeout.
+
 `resolve` is not needed for a line; `notify` and `resolve` can still be set alongside it.
 
 ### `wait.timer`
 
 ```yaml
-- wait.timer: { seconds: 3600 }   # 1–2592000 (30 days)
+- wait.timer: { seconds: 3600 }   # 1 to 2592000 (30 days)
 ```
 
-Parks the run and resumes with `{ waited: true, seconds }`. The worker is released for the whole wait.
+The run waits, holding no worker, then resumes with `{ waited: true, seconds }`.
 
 ### `wait.event`
 
-Park until a matching event delivery arrives. The matching delivery is **consumed** — it resumes the parked run instead of enqueuing a new one — and its payload becomes the step output.
+Waits for a matching event. The matching delivery is consumed: it resumes the waiting run instead of starting a new one, and its payload becomes the step output.
 
 ```yaml
-# Consume the next delivery to this workflow's OWN webhook hook — the compiler
-# requires an `on: webhook` trigger for a hook-source wait.
+# Wait for the next call to this workflow's own webhook; needs an on: webhook trigger.
 on: { webhook: {} }
 do:
   - id: outcome
     wait.event:
       match: { path: "trigger.status", op: eq, value: completed }
-      timeoutSeconds: 86400          # optional: fail the wait loud when it elapses first
+      timeoutSeconds: 86400          # optional: fail the wait when this passes first
 ```
 
 ```yaml
-# …or consume a PROVIDER event delivered to the owner's hub connection — any
-# trigger works; no `on: webhook` needed.
+# Or wait for a provider event on your connection; any trigger works.
 - id: paid
   wait.event:
-    source: { provider: stripe, event: invoice.paid }   # connection: <id> optionally pins one
+    source: { provider: stripe, event: invoice.paid }   # connection: <id> pins one connection
     match: { path: "trigger.payload.id", op: eq, value: '${steps["create-invoice"].id}' }
     timeoutSeconds: 86400
 ```
 
-- Without `source`, the wait consumes deliveries to the workflow's own hook and the compiler requires an `on: webhook` trigger.
-- With `source`, `provider` must be a wired inbound provider (not GitHub) the owner has an active connection for — a wait on an event that can never arrive fails loud at dispatch.
-- `match` is the shared [condition](#conditions) tree over the delivery: paths root at `trigger.*` (a provider-source wait reads `trigger.payload.*` for the raw event and `trigger.event` / `trigger.provider` for metadata) — never `steps.*`, because the ingress has no run. Bake step data into the `value` side; it is expanded at park time (the correlation idiom in the `paid` example). Absent `match`, the next delivery whatever its shape resumes the run.
-- When a delivery matches BOTH a parked provider wait and a `provider_event` trigger, the wait consumes it and the trigger does **not** fire for that delivery — no new run is enqueued. The parked run is the more specific consumer: it parked on a correlation `match` naming exactly this delivery, where the trigger would only fan the same event out to a fresh run.
+- Without `source`, the wait takes deliveries to the workflow's own webhook, and the workflow needs an `on: webhook` trigger.
+- With `source`, `provider` must be a provider that sends events to Tangle, other than GitHub, with an active connection. A wait on an event that can never arrive fails when the step starts.
+- `match` is a [condition](#conditions) over the delivery. Paths start at `trigger.*`: a provider wait reads `trigger.payload.*` for the raw event and `trigger.event` or `trigger.provider` for its metadata. A `match` path never reads `steps.*`; put step data in `value`, which is expanded when the run starts waiting, as in the `paid` example. Without `match`, the next delivery resumes the run.
+- When a delivery matches both a waiting provider wait and a `provider_event` trigger, the wait consumes it and the trigger does not start a new run, because the wait named exactly this delivery.
 
 ### `workflow.run`
 
-Enqueue a child run of another workflow owned by the same principal and park until it goes terminal:
+Starts a run of another workflow you own and waits until it finishes:
 
 ```yaml
 - id: review
   workflow.run:
-    workflow: wf_01J8XAMPLE            # target workflow id (mapping expressions allowed)
-    input: { pr: "${trigger.payload.pull_request.number}" }   # becomes the child's ${trigger.*}
+    workflow: wf_01J8XAMPLE            # target workflow id; expressions allowed
+    input: { pr: "${trigger.payload.pull_request.number}" }   # the child's ${trigger.*}
 ```
 
-A child success resumes the parent with `{ status, steps }` (read a child step's text as `${steps[N].steps[k].text}`); a child failure or cancel **fails the wait** (its `onError` policy applies). Ancestor cycles and chains deeper than 8 fail loud at dispatch.
+A child that succeeds resumes the parent with `{ status, steps }`; read a child step as `${steps[N].steps[k].text}`. A child that fails or is cancelled fails the wait, and its `onError` applies. A workflow that would start itself, or a chain deeper than 8, fails when the step starts.
 
-Suspension rules shared by all three wait kinds: top-level only (never inside `parallel`/`foreach`), no `retry`, `onError` as a mode only (`continue` absorbs a timeout/child failure; default `fail`), and at most one suspension in flight per run.
+Rules for all three waits: top level only (never inside `parallel` or `foreach`), no `retry`, `onError` as a mode only (`continue` absorbs a timeout or a child failure; the default is `fail`), and at most one wait in progress per run.
 
 ### `parallel`
 
-Run an explicit list of leaf branches concurrently:
+Runs a list of steps at the same time:
 
 ```yaml
 - parallel:
-    maxConcurrency: 4                # optional, default 4, max 8
-    branches:                        # 1–16 leaf actions
+    maxConcurrency: 4                # optional, default 4, at most 8
+    branches:                        # 1 to 16 steps
       - agent.run:
           topology: { inference: {} }
           profile:
@@ -672,40 +690,42 @@ Run an explicit list of leaf branches concurrently:
           prompt: "Performance-review this change: ${steps[0].text}"
 ```
 
-Best-effort: every branch is attempted and a branch failure is recorded on that branch's result (inspect `${steps[N].branches[k].status}`) — the run only fails when *every* branch fails. A branch's leaf output nests under `.output`: read `${steps[N].branches[k].output.text}`, **not** `branches[k].text`.
+Every branch is attempted, and a failed branch is recorded on its result (`${steps[N].branches[k].status}`). The run fails only when every branch fails. A branch's output sits under `.output`: read `${steps[N].branches[k].output.text}`, not `branches[k].text`.
 
 ### `foreach`
 
-Run one leaf child template once per element of a collection:
+Runs one step for each item of a list:
 
 ```yaml
 - foreach:
-    items: "${steps.fetch.result}"   # a single ${…} expression resolving to an array, or a literal array (≤ 50 elements)
+    items: "${steps.fetch.result}"   # one ${...} that resolves to a list, or a literal list of up to 50
     maxConcurrency: 4
-    do:                              # exactly ONE leaf action (never a list)
+    do:                              # exactly one step, not a list
       notify:
         url: "https://example.com/hook"
         payload: { item: "${item}", position: "${index}" }
 ```
 
-Each child sees `${item}` (the element) and `${index}` (its 0-based position). A string `items` must be a *single* `${…}` token with no surrounding text — only then does it resolve to a real array. Best-effort like `parallel`: per-element failures are captured, an empty collection is a no-op, and the run fails only when every element fails. Read results as `${steps[N].items[k].output.…}`.
+Each run of the step sees `${item}`, the item, and `${index}`, its position from 0. A string `items` must be a single `${...}` with no text around it; only then does it resolve to a real list.
+Like `parallel`, a failed item is recorded, an empty list does nothing, and the run fails only when every item fails. Read results as `${steps[N].items[k].output...}`.
 
-Structural nesting is exactly one level deep: a `parallel`/`foreach` child is always a leaf (`sandbox.spawn`, `sandbox.snapshot`, `integration.invoke`, `notify`, `agent.run`, `script.run`, `trace.analyze`) — never another structural action, a `decision`, or a wait. When each item needs several operations, do the whole per-item job in one `agent.run` granted `connections`.
+`parallel` and `foreach` nest one level only. Their child is always one of `sandbox.spawn`, `sandbox.snapshot`, `integration.invoke`, `notify`, `agent.run`, `script.run` or `trace.analyze`, never another `parallel` or `foreach`, a `decision` or a wait.
+When each item needs several operations, do the whole job in one `agent.run` with `connections`.
 
-## Graph topology (`id` / `needs` / `join`)
+## Graph (`id`, `needs`, `join`)
 
-A plain `do` list is a linear chain — each action implicitly depends on the previous one. Explicit `id` and `needs` open the full DAG-with-guarded-cycles model:
+A plain `do` list is a chain: each step depends on the one before it. `id` and `needs` let you build any graph, including loops with guarded edges:
 
 ```yaml
 do:
   - id: build
-    needs: []                        # explicit empty: a root, starts immediately
+    needs: []                        # no dependencies: starts at once
     agent.run:
       topology: { inference: {} }
       profile: { name: builder, prompt: { systemPrompt: "You draft concise reports." } }
       prompt: "Draft the report."
   - id: review-a
-    needs: [build]                   # fans out with review-b
+    needs: [build]                   # runs alongside review-b
     agent.run:
       topology: { inference: {} }
       profile: { name: clarity-reviewer, prompt: { systemPrompt: "You score clarity." } }
@@ -717,42 +737,45 @@ do:
       profile: { name: accuracy-reviewer, prompt: { systemPrompt: "You score accuracy." } }
       prompt: "Score the accuracy of: ${steps.build.text}"
   - id: synthesize
-    needs: [review-a, review-b]      # the join — waits for ALL
+    needs: [review-a, review-b]      # waits for both
     agent.run:
       topology: { inference: {} }
       profile: { name: synthesizer, prompt: { systemPrompt: "You merge reviews into one verdict." } }
-      prompt: 'Merge these reviews: ${steps["review-a"].text} — ${steps["review-b"].text}'
+      prompt: 'Merge these reviews: ${steps["review-a"].text} and ${steps["review-b"].text}'
 ```
 
-- `id` — unique per workflow; starts with a letter, then letters/digits/`_`/`-`, ≤ 64 chars. Defaults to `step-N` by 1-based position. Address a step's output as `${steps.<id>.…}` (a hyphenated id needs the quoted form `${steps["my-id"].…}`).
-- `needs` — omitted means the chain default (depend on the previous action); `needs: []` means no dependencies. An entry is a bare id (satisfied when that action completes) or a guarded edge `{ id, when }` — satisfied only when the `when` predicate holds on the named action's completion. A `needs[].when` predicate has the same shape as an `if` guard but a wider step scope: it may name any step by index (`steps[1]`) **or** by id (`steps.review`), and it may only reference steps that have actually run by the time its source completes.
+- `id`: unique in the workflow, starting with a letter, then letters, digits, `_` or `-`, at most 64 characters. The default is `step-N` by position, counting from 1. Read a step's output as `${steps.<id>...}`; a hyphenated id needs the quoted form `${steps["my-id"]...}`.
+- `needs`: omitted, the step depends on the step before it; `needs: []` means no dependencies. An entry is an id, satisfied when that step completes, or a guarded edge `{ id, when }`, satisfied when the `when` condition holds on that step's completion.
+  A `when` can name any step by index (`steps[1]`) or by id (`steps.review`); the compiler rejects an unknown id or an index past the end. A step that has not run by the time the guard is judged reads as missing.
 
 ### Join rules
 
-`join` (default `all`) decides which dependency *outcomes* release the node:
+`join`, default `all`, decides which dependency outcomes release the step:
 
-| `join` | Releases when… | Use for |
-|---|---|---|
-| `all` | every dependency completed successfully | the default fan-in |
-| `any` | the FIRST dependency completes | OR fan-in (later completions are no-ops) |
-| `any_failed` | a dependency FAILS | an error route — read `${steps.<id>.error}` |
-| `all_done` | every dependency settled, success or failure | a cleanup/finally node |
+| `join` | Releases when | Use for |
+| --- | --- | --- |
+| `all` | every dependency completed successfully | the usual fan-in |
+| `any` | the first dependency completes | either-of fan-in; later completions do nothing |
+| `any_failed` | a dependency fails | an error route; read `${steps.<id>.error}` |
+| `all_done` | every dependency finished, successfully or not | a cleanup step |
 
-A failed step's output is `{ status: "failed", error }`. Failure precedence: `retry` first, then `onError`, then failure edges — a failure with no failure-consuming downstream still fails the run. If no dependency can ever release a node (every edge dead or settled without a match), the node is skipped and recorded as such.
+A failed step's output is `{ status: "failed", error }`. A failure goes first to `retry`, then `onError`, then any failure edges; a failure with no step downstream to handle it still fails the run.
+If no dependency can release a step, because every edge is closed or settled without a match, the step is skipped and recorded as skipped.
 
-### Guarded cycles
+### Loops with guarded edges
 
-Point a guarded edge *back* at an earlier node to loop (draft → review → steer → draft):
+Point a guarded edge back at an earlier step to loop, such as draft, review, steer, draft:
 
-1. Every cycle must carry at least one guarded edge — an unguarded cycle can never start or stop and is a compile-time error.
-2. The guarded back-edge is the loop's re-entry trigger: its target should have no other `needs` (so it runs first), and it re-runs only while the guard holds.
-3. A guarded edge whose verdict is false is **dead for the whole run** — route terminal actions (publish/notify on success) with an unguarded `needs` plus a step-level `if`, never with a guarded edge.
-4. `maxNodeVisits` (default 25, max 100) bounds the loop — set it to a small multiple of your intended rounds.
-5. Guard an agent's text output with `contains` on a verdict line its prompt pins down (e.g. `VERDICT: approve` / `VERDICT: revise`).
+1. Every cycle needs at least one guarded edge. An unguarded cycle could never start or stop, so it is a compile error.
+2. The guarded back-edge is what re-enters the loop. Its target should have no other `needs`, so it runs first, and it runs again each time the guard holds.
+3. A guard is judged on each successful completion of the step it watches. When it is false, the edge is closed for that completion only and is judged again on the next successful completion. A step outside a loop completes once, so there a false guard closes its branch for the run. A failed step never reopens a closed edge, since it produced no output to judge.
+4. To gate the step after a loop, use either a guarded edge or an unguarded `needs` with a step-level `if`. The `if` keeps the condition on the step it gates.
+5. `maxNodeVisits` (default 25, at most 100) bounds the loop; set it to a small multiple of the rounds you expect. `maxRunCostUsd` bounds its spend.
+6. Guard an agent's text with `contains` on a verdict line its prompt asks for, such as `VERDICT: approve` or `VERDICT: revise`.
 
-In a cyclic run, `${steps.<id>}` is always the node's **latest** visit; the `history` root reads earlier turns — `${history.<id>[0].text}` is the first visit's output, `${history.<id>}` every visit oldest-first.
+In a loop, `${steps.<id>}` is always the step's latest visit. The `history` root reads earlier ones: `${history.<id>[0].text}` is the first visit's output, and `${history.<id>}` lists every visit, oldest first.
 
-## Control flow (`if` / `retry` / `onError`)
+## Control flow (`if`, `retry`, `onError`)
 
 ```yaml
 - id: gate
@@ -767,61 +790,64 @@ In a cyclic run, `${steps.<id>}` is always the node's **latest** visit; the `his
       owner: "${trigger.payload.repository.owner.login}"
       repo: "${trigger.payload.repository.name}"
       issue_number: "${trigger.payload.issue.number}"
-      body: "Outcome: ${steps[0].verdict}"
-  if: { path: "steps[0].verdict", op: eq, value: approve }   # skip when false; may only reference PRIOR steps
+      body: "Outcome: ${steps.gate.verdict}"
+  if: { path: "steps.gate.verdict", op: eq, value: approve }   # skipped when false
   retry: { maxAttempts: 3, backoff: exponential, delayMs: 1000 }
-  onError:                                                    # after retries are spent
+  onError:                                                     # after the retries
     do: { notify: { url: "https://alerts.example/hook" } }
 ```
 
-- `if` — guard any action. False ⇒ the action is skipped (no side effect, its step slot resolves to nothing). Paths read the trigger context (`trigger.*`) and **prior** steps by index (`steps[N]…`); an `if` may not reference its own or a later step, and not `${item…}`. Express if/else by guarding one action on a condition and another on its negation.
-- `retry` — leaf actions only: re-dispatch on failure up to `maxAttempts` (2–5) total tries, sleeping `delayMs` between them (default 1000, max 30000; `exponential` doubles each try). A retry **repeats the side effect** — apply it only where a repeat is safe.
-- `onError` — applied after `retry` is exhausted: `fail` (default) terminates the run; `continue` records the failure and proceeds; `{ do: <leaf> }` runs a recovery leaf and continues if it succeeds (if the fallback also fails, the original failure terminates the run).
-- Where they apply: `if` on any kind; `retry`/`onError` on leaf kinds only; `decision` and structural kinds take `if` only; suspension kinds take `if` plus an `onError` *mode* (`fail`/`continue`, never a fallback). Evaluation order: guard first, then retry, then onError.
+- `if`: guards any step. When false, the step is skipped with no side effect, and its output resolves to nothing.
+  It reads `trigger.*` and any step this step is certain to run after, by id or by index: every step it depends on through `needs`, directly or further back. Under `join: any` or `any_failed`, only the steps common to every branch count, because which branch ran is unknown.
+  The compiler rejects an `if` that reads any other step, its own step or `${item...}`. For if-else, guard one step on a condition and another on its negation.
+- `retry`: for single steps only. Runs the step again on failure, up to `maxAttempts` tries in total (2 to 5), waiting `delayMs` between tries (default 1000, at most 30000; `exponential` doubles each wait). A retry repeats the side effect, so use it only where a repeat is safe.
+- `onError`: applies after `retry` is used up. `fail`, the default, ends the run; `continue` records the failure and moves on; `{ do: <step> }` runs a recovery step and continues if it succeeds, and if that also fails, the original failure ends the run.
+- Where they apply: `if` on every kind; `retry` and `onError` on single steps; `decision`, `parallel` and `foreach` take `if` only; waits take `if` and an `onError` mode (`fail` or `continue`, never a recovery step). The order is `if`, then `retry`, then `onError`.
 
 ## Mapping expressions
 
-Any string value in an action config may embed `${…}` expressions, resolved at dispatch. Quote any YAML value that contains one. There is no arithmetic, no conditionals, no eval — anything outside the grammar fails loudly at run time.
+Any string value in a step can embed `${...}` expressions, resolved when the step starts. Quote a YAML value that contains one. There is no arithmetic, no conditional and no eval, and anything outside the grammar fails the run with an error.
 
 ### Roots
 
 | Root | Contents |
-|---|---|
-| `trigger` | The trigger context that enqueued the run. A `provider_event` payload is at `trigger.payload.*`; a webhook body spreads at `trigger.*`; a schedule has no payload. |
-| `steps` | Outputs of actions already executed, by index (`steps[0].text`) or id (`steps.draft.text`). In a loop, a re-entered node's `steps.<id>` is its **latest** visit. |
-| `history` | Graph runs only: every visit's outputs per node — `${history.review[0].text}` (0-based), `${history.review}` oldest-first. Empty in linear workflows. |
-| `state` | The workflow's cross-run KV — `${state.<key>}`. See [KV state](#artifacts-and-kv-state). |
-| `item` / `index` | `foreach` children only: the current element and its position. |
-| `decision` / `result` | Decision transports only: the ask being posted, and the value the notify action returned (for `handle` maps). |
+| --- | --- |
+| `trigger` | What started the run. A `provider_event` payload is at `trigger.payload.*`; a webhook body is spread at `trigger.*`; a schedule has no payload. |
+| `steps` | Outputs of steps that ran, by index (`steps[0].text`) or id (`steps.draft.text`). In a loop, `steps.<id>` is the latest visit. |
+| `history` | Graphs only: every visit's output per step, such as `${history.review[0].text}` (from 0) or `${history.review}`, oldest first. Empty in a chain. |
+| `state` | The workflow's shared key-value store: `${state.<key>}`. See [State](#artifacts-and-state). |
+| `item`, `index` | Inside `foreach` only: the current item and its position. |
+| `decision`, `result` | Decision channels only: the question being posted, and what the `notify` call returned, for `handle` maps. |
 
-Path syntax: dotted segments, `["quoted-key"]`, `[0]` indices, and one `[]` projection per path that maps the rest over each array element (`pull_request.labels[].name`). A well-formed path that misses data resolves to an empty string — **no error** — so use the documented per-kind accessors exactly. Collection builtins operate on at most 1000 elements; a larger array fails the run loud.
+Paths use dotted segments, `["quoted-key"]`, `[0]` indexes, and one `[]` per path that maps the rest over each list item (`pull_request.labels[].name`).
+A valid path that finds no data resolves to an empty string, with no error, so use each kind's documented fields exactly. Collection functions accept at most 1000 items; a larger list fails the run.
 
-### String helpers
+### String functions
 
-| Helper | Result |
-|---|---|
-| `truncate(value, n)` | First `n` chars of the stringified value. |
+| Function | Result |
+| --- | --- |
+| `truncate(value, n)` | The first `n` characters of the value as a string. |
 | `default(value, "fallback")` | `fallback` when the value is missing or empty. |
-| `upper(value)` / `lower(value)` | Case mapping. |
-| `slice(value, start, end)` | Substring. |
-| `join(value, ", ")` | Join an array with a separator. |
+| `upper(value)`, `lower(value)` | Upper or lower case. |
+| `slice(value, start, end)` | A substring. |
+| `join(value, ", ")` | A list joined with a separator. |
 
-### Collection builtins
+### Collection functions
 
-First arg is always a **path** (never a literal, never a nested call):
+The first argument is always a path, never a literal or another call:
 
-| Builtin | Result |
-|---|---|
-| `first(path[, n])` / `last(path[, n])` | First/last element, or first/last `n` ≤ 20. |
-| `pluck(path, "field")` | Map an array of objects to one field. |
-| `pick(path, "a", "b")` | Project an object to named fields. |
-| `sortBy(path, "field")` | Stable sorted copy; numbers first, then strings, nulls last. |
+| Function | Result |
+| --- | --- |
+| `first(path[, n])`, `last(path[, n])` | The first or last item, or the first or last `n`, up to 20. |
+| `pluck(path, "field")` | One field from each object in a list. |
+| `pick(path, "a", "b")` | An object with only the named fields. |
+| `sortBy(path, "field")` | A stable sorted copy: numbers first, then strings, nulls last. |
 
-Example: `${join(pluck(trigger.payload.pull_request.labels, "name"), ", ")}` — wrong: no nesting. Instead read `${join(trigger.payload.pull_request.labels[].name, ", ")}` (a projection), or pluck in a `script.run`.
+Calls do not nest, so `${join(pluck(trigger.payload.pull_request.labels, "name"), ", ")}` is rejected. Write `${join(trigger.payload.pull_request.labels[].name, ", ")}` instead, or use `pluck` in a `script.run`.
 
 ## Conditions
 
-The one predicate shape, used by trigger `when`, action `if`, `needs[].when` edge guards, and `wait.event`/`decision` `match`: a tree of `all` / `any` / `not` combinators over leaf comparisons `{ path, op, value }`.
+One condition shape serves the trigger `when`, a step's `if`, a `needs[].when` edge and the `match` of `wait.event` and `decision`: a tree of `all`, `any` and `not` over comparisons `{ path, op, value }`.
 
 ```yaml
 when:
@@ -833,19 +859,28 @@ when:
 ```
 
 | Op | Meaning | Notes |
-|---|---|---|
-| `eq` / `neq` | Deep equality / inequality | `neq` fails closed: a missing field never satisfies it. |
-| `gt` / `gte` / `lt` / `lte` | Ordered comparison | Numbers with numbers, strings with strings; a type mismatch is `false`. |
-| `in` | Membership | `value` is an array of scalars (≤ 100). |
-| `contains` | Array membership or substring | The resolved value must be an array or string. |
-| `exists` | Field present | Unary — no `value`. An empty projection is not present. |
-| `truthy` | Field truthy | Unary. `[]` requires at least one truthy element. |
+| --- | --- | --- |
+| `eq`, `neq` | Deep equality, inequality | `neq` is false when the field is missing. |
+| `gt`, `gte`, `lt`, `lte` | Ordered comparison | Numbers with numbers, strings with strings; mixed types are false. |
+| `in` | Membership | `value` is a list of up to 100 scalars. |
+| `contains` | List membership or substring | The value must be a list or a string. |
+| `exists` | Field present | No `value`. An empty projection is not present. |
+| `truthy` | Field truthy | No `value`. A `[]` path needs at least one truthy item. |
 
-There is deliberately no regex operator. Bounds: ≤ 40 nodes, ≤ 6 deep — enough for real routing, never a ReDoS/CPU hazard on the webhook hot path. Scope rules: a trigger `when` reads `trigger.payload.*` only; an `if` reads `trigger.*` plus prior `steps[N].*`; a `needs[].when` reads `trigger.*` plus any step by index or id; a `wait.event` `match` reads the delivery (`trigger.*`) only — step data belongs in the `value` side, expanded at park time.
+There is no regex operator. A condition has at most 40 nodes and 6 levels.
 
-## Artifacts and KV state
+What each condition can read:
 
-**Artifacts.** A `script.run` should return small JSON and emit anything large as an artifact:
+| Condition | Reads |
+| --- | --- |
+| Trigger `when` | `trigger.payload.*` |
+| Step `if` | `trigger.*` and the steps the step is certain to run after, by id or index |
+| `needs[].when` | `trigger.*` and any step, by id or index |
+| `wait.event` and `decision` `match` | The delivery (`trigger.*`) only; put step data in `value` |
+
+## Artifacts and state
+
+**Artifacts.** A `script.run` should return small JSON and save anything large as an artifact:
 
 ```yaml
 source: |
@@ -856,9 +891,10 @@ source: |
   }
 ```
 
-The ref is a small opaque object (`{ $artifact, name, contentType, byteSize, preview }`) that flows through step refs and mapping expressions like any other value and is linked for download in the run detail. A later script node parses a whole-object mapping leaf (`const ref = JSON.parse(input.report)`) and calls `await readArtifact(ref)` for the bytes (`.text()` decodes). Caps: 25 MB per artifact, 20 artifacts per run.
+The returned reference is a small object (`{ $artifact, name, contentType, byteSize, preview }`) that passes through step outputs and expressions like any other value, and the run page links it for download.
+A later script parses it (`const ref = JSON.parse(input.report)`) and calls `await readArtifact(ref)` for the bytes; `.text()` decodes them. Limits: 25 MB per artifact and 20 artifacts per run.
 
-**KV state.** Every run of a workflow shares one key/value store — progress markers, cursors, and dedupe keys a later run must see (the steps blackboard is per-run; this is the workflow's memory across runs):
+**State.** All runs of a workflow share one key-value store for progress markers, cursors and keys a later run must see. Step outputs belong to one run; state is the workflow's memory across runs.
 
 ```yaml
 source: |
@@ -870,30 +906,55 @@ source: |
   }
 ```
 
-`state.get(key)` (value or `undefined`), `state.set(key, value)` (any JSON ≤ 64 KiB; returns the new version), `state.getEntry(key)` (`{ value, version }`), `state.cas(key, expectedVersion, value)` (compare-and-swap — throws `KV_VERSION_CONFLICT` on a lost race; re-read and retry), `state.delete(key)`. At most 1000 keys per workflow. Any config can *read* state as `${state.<key>}` (one batched read per step dispatch). Warning: runs are **not hermetic** to state — a parked-then-resumed run reads the current value, not the park-time value; pin park-time data in a step ref instead.
+| Call | Result |
+| --- | --- |
+| `state.get(key)` | The value, or `undefined` |
+| `state.set(key, value)` | Stores any JSON up to 64 KiB and returns the new version |
+| `state.getEntry(key)` | `{ value, version }` |
+| `state.cas(key, expectedVersion, value)` | Sets only if the version still matches; throws `KV_VERSION_CONFLICT` otherwise, so read again and retry |
+| `state.delete(key)` | Removes the key |
+
+A workflow holds at most 1000 keys. Any step can read state as `${state.<key>}`.
+A run that waits and resumes reads the value at resume time, not the value when it started waiting; to keep a value from before the wait, put it in a step output.
 
 ## Revisions and rollback
 
-Every create and update compiles the YAML and appends a numbered revision; prior definitions stay available in the workflow's revision history. Rolling back restores an earlier revision as a new head revision — history is append-only, so a rollback is itself auditable. On the CLI, `tangle workflows get <id>` shows the current definition and `update <id> file.yml` lands the next revision; the full revision browser lives on the platform hub.
+Every create and update compiles the YAML and adds a numbered revision. A rollback restores an earlier revision as a new latest revision, so the history only grows and a rollback is itself recorded.
 
-## Limits quick reference
+```bash
+tangle workflows revisions <id>          # list revisions
+tangle workflows revision <id> <rev>     # print one revision's definition
+tangle workflows rollback <id> <rev>     # make that revision current again
+tangle workflows update <id> wf.yml --note "tighter prompt"
+```
 
-| Surface | Limit |
-|---|---|
-| Actions per workflow | 50 (worst-case runtime leaf count) |
-| `maxNodeVisits` | default 25, cap 100 |
-| `parallel` branches | 16; concurrency default 4, max 8 |
-| `foreach` items | 50; concurrency default 4, max 8 |
-| `agent.run` prompt | 8192 chars authored (100k expanded); `maxRounds` 1–10; `timeout` 1s–1h (default 10m) |
-| `fanout` models | 2–4, distinct |
-| `script.run` source | 32 KiB; timeout default 120s, max 600s |
-| `decision` options | 2–20; notify targets ≤ 5; approvers ≤ 25; timeout ≤ 30d |
-| `wait.timer` / `wait.event` | ≤ 30 days |
-| `workflow.run` chain depth | 8 |
-| `retry` | 2–5 attempts; delay ≤ 30s |
-| Condition tree | ≤ 40 nodes, ≤ 6 deep |
-| Collection builtins | ≤ 1000 elements; `first/last` slice ≤ 20 |
-| Expression body | ≤ 1024 chars |
-| Artifacts | 25 MB each, 20 per run; step logs inline ≤ 64 KiB |
-| KV | values ≤ 64 KiB, ≤ 1000 keys |
-| Webhook trigger | 256 KiB body, 120 req/min |
+`tangle workflows get <id> --yaml` prints the current definition. The Platform app shows the same history.
+
+## Limits
+
+| What | Limit |
+| --- | --- |
+| Steps per workflow | 50, counted at run time |
+| `maxNodeVisits` | default 25, at most 100 |
+| `maxRunCostUsd` | at most 10000 |
+| `parallel` branches | 16; concurrency default 4, at most 8 |
+| `foreach` items | 50; concurrency default 4, at most 8 |
+| `agent.run` | prompt 8192 characters as written (100,000 expanded); `maxRounds` 1 to 10; `timeout` 1 second to 1 hour, default 10 minutes |
+| `fanout` models | 2 to 4, all different |
+| `script.run` | source 32 KiB; timeout default 120 seconds, at most 600 |
+| `decision` | 2 to 20 options; at most 5 notify targets and 25 approvers; timeout at most 30 days |
+| `wait.timer`, `wait.event` | at most 30 days |
+| `workflow.run` depth | 8 |
+| `retry` | 2 to 5 attempts; delay at most 30 seconds |
+| Condition | at most 40 nodes and 6 levels |
+| Collection functions | at most 1000 items; `first` and `last` at most 20 |
+| One expression | at most 1024 characters |
+| Artifacts | 25 MB each, 20 per run; step logs inline up to 64 KiB |
+| State | values up to 64 KiB, at most 1000 keys |
+| Webhook trigger | 256 KiB body, 120 requests a minute |
+
+## Next
+
+- [Workflows](/sandbox/workflows)
+- [Run, inspect and trace workflows](/sandbox/workflows-run)
+- [Workflow commands](/sandbox/cli/workflows)

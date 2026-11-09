@@ -45,3 +45,138 @@ status = 301
 from = "/intelligence"
 to = "https://intelligence.tangle.tools/"
 status = 301
+
+# Sandbox docs: the section root, the retired /infrastructure and /docs paths,
+# and the /sandbox/sdk/* links older pages published. Explicit /docs rules come
+# before the one-segment /docs/:page rule.
+
+[[redirects]]
+from = "/sandbox"
+to = "/sandbox/overview"
+status = 301
+
+[[redirects]]
+from = "/infrastructure/sandboxing"
+to = "/sandbox/overview"
+status = 301
+
+[[redirects]]
+from = "/docs"
+to = "/sandbox/overview"
+status = 301
+
+[[redirects]]
+from = "/docs/cloud-agents/claude-code"
+to = "/sandbox/cloud-agents-claude-code"
+status = 301
+
+[[redirects]]
+from = "/docs/cloud-agents/codex"
+to = "/sandbox/cloud-agents-codex"
+status = 301
+
+[[redirects]]
+from = "/docs/cloud-agents/coding-plans"
+to = "/sandbox/cloud-agents-coding-plans"
+status = 301
+
+[[redirects]]
+from = "/docs/cloud-agents/profiles"
+to = "/sandbox/cloud-agents-profiles"
+status = 301
+
+[[redirects]]
+from = "/docs/agents/multiple"
+to = "/sandbox/agents-multiple"
+status = 301
+
+[[redirects]]
+from = "/docs/agents/fleet"
+to = "/sandbox/agents-fleet"
+status = 301
+
+[[redirects]]
+from = "/docs/agents/graphs"
+to = "/sandbox/agents-graphs"
+status = 301
+
+[[redirects]]
+from = "/docs/agents/anthropic"
+to = "/sandbox/agents-anthropic"
+status = 301
+
+[[redirects]]
+from = "/docs/agents/openai"
+to = "/sandbox/agents-openai"
+status = 301
+
+[[redirects]]
+from = "/docs/agents/vercel-ai"
+to = "/sandbox/agents-vercel-ai"
+status = 301
+
+[[redirects]]
+from = "/docs/agents/mastra"
+to = "/sandbox/agents-mastra"
+status = 301
+
+[[redirects]]
+from = "/docs/agents/mcp"
+to = "/sandbox/agents-mcp"
+status = 301
+
+[[redirects]]
+from = "/docs/sdk/python"
+to = "/sandbox/sdk-python"
+status = 301
+
+[[redirects]]
+from = "/docs/sdk/typescript"
+to = "/sandbox/sdk-typescript"
+status = 301
+
+[[redirects]]
+from = "/docs/workflows/run"
+to = "/sandbox/workflows-run"
+status = 301
+
+[[redirects]]
+from = "/docs/workflows/yaml"
+to = "/sandbox/workflows-yaml"
+status = 301
+
+[[redirects]]
+from = "/docs/workflows/templates"
+to = "/sandbox/workflows-templates"
+status = 301
+
+[[redirects]]
+from = "/docs/:page"
+to = "/sandbox/:page"
+status = 301
+
+# Dashboard links that older sandbox pages published relative to this site.
+[[redirects]]
+from = "/dashboard"
+to = "https://sandbox.tangle.tools/dashboard"
+status = 301
+
+[[redirects]]
+from = "/dashboard/*"
+to = "https://sandbox.tangle.tools/dashboard/:splat"
+status = 301
+
+[[redirects]]
+from = "/sandbox/sdk/commands-files"
+to = "/sandbox/commands"
+status = 301
+
+[[redirects]]
+from = "/sandbox/sdk/agents-sessions"
+to = "/sandbox/sessions"
+status = 301
+
+[[redirects]]
+from = "/sandbox/sdk/parallel"
+to = "/sandbox/agents-fleet"
+status = 301

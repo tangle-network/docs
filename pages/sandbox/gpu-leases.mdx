@@ -1,142 +1,186 @@
-# GPU Leases
+import { Tabs, Callout } from "nextra/components";
 
-GPU leases are temporary GPU workers attached to an ordinary sandbox only while a command needs acceleration.
-The base sandbox stays cheap, and the GPU cloud starts billing only for the lease lifetime.
+# Attach a GPU to a sandbox
 
-This works the same way for Docker and Firecracker sandboxes because the GPU is not physically added to the running host.
-The sandbox keeps its files, environment, and agent context; the lease runs GPU commands on the selected provider and returns stdout, stderr, exit code, and usage.
+Lease a GPU for a sandbox only while a command needs it, with a spend cap and a time cap, then release it. The sandbox keeps its files, environment and agent context; the lease runs your GPU commands on a GPU cloud provider and returns their output and cost.
 
-## When to use it
+This works the same for Docker and Firecracker sandboxes, because the GPU is a separate worker, not a device added to the sandbox's host.
 
-Use a GPU lease when an agent or script needs a short burst of CUDA work, model evaluation, fine-tuning, rendering, simulation, or benchmarking.
-Do not keep a GPU attached while the agent is reading code, editing files, or waiting on network calls.
+## Run one command on a GPU
 
-The normal flow is:
-
-1. Create a regular sandbox.
-2. Attach a GPU lease with a spend cap and lifetime.
-3. Run one or more GPU commands.
-4. Detach the lease as soon as the accelerated work is done.
-
-## CLI
-
-For one command, use `gpu run`.
-It attaches the GPU, runs the command, and destroys the lease even when the command fails.
-Omit `--provider` to let Tangle choose the cheapest configured provider.
-
+<Tabs items={["CLI", "TypeScript"]} storageKey="sandbox-lang">
+<Tabs.Tab>
 ```bash
-tangle sandbox gpu run sbx_123 \
+tangle sandbox gpu run my-project \
   --accelerator-kind nvidia-3090 \
-  --accelerator-memory 24000 \
+  --accelerator-memory 24 \
   --max-spend-usd 1 \
   --max-lifetime 900 \
   --idle-timeout 120 \
   -- python eval.py
 ```
+</Tabs.Tab>
+<Tabs.Tab>
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
 
-For several commands, manage the lease explicitly:
-
-```bash
-tangle sandbox gpu attach sbx_123 \
-  --accelerator-kind nvidia-3090 \
-  --accelerator-memory 24000 \
-  --max-spend-usd 1 \
-  --max-lifetime 900 \
-  --idle-timeout 120
-
-tangle sandbox gpu list sbx_123
-tangle sandbox gpu exec sbx_123 gpu_abc -- python eval.py
-tangle sandbox gpu detach sbx_123 gpu_abc
-```
-
-The detach output includes billed seconds and customer cost once billing is finalized.
-
-## TypeScript
-
-```typescript
-const lease = await box.gpu.attach({
-  accelerator: { kind: "nvidia-3090", count: 1, memoryMB: 24_000 },
-  maxSpendUsd: 1,
-  maxLifetimeSeconds: 900,
-  idleTimeoutSeconds: 120,
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
 });
 
+const box = await client.create({ name: "gpu-eval" });
 try {
-  const result = await box.gpu.exec(lease.id, {
-    command: "python eval.py",
-    timeoutMs: 15 * 60 * 1000,
+  const lease = await box.gpu.attach({
+    accelerator: { kind: "nvidia-3090", count: 1, vramGb: 24 },
+    maxSpendUsd: 1,
+    maxLifetimeSeconds: 900,
+    idleTimeoutSeconds: 120,
   });
-
-  console.log(result.result.stdout);
+  try {
+    const { result } = await box.gpu.exec(lease.id, { command: "nvidia-smi", timeoutMs: 60_000 });
+    console.log(result.exitCode, result.stdout);
+  } finally {
+    const closed = await box.gpu.detach(lease.id);
+    console.log(closed.billing);
+  }
 } finally {
-  const closed = await box.gpu.detach(lease.id);
-  console.log(closed.billing);
+  await box.delete();
+}
+```
+</Tabs.Tab>
+</Tabs>
+
+`gpu run` attaches a lease, runs the command, and destroys the lease even when the command fails. It exits with the command's exit code. Put `--` before the command so its flags are not read as `tangle` flags. `--accelerator-memory` is the minimum memory per GPU in decimal GB: `24` for a 24 GB card.
+
+Detach in a `finally` block. Deleting the sandbox is a separate step.
+
+## Find a GPU you can lease
+
+```ts
+const { usable, statuses } = await box.gpu.providers({ accelerator: { kind: "nvidia-h100" } });
+console.log(usable);
+for (const s of statuses) console.log(s);
+```
+
+```bash
+tangle sandbox gpu providers my-project --accelerator-kind nvidia-h100
+```
+
+`usable` lists the providers a lease can be placed on now; an empty list means no lease can attach. `statuses` covers every supported provider, with whether it is configured and, when you pass an accelerator, a current quote. Pick accelerator kinds from this answer rather than from a fixed list.
+
+`accelerator` is `{ kind, count?, vramGb? }`. Omit `provider` and the platform picks the cheapest eligible offer; the lease's `providerSelection` shows the candidates it compared and why others were rejected. Name a provider when you need that vendor:
+
+```bash
+tangle sandbox gpu run my-project --provider runpod --accelerator-kind nvidia-4090 \
+  --max-spend-usd 1 --max-lifetime 900 -- python eval.py
+```
+
+When no provider can take the lease, the attach fails with code `GPU_PROVIDER_NOT_CONFIGURED`:
+
+```ts
+import { SandboxError } from "@tangle-network/sandbox";
+
+try {
+  await box.gpu.attach({ accelerator: { kind: "nvidia-h100" }, maxSpendUsd: 2, maxLifetimeSeconds: 600 });
+} catch (error) {
+  if (error instanceof SandboxError && error.code === "GPU_PROVIDER_NOT_CONFIGURED") {
+    console.log("No GPU provider can take this lease right now");
+  } else {
+    throw error;
+  }
 }
 ```
 
-## Provider Choice
-
-Supported provider names are `runpod`, `vast-ai`, `lambda-labs`, and `modal`.
-
-See which providers your deployment can use, whether each credential works, and the current price of a GPU:
+## Keep a lease across several commands
 
 ```bash
-tangle sandbox gpu providers <sandbox-id> --accelerator-kind nvidia-h100
+tangle sandbox gpu attach my-project \
+  --accelerator-kind nvidia-3090 --accelerator-memory 24 \
+  --max-spend-usd 1 --max-lifetime 900 --idle-timeout 120
+
+tangle sandbox gpu list my-project
+tangle sandbox gpu exec my-project <lease-id> --cwd /home/agent -- python train.py
+tangle sandbox gpu exec my-project <lease-id> -- python eval.py
+tangle sandbox gpu detach my-project <lease-id>
 ```
 
 ```ts
-const { usable, statuses } = await sandbox.gpu.providers({
-  accelerator: { kind: "nvidia-h100" },
+const lease = await box.gpu.attach({ accelerator: { kind: "nvidia-3090", vramGb: 24 }, maxSpendUsd: 2, maxLifetimeSeconds: 1800 });
+await box.gpu.exec(lease.id, { command: "python train.py", cwd: "/home/agent", env: { EPOCHS: "3" } });
+await box.gpu.renew(lease.id, { maxSpendUsd: 4, maxLifetimeSeconds: 3600 });
+await box.gpu.exec(lease.id, { command: "python eval.py" });
+console.log(await box.gpu.list());
+await box.gpu.detach(lease.id);
+```
+
+`renew` raises the spend cap or the lifetime of a live lease. `exec` returns `{ lease, result: { exitCode, stdout, stderr, durationMs } }`.
+
+## Request a GPU at create
+
+A sandbox can start with a lease. Set `resources.accelerator` and the lease caps:
+
+```ts
+const box = await client.create({
+  resources: { accelerator: { kind: "nvidia-3090", vramGb: 24 } },
+  gpuLease: { maxSpendUsd: 1, maxLifetimeSeconds: 900, idleTimeoutSeconds: 120 },
 });
 ```
 
-When no provider can take a lease, the attach fails with HTTP 503 and code `GPU_PROVIDER_NOT_CONFIGURED`; the SDK throws `GpuProviderNotConfiguredError`, whose message and `providers` field name the variables each provider needs.
-
-Specify a provider when you need one:
-
 ```bash
-tangle sandbox gpu run sbx_123 \
-  --provider runpod \
-  --accelerator-kind nvidia-4090 \
-  --max-spend-usd 1 \
-  --max-lifetime 900 \
-  -- python eval.py
+tangle sandbox create --accelerator-kind nvidia-3090 --accelerator-memory 24 \
+  --gpu-max-spend-usd 1 --gpu-max-lifetime 900 --gpu-idle-timeout 120
 ```
 
-Leave the provider unset when price matters more than location or vendor.
-The platform compares configured candidates and chooses the cheapest available option for the requested accelerator shape.
+## What you pay
 
-## Billing
+Every lease needs `maxSpendUsd` and `maxLifetimeSeconds`; the lease ends when it reaches either. `idleTimeoutSeconds` ends a lease that has not run a command for that long, so an agent that forgets to detach does not keep paying.
 
-Every lease requires `maxSpendUsd` and `maxLifetimeSeconds`.
-`idleTimeoutSeconds` is optional, but recommended for agent workflows because it destroys idle GPU workers automatically.
-
-Billing is recorded in seconds.
-Closed leases include:
+A lease is billed by the second. A closed lease reports:
 
 | Field | Meaning |
-| --- | --- |
-| `billing.seconds` | Charged lease duration. |
-| `billing.customerCostUsd` | Customer-facing cost. |
-| `billing.providerCostUsd` | Provider cost basis. |
-| `billing.customerPricePerHourUsd` | Hourly price used for the customer charge. |
-| `billing.providerCostPerHourUsd` | Hourly provider cost used for the cost basis. |
+|---|---|
+| `billing.seconds` | Seconds you are charged for. |
+| `billing.customerPricePerHourUsd` | The hourly price of this lease. |
+| `billing.customerCostUsd` | What this lease cost you. |
+| `billing.startedAt`, `billing.stoppedAt` | The billed interval. |
 
-Account usage also reports `gpuSeconds`, `gpuCostUsd`, and `gpuProviderCostUsd`.
+`client.usage()` adds GPU seconds and GPU cost to your account totals. `tangle sandbox gpu detach` prints the billed seconds and cost once billing is final. Prices are on [Pricing](/sandbox/cost).
 
-## Fleets
+## Fleets with GPUs
 
-Fleet workers can request the same accelerator shape and GPU caps.
-Use this for parallel eval campaigns where each worker needs its own short GPU burst.
+Fleet workers can each request the same accelerator and caps, for parallel evals where each worker needs its own short GPU burst:
 
 ```bash
 tangle fleet create --count 4 \
-  --accelerator-kind nvidia-3090 \
-  --accelerator-memory 24000 \
-  --gpu-max-spend-usd 1 \
-  --gpu-max-lifetime 900 \
-  --gpu-idle-timeout 120
+  --accelerator-kind nvidia-3090 --accelerator-memory 24 \
+  --gpu-max-spend-usd 1 --gpu-max-lifetime 900 --gpu-idle-timeout 120
 ```
 
-Keep fleet caps tight.
-Four workers with a `--gpu-max-spend-usd 1` cap can spend up to four dollars if all four attach GPUs.
+Caps apply per worker: four workers with `--gpu-max-spend-usd 1` can spend up to four dollars together. See [Run fleets of sandboxes](/sandbox/agents-fleet).
+
+## Python and REST
+
+Python has no GPU lease methods. Call the routes with `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+lease = client.fetch(
+    "POST",
+    f"/v1/sandboxes/{box.id}/gpu/leases",
+    json={"accelerator": {"kind": "nvidia-3090", "vramGb": 24}, "maxSpendUsd": 1, "maxLifetimeSeconds": 900},
+).json()
+lease_id = lease["lease"]["id"]
+try:
+    out = client.fetch("POST", f"/v1/sandboxes/{box.id}/gpu/leases/{lease_id}/exec", json={"command": "nvidia-smi"})
+    print(out.json())
+finally:
+    client.fetch("DELETE", f"/v1/sandboxes/{box.id}/gpu/leases/{lease_id}")
+```
+
+`GET /v1/sandboxes/{id}/gpu/providers` lists providers, and `PATCH /v1/sandboxes/{id}/gpu/leases/{leaseId}` renews.
+
+## Next
+
+- [Run fleets of sandboxes](/sandbox/agents-fleet)
+- [Pricing and spend controls](/sandbox/cost)
+- [Run commands and code](/sandbox/commands)

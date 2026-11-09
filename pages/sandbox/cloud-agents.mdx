@@ -1,30 +1,23 @@
-# Start a cloud agent
+---
+title: Run a coding agent in a sandbox
+description: Start Claude Code, Codex, OpenCode or another coding agent on a repository in its own sandbox, check its work, and read what the turn cost.
+---
 
-A cloud agent is a coding agent (Claude Code, Codex, or OpenCode) running in
-its own Linux sandbox. It has a real filesystem, a shell, package installs, and
-git. It keeps working when your laptop sleeps, and you can run ten of them at
-once. You send it prompts from the SDK, the CLI, or HTTP, and you delete it, or
-let it stop itself, when the work is done.
+import { Tabs } from 'nextra/components'
 
-## Choose how the agent pays for its model
+# Run a coding agent in a sandbox
 
-| Credential | Use it when | Model usage is billed to |
-|---|---|---|
-| [Claude subscription](/docs/cloud-agents/claude-code) | You have Claude Pro or Max and want Claude Code in the cloud. | Your Claude plan |
-| [ChatGPT plan or OpenAI key](/docs/cloud-agents/codex) | You use Codex with your ChatGPT login or an OpenAI key. | Your ChatGPT plan or OpenAI account |
-| [Coding plan](/docs/cloud-agents/coding-plans) | You pay for Z.ai GLM, Kimi, MiniMax, or another provider's plan. | That provider |
-| Tangle Router (default) | You want no setup: pass no credential at all. | Your Tangle credit |
+Each sandbox can run a coding agent such as Claude Code, Codex, OpenCode or Pi
+against a repository. The agent gets a Linux machine with a shell, git and
+package managers. You send it a task from the SDK, the CLI or HTTP, check its
+work yourself, and delete the sandbox when you are done.
 
-Tangle bills sandbox compute per second in every case. With your own
-subscription or key, model tokens never touch your Tangle credit. See
-[Cost, limits & spin-down](/docs/cost).
+## Fix a failing test
 
-## Claude Code on your subscription, in one call
-
-Create a token with `claude setup-token` (it prints a long-lived OAuth token
-for your Claude account), then:
-
+<Tabs items={["TypeScript", "Python", "CLI"]}>
+<Tabs.Tab>
 ```ts
+import { writeFile } from "node:fs/promises";
 import { Sandbox } from "@tangle-network/sandbox";
 
 const client = new Sandbox({
@@ -32,105 +25,183 @@ const client = new Sandbox({
   baseUrl: "https://sandbox.tangle.tools",
 });
 
-// Once per token. The value is encrypted at rest and never returned.
-await client.secrets.create("CLAUDE_TOKEN", process.env.CLAUDE_CODE_OAUTH_TOKEN!);
-
-const agent = await client.create({
-  name: "my-claude",
-  backend: {
-    type: "claude-code",
-    model: {
-      cliAuth: { account: "me", secretEnv: "CLAUDE_TOKEN", format: "token" },
-    },
-  },
-  secrets: ["CLAUDE_TOKEN"],
-  git: { url: "https://github.com/your-org/your-repo" },
-  idleTimeoutSeconds: 900,
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  backend: { type: "claude-code" },
 });
-await agent.waitFor("running");
+try {
+  const run = await box.prompt("`npm test` fails. Find the cause and fix it.");
+  if (!run.success) throw new Error(run.error);
 
-const result = await agent.prompt("Find the failing test and fix it.", {
-  sessionId: "fix-tests",
-});
-console.log(result.success, result.response);
+  const tests = await box.exec("npm test");
+  if (tests.exitCode !== 0) throw new Error("The tests still fail.");
+
+  await writeFile("fix.patch", (await box.exec("git diff")).stdout);
+  console.log(run.usage, run.costUsd);
+} finally {
+  await box.delete();
+}
 ```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import os
 
-Or from a terminal:
+from tangle_sandbox import BackendConfig, CreateSandboxOptions, GitConfig, Sandbox
 
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+box = client.create(
+    CreateSandboxOptions(
+        git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"),
+        backend=BackendConfig(type="claude-code"),
+    )
+)
+box.wait_for("running")
+try:
+    run = box.prompt("`npm test` fails. Find the cause and fix it.")
+    if not run.success:
+        raise RuntimeError(run.error)
+    tests = box.exec("npm test")
+    print("pass" if tests.exit_code == 0 else "still failing")
+    print(box.exec("git diff").stdout)
+finally:
+    box.delete()
+    client.close()
+```
+</Tabs.Tab>
+<Tabs.Tab>
 ```bash
-tangle secret create CLAUDE_TOKEN --value-stdin <<< "$CLAUDE_CODE_OAUTH_TOKEN"
-tangle sandbox create --name my-claude --backend claude-code --cli-auth CLAUDE_TOKEN \
-  --git-url https://github.com/your-org/your-repo --idle-timeout 900
-tangle agent prompt <sandbox-id> "Find the failing test and fix it." --session fix-tests --stream
+tangle sandbox create --name fix-tests --backend claude-code \
+  --git-url https://github.com/tangle-network/sandbox-demo
+tangle agent prompt <sandbox-id> "\`npm test\` fails. Find the cause and fix it." --stream
+tangle sandbox delete <sandbox-id> --force
+```
+</Tabs.Tab>
+</Tabs>
+
+A finished turn is not a finished task. `run.success` says the agent stopped
+without an error; run the tests yourself to know the fix works.
+
+`box.prompt()` never throws when the agent fails. It returns `success`,
+`status`, `response`, `error`, `errorCode`, `toolInvocations`, `usage`,
+`costUsd`, `traceId` and `durationMs`. It throws only for request failures,
+such as a sandbox that is not running.
+
+## Choose the coding agent
+
+`backend.type` picks the coding agent: Claude Code (`"claude-code"`), Codex
+(`"codex"`), OpenCode (`"opencode"`), Pi (`"pi"`) and others. Ask the platform which ones your account can
+run:
+
+<Tabs items={["TypeScript", "Python", "CLI"]}>
+<Tabs.Tab>
+```ts
+const { backends } = await client.listBackends();
+console.log(backends.map((backend) => backend.type));
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+response = client.fetch("GET", "/v1/backends")
+print([backend["type"] for backend in response.json()["backends"]])
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+curl -s https://sandbox.tangle.tools/v1/backends \
+  -H "Authorization: Bearer $TANGLE_API_KEY"
+```
+</Tabs.Tab>
+</Tabs>
+
+Every sandbox ships the full set, so one sandbox can run a different coding
+agent per turn. On the CLI, `tangle agent prompt --harness codex` runs that turn
+on Codex.
+
+## Choose how the agent pays for its model
+
+| Credential | Set up with | Model usage is billed to |
+|---|---|---|
+| Tangle Router (default) | Nothing: pass no credential. | Your Tangle balance |
+| Your Claude plan | [Claude Code on your Claude plan](/sandbox/cloud-agents-claude-code) | Your Claude plan |
+| Your ChatGPT plan | [Codex on your ChatGPT plan](/sandbox/cloud-agents-codex) | Your ChatGPT plan |
+| A GLM, Kimi or MiniMax plan | [Coding plans](/sandbox/cloud-agents-coding-plans) | That provider |
+
+Sandbox compute is billed by Tangle in every case. See
+[pricing and spend](/sandbox/cost).
+
+On the Router, set the model with `backend.model.model`; Claude Code, Codex and
+OpenCode all take it. The models your key
+can run are listed by `GET /v1/router-models` with your Sandbox key, and on the
+[model list](/gateway/models).
+
+```ts
+const box = await client.create({
+  backend: { type: "opencode", model: { model: "<model-id>" } },
+});
 ```
 
-The sandbox is ready in seconds. The agent runs as a durable session:
-`sessionId` keeps the conversation, so a second `prompt()` with the same id
-continues where the first stopped, from this process or another one.
+A credential can also stay outside the sandbox entirely: with proxy custody the
+sandbox holds a placeholder and the network proxy adds the real value to
+matching requests. See [Secrets](/sandbox/secrets).
 
 ## Watch it work
 
-`streamPrompt()` yields events while the agent thinks, edits files, and runs
-commands:
+`streamPrompt()` yields events while the agent thinks, edits files and runs
+commands. `applySandboxEventText()` folds them into the response text the same
+way `prompt()` does:
 
 ```ts
-for await (const event of agent.streamPrompt("Now add a regression test.", {
-  sessionId: "fix-tests",
-})) {
-  if (event.type === "message.part.updated") {
-    const part = event.data.part as { type?: string };
-    if (part?.type === "text" && typeof event.data.delta === "string") {
-      process.stdout.write(event.data.delta);
-    }
-  }
-  if (event.type === "done" || event.type === "result" || event.type === "error") {
-    break;
-  }
+import { applySandboxEventText } from "@tangle-network/sandbox";
+
+let text: string | undefined;
+for await (const event of box.streamPrompt("Now add a regression test.")) {
+  text = applySandboxEventText(text, event);
+  if (event.type === "result") console.log(text);
 }
 ```
 
+`getSandboxEventText(event)` returns the text one event carries. Tool calls
+arrive as `message.part.updated` events whose part has `type: "tool"`.
+[Stream output](/sandbox/streaming) lists every event type.
+
 ## Pick it up later
 
-The sandbox and its sessions outlive your process. Keep `agent.id`, fetch the
-sandbox from anywhere, and keep going:
+The sandbox and its conversation outlive your process. Keep the sandbox id and
+the session id, then continue from anywhere:
 
 ```ts
-const again = await client.get(agentId);
-await again?.session("fix-tests").prompt("Open a pull request with the fix.");
+const again = await client.get(sandboxId);
+if (!again) throw new Error("The sandbox was deleted.");
+await again.session("fix-tests").prompt("Open a pull request with the fix.");
 ```
 
-From a terminal, `tangle agent prompt <sandbox-id> "…" --session fix-tests
---stream` continues the same session, `tangle ssh <sandbox-id>` opens a shell
-beside the agent, and the [dashboard](/dashboard) shows the session live.
+A stopped sandbox must be resumed first. [Sessions](/sandbox/sessions) covers
+resuming, detached turns and safe retries.
+
+From a terminal, `tangle agent prompt <sandbox-id> "..." --session fix-tests`
+continues the same session. `tangle ssh <sandbox-id>` opens a shell beside the
+agent when the sandbox was created with `--ssh`. The
+[dashboard](https://sandbox.tangle.tools/dashboard) shows each session live.
+To drive the agent's own terminal UI, use [interactive mode](/sandbox/interactive).
+
+## Run many at once
+
+Turns in one session run one at a time. Sessions in one sandbox, and separate
+sandboxes, run side by side. Your plan caps how many sandboxes run at once:
+`client.subscription()` returns `maxConcurrentSandboxes`, where `0` means no
+cap. [Limits](/sandbox/limits) lists the values, and [Fleets](/sandbox/agents-fleet)
+run many agents under one budget.
 
 ## Spin it down
 
-```ts
-await agent.delete(); // permanent: the sandbox and its files are gone
-```
-
-`idleTimeoutSeconds` stops an agent nobody is talking to, and
-`maxLifetimeSeconds` caps how long it may run. A stopped sandbox keeps its
-files and resumes with `agent.resume()`. See
-[Cost, limits & spin-down](/docs/cost) for a live cost meter.
-
-## How your credential is handled
-
-- The token is stored as an encrypted account secret. The create request
-  carries only its name (`secretEnv`), never its value.
-- The sandbox receives the token at start, and only for the harness you chose.
-  The platform does not mint a Tangle model key for that sandbox.
-- Delete the secret (`client.secrets.delete("CLAUDE_TOKEN")`) or revoke the
-  token at its provider to cut access.
+Delete the sandbox in `finally`, as the examples above do. `delete()` is
+permanent. `idleTimeoutSeconds` stops a sandbox nobody is using and
+`maxLifetimeSeconds` caps how long it runs, but a stopped sandbox still exists
+until you delete it. See [Create, stop and delete](/sandbox/lifecycle).
 
 ## Next
 
-- [Claude Code subscription](/docs/cloud-agents/claude-code): tokens,
-  rotation, adding a token to a running sandbox, and HTTP.
-- [Codex & ChatGPT plan](/docs/cloud-agents/codex)
-- [Coding plans (GLM, Kimi, MiniMax)](/docs/cloud-agents/coding-plans)
-- [Agent profiles](/docs/cloud-agents/profiles): give the agent a role,
-  instructions, and tools.
-- [Network egress rules](/docs/egress): limit what the agent can reach.
-- [Multiple agents](/docs/agents/multiple) and [Fleets](/docs/agents/fleet):
-  run many at once.
+- [Interactive mode](/sandbox/interactive): drive the agent's own terminal UI.
+- [Sessions](/sandbox/sessions): continue a conversation and retry safely.
+- [AgentProfiles](/sandbox/cloud-agents-profiles): give the agent a role, skills and tools.

@@ -1,0 +1,184 @@
+---
+title: Reach an agent by email, iMessage or voice
+description: Give a sandbox agent a mailbox or phone number from Tangle Hub, choose who can message it, and read every request it answered.
+---
+
+# Reach an agent by email, iMessage or voice
+
+A line is a mailbox or phone number connected in Tangle Hub that people can
+message. You attach it to a sandbox or to a per-member
+[instance](/sandbox/instances). Hub receives each message, runs it as a turn
+in the attached sandbox, and sends the agent's answer back on the same
+transport. You decide who may write to it.
+
+Transports: email, iMessage, SMS, WhatsApp, Telegram and voice.
+
+## Turn a connection into a line
+
+Connect the identity or number in Hub first; see
+[Connections](/sandbox/connections). Then make it a line:
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const line = await client.lines.fromConnection({
+  connectionId: process.env.LINE_CONNECTION_ID!,
+  transport: "email",
+});
+console.log(line.id, line.address);
+```
+
+An identity has one email line, so calling `fromConnection` again returns the
+same line. Phone transports take a `phoneNumberId`; list the numbers you own
+with `client.lines.numbers(connectionId, "imessage")`.
+
+## Attach the line to sandboxes
+
+Attach with `instance` to give each member their own sandbox. Hub creates a
+member's sandbox on their first message, resumes it when stopped and replaces
+it when deleted.
+
+```ts
+const attachment = await client.lines.attach({
+  number: line.id,
+  mode: "personal",
+  members: [{ address: "ana@example.com", role: "owner" }],
+  unknownSenders: "reject",
+  respond: {
+    kind: "agent",
+    backend: {
+      type: "opencode", // Claude Code ("claude-code") and Codex ("codex") work the same way
+      profile: { name: "email-assistant", prompt: { systemPrompt: "Reply in two sentences." } },
+    },
+  },
+  instance: {
+    keyPrefix: "email-assistant:",
+    create: { resources: { cpuCores: 2, memoryMB: 2048, diskGB: 2 }, idleTimeoutSeconds: 600 },
+  },
+  clientReference: "email-assistant",
+});
+```
+
+`respond.backend` is an ordinary backend: Claude Code, Codex, OpenCode or
+another coding agent, with its profile.
+
+To run every member in one sandbox you already have, attach from the sandbox
+instead: `box.lines.attach({ number, mode: "shared", ... })`.
+
+A line has one attachment at a time. Attaching again with the same options
+returns the same attachment; a different attachment is refused until you
+detach the first.
+
+## Who can write, and what they see
+
+| Option | Effect |
+|---|---|
+| `members` | Declared senders: `{ address, role, label }`. An address is an E.164 phone number or an email address. |
+| `unknownSenders` | `"reject"` refuses anyone not in `members`. Email lines answer declared members only. |
+| `roles` | Per role: `context` is `"shared"` (sees other shared members' recent exchanges) or `"own"` (sees none, and nobody sees its exchanges); `tools` is `"chat"` or `"act"`. |
+| `mode` | `"personal"` or `"shared"`. In shared mode each member gets their own thread and session in one sandbox. |
+
+One sandbox serves every member of a shared attachment, so a member with `act`
+tools could read another member's session files. Hub refuses an `own`-context
+role next to an `act` role on one sandbox; use `instance` to give each member
+their own sandbox instead.
+
+A From address proves nothing, so Hub holds a member's first email and asks
+that address to confirm. After the member replies YES, Hub runs the held mail,
+and later mail in that thread runs at once.
+
+## Read what happened
+
+```ts
+for (const thread of await client.lines.threads(line.id).list()) {
+  for (const message of await client.lines.threads(line.id).messages(thread.id)) {
+    console.log(message.direction, message.kind, message.status, message.text);
+  }
+}
+```
+
+An answer the agent sent has `direction: "out"`, `kind: "agent"` and
+`status: "replied"`. `dropped` means Hub refused to send it and `failed` means
+every send failed; both carry an `errorCode`. Each request's `timeline` marks
+each step in milliseconds after the message arrived.
+
+`client.lines.members(line.id).list()` lists the members, their roles and
+consent.
+
+## Message a member first
+
+`client.lines.send(lineId, input)` queues a message to a member who has
+consented. Hub sends it on the member's existing conversation and holds it
+during the member's quiet hours. A queued receipt is not a delivery
+confirmation; read it back with `client.lines.sentMessage(lineId, messageId)`.
+
+## Take calls on an iMessage line
+
+Members of an attached iMessage line can call it. A ph0ny voice agent answers,
+and each question it asks the workspace runs in the caller's own thread
+session, so a call continues the text conversation.
+
+```ts
+const voiced = await client.lines.enableVoice(lineId, {
+  ph0nyConnectionId: process.env.PH0NY_CONNECTION_ID!,
+  ph0nyAgentId: process.env.PH0NY_AGENT_ID!,
+});
+console.log(voiced.voice?.state);
+
+await client.lines.disableVoice(lineId);
+```
+
+Connect your ph0ny key in Hub first. Voice answers the attachment's members
+only, and enabling voice again replaces every credential Hub set for the line.
+A line with a reply gate takes no calls.
+
+## Detach and release
+
+```ts
+await client.lines.detach(line.id);   // stop routing; history and the number stay
+await client.lines.release(line.id);  // retire a detached line
+```
+
+Detaching leaves each member's instance sandbox under its key. Delete those
+sandboxes and release their keys as on [One sandbox per user](/sandbox/instances).
+Releasing a line does not cancel a number you rent from a provider.
+
+## From the CLI
+
+```bash
+tangle lines providers
+tangle lines numbers <connection-id> --transport imessage
+tangle lines connect <connection-id> --transport email --reference support-inbox --yes
+tangle lines attach <line-id> --profile-id <profile-id> --member ana@example.com --yes
+tangle lines threads <line-id>
+tangle lines messages <line-id> <thread-id>
+tangle lines members --line <line-id>
+tangle lines detach <line-id> --yes
+tangle lines release <line-id> --yes
+```
+
+`attach --tools act` applies the profile's tools and needs a per-member
+instance, not `--sandbox`. `--turns-per-day` caps turns per member per day.
+`--file <path>` takes a full attachment as JSON instead of the quick flags.
+Inside a sandbox attached to a line, `tangle context` prints the line, its
+members and their consent, and `tangle lines send` and `tangle lines remind`
+infer the line.
+
+Lines are served by Tangle Platform at `https://id.tangle.tools`, and the
+Sandbox API at `https://sandbox.tangle.tools` forwards `/v1/lines` requests
+there. Lines are TypeScript and CLI only; from Python, call `/v1/lines` with
+`client.fetch()`.
+
+The complete programs for email, shared and voice lines are in
+[product examples](/sandbox/examples/products).
+
+## Next
+
+- [Connections](/sandbox/connections)
+- [One sandbox per user](/sandbox/instances)
+- [Hub and line commands](/sandbox/cli/hub-and-lines)

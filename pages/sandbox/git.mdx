@@ -1,0 +1,204 @@
+import { Tabs, Callout } from "nextra/components";
+
+# Clone repositories and use git
+
+Start a sandbox with your repository already cloned, public or private, then read status and diffs, commit, branch and push from code.
+
+## Clone at create
+
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+// The clone finishes before create() resolves.
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo", ref: "main", depth: 1 },
+});
+try {
+  const status = await box.git.status();
+  console.log(status.branch, status.head, status.isDirty);
+  console.log((await box.exec("ls")).stdout);
+} finally {
+  await box.delete();
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import os
+from tangle_sandbox import Sandbox, SandboxStatus, GitConfig
+
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+box = client.create(git=GitConfig(url="https://github.com/tangle-network/sandbox-demo", depth=1))
+try:
+    box.wait_for(SandboxStatus.RUNNING)
+    status = box.git.status()
+    print(status.branch, status.is_dirty)
+finally:
+    box.delete()
+    client.close()
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+tangle sandbox create --name demo \
+  --git-url https://github.com/tangle-network/sandbox-demo --git-ref main --git-depth 1
+tangle git status demo
+tangle sandbox delete demo --force
+```
+</Tabs.Tab>
+</Tabs>
+
+| `git` field | Effect |
+|---|---|
+| `url` | The HTTPS URL to clone. |
+| `ref` | Branch, tag or commit to check out. |
+| `depth` | Shallow clone depth. |
+| `sparse` | Paths for a sparse checkout. |
+| `auth` | `{ token }` or `{ grant: "read" }` for a private repository. |
+
+The repository is cloned into the workspace, so `exec`, `read` and the coding agent start inside it.
+
+## Clone a private repository
+
+### With a connected GitHub account
+
+If your account has connected the repository through the Tangle GitHub App, ask for a read grant instead of passing a token. The platform mints a short-lived token for that one repository, read only, uses it for the clone, and never returns it or writes it to a log.
+
+```ts
+const box = await client.create({
+  git: { url: "https://github.com/acme/private-service", auth: { grant: "read" } },
+});
+```
+
+The API key must hold the `git:grant` scope, and the URL must be `https://github.com/<owner>/<repo>`. The create is refused with one of these codes:
+
+| Code | Cause |
+|---|---|
+| `GIT_GRANT_SCOPE_REQUIRED` | The API key lacks `git:grant`. |
+| `GIT_GRANT_UNSUPPORTED_URL` | The URL is not a GitHub repository URL. |
+| `GIT_GRANT_NOT_CONNECTED` | Your account has not connected the repository. |
+| `GIT_GRANT_ACCESS_DENIED` | GitHub does not show you access to it. |
+
+`grant` and `token` are exclusive, and an [isolated](/sandbox/security#isolated-sandboxes) create refuses a grant.
+
+### With a token
+
+```ts
+const box = await client.create({
+  git: { url: "https://github.com/acme/private-service", auth: { token: process.env.GITHUB_TOKEN! } },
+});
+```
+
+In the CLI, the token never goes in argv: `--git-token-env GITHUB_TOKEN` names an environment variable that holds it, or `--git-token-stdin` reads it from stdin.
+
+## Work with the repository
+
+```ts
+const status = await box.git.status();
+console.log(status.modified, status.untracked, status.ahead, status.behind);
+
+const diff = await box.git.diff();
+for (const file of diff.files) console.log(file.status, file.path, `+${file.additions} -${file.deletions}`);
+
+await box.git.checkout("fix/null-guard", { create: true });
+await box.git.add(["src/server.js"]);
+const commit = await box.git.commit("fix: guard a null request body");
+console.log(commit.sha, commit.message);
+
+for (const c of await box.git.log(5)) console.log(c.shortSha, c.message);
+for (const b of await box.git.branches()) console.log(b.current ? "*" : " ", b.name);
+
+await box.git.pull({ rebase: true });
+await box.git.push();
+```
+
+| Method | Returns |
+|---|---|
+| `status()` | `branch`, `head`, `isDirty`, `ahead`, `behind`, `staged`, `modified`, `untracked`. |
+| `diff(ref?)` | `files` with status and line counts, totals, and the unified diff in `raw`. |
+| `log(limit?)` | Commits with `sha`, `shortSha`, `message`, `author`, `email`, `date`. |
+| `branches()` | Branches with `name`, `current`, `upstream` and `commit`. |
+| `add(paths)`, `commit(message, { amend })`, `push({ force })`, `pull({ rebase })`, `checkout(ref, { create })` | Run the matching git command. |
+
+`push` needs write access to the remote. A `grant` token is read only.
+
+### Save the agent's change as a patch
+
+```ts
+import { writeFile } from "node:fs/promises";
+
+const { raw } = await box.git.diff();
+await writeFile("agent.patch", raw);
+```
+
+Apply it locally with `git apply agent.patch`.
+
+### Let a coding agent fix a test, then commit
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  backend: { type: "codex" },
+});
+try {
+  const run = await box.prompt("The test tagged null-guard fails. Fix the cause.");
+  if (!run.success) throw new Error(run.error);
+
+  console.log((await box.exec("git status --short")).stdout.trim());
+  const tests = await box.exec("npm test -- --test-name-pattern=null-guard");
+  if (tests.exitCode !== 0) throw new Error("The test still fails.");
+
+  await box.exec('git -c user.name=Codex -c user.email=codex@tangle.tools commit -am "fix: guard a null request body"');
+  console.log((await box.exec("git log --oneline -1")).stdout.trim());
+} finally {
+  await box.delete();
+}
+```
+
+## From the CLI
+
+```bash
+tangle git status demo
+tangle git diff demo --ref main
+tangle git log demo --limit 5
+tangle git checkout demo fix/null-guard --create
+tangle git add demo src/server.js
+tangle git commit demo -m "fix: guard a null request body"
+tangle git branches demo
+tangle git pull demo --rebase
+tangle git push demo
+```
+
+Each command resumes a stopped sandbox first.
+
+## Python and REST
+
+Python's `box.git` has the same nine operations: `status`, `log(limit=10)`, `diff(ref=None)`, `add(paths)`, `commit(message, amend=False)`, `push(force=False)`, `pull(rebase=False)`, `branches()` and `checkout(ref, create=False)`. `GitConfig` and `GitAuth` take `url`, `ref`, `depth`, `sparse` and a token. For a read grant from Python, send the create through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+response = client.fetch(
+    "POST",
+    "/v1/sandboxes",
+    json={"git": {"url": "https://github.com/acme/private-service", "auth": {"grant": "read"}}},
+)
+```
+
+## Next
+
+- [Run a coding agent in a sandbox](/sandbox/cloud-agents)
+- [Snapshot, fork and restore](/sandbox/snapshots)
+- [Store secrets and give sandboxes credentials](/sandbox/secrets)

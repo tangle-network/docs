@@ -1,52 +1,93 @@
 ---
 title: Sandbox compliance pinning
-description: Reference — what the orchestrator pins on a sandbox created under a HIPAA-enrolled key, and which create paths refuse claimed workloads.
+description: How a sandbox created under a HIPAA-enrolled key, or with compliance hipaa, is placed and protected, the errors it can return, and which create calls refuse it.
 ---
+
+import { Tabs } from "nextra/components";
 
 # Sandbox compliance pinning
 
-This is the reference for what changes on a sandbox created under a HIPAA-enrolled app or team key. For enrollment itself, see [Enable HIPAA protection](/gateway/hipaa/enable).
+This page explains what changes on a sandbox created under a HIPAA-enrolled app or team key, or with `compliance: { hipaa: true }`. For enrollment, see [Enable HIPAA protection](/gateway/hipaa/enable).
 
-## How a sandbox becomes claimed
+## How a sandbox becomes HIPAA-pinned
 
-A sandbox inherits its compliance state from **verified key provenance**, never from the caller:
+A sandbox is pinned in either of two ways:
 
-1. Platform key verification derives a positive `originAppCompliance` claim from the verified app or team lineage of the key, unioned with the first-party registry. A caller-supplied compliance field does not establish this identity.
-2. If a cached verdict contains no positive claim, the Sandbox API requires current verification before creating the sandbox — a stale absence is never used during a Platform outage. A cached **positive** claim is safe to reuse because the acceptance latch cannot be cleared.
-3. The Sandbox API forwards the verified identity and claim, and the orchestrator pins the sandbox's origin and compliance labels at creation time.
+- **Your key is HIPAA-enrolled.** Tangle reads the enrollment from the verified app or team behind the API key, never from the request. Every sandbox that key creates is pinned. If Tangle cannot confirm the key's current enrollment, the create is refused rather than placed without protection.
+- **You ask for it on create.** Pass `compliance: { hipaa: true }` or `compliance: ["hipaa"]`. The key must be entitled to HIPAA placement.
 
-A claimed workload must have usable verified attribution; otherwise creation is refused.
+<Tabs items={["TypeScript", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
 
-## What gets pinned
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
 
-The pinned labels control the following behaviors for the life of the sandbox:
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
 
-| Behavior                       | Effect                                                                                       |
-| ------------------------------ | -------------------------------------------------------------------------------------------- |
-| Origin and compliance labels   | Pinned at creation from the verified claim; they drive every behavior below.                 |
-| Run-session capture exclusion  | Run sessions on the sandbox are excluded from capture.                                       |
-| Metadata-only telemetry        | Telemetry is reduced to a metadata skeleton — no content-bearing payloads.                   |
-| Sentry environment withholding | The sandbox's environment is withheld from Sentry reporting.                                 |
-| In-boundary PHI scrubbing      | Content inside the sandbox boundary is scrubbed before it can leave through reporting paths. |
+const box = await client.create({ compliance: { hipaa: true } });
+try {
+  console.log(box.id, box.status);
+} finally {
+  await box.delete();
+}
+```
 
-## `SandboxInfo.compliance` is read-only
+</Tabs.Tab>
+<Tabs.Tab>
 
-`SandboxInfo.compliance` is a **read-only echo** of the pinned state. There is no client option to set, unset, or edit it — on create or anywhere else. It exists so your code can confirm what the orchestrator pinned, nothing more.
+The CLI has no compliance flag. A HIPAA-enrolled key pins every sandbox the CLI creates with it.
 
-## Unsupported create paths
+</Tabs.Tab>
+</Tabs>
 
-Paths that cannot preserve the verified claim refuse claimed workloads with `COMPLIANCE_CREATE_UNSUPPORTED` instead of silently dropping the protection:
+The Python SDK has no `compliance` option either. Send `"compliance": {"hipaa": true}` in the body of `POST /v1/sandboxes`, for example with `client.fetch("POST", "/v1/sandboxes", json={...})`.
 
-- Batch creation
-- Branch creation
-- Rollouts
-- Detached GPU leases — including a GPU lease requested during an otherwise ordinary create
-- E2B create
-- The optional OpenAI-compatible run creation endpoints
-- Sessions without an existing `projectId`
+## Where a pinned sandbox runs
 
-Reads and execution on existing sandboxes remain available. An ordinary create succeeding does not prove restore or multi-cell handling for claimed workloads.
+A pinned sandbox runs only on capacity that can take HIPAA workloads, and it is never placed anywhere else.
+
+- A create that asks for HIPAA with a key that is not entitled to it gets `COMPLIANCE_NOT_ENTITLED` (403).
+- When no HIPAA capacity can take the sandbox, the create gets `COMPLIANCE_CAPACITY_UNAVAILABLE` or `COMPLIANCE_CELL_UNAVAILABLE` (503) with a `Retry-After` header.
+- A call that cannot keep the protection gets `COMPLIANCE_CREATE_UNSUPPORTED` (403); see [Calls that refuse a pinned workload](#calls-that-refuse-a-pinned-workload).
+
+Branch on `error.code`; [Error codes](/sandbox/errors) says what to do about each.
+
+## What pinning changes
+
+For the life of the sandbox:
+
+| Behavior | Effect |
+|---|---|
+| Fixed at create | The HIPAA setting is fixed when the sandbox is created and applies for its whole life. |
+| Session transcripts | Coding-agent session transcripts are not copied out of the sandbox when it stops or is deleted. |
+| Telemetry | Telemetry carries metadata only, never content. |
+| Error reports | An error report from inside the sandbox carries an event ID, a timestamp and a fixed label, never request or file content. Traces and profiles are not sampled. |
+
+The sandbox record echoes its compliance state so your code can confirm it. The echo is set by Tangle; you cannot change it after create.
+
+## Calls that refuse a pinned workload
+
+These calls cannot keep the protection, so a HIPAA-enrolled key gets `COMPLIANCE_CREATE_UNSUPPORTED` instead of an unprotected sandbox:
+
+- Batch runs (`POST /v1/sandboxes/batch/run`)
+- Branching a sandbox (`POST /v1/sandboxes/{id}/branch`)
+- Rollouts (`POST /v1/sandboxes/{id}/rollouts`)
+- GPU leases, including a GPU lease requested as part of a create
+- E2B-compatible create (`POST /e2b/sandboxes`)
+- Creating a session with `POST /v1/sessions` that names no existing sandbox
+
+Create the sandbox with `POST /v1/sandboxes` first. Reads and commands on existing sandboxes keep working.
 
 ## Not retroactive
 
-Pinning applies to **new** sandboxes. Enrollment does not modify existing sandboxes, retained files, or historical logs — their migration and retention require a separate approved procedure. Until the [launch requirements](/gateway/hipaa#current-readiness-status) close, the shared fleet remains out of bounds for PHI regardless of pinning.
+Pinning applies to new sandboxes. Enrollment does not change existing sandboxes, retained files or past logs; moving them needs a separate approved procedure.
+Until the [launch requirements](/gateway/hipaa#current-readiness-status) close, do not put PHI on the shared fleet, whether or not a sandbox is pinned.
+
+## Next steps
+
+- [Enable HIPAA protection](/gateway/hipaa/enable): enroll an app or team.
+- [Isolation and compliance](/sandbox/security): the sandbox security model.
+- [Error codes](/sandbox/errors): every Sandbox error code.

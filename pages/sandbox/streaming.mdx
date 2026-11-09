@@ -1,0 +1,265 @@
+import { Tabs, Callout } from "nextra/components";
+
+# Stream command and agent output
+
+Show a process's output or a coding agent's work as it happens, in your server and in a browser, and pick the stream back up after a dropped connection without losing events.
+
+## Stream a coding agent's answer
+
+`streamPrompt` yields events while the agent works. Fold them into text with `applySandboxEventText`: some coding agents send `token` deltas, others send cumulative `message.part.updated` parts, and the helper handles both.
+
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+```ts
+import { Sandbox, applySandboxEventText } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  backend: { type: "claude-code" },
+});
+try {
+  let text: string | undefined;
+  for await (const event of box.streamPrompt("Summarize what this repository does.")) {
+    const next = applySandboxEventText(text, event);
+    if (next !== undefined && next !== text) {
+      process.stdout.write(next.startsWith(text ?? "") ? next.slice((text ?? "").length) : `\n${next}`);
+      text = next;
+    }
+  }
+} finally {
+  await box.delete();
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import os
+from tangle_sandbox import Sandbox, SandboxStatus, BackendConfig, GitConfig
+
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+box = client.create(
+    git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"),
+    backend=BackendConfig(type="claude-code"),
+)
+try:
+    box.wait_for(SandboxStatus.RUNNING)
+    for event in box.stream_prompt("Summarize what this repository does."):
+        if event.type == "result":
+            print(event.data.get("finalText"))
+finally:
+    box.delete()
+    client.close()
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+tangle agent prompt my-project "Summarize what this repository does." --stream
+```
+</Tabs.Tab>
+</Tabs>
+
+| Event type | Carries |
+|---|---|
+| `token` | A text delta in `data.delta` or `data.value`. |
+| `message.part.updated` | One part of the agent's message in `data.part`: text, or a tool call with `tool` and `state.input`. |
+| `result` | The final answer in `data.finalText`. |
+
+`getSandboxEventText(event)` returns the text one event carries, without folding.
+
+### Watch tool calls as they happen
+
+```ts
+const seen = new Set<string>();
+for await (const { type, data } of box.streamPrompt("The test tagged timezone fails. Fix the cause.")) {
+  const part = data.part as { id: string; type: string; tool?: string; state?: { input?: unknown } } | undefined;
+  if (type === "message.part.updated" && part?.type === "tool" && !seen.has(part.id)) {
+    seen.add(part.id);
+    console.log(`${seen.size}.`, part.tool, JSON.stringify(part.state?.input ?? "").slice(0, 70));
+  }
+  if (type === "result") console.log("\n" + data.finalText);
+}
+```
+
+<Callout type="warning">
+Leaving a `streamPrompt` loop before its last event cancels the run. Pass `detach: true` to keep the run going after your loop ends, or use `dispatchPrompt` for work that must outlive the caller.
+</Callout>
+
+## Start work that outlives the caller
+
+`dispatchPrompt` returns once the run is admitted. The run continues when your process exits, and any process can read its events later.
+
+```ts
+const sessionId = "issue-482";
+const turnId = "issue-482-turn-1";
+
+const dispatched = await box.dispatchPrompt("Fix issue 482 and run the tests.", {
+  sessionId,
+  turnId,
+});
+console.log(dispatched.dispatched, dispatched.executionId, dispatched.status);
+```
+
+`sessionId` stops a second run from starting while that session is in flight. `turnId` is the retry key: a retry with the same `turnId` returns the finished turn instead of running the agent again. `dispatched: false` means the prompt was not sent because the turn is already running or already finished. Pass `keepEvents: true` to get the run's stream back as `dispatched.events`.
+
+## Reconnect without losing events
+
+The platform keeps each session's events. Read them with `box.session(id).events()`; pass `since` with the last event id you delivered to replay everything after it, then continue live.
+
+```ts
+let lastEventId: string | undefined;
+for await (const event of box.session(sessionId).events({ since: lastEventId })) {
+  lastEventId = event.id ?? lastEventId;
+  console.log(event.type);
+}
+```
+
+The iterator ends when the session reaches `completed`, `failed` or `cancelled`, or when your `signal` aborts.
+
+### A server route that resumes from `Last-Event-ID`
+
+This Cloudflare Worker serves server-sent events to a browser. When the browser reconnects with `Last-Event-ID`, the route replays from that event.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox/core";
+
+interface Env {
+  TANGLE_API_KEY: string;
+  SANDBOX_ID: string;
+}
+
+export default {
+  async fetch(req: Request, env: Env): Promise<Response> {
+    const url = new URL(req.url);
+    if (req.method !== "POST" || url.pathname !== "/chat") {
+      return new Response("Not found", { status: 404 });
+    }
+    // Authenticate your user here and derive these from your own session.
+    const sessionId = req.headers.get("x-conversation-id")!;
+    const turnId = req.headers.get("x-turn-id")!;
+
+    const client = new Sandbox({ apiKey: env.TANGLE_API_KEY, baseUrl: "https://sandbox.tangle.tools" });
+    const box = await client.get(env.SANDBOX_ID);
+    if (!box) return new Response("Sandbox not found", { status: 404 });
+
+    const cached = await box.findCompletedTurn(turnId, { sessionId });
+    if (cached) return Response.json({ cached: true, ...cached });
+
+    await box.dispatchPrompt(await req.text(), { sessionId, turnId });
+
+    const lastEventId = req.headers.get("last-event-id") ?? undefined;
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const event of box.session(sessionId).events({ since: lastEventId, signal: req.signal })) {
+            controller.enqueue(
+              encoder.encode(`id: ${event.id ?? ""}\nevent: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`),
+            );
+          }
+          controller.close();
+        } catch (err) {
+          if ((err as Error).name === "AbortError") return controller.close();
+          controller.error(err);
+        }
+      },
+    });
+    return new Response(stream, {
+      headers: { "content-type": "text/event-stream", "cache-control": "no-cache" },
+    });
+  },
+};
+```
+
+The run keeps going if the browser or the Worker drops the response. A reconnect with the same conversation id, turn id and `Last-Event-ID` picks up where it stopped.
+
+## Stream to a browser
+
+Your API key never goes to the browser. Your server mints a short-lived, read-only token for one session, and the page streams with `SessionGatewayClient`.
+
+On your server, after you check that the session belongs to the signed-in user:
+
+```ts
+const scoped = await box.mintScopedToken({
+  scope: "session-runtime",
+  sessionId: runtimeSessionId,
+  access: "read-only",
+});
+return Response.json({
+  token: scoped.token,
+  expiresAt: scoped.expiresAt.getTime() / 1000,
+  url: scoped.sidecarProxyUrl,
+});
+```
+
+In the browser:
+
+```ts
+import { SessionGatewayClient } from "@tangle-network/sandbox/session-gateway";
+
+async function fetchScopedToken(sessionId: string) {
+  const res = await fetch("/api/sandbox/scoped-token", {
+    method: "POST",
+    credentials: "include",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ sessionId }),
+  });
+  if (!res.ok) throw new Error(`Scoped-token request failed with ${res.status}`);
+  return (await res.json()) as { token: string; expiresAt: number; url: string };
+}
+
+const initial = await fetchScopedToken(sessionId);
+const gateway = new SessionGatewayClient({
+  url: initial.url,
+  token: initial.token,
+  sessionId,
+  runtimeSessionId,
+  onTokenRefresh: () => fetchScopedToken(sessionId),
+  handlers: {
+    onAgentEvent: (channel, data, seq) => render(channel, data, seq),
+    onReplayComplete: (received) => console.info(`caught up after ${received} events`),
+    onStreamGap: () => void gateway.replay(),
+    onError: (message, code) => console.error(code, message),
+  },
+});
+gateway.connect();
+```
+
+A reattach resumes after the last event the client delivered, so a dropped connection or a phone going to sleep loses nothing. `onTokenRefresh` fetches a new token before the old one expires. Keep the browser's `sessionId` in `localStorage` so a reload rejoins the same stream.
+
+Token scopes and lifetimes are on [Authentication](/sandbox/authentication).
+
+## Stream a process's output
+
+```ts
+const proc = await box.process.spawn("npm test");
+for await (const entry of proc.logs()) {
+  console.log(entry);
+}
+console.log("exit", await proc.wait());
+```
+
+`logs()` yields `stdout`, `stderr` and `gap` entries; a gap reports how many bytes were dropped. `stdout()` and `stderr()` yield one stream each. In the CLI, `tangle process logs <sandbox> <pid>` follows a process until it exits, and `--json` prints one entry per line.
+
+## Python and REST
+
+Python streams a prompt with `stream_prompt`, which yields `SandboxEvent(type, data, id)`. The `[gateway]` extra (`pip install "tangle-sandbox[gateway]"`) adds a session gateway client. Python has no `dispatch_prompt`, session event replay, process logs or `mint_scoped_token`. Mint the browser token through REST with `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+response = client.fetch(
+    "POST",
+    f"/v1/sandboxes/{box.id}/scoped-token",
+    json={"scope": "session-runtime", "sessionId": runtime_session_id, "access": "read-only"},
+)
+print(response.status_code, response.json())
+```
+
+## Next
+
+- [Keep conversations across turns and processes](/sandbox/sessions)
+- [Drive a coding agent interactively](/sandbox/interactive)
+- [Run commands and code](/sandbox/commands)

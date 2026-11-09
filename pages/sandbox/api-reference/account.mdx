@@ -1,0 +1,932 @@
+---
+title: Account, usage, billing and pricing routes
+description: REST reference for the current account, usage and egress, billing, public pricing, notifications, sign-in and service health.
+---
+
+# Account, usage, billing and pricing routes
+
+Read and update your account, read usage, billing and prices, manage notifications, and sign in.
+
+Every route is on `https://sandbox.tangle.tools` and takes your account API key as `Authorization: Bearer <key>` unless it says otherwise. Errors use the shape in [Error codes](/sandbox/errors).
+This page is generated from the [OpenAPI document](/sandbox-openapi.json), which also has every response schema.
+
+## Account
+
+| Route | Does |
+|---|---|
+| `GET /v1/account/me` | Get the current account (alias of /v1/me) |
+| `GET /v1/me` | Get the current account |
+| `PATCH /v1/me` | Update the account profile |
+| `GET /v1/me/email-preferences` | Get email preferences |
+| `PUT /v1/me/email-preferences` | Update email preferences |
+| `POST /v1/model-credentials/resolve` | Resolve a model credential for an agent profile |
+| `POST /v1/signup` | Create an account without sign-in |
+
+### Get the current account (alias of /v1/me)
+
+`GET /v1/account/me`
+
+| Status | Meaning |
+|---|---|
+| 200 | The caller's account |
+| 401 | Missing or invalid credential |
+| 404 | The caller has no customer record (NOT_FOUND) |
+
+### Get the current account
+
+`GET /v1/me`
+
+| Status | Meaning |
+|---|---|
+| 200 | The caller's account |
+| 401 | Missing or invalid credential |
+| 404 | The caller has no customer record (NOT_FOUND) |
+
+### Update the account profile
+
+`PATCH /v1/me`
+
+The name is the only field that can change.
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | string | Yes | Trimmed before it is checked. It cannot contain &lt; or &gt; or control characters. |
+
+| Status | Meaning |
+|---|---|
+| 200 | The updated profile |
+| 400 | No body, no name, or an invalid name (BAD_REQUEST, VALIDATION_ERROR) |
+| 401 | Missing or invalid credential |
+| 500 | The update failed (INTERNAL_ERROR) |
+
+### Get email preferences
+
+`GET /v1/me/email-preferences`
+
+| Status | Meaning |
+|---|---|
+| 200 | The caller's email preferences |
+| 401 | Missing or invalid credential |
+| 503 | Email preferences are not available on this deployment (UNAVAILABLE) |
+
+### Update email preferences
+
+`PUT /v1/me/email-preferences`
+
+Fields left out keep their value.
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `security_alerts` | boolean | No |  |
+| `product_updates` | boolean | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The preferences after the update |
+| 400 | No body, or no preference field (BAD_REQUEST) |
+| 401 | Missing or invalid credential |
+| 404 | The account no longer exists (NOT_FOUND) |
+| 503 | Email preferences are not available on this deployment (UNAVAILABLE) |
+
+### Resolve a model credential for an agent profile
+
+`POST /v1/model-credentials/resolve`
+
+Selects a model-credential seat for the profile and returns how to reach it: a CLI auth reference or an API key environment variable with its base URL. The response never holds a raw key and is never cached. Only the principal enrolled for the deployment's account-owner grant can call it; other callers, keys scoped to one sandbox and member-paid line keys get 403. A retained sandbox must be one the caller owns personally.
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `selection` | object | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | The selected seat and how to reach it |
+| 400 | The selection is invalid, or the seat owner refused it |
+| 401 | Missing or invalid credential, or the seat owner refused the grant |
+| 403 | The caller cannot use this grant, or cannot write the retained sandbox |
+| 413 | The request body is over the proxy request limit |
+| 429 | The seat owner rate-limited the selection |
+| 503 | The seat owner is unavailable or has no seat to give |
+
+### Create an account without sign-in
+
+`POST /v1/signup`
+
+Needs no credential and is off in production, which answers 410 SIGNUP_DISABLED: sign in through the OAuth provider instead. Where a deployment turns it on, the account is created unverified and no API key is issued.
+
+Authentication: none.
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `email` | string | Yes |  |
+| `name` | string | No | Trimmed; 1-100 characters without &lt; or &gt; or control characters. A blank name is ignored. |
+
+| Status | Meaning |
+|---|---|
+| 201 | The account was created |
+| 400 | The email or name is invalid (VALIDATION_ERROR) |
+| 409 | The email is already registered (EMAIL_EXISTS) |
+| 410 | Direct sign-up is off on this deployment (SIGNUP_DISABLED) |
+
+## Usage
+
+| Route | Does |
+|---|---|
+| `GET /usage` | Get today's usage |
+| `GET /v1/usage` | Get current usage stats |
+| `GET /v1/usage/egress` | Get sandbox egress for a calendar month |
+| `GET /v1/usage/export` | Export usage data as CSV |
+| `GET /v1/usage/subscription` | Get subscription info |
+
+### Get today's usage
+
+`GET /usage`
+
+Counts for the billing owner of the credential, not for one sandbox.
+
+| Status | Meaning |
+|---|---|
+| 200 | Usage for the current period |
+| 401 | Missing or invalid credential |
+
+### Get current usage stats
+
+`GET /v1/usage`
+
+| Status | Meaning |
+|---|---|
+| 200 | Current usage |
+| 500 | Internal error |
+
+### Get sandbox egress for a calendar month
+
+`GET /v1/usage/egress`
+
+The account's egress for one calendar month (UTC) as the meter recorded it: the account total, the plan's allowance, the overage beyond it, each sandbox's bytes, and what the meter has charged or reserved. Paid plans include 2 TB per account per month, shared by its sandboxes, then bill per decimal GB; Free accounts are capped at 100 GiB per month and never charged.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `month` | query | No | string | Calendar month, `YYYY-MM` in UTC. Defaults to the current month. |
+
+| Status | Meaning |
+|---|---|
+| 200 | Egress for the month |
+| 500 | Internal error |
+
+### Export usage data as CSV
+
+`GET /v1/usage/export`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `days` | query | No | integer |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | CSV file download |
+| 500 | Internal error |
+
+### Get subscription info
+
+`GET /v1/usage/subscription`
+
+| Status | Meaning |
+|---|---|
+| 200 | Subscription info |
+| 404 | No subscription found |
+| 500 | Internal error |
+
+## Billing
+
+| Route | Does |
+|---|---|
+| `GET /subscription` | Get the plan, credit and limits |
+| `GET /v1/billing/balance` | Get the credit balance |
+| `GET /v1/billing/transactions` | List credit transactions |
+| `GET /v1/billing/usage` | Get spend by product |
+| `GET /v1/billing/{path}` | Call a retired billing path |
+
+### Get the plan, credit and limits
+
+`GET /subscription`
+
+Reports the plan of the billing owner of the credential. Plan changes and top-ups are made at id.tangle.tools.
+
+| Status | Meaning |
+|---|---|
+| 200 | Plan, credit and limits |
+| 401 | Missing or invalid credential |
+| 500 | The subscription could not be read |
+
+### Get the credit balance
+
+`GET /v1/billing/balance`
+
+Read from id.tangle.tools for the billing owner of the credential; the query string is passed through.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `teamId` | query | No | string | Read a team wallet. The caller must be a member. |
+
+| Status | Meaning |
+|---|---|
+| 200 | The wallet balance |
+| 401 | Missing or invalid credential |
+| 403 | The caller is not a member of the team |
+| 502 | id.tangle.tools is unreachable (PLATFORM_UNAVAILABLE) |
+| 504 | id.tangle.tools did not answer in time (PLATFORM_TIMEOUT) |
+
+### List credit transactions
+
+`GET /v1/billing/transactions`
+
+Read from id.tangle.tools for the billing owner of the credential; the query string is passed through.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `teamId` | query | No | string | Read a team wallet. The caller must be a member. |
+| `limit` | query | No | string | Rows per page. |
+| `offset` | query | No | string | Rows to skip. |
+| `sort` | query | No | string | createdAt (default), amount or type. |
+| `sortDirection` | query | No | string | desc (default) or asc. |
+| `groupBy` | query | No | string | resource returns statement lines instead of ledger rows. |
+| `type` | query | No | string | Transaction type. |
+| `product` | query | No | string | Product; an empty value matches rows with none. |
+| `keyId` | query | No | string | API key that made the charge. |
+| `originAppId` | query | No | string | App the charge came from. |
+| `lineageId` | query | No | string | Lineage of the charging credential. |
+| `mintActorId` | query | No | string | Actor that minted the charging key. |
+| `attributionActorUserId` | query | No | string | User the charge is attributed to. |
+| `resourceType` | query | No | string | Type of the charged resource. |
+| `resourceId` | query | No | string | Id of the charged resource. |
+| `groupKey` | query | No | string | Statement line key, for example sandbox:&lt;id&gt;. |
+| `modelId` | query | No | string | Model that was charged. |
+| `dateFrom` | query | No | string | Earliest row, as an ISO date or time. |
+| `dateTo` | query | No | string | Latest row, as an ISO date or time. |
+| `search` | query | No | string | Text to match in the description. |
+
+| Status | Meaning |
+|---|---|
+| 200 | A page of the wallet's transactions |
+| 401 | Missing or invalid credential |
+| 403 | The caller is not a member of the team |
+| 502 | id.tangle.tools is unreachable (PLATFORM_UNAVAILABLE) |
+| 504 | id.tangle.tools did not answer in time (PLATFORM_TIMEOUT) |
+
+### Get spend by product
+
+`GET /v1/billing/usage`
+
+Read from id.tangle.tools for the billing owner of the credential; the query string is passed through. Only debits count.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `teamId` | query | No | string | Read a team wallet. The caller must be a member. |
+| `from` | query | No | string | Start of the range, as an ISO date or time. |
+| `to` | query | No | string | End of the range, as an ISO date or time. |
+
+| Status | Meaning |
+|---|---|
+| 200 | Spend per product |
+| 401 | Missing or invalid credential |
+| 403 | The caller is not a member of the team |
+| 502 | id.tangle.tools is unreachable (PLATFORM_UNAVAILABLE) |
+| 504 | id.tangle.tools did not answer in time (PLATFORM_TIMEOUT) |
+
+### Call a retired billing path
+
+`GET /v1/billing/{path}`
+
+Any method on any other path under /v1/billing answers 410: send the same request to https://id.tangle.tools with your Platform API key.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `path` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 410 | Retired path (BILLING_MOVED) |
+
+## Pricing
+
+| Route | Does |
+|---|---|
+| `GET /v1/pricing/egress` | Get egress pricing |
+| `GET /v1/pricing/sandboxes` | Get the sandbox rate card |
+
+### Get egress pricing
+
+`GET /v1/pricing/egress`
+
+Each plan's monthly egress allowance and the price beyond it. Public: no credential is required. Outbound bytes from each sandbox are counted per UTC calendar month; inbound traffic is free. Every plan's allowance is per account (`scope: account`), shared by its sandboxes: `overage: billed` plans pay `usdPerGb` per decimal GB (10^9 bytes) beyond `includedBytes`; `overage: refused` plans are refused new sandboxes and prompts at it and never charged. Computed from the allowances quota admission enforces and the rates this deployment bills.
+
+| Status | Meaning |
+|---|---|
+| 200 | Egress terms retrieved |
+
+### Get the sandbox rate card
+
+`GET /v1/pricing/sandboxes`
+
+USD per vCPU-hour, per GB-hour of memory, per GB-hour of disk, and the hourly minimum, for the pool this deployment bills sandboxes in. A sandbox is billed vcpu*cpuCoreHourUsd + memoryGB*memoryGBHourUsd + diskGB*diskGBHourUsd per hour, floored at minChargeHourUsd. `source` is `pool-derived` when the numbers come from the configured pool's own host cost and sellable capacity, and `reference-constants` when no pool cost is configured and the deployment prices on the pricing engine's reference server instead. Public: no credential is required.
+
+| Status | Meaning |
+|---|---|
+| 200 | Rate card retrieved |
+
+## Notifications
+
+| Route | Does |
+|---|---|
+| `GET /v1/notifications` | List notifications |
+| `POST /v1/notifications/read-all` | Mark all notifications as read |
+| `POST /v1/notifications/{id}/read` | Mark a notification as read |
+
+### List notifications
+
+`GET /v1/notifications`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `unread` | query | No | boolean or null |  |
+| `limit` | query | No | integer |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | List of notifications |
+| 500 | Internal error |
+
+### Mark all notifications as read
+
+`POST /v1/notifications/read-all`
+
+| Status | Meaning |
+|---|---|
+| 200 | All marked as read |
+| 500 | Internal error |
+
+### Mark a notification as read
+
+`POST /v1/notifications/{id}/read`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Marked as read |
+| 500 | Internal error |
+
+## Sign-in
+
+| Route | Does |
+|---|---|
+| `DELETE /auth/account` | Delete the account |
+| `GET /auth/callback` | Finish browser sign-in |
+| `GET /auth/cli/callback` | Forward a CLI sign-in return |
+| `GET /auth/cli/device` | Show the device approval page |
+| `POST /auth/cli/device/authorize` | Approve a device sign-in |
+| `POST /auth/cli/device/poll` | Poll a device sign-in |
+| `POST /auth/cli/device/start` | Start device sign-in |
+| `POST /auth/cli/exchange` | Exchange a CLI grant for credentials |
+| `POST /auth/cli/hub-key` | Mint a Hub key for the CLI |
+| `GET /auth/cli/login` | Start CLI browser sign-in |
+| `GET /auth/login` | Start browser sign-in |
+| `POST /auth/login` | Start browser sign-in from a form |
+| `POST /auth/logout` | Sign out |
+| `GET /auth/logout` | Sign out and redirect |
+| `POST /auth/mfa/backup-codes` | Replace backup codes |
+| `POST /auth/mfa/challenge` | Complete a two-factor sign-in |
+| `POST /auth/mfa/disable` | Turn off two-factor sign-in |
+| `POST /auth/mfa/enroll` | Start two-factor enrollment |
+| `GET /auth/mfa/status` | Get two-factor status |
+| `POST /auth/mfa/verify` | Finish two-factor enrollment |
+| `GET /auth/providers` | List sign-in methods |
+| `GET /auth/session` | Get the current session |
+| `POST /auth/session` | Exchange an API key for a browser session |
+
+### Delete the account
+
+`DELETE /auth/account`
+
+Takes the `session` cookie, or its token as a Bearer token, from a browser sign-in; an API key, CLI token or runtime token gets 403 `SESSION_AUTH_REQUIRED`. It also needs the `recent_auth` cookie that sign-in sets, which expires soon after. Marks the account deleted, revokes the API keys Sandbox created for it, except a team's keys, and clears the `session` cookie.
+
+Authentication: a browser session cookie.
+
+| Status | Meaning |
+|---|---|
+| 200 | Account deleted |
+| 401 | No valid credential, or no `recent_auth` cookie from a recent sign-in |
+| 403 | Key verification refused the credential, or an API key, CLI token or runtime token called a route that needs a browser sign-in (`SESSION_AUTH_REQUIRED`) |
+| 500 | The account could not be deleted |
+| 502 | Key verification returned an incomplete identity |
+| 503 | Key verification is unavailable; retry after the `Retry-After` seconds |
+
+### Finish browser sign-in
+
+`GET /auth/callback`
+
+Takes the one-time `code` from Tangle sign-in and the `oauth_state` cookie set when sign-in started. Always answers with a redirect. On success it sets the `session` and `recent_auth` cookies and redirects to the `redirect_to` target from sign-in, by default `/dashboard`. When the account has two-factor sign-in on, it sets the `mfa_challenge` cookie and redirects to the dashboard `/mfa` page instead. A CLI sign-in redirects to its loopback `callback_url` with `grant_token`, `expires_at` and `session_expires_at`; exchange the `grant_token` at `POST /auth/cli/exchange`. On failure it redirects to `/login?error=<reason>` on the dashboard, or to the loopback `callback_url` with `error=<reason>`. Reasons include `missing_code`, `csrf_mismatch`, `auth_failed`, `email_verification_required` and `paid_access_required`.
+
+Authentication: none.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `code` | query | No | string | One-time code that Tangle sign-in returns. |
+| `state` | query | No | string | State value from the sign-in redirect, returned unchanged. |
+| `error` | query | No | string | Error code from Tangle sign-in, when sign-in failed there. |
+| `error_description` | query | No | string | Readable reason for `error`; the redirect uses it when present. |
+
+| Status | Meaning |
+|---|---|
+| 302 | Redirect to the dashboard, the two-factor page, the CLI loopback URL, or the login page with an error |
+| 429 | Too many requests from this address; wait `Retry-After` seconds |
+| 503 | The rate limiter is unavailable; retry shortly |
+
+### Forward a CLI sign-in return
+
+`GET /auth/cli/callback`
+
+Takes no credential. Redirects to `GET /auth/callback` on the API origin with the same `code`, `state`, `error` and `error_description`.
+
+Authentication: none.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `code` | query | No | string | One-time code that Tangle sign-in returns. |
+| `state` | query | No | string | State value from the sign-in redirect, returned unchanged. |
+| `error` | query | No | string | Error code from Tangle sign-in, when sign-in failed there. |
+| `error_description` | query | No | string | Readable reason for `error`; the redirect uses it when present. |
+
+| Status | Meaning |
+|---|---|
+| 302 | Redirect to `GET /auth/callback` |
+| 429 | Too many requests from this address; wait `Retry-After` seconds |
+| 503 | The rate limiter is unavailable; retry shortly |
+
+### Show the device approval page
+
+`GET /auth/cli/device`
+
+Takes no credential; it reads the `session` cookie to see who is signed in. With a `user_code` and no session it redirects to `GET /auth/login`. When the dashboard runs on another origin it redirects to the dashboard's device page. Otherwise it answers an HTML page where the person approves the code.
+
+Authentication: none.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `user_code` | query | No | string | Eight letters and digits from the CLI, with or without the hyphen. |
+| `provider` | query | No | string | `github`, `google` or `microsoft`. Any other value is ignored. |
+
+| Status | Meaning |
+|---|---|
+| 200 | Approval page |
+| 302 | Redirect to sign-in, or to the dashboard's device page |
+| 429 | Too many requests from this address; wait `Retry-After` seconds |
+| 503 | The rate limiter is unavailable; retry shortly |
+
+### Approve a device sign-in
+
+`POST /auth/cli/device/authorize`
+
+Takes the `session` cookie of the person approving the code. Without a session it redirects to `GET /auth/login`. Approving lets the CLI's next poll succeed. Answers an HTML page, or a 303 redirect to the dashboard's device page when `result_redirect` is `frontend` and the dashboard runs on another origin.
+
+Authentication: none.
+
+Request body (`application/x-www-form-urlencoded`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `user_code` | string | Yes | Eight letters and digits from the CLI, with or without the hyphen. |
+| `provider` | string | No | `github`, `google` or `microsoft`. Any other value is ignored. |
+| `result_redirect` | string | No | `frontend` to get a redirect instead of an HTML page. |
+
+| Status | Meaning |
+|---|---|
+| 200 | Code approved, or already approved |
+| 302 | Redirect to sign-in because there is no session |
+| 303 | Redirect to the dashboard's device page with the result |
+| 400 | `user_code` is missing, invalid or expired |
+| 401 | The session no longer passes key verification; sign in again |
+| 403 | Key verification refused the session: no key binding, email not verified, paid access required, or the key belongs to another product |
+| 429 | Too many requests from this address; wait `Retry-After` seconds |
+| 502 | Key verification returned an incomplete identity |
+| 503 | Key verification or the rate limiter is unavailable; retry shortly |
+
+### Poll a device sign-in
+
+`POST /auth/cli/device/poll`
+
+Takes the `device_code` from `POST /auth/cli/device/start`. Answers 428 `AUTHORIZATION_PENDING` until the person approves the code. The approved answer is returned once; the device code is spent after it.
+
+Authentication: none.
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `device_code` | string | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Approved; the CLI credentials |
+| 400 | `device_code` is missing |
+| 401 | The device code is invalid or expired, or the approving session no longer passes key verification |
+| 403 | Key verification refused the approving session: no key binding, email not verified, paid access required, or the key belongs to another product |
+| 428 | The person has not approved the code |
+| 429 | Too many requests from this address; wait `Retry-After` seconds |
+| 500 | The approved grant lacks its credentials |
+| 502 | Key verification returned an incomplete identity |
+| 503 | Key verification or the rate limiter is unavailable; retry shortly |
+
+### Start device sign-in
+
+`POST /auth/cli/device/start`
+
+Takes no credential. Show `user_code` to the person, open `verification_uri_complete` in a browser, and poll `POST /auth/cli/device/poll` with `device_code` every `interval` seconds until `expires_in` seconds have passed.
+
+Authentication: none.
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `provider` | string | No | `github`, `google` or `microsoft`. Any other value is ignored. |
+
+| Status | Meaning |
+|---|---|
+| 200 | Device code issued |
+| 429 | Too many requests from this address; wait `Retry-After` seconds |
+| 503 | The rate limiter is unavailable; retry shortly |
+
+### Exchange a CLI grant for credentials
+
+`POST /auth/cli/exchange`
+
+Takes the `grant_token` that `GET /auth/callback` appended to the CLI's loopback `callback_url`. A grant token is short-lived.
+
+Authentication: none.
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `grant_token` | string | Yes | Token from the loopback redirect. |
+
+| Status | Meaning |
+|---|---|
+| 200 | CLI credentials |
+| 400 | `grant_token` is missing |
+| 401 | The grant token is invalid or expired, or its session no longer passes key verification |
+| 403 | Key verification refused the session: no key binding, email not verified, paid access required, or the key belongs to another product |
+| 429 | Too many requests from this address; wait `Retry-After` seconds |
+| 502 | Key verification returned an incomplete identity |
+| 503 | Key verification or the rate limiter is unavailable; retry shortly |
+
+### Mint a Hub key for the CLI
+
+`POST /auth/cli/hub-key`
+
+Takes the `session` cookie, a session token as a Bearer token, or an account API key as a Bearer token. Returns an API key for Hub; `expires_at` says when it stops working. Minting again for the same `device_id` revokes that device's previous key.
+
+Authentication: an API key as a bearer token or a browser session cookie.
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `device_id` | string | Yes | Stable id for this install: 1 to 64 letters, digits, dots, underscores or dashes. |
+
+| Status | Meaning |
+|---|---|
+| 200 | Hub key minted |
+| 400 | `device_id` is missing or malformed |
+| 401 | No valid credential, or no customer for it |
+| 402 | The key this request used has spent its budget and cannot fund a new key |
+| 403 | Key verification refused the credential, or it carries no verified key |
+| 502 | The key could not be minted, or key verification returned an incomplete identity |
+| 503 | This deployment has no Tangle sign-in configured, or key verification is unavailable |
+
+### Start CLI browser sign-in
+
+`GET /auth/cli/login`
+
+Takes no credential. Sets the `oauth_state` cookie and redirects the browser to Tangle sign-in. After sign-in the browser returns to `callback_url` with a `grant_token` for `POST /auth/cli/exchange`.
+
+Authentication: none.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `callback_url` | query | Yes | string | Loopback URL the CLI listens on: `http://localhost`, `http://127.0.0.1` or `http://[::1]`, with any port and path. |
+
+| Status | Meaning |
+|---|---|
+| 302 | Redirect to Tangle sign-in |
+| 400 | `callback_url` is missing or is not a loopback `http` URL |
+| 429 | Too many requests from this address; wait `Retry-After` seconds |
+| 503 | This deployment has no Tangle sign-in configured, or the rate limiter is unavailable |
+
+### Start browser sign-in
+
+`GET /auth/login`
+
+Takes no credential. Sets the `oauth_state` cookie and redirects the browser to Tangle sign-in, which returns it to `GET /auth/callback`.
+
+Authentication: none.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `provider` | query | No | string | `github`, `google` or `microsoft`. Any other value is ignored. |
+| `mode` | query | No | string | Passed to Tangle sign-in unchanged. |
+| `redirect_to` | query | No | string | Where to send the browser after sign-in. Accepted on the dashboard origin, or as the CLI device page on the API origin. Anything else becomes the dashboard URL. |
+
+| Status | Meaning |
+|---|---|
+| 302 | Redirect to Tangle sign-in |
+| 429 | Too many requests from this address; wait `Retry-After` seconds |
+| 503 | This deployment has no Tangle sign-in configured, or the rate limiter is unavailable |
+
+### Start browser sign-in from a form
+
+`POST /auth/login`
+
+Takes no credential. Accepts a JSON body or a form body. Sets the `oauth_state` cookie and redirects the browser to Tangle sign-in.
+
+Authentication: none.
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `provider` | string | No | Sign-in provider, passed to Tangle sign-in unchanged. |
+| `email` | string | No | Address to prefill. Tangle sign-in then asks for a fresh sign-in. |
+| `redirect_to` | string | No | Where to send the browser after sign-in. Accepted on the dashboard origin, or as the CLI device page on the API origin. Anything else becomes the dashboard URL. |
+| `mode` | string | No | Passed to Tangle sign-in unchanged. |
+
+| Status | Meaning |
+|---|---|
+| 302 | Redirect to Tangle sign-in |
+| 503 | This deployment has no Tangle sign-in configured |
+
+### Sign out
+
+`POST /auth/logout`
+
+Takes no credential. Clears the `session` and `mfa_challenge` cookies. To also end the shared Tangle sign-in, send the browser to `signoutUrl`.
+
+Authentication: none.
+
+| Status | Meaning |
+|---|---|
+| 200 | Cookies cleared |
+
+### Sign out and redirect
+
+`GET /auth/logout`
+
+Takes no credential. Clears the `session` and `mfa_challenge` cookies, then redirects to the Tangle sign-out URL, or to the dashboard when no Tangle sign-in is configured.
+
+Authentication: none.
+
+| Status | Meaning |
+|---|---|
+| 302 | Redirect to Tangle sign-out, or to the dashboard |
+
+### Replace backup codes
+
+`POST /auth/mfa/backup-codes`
+
+Takes the `session` cookie, or its token as a Bearer token, from a browser sign-in; an API key, CLI token or runtime token gets 403 `SESSION_AUTH_REQUIRED`. It also needs the `recent_auth` cookie that sign-in sets, which expires soon after. Needs a current code. The old backup codes stop working.
+
+Authentication: a browser session cookie.
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `code` | string | Yes | Current code from the authenticator app, or an unused backup code. |
+
+| Status | Meaning |
+|---|---|
+| 200 | New backup codes |
+| 400 | `code` is wrong |
+| 401 | No valid credential, or no `recent_auth` cookie from a recent sign-in |
+| 403 | Key verification refused the credential, or an API key, CLI token or runtime token called a route that needs a browser sign-in (`SESSION_AUTH_REQUIRED`) |
+| 404 | Two-factor sign-in is not on |
+| 500 | The two-factor change failed |
+| 502 | Key verification returned an incomplete identity |
+| 503 | Key verification is unavailable; retry after the `Retry-After` seconds |
+
+### Complete a two-factor sign-in
+
+`POST /auth/mfa/challenge`
+
+Takes the `mfa_challenge` cookie that sign-in sets when the account has two-factor sign-in on, and a current code or an unused backup code. On success it sets the `session` and `recent_auth` cookies and clears `mfa_challenge`. Each correct submission uses up the cookie. A wrong code sets a fresh `mfa_challenge` cookie with the same expiry; use it for the retry. For a CLI sign-in, `redirect_to` is the loopback `callback_url` carrying the `grant_token` for `POST /auth/cli/exchange`.
+
+Authentication: the two-factor challenge cookie from sign-in.
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `code` | string | Yes | Current code from the authenticator app, or an unused backup code. |
+
+| Status | Meaning |
+|---|---|
+| 200 | Signed in |
+| 400 | `code` is wrong |
+| 401 | No challenge cookie, an expired one, or the sign-in no longer passes key verification |
+| 403 | The sign-in has no key binding, or key verification refused it |
+| 409 | Another challenge is in progress for this account, or this cookie was already used |
+| 429 | Too many requests from this address; wait `Retry-After` seconds |
+| 502 | Key verification returned an incomplete identity |
+| 503 | Key verification or the rate limiter is unavailable; retry shortly |
+
+### Turn off two-factor sign-in
+
+`POST /auth/mfa/disable`
+
+Takes the `session` cookie, or its token as a Bearer token, from a browser sign-in; an API key, CLI token or runtime token gets 403 `SESSION_AUTH_REQUIRED`. It also needs the `recent_auth` cookie that sign-in sets, which expires soon after. Needs a current code, so a stolen session cannot remove the second factor.
+
+Authentication: a browser session cookie.
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `code` | string | Yes | Current code from the authenticator app, or an unused backup code. |
+
+| Status | Meaning |
+|---|---|
+| 200 | Two-factor sign-in is off |
+| 400 | `code` is wrong |
+| 401 | No valid credential, or no `recent_auth` cookie from a recent sign-in |
+| 403 | Key verification refused the credential, or an API key, CLI token or runtime token called a route that needs a browser sign-in (`SESSION_AUTH_REQUIRED`) |
+| 404 | Two-factor sign-in is not on |
+| 500 | The two-factor change failed |
+| 502 | Key verification returned an incomplete identity |
+| 503 | Key verification is unavailable; retry after the `Retry-After` seconds |
+
+### Start two-factor enrollment
+
+`POST /auth/mfa/enroll`
+
+Takes the `session` cookie, or its token as a Bearer token, from a browser sign-in; an API key, CLI token or runtime token gets 403 `SESSION_AUTH_REQUIRED`. It also needs the `recent_auth` cookie that sign-in sets, which expires soon after. Returns a new secret and backup codes. Two-factor sign-in stays off until `POST /auth/mfa/verify` accepts a code from the secret.
+
+Authentication: a browser session cookie.
+
+| Status | Meaning |
+|---|---|
+| 200 | Enrollment started |
+| 401 | No valid credential, or no `recent_auth` cookie from a recent sign-in |
+| 403 | Key verification refused the credential, or an API key, CLI token or runtime token called a route that needs a browser sign-in (`SESSION_AUTH_REQUIRED`) |
+| 500 | Enrollment could not start |
+| 502 | Key verification returned an incomplete identity |
+| 503 | Key verification is unavailable; retry after the `Retry-After` seconds |
+
+### Get two-factor status
+
+`GET /auth/mfa/status`
+
+Takes the `session` cookie, or its token as a Bearer token, from a browser sign-in; an API key, CLI token or runtime token gets 403 `SESSION_AUTH_REQUIRED`.
+
+Authentication: a browser session cookie.
+
+| Status | Meaning |
+|---|---|
+| 200 | Two-factor status |
+| 401 | No valid credential in the request |
+| 403 | Key verification refused the credential, or an API key, CLI token or runtime token called a route that needs a browser sign-in (`SESSION_AUTH_REQUIRED`) |
+| 500 | The status could not be read |
+| 502 | Key verification returned an incomplete identity |
+| 503 | Key verification is unavailable; retry after the `Retry-After` seconds |
+
+### Finish two-factor enrollment
+
+`POST /auth/mfa/verify`
+
+Takes the `session` cookie, or its token as a Bearer token, from a browser sign-in; an API key, CLI token or runtime token gets 403 `SESSION_AUTH_REQUIRED`. It also needs the `recent_auth` cookie that sign-in sets, which expires soon after. Turns on two-factor sign-in when `code` matches the secret from `POST /auth/mfa/enroll`.
+
+Authentication: a browser session cookie.
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `code` | string | Yes | Current code from the authenticator app. |
+| `backup_codes` | array of string | Yes | The `backup_codes` that `/enroll` returned, unchanged. |
+
+| Status | Meaning |
+|---|---|
+| 200 | Two-factor sign-in is on |
+| 400 | `code` is wrong, or `backup_codes` is not the list `/enroll` returned |
+| 401 | No valid credential, or no `recent_auth` cookie from a recent sign-in |
+| 403 | Key verification refused the credential, or an API key, CLI token or runtime token called a route that needs a browser sign-in (`SESSION_AUTH_REQUIRED`) |
+| 404 | No enrollment is pending, or it expired; start again with `/enroll` |
+| 500 | The two-factor change failed |
+| 502 | Key verification returned an incomplete identity |
+| 503 | Key verification is unavailable; retry after the `Retry-After` seconds |
+
+### List sign-in methods
+
+`GET /auth/providers`
+
+Takes no credential. Each flag says whether this deployment offers the method.
+
+Authentication: none.
+
+| Status | Meaning |
+|---|---|
+| 200 | Sign-in methods |
+
+### Get the current session
+
+`GET /auth/session`
+
+Takes the `session` cookie, a session token as a Bearer token, or an account API key as a Bearer token. Answers 200 with `authenticated: false` when no valid credential is sent.
+
+Authentication: an API key as a bearer token or a browser session cookie.
+
+| Status | Meaning |
+|---|---|
+| 200 | The signed-in account, or `authenticated: false` |
+| 403 | Key verification refused the credential: email not verified, paid access required, or the key belongs to another product |
+| 502 | Key verification returned an incomplete identity |
+| 503 | Key verification is unavailable; retry after the `Retry-After` seconds |
+
+### Exchange an API key for a browser session
+
+`POST /auth/session`
+
+Takes an account API key as a Bearer token; a session token or the `session` cookie gets 401. Sets the `session` and `recent_auth` cookies. When the account has two-factor sign-in on, sets the `mfa_challenge` cookie instead and answers 403 `MFA_REQUIRED`; finish with `POST /auth/mfa/challenge`.
+
+Authentication: an API key as a bearer token or a browser session cookie.
+
+| Status | Meaning |
+|---|---|
+| 200 | Session cookies set |
+| 401 | No valid credential, or a session token in place of an API key |
+| 403 | Two-factor verification required, or key verification refused the credential |
+| 404 | No customer for this credential |
+| 502 | Key verification returned an incomplete identity |
+| 503 | Key verification is unavailable; retry after the `Retry-After` seconds |
+
+## Service
+
+| Route | Does |
+|---|---|
+| `GET /health` | Check service health |
+| `GET /version` | Get the deployed revision |
+| `GET /version/` | Get the deployed revision (trailing slash) |
+
+### Check service health
+
+`GET /health`
+
+Needs no credential. status is ok while the service answers requests; a billing backlog never changes it and is reported under checks.
+
+Authentication: none.
+
+| Status | Meaning |
+|---|---|
+| 200 | The service is answering |
+
+### Get the deployed revision
+
+`GET /version`
+
+Needs no credential. The response is never cached. A 503 means the deploy stamp names a different revision than the running bundle.
+
+Authentication: none.
+
+| Status | Meaning |
+|---|---|
+| 200 | Revision of the running bundle |
+| 503 | Deploy stamp mismatch |
+
+### Get the deployed revision (trailing slash)
+
+`GET /version/`
+
+Needs no credential. The response is never cached. A 503 means the deploy stamp names a different revision than the running bundle.
+
+Authentication: none.
+
+| Status | Meaning |
+|---|---|
+| 200 | Revision of the running bundle |
+| 503 | Deploy stamp mismatch |
+
+## Next steps
+
+- [E2B-compatible routes](/sandbox/api-reference/e2b): E2B's REST shape on Tangle.
+- [Pricing and spend](/sandbox/cost): what you pay for and how to cap it.
+- [Limits and timeouts](/sandbox/limits): plan limits and the API rate limit.

@@ -1,0 +1,145 @@
+# Resources reference: secrets, teams, templates, instances, fleets and runs
+
+Every account-level manager on the `Sandbox` client: stored credentials, SSH keys, teams, environments and templates, per-customer instances, fleets, batch runs, profile runs, messaging lines and intelligence reports.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const secrets = await client.secrets.list();
+console.log(secrets.map((s) => s.name));
+```
+
+## Secrets: `client.secrets`
+
+| Member | Returns |
+|---|---|
+| `create(name, value, options?)` | The `SecretInfo`. `options` sets custody: `hosts`, `proxySecrets` and the rest. |
+| `update(name, value, { expectedUpdatedAt?, ...options })` | The updated `SecretInfo`. `expectedUpdatedAt` refuses the write if someone changed it first. |
+| `list()` | `SecretInfo[]` with `name`, `createdAt`, `updatedAt` and custody fields. Never the value. |
+| `delete(name, { expectedUpdatedAt? })` | `void`. |
+
+Route: `/v1/secrets`. Custody, rotation and coding agent credentials are on [Secrets](/sandbox/secrets).
+
+## SSH keys: `client.sshKeys`
+
+| Member | Returns |
+|---|---|
+| `create(name, publicKey)` | The stored key with its id. |
+| `list()` | Your stored keys. |
+| `delete(id)` | `void`. |
+
+Pass ids in `sshKeyIds` at create. See [Terminals](/sandbox/terminals#stored-keys).
+
+## Teams: `client.teams`
+
+| Member | Use |
+|---|---|
+| `list()`, `create(options)`, `get(teamId)`, `update(teamId, { name })`, `delete(teamId)` | Manage teams. |
+| `leave(teamId)`, `transferOwnership(teamId, ...)` | Change your membership. |
+| `listMembers(teamId)`, `updateMember(...)`, `removeMember(teamId, memberId)` | Manage members and roles. |
+| `invite(teamId, options)`, `listInvitations(teamId)`, `revokeInvitation(id)`, `getInvitation(token)`, `acceptInvitation(token)` | Invitations. |
+| `listSecrets(teamId)`, `upsertSecret(teamId, ...)`, `deleteSecret(teamId, name)`, `revealSecret(teamId, ...)` | Team secrets. See [Team secrets](/sandbox/secrets#team-secrets). |
+| `listTemplates(teamId)`, `createTemplate(teamId, ...)`, `deleteTemplate(teamId, templateId)` | Team templates. |
+
+Pass `teamId` to `create` for a team sandbox. Route: `/v1/teams`.
+
+## Environments and templates
+
+| Member | Returns |
+|---|---|
+| `client.environments.list()` | Environments and your templates, with the runtimes each accepts. |
+| `client.environments.get(id)` | One, or `null`. |
+| `client.publicTemplates.list(options?)` | Public templates. |
+| `client.publicTemplates.featured()` | Featured templates. |
+| `client.publicTemplates.get(idOrSlug)` | One template. |
+| `client.publicTemplates.versions(idOrSlug)` | Its versions, to pin one with `publicTemplateVersionId`. |
+| `client.publicTemplates.publish(...)`, `publishVersion(...)` | Publish a template or a new version, with progress callbacks. Failure throws `PublicTemplatePublishError`, which can resume the job. |
+
+`Image` and `ImageBuilder` describe an image and generate its Dockerfile. The shared build endpoint refuses builds with `IMAGE_BUILDS_DISABLED`; publish an image from a sandbox with `box.images.publish` or bring your own. See [Templates and images](/sandbox/templates-gallery).
+
+## One sandbox per customer: `client.instances`
+
+```ts
+const instance = await client.instances.ensure({
+  key: `customer:${customerId}`,
+  profile: { version: releaseId, backend: { type: "claude-code" } },
+  create: { resources: { cpuCores: 1, memoryMB: 2048, diskGB: 10 } },
+});
+const result = await instance.turn(message, { thread: "main", turnId: messageId });
+```
+
+| Member | Returns |
+|---|---|
+| `ensure({ key, profile?, create, restartAfterMs? })` | A running `HostedInstance`: creates the first sandbox for the key, resumes a stopped one, or replaces one that was deleted. Concurrent callers get the same sandbox. |
+| `get(key)` | The instance record, or `null`. |
+| `release(key)` | `true` when the key was released. |
+| `instance.turn(message, { thread, turnId })` | One turn in the session for that thread and profile version. |
+
+See [Instances](/sandbox/instances).
+
+## Fleets: `client.fleets`
+
+| Member | Returns |
+|---|---|
+| `create(input)`, `createWithCoordinator(input)` | A `SandboxFleet`: sandboxes under one lifecycle, policy and budget. |
+| `list({ fleetId })` | That one fleet. |
+| `delete(...)` | Deletes the fleet and its sandboxes. |
+
+`SandboxFleet` members include `dispatchExec(command, { machines, maxConcurrent, retry, timeoutMs })`, `exec`, `prompt`, `dispatchPrompt`, `runAll`, `driveTurns`, `cancel`, `spend`, `usage`, `cost`, `trace`, `exportTrace`, `manifest`, `attachMachine`, `detachMachine`, `createWorkspaceSnapshot`, `restoreWorkspaceSnapshot`, `collectArtifacts`, `createIntelligenceReport` and `delete`. Policies are checked before provisioning and do not replace account quotas. Route: `POST /v1/fleets`. See [Fleets](/sandbox/agents-fleet).
+
+## Batch runs
+
+| Member | Returns |
+|---|---|
+| `client.runBatch({ tasks, backends, persistent?, reuseKey?, git? }, { idempotencyKey? })` | A `BatchResult` once every task finishes. |
+| `client.streamBatch(request, options?)` | Batch events as tasks run. |
+
+`tasks` is `{ id, message }[]`; `backends` is `{ id, type }[]`. Sandboxes are temporary unless `persistent: true` with a `reuseKey`. An `idempotencyKey` joins an active run or replays a finished one. Disconnecting from an unkeyed stream cancels the work. Route: `POST /v1/sandboxes/batch/run`. See [Runs and batches](/sandbox/runs-and-batch).
+
+## Profile runs: `client.run` and `client.runs`
+
+`client.run({ profile, prompt, placement? }, wait?)` runs an agent profile where its needs allow, and records why. `placement` is `auto`, `inference`, `worker` or `sandbox`. It refuses before spending when a run cannot be honored. `client.runs.create`, `get`, `wait` and `cancel` manage runs by id. `costUsd` is model spend only. Both need `platformUrl`.
+
+## Messaging lines: `client.lines`
+
+| Member | Use |
+|---|---|
+| `client.lines.fromConnection({ connectionId, transport, phoneNumberId? })` | A line from a connected messaging account. |
+| `client.lines.list()`, `get(lineId)`, `providers()`, `numbers(...)`, `resolve(number)` | Find lines. |
+| `client.lines.attach(...)`, `detach(...)` | Bind a line to a sandbox by id. |
+| `box.lines.attach({ number, mode, members, roles?, respond?, limits? })` | Route a line's messages to this sandbox. Each member gets their own session. |
+| `box.lines.list()`, `box.lines.detach(number)` | This sandbox's lines. |
+
+See [Lines](/sandbox/lines).
+
+## Intelligence reports: `client.intelligence`
+
+| Member | Returns |
+|---|---|
+| `createReport({ subject, mode, acknowledgeCost?, budget?, metadata? })` | A job with `jobId`. `subject` is `{ type: "sandbox" \| "fleet", id }`. |
+| `createAgenticReport({ subject, maxUsd })` | An agentic report job capped at `maxUsd`. |
+| `estimateReport({ subject, mode, metadata? })` | `{ mode, costUsd, billable, billedTo, reason }`. |
+| `getReport(jobId)` | The report: `status`, `billing`, `result`. |
+| `listReports({ subjectType?, subjectId?, limit? })` | Reports. |
+| `waitForReport(jobId, { timeoutMs?, pollMs? })` | The finished report. |
+
+A report that would cost more than `budget.maxUsd` is refused with `402` before any charge. See [Trace and inspect what ran](/sandbox/observability).
+
+## Python and REST
+
+Python has `client.secrets` (`create`, `list`, `update`, `delete`), `client.environments` (`list`, `get`), `client.teams` (teams, members and invitations), `client.fleets`, `run_batch`, `stream_batch` and the intelligence report methods; see [Python fleets and extras](/sandbox/sdk-python/fleets-and-extras). It has no SSH keys, team secrets, team templates, public templates, instances, lines or profile runs. Call those routes through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+client.fetch("GET", f"/v1/teams/{team_id}/secrets")
+```
+
+## Next
+
+- [Client reference](/sandbox/sdk-typescript/client)
+- [Store secrets and give sandboxes credentials](/sandbox/secrets)
+- [Start from templates and custom images](/sandbox/templates-gallery)

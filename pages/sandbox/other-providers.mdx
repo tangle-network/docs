@@ -1,172 +1,171 @@
-# Run the same agent on E2B, Daytona, or Boat
+---
+title: Run the same agent on E2B, Daytona and more
+description: Run one AgentProfile on Tangle, E2B, Daytona, Boat or any ComputeSDK cloud by swapping a provider package, with models billed to your Tangle key.
+---
 
-The `AgentEnvironmentProvider` contract means your agent code runs unchanged on any supported cloud. Swap the provider adapter, keep the same `AgentProfile`, the same runtime calls, and the same accounting.
+import { Tabs } from 'nextra/components'
 
-## How it works
+# Run the same agent on E2B, Daytona and more
 
-```mermaid
-flowchart LR
-    A["Your agent code"] --> B["agent-runtime"]
-    B --> C["AgentEnvironmentProvider"]
-    C --> D["Tangle Sandbox"]
-    C --> E["E2B Sandbox"]
-    C --> F["Daytona Sandbox"]
-    C --> G["Boat Sandbox"]
-```
+An `AgentEnvironmentProvider` creates sandboxes on one cloud and runs agent
+turns in them. Each provider package wraps one cloud. `providerAsSandboxClient`
+from `@tangle-network/agent-runtime` turns any of them into a client with the
+same `create()` and `streamPrompt()` calls, so your agent code stays the same
+when you change clouds.
 
-Every provider implements the same `AgentEnvironmentProvider` interface. Your profile, your turns, your budgets, and your evaluation — all identical. Only the sandbox underneath changes.
+| Package | Cloud | Credentials |
+|---|---|---|
+| `@tangle-network/agent-provider-tangle` | Tangle Sandbox | `TANGLE_API_KEY` |
+| `@tangle-network/agent-provider-e2b` | E2B | `E2B_API_KEY`, plus `TANGLE_API_KEY` for models |
+| `@tangle-network/agent-provider-daytona` | Daytona | `DAYTONA_API_KEY`, plus `TANGLE_API_KEY` for models |
+| `@tangle-network/agent-provider-computesdk` | Any [ComputeSDK](https://www.npmjs.com/package/computesdk) cloud | That cloud's key, plus `TANGLE_API_KEY` for models |
+| `@tangle-network/agent-provider-boat` | [Boat](https://boat.dev) | `BOAT_API_KEY`, plus `TANGLE_API_KEY` for models |
 
-## Install
+On every cloud other than Tangle, the coding agent runs in the sandbox and its
+model calls go through the Tangle Router on the key you pass as `router.key`.
+The Boat provider has not completed a live run; treat it as a preview.
 
-```bash
-# Tangle (default)
-pnpm add @tangle-network/agent-provider-tangle
+agent-runtime needs Node.js 22.19 or later.
 
-# E2B
-pnpm add @tangle-network/agent-provider-e2b
+## Run one agent on any cloud
 
-# Daytona
-pnpm add @tangle-network/agent-provider-daytona
+Create the provider for your cloud:
 
-# Boat
-pnpm add @tangle-network/agent-provider-boat
-```
-
-## Quickstart: swap providers in one line
-
+<Tabs items={["Tangle", "E2B", "Daytona", "ComputeSDK"]}>
+<Tabs.Tab>
 ```ts
-import { providerAsSandboxClient, runAgentRounds } from "@tangle-network/agent-runtime/kernel";
-import type { AgentProfile } from "@tangle-network/agent-interface";
-
-// Your agent definition — identical across all providers
-const profile = {
-  name: "my-agent",
-  harness: "claude-code",
-  model: { provider: "anthropic", default: "anthropic/claude-sonnet-4-6" },
-} satisfies AgentProfile;
-
-// === Option A: Run on Tangle ===
-import { Sandbox } from "@tangle-network/sandbox";
 import { createTangleProvider } from "@tangle-network/agent-provider-tangle";
+import { Sandbox } from "@tangle-network/sandbox";
 
-const tangleProvider = createTangleProvider({
-  client: new Sandbox({
-    apiKey: process.env.TANGLE_API_KEY!,
-    baseUrl: "https://sandbox.tangle.tools",
-  }),
+const provider = createTangleProvider({
+  client: new Sandbox({ apiKey: process.env.TANGLE_API_KEY!, baseUrl: "https://sandbox.tangle.tools" }),
 });
-
-// === Option B: Run on E2B ===
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```ts
 import { createE2BProvider } from "@tangle-network/agent-provider-e2b";
 
-const e2bProvider = createE2BProvider({
-  apiKey: process.env.E2B_API_KEY,       // defaults to E2B_API_KEY
-  router: { key: process.env.TANGLE_API_KEY! },  // model calls still route through Tangle
-});
-
-// === Option C: Run on Daytona ===
+// Reads E2B_API_KEY; model calls go through the Router on the Tangle key.
+const provider = createE2BProvider({ router: { key: process.env.TANGLE_API_KEY! } });
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```ts
 import { createDaytonaProvider } from "@tangle-network/agent-provider-daytona";
 
-const daytonaProvider = createDaytonaProvider({
-  // apiKey, apiUrl, target default to DAYTONA_API_KEY, DAYTONA_API_URL, DAYTONA_TARGET
+const provider = createDaytonaProvider({
+  apiKey: process.env.DAYTONA_API_KEY!,
   router: { key: process.env.TANGLE_API_KEY! },
 });
-
-// The same run works on any of them:
-const client = providerAsSandboxClient(e2bProvider);  // ← swap here
-
-const result = await runAgentRounds({
-  task: "Fix the failing test in src/utils/date.ts",
-  driver: {
-    plan: async (task, history) => (history.length === 0 ? [task] : []),
-    decide: () => "done" as const,
-  },
-  agentRun: { profile, taskToPrompt: (t) => t },
-  output: { parse: (events) => events },
-  ctx: { sandboxClient: client },
-});
 ```
+</Tabs.Tab>
+<Tabs.Tab>
+```ts
+import { e2b } from "@computesdk/e2b";
+import { createComputeSdkProvider } from "@tangle-network/agent-provider-computesdk";
+import { compute } from "computesdk";
 
-## What each provider supports
-
-| Capability | Tangle | E2B | Daytona | Boat |
-|---|---|---|---|---|
-| Agent harnesses (Claude Code, Codex, etc.) | ✅ All 8 | ✅ Via CLI Bridge | ✅ Via CLI Bridge | ✅ Via CLI Bridge |
-| Model inference through Tangle Router | ✅ Native | ✅ `router.key` | ✅ `router.key` | ✅ `router.key` |
-| Git repo checkout | ✅ | ✅ | ✅ | ✅ |
-| Checkpoints & snapshots | ✅ | ❌ | ✅ | ✅ |
-| Fork from checkpoint | ✅ | ❌ | ✅ | ✅ |
-| Egress allowlists | ✅ `strict`/`blocked`/`open` | ❌ | ✅ `domainAllowList` | ❌ |
-| Custom images | ✅ | ❌ Template-based | ❌ Snapshot-based | ❌ Setup script |
-| Resource limits | ✅ | ❌ Fixed by template | ❌ | ❌ |
-| Secrets | ✅ | ❌ | ❌ | ❌ |
-| Idempotent create | ✅ | ❌ | ❌ | ❌ |
-| Durable resume | ✅ | ❌ | ❌ | ❌ |
-| Sandbox lifetime | ✅ Manual | ✅ `lifetimeMs` | ✅ `ttlMinutes` | ✅ `ttlSeconds` |
-| Run tagging | ✅ | ✅ Metadata | ✅ Labels | ✅ Labels |
-
-**Fields marked ❌ are refused with an `EnvironmentProviderError` that names the field** — before any provider call, so you get a clear error rather than a silent no-op.
-
-## When to use each provider
-
-| Use Tangle when | Use E2B when | Use Daytona when | Use Boat when |
-|---|---|---|---|
-| You need durable resume, secrets, or custom images | You want the simplest setup and don't need snapshots | You need checkpoints/forks on a budget | You want snapshot-based workflows on Boat's infra |
-| Your agents run long-lived sessions | Your tasks are short and stateless | You need to fork from a known-good state | You're already on Boat and want agent support |
-| You need egress control for compliance | Your agent doesn't need network restrictions | You want per-domain egress rules | You want the lightest vendor surface |
-
-## Building the box image for E2B and Daytona
-
-E2B and Daytona sandboxes run CLI Bridge from a pre-built box. Build it once per CLI Bridge pin:
-
-```bash
-# From the agent-sdk repository root
-
-# E2B: publishes a template
-pnpm build:sandbox-image --target e2b
-
-# Daytona: prints DAYTONA_SNAPSHOT=<name>
-DAYTONA_API_KEY=... pnpm build:sandbox-image --target daytona
+compute.setConfig({ provider: e2b({ apiKey: process.env.E2B_API_KEY }) });
+const provider = createComputeSdkProvider({ compute, router: { key: process.env.TANGLE_API_KEY! } });
 ```
+</Tabs.Tab>
+</Tabs>
 
-The pinned Bridge and harness installs are included in the image. Pass `template` (E2B) or `snapshot` (Daytona) to use a specific build, or `workspace.environment` on individual creates.
-
-## The provider contract
-
-Every provider implements `AgentEnvironmentProvider`:
+Then run the same code on any of them:
 
 ```ts
-interface AgentEnvironmentProvider {
-  /** Human-readable name for diagnostics. */
-  readonly name: string;
+import { providerAsSandboxClient } from "@tangle-network/agent-runtime/kernel";
 
-  /** Create an environment. Refuses unsupported fields before any call. */
-  create(input: CreateAgentEnvironmentInput): Promise<EnvironmentHandle>;
+const client = providerAsSandboxClient(provider, {
+  defaults: { profile: { name: "repo-reader", harness: "claude-code" } },
+});
 
-  /** List environments matching a filter. */
-  list(filter?: ListFilter): AsyncIterable<SandboxInfo>;
-
-  /** Advertise what this provider actually supports. */
-  capabilities(): ProviderCapabilities;
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+});
+try {
+  for await (const event of box.streamPrompt("Read this repository. In two sentences, say what it does.")) {
+    if (event.type === "result") console.log(event.data.finalText);
+  }
+} finally {
+  await box.delete();
 }
 ```
 
-Unsupported fields are refused with `EnvironmentProviderError` naming the field — never silently dropped.
+The profile runs Claude Code here; Codex, OpenCode and Pi are set the same
+way. On Daytona, name a Router model in the profile:
+`model: { default: "<model-id>" }`. The complete program for each cloud is in
+[eval and runtime examples](/sandbox/examples/evals-and-runtime).
 
-## Conformance testing
+Router model ids come from
+`GET /v1/router-models` with your Sandbox key, or the
+[model list](/gateway/models).
 
-Every provider passes the same conformance suite before publishing:
+The same client works anywhere agent-runtime takes a `sandboxClient`, such as
+`supervise` workers and `runAgentRounds`. See [agent-runtime](/sandbox/agent-runtime).
+
+## What each cloud honors
+
+A provider refuses any create field it cannot honor, before it calls the
+cloud, with an `EnvironmentProviderError` that names the field. Nothing is
+dropped silently. `provider.capabilities()` reports what a provider supports.
+
+| Cloud | Honors | Refuses |
+|---|---|---|
+| E2B | Profile, repository checkout, `workspace.environment` (another template) | Custom images, resources, every egress mode, keyed create, secrets, snapshots and checkpoints |
+| Daytona | Profile, repository checkout, `workspace.environment` (snapshot name), env, metadata and name; egress `open`, `strict` (domain allow list plus the Router host) and `blocked`; checkpoints and forks | Custom images, resources, secrets, idempotency keys |
+| Boat | Profile, repository checkout, `workspace.environment` (snapshot or sandbox id), env, metadata and name; checkpoints and forks | Custom images, resources, egress, secrets |
+| ComputeSDK | Profile, repository checkout, `workspace.environment`, `workspace.image` when the image is built from the box image; checkpoints when you pass the snapshot manager | Resources, egress |
+
+On Tangle Sandbox, every create option is available. See [create options](/sandbox/lifecycle).
+
+## Build the box image for E2B, Daytona and ComputeSDK
+
+Sandboxes on other clouds boot an image that carries the coding agents and the
+bridge that runs them. Build it once from the
+[agent-sdk repository](https://github.com/tangle-network/agent-sdk):
 
 ```bash
-# From any provider package
-pnpm test:live
+E2B_API_KEY=... pnpm build:sandbox-image --target e2b
+DAYTONA_API_KEY=... pnpm build:sandbox-image --target daytona
+pnpm build:sandbox-image --target docker
 ```
 
-The suite runs `runLiveProfileConformance` from `@tangle-network/agent-provider-testkit`: 67 checks covering create, turns, teardown, accounting, error paths, and capability truthfulness. Without credentials, it reports `no credential: <NAME>` and proves nothing.
+The script prints the name it published, such as `DAYTONA_SNAPSHOT=<name>`.
+That name is each provider's default, so the providers find it without
+configuration. `--base-image <image>` builds the same box on another base
+layer. Boat takes no custom images; a fresh Boat sandbox installs the same
+tools with a setup script, and a saved snapshot skips that install.
 
-## Next steps
+## Prove a provider with the conformance suite
 
-- [Run agents with agent-runtime](/sandbox/agent-runtime)
-- [Evaluate agents with agent-eval](/sandbox/evaluation)
-- [agent-sdk on GitHub](https://github.com/tangle-network/agent-sdk)
-- [Provider testkit](https://github.com/tangle-network/agent-sdk/tree/main/packages/agent-provider-testkit)
+`@tangle-network/agent-provider-testkit` checks a provider against a real
+cloud with a real profile: a coding agent, a model, a system prompt, an MCP
+server, a hook, a denied tool, a subagent and mounted files.
+
+```ts
+import { formatLiveReport, runLiveProfileConformance } from "@tangle-network/agent-provider-testkit";
+import { createE2BProvider } from "@tangle-network/agent-provider-e2b";
+
+const report = await runLiveProfileConformance({
+  name: "e2b",
+  credentials: ["E2B_API_KEY", "TANGLE_API_KEY"],
+  harness: "claude-code",
+  model: process.env.TANGLE_MODEL!,
+  createProvider: () => createE2BProvider({ router: { key: process.env.TANGLE_API_KEY! } }),
+});
+console.log(formatLiveReport(report));
+```
+
+Each requirement reports `pass`, `fail`, `skip` or `unproven`. A missing
+credential skips the run with `no credential: <NAME>` and never reports a pass.
+The suite spends real model tokens, creates real sandboxes, and fails on any
+sandbox it tagged that survives teardown. `runAgentEnvironmentProviderConformance`
+runs the contract checks without a model.
+
+## Next
+
+- [agent-runtime](/sandbox/agent-runtime)
+- [Evaluate agents](/sandbox/evaluation)
+- [AgentProfiles](/sandbox/cloud-agents-profiles)

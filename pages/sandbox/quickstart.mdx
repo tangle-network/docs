@@ -1,139 +1,245 @@
-# Quickstart
+---
+title: "Quickstart: run your first sandbox"
+description: Create a sandbox, run a command in it, ask a coding agent to do a task and delete the sandbox, from TypeScript, Python or the tangle CLI.
+---
 
-Create a managed Sandbox, run exact code, then add a durable Agent session.
+import { Callout, Tabs } from "nextra/components";
 
-## 1. Create an account API key
+# Quickstart: run your first sandbox
 
-Sign in to the dashboard and create a key at
-[id.tangle.tools/app/keys](https://id.tangle.tools/app/keys).
+Create an API key, start a sandbox, run a command in it, give a coding agent a task, and delete the sandbox.
+Every step has a TypeScript, Python and CLI tab.
+
+## Get an API key
+
+Create a key at [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys). Keys start with `sk-tan-`.
 
 ```bash
 export TANGLE_API_KEY="sk-tan-..."
-export SANDBOX_BASE_URL="https://sandbox.tangle.tools"
 ```
 
-`TANGLE_API_KEY` is an account credential. Keep it in a trusted backend, CI
-secret store, or CLI configuration. **Never expose it to browser code.**
-Browser applications use short-lived scoped tokens described in
-[Authentication and browser access](/docs/authentication).
+The key can create, run and delete every sandbox on your account. Keep it on a server, in a CI secret or in the CLI's keychain.
+Browser code gets a short-lived token instead; see [API keys and tokens](/sandbox/authentication).
 
-## 2. Create and use a Sandbox from TypeScript
+## Install
 
-```ts
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+
+```bash
+npm install @tangle-network/sandbox tsx
+```
+
+Save each program with the `.mts` extension and run it with `npx tsx <file>.mts`.
+Top-level `await` needs a module, and a `.ts` file in a new npm project compiles as CommonJS.
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+The package is [`tangle-sandbox` on PyPI](https://pypi.org/project/tangle-sandbox/) and needs Python 3.10 or newer.
+
+```bash
+pip install tangle-sandbox
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+The CLI is `@tangle-network/sandbox-cli` and needs Node.js 22.19 or newer. It installs the `tangle` command.
+
+```bash
+npm install -g @tangle-network/sandbox-cli
+tangle auth login
+```
+
+`tangle auth login` opens your browser and waits up to 2 minutes for you to sign in.
+On a machine without a browser, run `tangle auth login --no-browser` and enter the device code it prints within 15 minutes.
+In CI, set `TANGLE_API_KEY` and skip the login.
+
+Run the CLI without installing it with `npx @tangle-network/sandbox-cli`. Never run bare `npx tangle`: that npm name belongs to an unrelated package.
+
+</Tabs.Tab>
+</Tabs>
+
+## Create a sandbox and run a command
+
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+
+```ts filename="run-code.mts"
 import { Sandbox } from "@tangle-network/sandbox";
 
 const client = new Sandbox({
   apiKey: process.env.TANGLE_API_KEY!,
-  baseUrl: process.env.SANDBOX_BASE_URL!,
+  baseUrl: "https://sandbox.tangle.tools",
 });
 
-const box = await client.create({
-  agent: false,
-  maxLifetimeSeconds: 3600,
-});
-
+const box = await client.create();
 try {
-  await box.waitFor("running");
-
-  const result = await box.exec("node -e 'console.log(1 + 1)'");
-  if (result.exitCode !== 0) throw new Error(result.stderr);
-  console.log(result.stdout); // 2
+  const result = await box.exec("python3 -c 'print(sum(range(1_000_000)))'");
+  console.log(result.exitCode, result.stdout);
 } finally {
   await box.delete();
 }
 ```
 
-Omitting `environment` uses the server's default image.
+```bash
+npx tsx run-code.mts
+```
 
-`agent: false` means “managed runtime, no default Agent.” Files, processes,
-terminals, telemetry, and later Agent sessions remain available. `bare:
-true` is different: it removes the managed runtime.
+```text
+0 499999500000
+```
 
-## 3. Run a durable Agent conversation
+`client.create()` returns once the sandbox is running. `exec` does not throw on a non-zero exit, so read `exitCode`.
 
-Create the Sandbox with a backend, or add a session later. Reuse the session
-ID to continue the same conversation:
+</Tabs.Tab>
+<Tabs.Tab>
 
-```ts
-const agentBox = await client.create({
-  backend: {
-    type: "opencode",
-    profile: {
-      name: "builder",
-      prompt: { appendSystemPrompt: "Run tests before finishing." },
-    },
-  },
+```python filename="run_code.py"
+import os
+
+from tangle_sandbox import Sandbox, SandboxStatus
+
+client = Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+)
+
+box = client.create(name="hello")
+try:
+    # create() returns before the sandbox runs; exec refuses until it is running.
+    box.wait_for(SandboxStatus.RUNNING)
+    result = box.exec("python3 -c 'print(sum(range(1_000_000)))'")
+    print(result.exit_code, result.stdout)
+finally:
+    box.delete()
+    client.close()
+```
+
+```text
+0 499999500000
+```
+
+Pass `SandboxStatus.RUNNING`, not the string `"running"`: the string form raises `AttributeError` instead of `TimeoutError` when the wait times out.
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```bash
+tangle sandbox create --name hello --idle-timeout 900
+tangle exec hello -- python3 -c 'print(sum(range(1_000_000)))'
+```
+
+```text
+✓ Sandbox created: <sandbox id>
+...
+499999500000
+```
+
+`tangle sandbox create` waits up to 120 seconds for the sandbox to run, then prints its details.
+`--idle-timeout 900` stops the sandbox after 15 idle minutes; a stopped sandbox keeps its files and `tangle exec` resumes it.
+Put `--` before the remote command so the CLI does not read its flags. `tangle exec` exits with the remote command's exit code.
+
+</Tabs.Tab>
+</Tabs>
+
+Neither SDK reads environment variables, so pass `baseUrl` (`base_url` in Python) every time.
+
+## Give a coding agent a task
+
+A new sandbox has a coding agent installed. Unless you give it your own credential, it calls models through the [Tangle Router](https://router.tangle.tools), which bills model use to your account.
+`GET /v1/router-models` lists the models your key can run; [Router models](/gateway/models) describes them.
+
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+
+```ts filename="prompt.mts"
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
 });
 
+const box = await client.create();
 try {
-  const sessionId = "repo-review-v1";
+  const run = await box.prompt(
+    "Write fizzbuzz.py for 1 to 15, run it, and reply with its output.",
+  );
+  console.log(run.success ? run.response : run.error);
 
-  const first = await agentBox.prompt("Inspect the repository.", {
-    sessionId,
-  });
-  const second = await agentBox
-    .session(sessionId)
-    .prompt("Fix the highest-severity issue and run its tests.");
-
-  console.log(first.response);
-  console.log(second.response);
+  const file = await box.exec("cat fizzbuzz.py");
+  console.log(file.stdout);
 } finally {
-  await agentBox.delete();
+  await box.delete();
 }
 ```
 
-To run the agent on your own Claude subscription, ChatGPT plan, or coding
-plan instead of the Tangle Router, see [Start a cloud agent](/docs/cloud-agents).
+</Tabs.Tab>
+<Tabs.Tab>
 
-For several AgentProfiles sharing one computer, use
-[`box.agents`](/docs/agents/multiple). For separate machines or hard
-resource isolation, use a Fleet.
+```python filename="prompt.py"
+import os
 
-## 4. Use the CLI
+from tangle_sandbox import Sandbox, SandboxStatus
+
+client = Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+)
+
+box = client.create(name="fizzbuzz")
+try:
+    box.wait_for(SandboxStatus.RUNNING)
+    result = box.prompt("Write fizzbuzz.py for 1 to 15, run it, and reply with its output.")
+    print(result.response if result.success else result.error)
+    print(box.exec("cat fizzbuzz.py").stdout)
+finally:
+    box.delete()
+    client.close()
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
 
 ```bash
-curl -fsSL https://sandbox.tangle.tools/install.sh | sh
-tangle auth login --api-key "$TANGLE_API_KEY"
-tangle sandbox create --name hello --ssh
-tangle sandbox list
+tangle agent prompt --box hello "Write fizzbuzz.py for 1 to 15, run it, and reply with its output."
+tangle exec hello -- cat fizzbuzz.py
+tangle sandbox delete hello --force
 ```
 
-`--ssh` authorizes your `~/.ssh/id_ed25519.pub` (or `id_ecdsa.pub`, `id_rsa.pub`); `tangle ssh hello` then opens a shell. On a Linux server without a keychain, see [CLI authentication](/docs/cli).
+`tangle agent prompt` waits for the agent and prints its reply with the duration and token counts.
+`--stream` prints the reply as it arrives; `--interactive` opens the coding agent's own terminal UI. See [Interactive mode](/sandbox/interactive).
+`tangle sandbox delete` asks for confirmation unless you pass `--force`.
 
-## 5. Use Python
+</Tabs.Tab>
+</Tabs>
 
-Install HTTPX with `pip install httpx`.
+<Callout type="warning">
+`prompt` does not throw when the agent fails. Check `success`, then read `response` or `error`.
+A finished turn is not a finished task: check the work with a command, as the example does with `cat`.
+</Callout>
 
-```python
-import os
-import httpx
+## Delete what you create
 
-with httpx.Client(
-    base_url="https://sandbox.tangle.tools",
-    headers={"Authorization": f"Bearer {os.environ['TANGLE_API_KEY']}"},
-    timeout=30,
-) as client:
-    response = client.get("/v1/sandboxes").raise_for_status().json()
-    for sandbox in response["sandboxes"]:
-        print(sandbox["id"], sandbox["status"])
-```
+`maxLifetimeSeconds` and `idleTimeoutSeconds` stop a sandbox and keep its disk. They do not delete it.
+Delete in a `finally` block, as every example here does, or set `deleteAfterStoppedSeconds`. See [Create, stop and delete](/sandbox/lifecycle).
 
-See [Python](/docs/sdk/python) to create a sandbox and run commands.
+## What you did
 
-## Lifecycle
+- Created an API key and a client pointed at `https://sandbox.tangle.tools`.
+- Started an isolated Linux sandbox and ran a command in it.
+- Gave the sandbox's coding agent a task and checked its result.
+- Deleted the sandbox so it stopped billing.
 
-- `stop()` suspends supported Sandboxes while preserving state.
-- `resume()` brings a stopped Sandbox back.
-- `delete()` is permanent.
-- Stable Agent session IDs let another process re-fetch the Sandbox and
-  reattach while the Sandbox still exists.
+## Set up a coding agent to use Tangle Sandbox
 
-## Next
+If you work with a coding agent such as Claude Code or Codex, give it the setup skill at [sandbox.tangle.tools/agent-setup.md](https://sandbox.tangle.tools/agent-setup.md).
+The CLI ships the same instructions; `tangle skill path` prints where its `SKILL.md` is installed.
 
-- [Start a cloud agent](/docs/cloud-agents)
-- [Authentication and browser access](/docs/authentication)
-- [TypeScript SDK](/docs/sdk/typescript)
-- [Multiple Agents](/docs/agents/multiple)
-- [Python](/docs/sdk/python)
-- [CLI](/docs/cli)
-- [Workflows](/docs/workflows)
+## Next steps
+
+- [How sandboxes work](/sandbox/concepts): states, what survives a stop, and the security boundary.
+- [Run a coding agent](/sandbox/cloud-agents): pick the agent, model and credential.
+- [Interactive mode](/sandbox/interactive): drive a coding agent's own terminal UI inside a sandbox.

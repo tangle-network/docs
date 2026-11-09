@@ -1,41 +1,132 @@
-# Authentication and browser access
+---
+title: Authenticate with API keys, CLI login and browser tokens
+description: Create, limit and rotate Tangle API keys, sign the tangle CLI in, and give browsers a short-lived scoped token instead of your key.
+---
 
-Tangle Sandbox has one simple authority rule:
+import { Callout, Tabs } from "nextra/components";
 
-> Keep account credentials on a trusted server or in the CLI. Give browsers
-> only short-lived tokens scoped to the exact session or runtime access they
-> need.
+# API keys and tokens
 
-Never put `TANGLE_API_KEY`, a sandbox connection token, or a provider API key
-into browser JavaScript, local storage, a URL, or a client-visible error.
+Your account API key authorizes every call to Tangle Sandbox. This page covers creating and limiting keys, how the CLI finds its credential, and how to give a browser a short-lived token so the key never leaves your server.
 
-## Credential types
+## Account API keys
 
-| Credential | Use it from | What it can do |
-|---|---|---|
-| Account API key (`sk-tan-…`) | Trusted backend, CI, or CLI | Create, fetch, stop, resume, and delete sandboxes; mint delegated tokens |
-| `session` token | Browser `SessionGatewayClient` | Read and replay one browser session mapped to one durable runtime session |
-| `project` token | Browser `SessionGatewayClient` | Read project-level gateway streams |
-| `session-runtime` token | Browser/Worker `SandboxRuntimeClient` | Short-lived read, workspace, and terminal access bound to one runtime session |
-| `read-only` token | Browser/Worker `SandboxRuntimeClient` | Short-lived read-only runtime access bound to the sandbox project |
-| Capability token | MCP or another explicit integration | Only the named capability, such as `computer_use` |
+Create a key at [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys). Keys start with `sk-tan-` and are shown once.
+Send the key as a bearer token:
 
-Scoped tokens expire in minutes. They do not replace the account key; they
-reduce what a delegated client can reach if that client is compromised.
+```bash
+curl -s https://sandbox.tangle.tools/v1/sandboxes \
+  -H "Authorization: Bearer $TANGLE_API_KEY"
+```
 
-## Server: mint a runtime token
-
-Authenticate your application user, verify that the requested sandbox and
-session belong to them, then mint on the server:
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
 const client = new Sandbox({
   apiKey: process.env.TANGLE_API_KEY!,
-  baseUrl: process.env.SANDBOX_BASE_URL!,
+  baseUrl: "https://sandbox.tangle.tools",
 });
+```
 
+The SDK reads no environment variables. `TANGLE_API_KEY` in these docs is a convention; pass the key however your app stores secrets.
+`client.withApiKey(otherKey)` returns a second client with the same settings and a different key.
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```python
+import os
+
+from tangle_sandbox import Sandbox
+
+client = Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+)
+```
+
+`Sandbox` and `AsyncSandbox` read no environment variables and have no default `base_url`.
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```bash
+export TANGLE_API_KEY="sk-tan-..."
+tangle sandbox list
+```
+
+The CLI reads `TANGLE_API_KEY` when no other credential is set. See [How the CLI finds a credential](#how-the-cli-finds-a-credential).
+
+</Tabs.Tab>
+</Tabs>
+
+The key can create, run and delete every sandbox on your account. Keep it on a server, in a CI secret or in the CLI's keychain.
+Never put it in browser JavaScript, local storage, a URL or an error message. Browsers get a [scoped token](#give-a-browser-a-scoped-token).
+
+### Limit what a key can do
+
+`tangle keys create` creates a key with limits and prints it once:
+
+```bash
+tangle keys create ci-agents --product sandbox --budget-usd 25 --rpm-limit 120 --expires-in-days 30
+```
+
+| Flag | Effect |
+|---|---|
+| `--product <product>` | The key works only for one product: `sandbox`, `router`, `blueprint-agent`, `evals` or `agent-builder`. Omit it for all products. |
+| `--budget-usd <amount>` | A hard spending cap in USD for this key. |
+| `--rpm-limit <limit>` | A requests-per-minute cap for this key. |
+| `--expires-in-days <days>` | The key stops working after this many days. |
+
+`tangle keys list` shows each key's id, prefix, product, last use and expiry. `tangle keys revoke <keyId>` revokes a key after a confirmation; pass `--yes` to skip it.
+
+`tangle keys create` and `tangle keys revoke` refuse a browser-login session. Sign in with an API key first (`tangle auth login --api-key`) or set `TANGLE_API_KEY`.
+
+### Rotate a key
+
+1. Create the new key.
+2. Deploy it to every service and CI secret that uses the old one.
+3. Revoke the old key with `tangle keys revoke <keyId>` or at [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys).
+
+## Sign in the CLI
+
+| Command | What happens |
+|---|---|
+| `tangle auth login` | Opens your browser and waits up to 2 minutes for you to sign in. |
+| `tangle auth login --no-browser` | Prints a device code to enter in any browser. The CLI waits up to 15 minutes. |
+| `tangle auth login --api-key sk-tan-...` | Checks the key against the API and stores it. |
+| `tangle auth status` | Checks the stored credential against the API. |
+| `tangle auth logout` | Removes the stored credential. |
+
+The CLI stores its credential in the operating system keychain: the macOS keychain, or the Secret Service on Linux.
+A Linux server or container without a keychain cannot store a login. Use one of these instead:
+
+- Set `TANGLE_API_KEY`, or `TANGLE_API_KEY_FILE` with the path of a file that holds the key.
+- Set `TANGLE_ALLOW_PLAINTEXT_CREDENTIALS=1` to let the CLI write `~/.tangle/credentials.json`.
+
+### How the CLI finds a credential
+
+Each command takes the first credential it finds, in this order:
+
+1. `--api-key`
+2. `TANGLE_API_KEY_FILE`, read on every use
+3. `TANGLE_API_KEY`
+4. The keychain entry for the active profile
+5. `~/.tangle/credentials.json`, only with `TANGLE_ALLOW_PLAINTEXT_CREDENTIALS=1`
+
+The CLI loads a `.env` file from the current directory before it reads the environment, so a `TANGLE_API_KEY` there applies.
+
+Profiles keep several accounts on one machine. `tangle auth login --profile work` signs a profile in, `tangle auth profiles use work` makes it active, and `TANGLE_PROFILE=work` selects it for one command.
+There is no global `--profile` flag.
+
+## Give a browser a scoped token
+
+A browser never receives your account key. Your server checks that the user owns the sandbox and session, mints a short-lived token for exactly that access, and returns only the token.
+
+```ts filename="server.ts"
 const box = await client.get(ownedSandboxId);
 if (!box) throw new Error("Sandbox not found");
 
@@ -45,7 +136,6 @@ const scoped = await box.mintScopedToken({
   ttlMinutes: 5,
 });
 
-// Return only these delegated fields to the authenticated browser.
 return {
   token: scoped.token,
   expiresAt: scoped.expiresAt.toISOString(),
@@ -53,12 +143,21 @@ return {
 };
 ```
 
-The server—not the browser—chooses `ownedRuntimeSessionId`. Do not accept an
-arbitrary session ID and mint for it without an ownership check.
+Your server chooses `ownedRuntimeSessionId` from its own records. Never mint a token for a session id the browser sends without checking that the user owns it.
 
-## Browser: use the scoped runtime client
+| `scope` | Gives the browser | Use with |
+|---|---|---|
+| `session-runtime` | Reads, workspace changes and terminals for one session | `createSandboxRuntimeClient` with `scoped.sidecarProxyUrl` |
+| `session-runtime` with `access: "read-only"` | Read access to one session, including its event stream | `SessionGatewayClient` with `scoped.sidecarProxyUrl` |
+| `read-only` | Read access to the sandbox, no workspace or terminal changes | `createSandboxRuntimeClient` with `scoped.sidecarProxyUrl` |
+| `session` | Event reads for one browser session mapped to one runtime session | The Sandbox API's `/session` WebSocket |
+| `project` | Event reads for the whole sandbox | The Sandbox API's `/session` WebSocket |
 
-```ts
+`ttlMinutes` defaults to 5 and is clamped between 1 and 15. `expiresAt` is a `Date`; convert it before you send it as JSON.
+
+In the browser, build the runtime client from those fields:
+
+```ts filename="browser.ts"
 import { createSandboxRuntimeClient } from "@tangle-network/sandbox/runtime";
 
 const delegated = await fetch("/api/sandbox/runtime-token", {
@@ -71,50 +170,61 @@ const runtime = createSandboxRuntimeClient({
   token: delegated.token,
 });
 
-const status = await runtime.health();
-const messages = await runtime.messages("reviewer-v1");
+await runtime.health();
 ```
 
-`SandboxRuntimeClient.updateToken(nextToken)` replaces an expiring token
-without rebuilding every consumer.
+Before the token expires, fetch a new one from your server and call `runtime.updateToken(nextToken)`. Existing code that holds `runtime` keeps working.
 
-## Browser event streaming and replay
+<Callout>
+Scoped tokens are a TypeScript SDK feature. From Python or another language, call `POST /v1/sandboxes/{id}/scoped-token` with the same body; Python's `client.fetch("POST", path, json=...)` sends it with your key.
+</Callout>
 
-For a reconnecting browser chat, mint `scope: "session"` with both IDs:
+## Stream a session to a browser and resume after a drop
 
-```ts
-const token = await box.mintScopedToken({
-  scope: "session",
-  sessionId: browserSessionId,
-  runtimeSessionId: ownedRuntimeSessionId,
-  ttlMinutes: 5,
+For a chat view that survives reloads and network changes, mint a read-only `session-runtime` token and pass `sidecarProxyUrl` to `SessionGatewayClient`.
+It replays the running turn after a reconnect and asks your server for a fresh token when the old one expires.
+
+```ts filename="server.ts"
+const scoped = await box.mintScopedToken({
+  scope: "session-runtime",
+  sessionId: runtimeSessionId,
+  access: "read-only",
 });
+return {
+  token: scoped.token,
+  expiresAt: scoped.expiresAt.getTime() / 1000,
+  url: scoped.sidecarProxyUrl,
+};
 ```
 
-- `sessionId` is the stable ID owned by your browser application.
-- `runtimeSessionId` is the real durable Agent session inside the sandbox.
-- Your backend must recover and authorize the mapping between them.
+```ts filename="browser.ts"
+import { SessionGatewayClient } from "@tangle-network/sandbox/session-gateway";
 
-Use the returned token with `SessionGatewayClient`, refresh it from your
-authenticated backend, and persist replay state in the browser. See the
-`browser-streaming-resume.ts` SDK example for the complete reconnect loop.
+const client = new SessionGatewayClient({
+  url: initial.url,
+  token: initial.token,
+  sessionId,
+  runtimeSessionId,
+  onTokenRefresh: () => fetchScopedToken(sessionId),
+  handlers: {
+    onAgentEvent: (channel, data, seq) => render({ channel, data, seq }),
+    onStreamGap: () => void client.replay(),
+    onError: (message, code) => console.error(code, message),
+  },
+});
+client.connect();
+```
 
-## Multiple Agents
+`sessionId` is your browser's own stable id, kept across reloads; `runtimeSessionId` is the coding-agent session your server authorized for it.
+[Stream output](/sandbox/streaming) covers the event types and what to do with each.
 
-`box.agents.start()`, `startMany()`, `stop()`, and sandbox lifecycle methods
-remain owner operations. Keep them on the trusted side of your application.
+## Agents that share a sandbox
 
-A delegated session token can observe or operate only through the routes its
-scope permits. It does not become a general `box.agents` administrator and
-cannot cross from one session-bound token into a sibling session.
+`box.agents.start()`, `stop()` and the sandbox lifecycle calls need the account key. Keep them on your server.
+A scoped token reaches only the session its scope names. [Several agents in one sandbox](/sandbox/agents-multiple) explains what agents in one sandbox can see of each other.
 
-## Operational rules
+## Next steps
 
-- Mint the narrowest scope that satisfies the UI.
-- Keep TTLs short and refresh through an authenticated backend endpoint.
-- Bind every session ID to your own authorization model before minting.
-- Never log bearer tokens or put them in query strings.
-- Treat sibling Agents as one sandbox trust domain; use separate sandboxes
-  for separate tenants or mutually untrusted workloads.
-- Use separate provider credentials or AgentProfiles when model authority
-  differs, even when the Agents share a sandbox.
+- [How sandboxes work](/sandbox/concepts): states, lifetimes and the security boundary.
+- [Teams](/sandbox/teams): share sandboxes, secrets and templates with your team.
+- [Pricing and spend](/sandbox/cost): key budgets and other spend limits.

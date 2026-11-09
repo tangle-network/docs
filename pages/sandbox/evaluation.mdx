@@ -1,236 +1,171 @@
-# Evaluate agents with agent-eval
+---
+title: Evaluate agents
+description: Score sandbox agents on fixed cases with @tangle-network/agent-eval, compare models and coding agents, grade answers with a model judge, gate releases in CI, and read what a run did.
+---
 
-`@tangle-network/agent-eval` runs agent evaluations, compares changes on the same cases, and decides whether a candidate has enough evidence to release. It records outputs, failures, costs, and evidence for each comparison.
+# Evaluate agents
 
-Eval runs in your TypeScript process. You supply agent execution, judges, and model transports. It records what actually happened.
-
-## Install
+`@tangle-network/agent-eval` runs your agent on a fixed set of cases, scores
+each result with a judge, and reports the scores so you can compare one change
+against another. The sandbox runs the agent; agent-eval runs in your own
+TypeScript process.
 
 ```bash
-pnpm add @tangle-network/agent-eval @tangle-network/agent-runtime @tangle-network/sandbox
+npm install @tangle-network/agent-eval @tangle-network/sandbox
 ```
 
-Use Node.js 20.19 or newer.
+agent-eval needs Node.js 20.19 or later.
 
-## Quickstart: score a change offline
+| Word | Meaning |
+|---|---|
+| Case (scenario) | One task, with an `id` and a `kind`. |
+| Surface | The thing you change between runs: a prompt, a model, a coding agent or a whole configuration. |
+| Judge | Scores one result on named dimensions and returns a composite score. |
 
-This example runs without any API keys — it uses a scripted agent:
+## Score a coding agent on fixed cases
+
+`defineAgentEval` takes the cases, the agent and the judge. The agent receives
+the surface and one case and returns an artifact; here, the exit code of the
+test that case names.
 
 ```ts
-import { defineAgentEval } from "@tangle-network/agent-eval/contract";
+import { defineAgentEval, type Scenario } from "@tangle-network/agent-eval/contract";
 
-interface SupportCase {
-  id: string;
-  kind: "support";
-}
-
-const evalKit = defineAgentEval<SupportCase, string>({
+// client is a Sandbox created with baseUrl "https://sandbox.tangle.tools".
+const evalKit = defineAgentEval<Scenario & { task: string }, number>({
   scenarios: [
-    { id: "refund", kind: "support" },
-    { id: "shipping", kind: "support" },
-    { id: "cancel", kind: "support" },
+    { id: "cli-flag", kind: "fix", task: "The test tagged cli-flag fails." },
+    { id: "null-guard", kind: "fix", task: "The test tagged null-guard fails." },
+    { id: "timezone", kind: "fix", task: "The test tagged timezone fails." },
   ],
-
-  // The agent under test: given a case, return a response.
-  run: async (scenario) => {
-    // Replace with a real agent call:
-    // const result = await runAgentRounds({ task: scenario.id, ... });
-    return `Handled ${scenario.id} request`;
-  },
-
-  // The judge: given a case and a response, return a verdict.
-  judge: async (scenario, response) => {
-    const passed = response.includes(scenario.id);
-    return { passed, reason: passed ? "Correctly handled" : "Missing case reference" };
-  },
-});
-
-// Score one candidate
-const result = await evalKit.score({
-  candidate: { id: "my-agent-v1", createdAt: new Date().toISOString() },
-});
-
-console.log(`Passed: ${result.passed}/${result.total} scenarios`);
-console.log(`Cost: $${result.totalCostUsd.toFixed(4)}`);
-```
-
-## Compare two candidates on the same cases
-
-The core workflow: run two versions of your agent, compare them on identical scenarios, and get a statistical verdict.
-
-```ts
-import { compareEvals } from "@tangle-network/agent-eval/comparison";
-
-// Run both candidates
-const baseline = await evalKit.score({
-  candidate: { id: "agent-v1", createdAt: new Date().toISOString() },
-});
-
-const candidate = await evalKit.score({
-  candidate: { id: "agent-v2", createdAt: new Date().toISOString() },
-});
-
-// Compare them
-const comparison = await compareEvals({
-  baseline,
-  candidate,
-  config: {
-    // Minimum improvement to declare a win
-    minImprovement: 0.05,
-    // Confidence level for the statistical test
-    confidenceLevel: 0.95,
-  },
-});
-
-console.log(comparison.verdict);  // "improved" | "regressed" | "inconclusive"
-console.log(comparison.evidence);  // Full evidence record
-```
-
-## Run against a real agent in a sandbox
-
-Combine with `agent-runtime` and Tangle Sandbox for real evaluations:
-
-```ts
-import { Sandbox } from "@tangle-network/sandbox";
-import { createTangleProvider } from "@tangle-network/agent-provider-tangle";
-import { providerAsSandboxClient, runAgentRounds } from "@tangle-network/agent-runtime/kernel";
-import { defineAgentEval } from "@tangle-network/agent-eval/contract";
-
-const sandbox = new Sandbox({
-  apiKey: process.env.TANGLE_API_KEY!,
-  baseUrl: "https://sandbox.tangle.tools",
-});
-const provider = createTangleProvider({ client: sandbox });
-const client = providerAsSandboxClient(provider);
-
-const evalKit = defineAgentEval<SupportCase, string>({
-  scenarios: [
-    { id: "refund", kind: "support" },
-    { id: "shipping", kind: "support" },
-    { id: "cancel", kind: "support" },
-    { id: "upgrade", kind: "support" },
-    { id: "downgrade", kind: "support" },
-  ],
-
-  run: async (scenario) => {
-    const result = await runAgentRounds({
-      task: `A customer asks about ${scenario.id}. Write a helpful response.`,
-      driver: {
-        plan: async (task, history) => (history.length === 0 ? [task] : []),
-        decide: () => "done" as const,
-      },
-      agentRun: {
-        profile: {
-          name: "support-agent",
-          harness: "claude-code",
-          model: { provider: "anthropic", default: "anthropic/claude-sonnet-4-6" },
-        },
-        taskToPrompt: (t) => t,
-      },
-      output: { parse: (events) => JSON.stringify(events) },
-      ctx: { sandboxClient: client },
+  baselineSurface: "claude-code",
+  agent: async (harness, scenario) => {
+    const box = await client.create({
+      git: { url: "https://github.com/tangle-network/sandbox-demo" },
+      backend: { type: harness as "claude-code" | "codex" },
     });
-    return result.iterations[0]?.output ?? "";
+    try {
+      await box.prompt(`${scenario.task} Fix the cause.`);
+      return (await box.exec(`npm test -- --test-name-pattern=${scenario.id}`)).exitCode;
+    } finally {
+      await box.delete();
+    }
   },
-
-  judge: async (scenario, response) => {
-    // Use a model to judge, or write a deterministic check
-    const addressesTopic = response.toLowerCase().includes(scenario.id);
-    const isHelpful = response.length > 20;
-    return {
-      passed: addressesTopic && isHelpful,
-      reason: addressesTopic ? (isHelpful ? "Good" : "Too short") : "Off topic",
-    };
-  },
-});
-
-const result = await evalKit.score({
-  candidate: { id: "support-agent-v2", createdAt: new Date().toISOString() },
-});
-```
-
-## Automated improvement with a held-out gate
-
-Eval enforces the improvement boundary: optimize on a development partition, then prove the result on a held-out final-test partition.
-
-```ts
-import { createImprovementGate } from "@tangle-network/agent-eval/improvement";
-
-const gate = createImprovementGate({
-  // Split scenarios into dev (optimize on) and final (prove on)
-  split: { devFraction: 0.7, seed: "fixed-seed" },
-
-  // The optimizer explores on the dev partition only
-  optimize: async (devScenarios) => {
-    // Try different prompts, models, or tool configurations
-    // Return the best candidate found on dev
-    return { profile: optimizedProfile };
-  },
-
-  // The gate proves on final — the optimizer never sees these
-  prove: async (finalScenarios, candidate) => {
-    return evalKit.score({ candidate });
-  },
-});
-
-const decision = await gate.run();
-// decision: "promoted" | "rejected" | "inconclusive"
-```
-
-## Configure model transports and pricing
-
-Eval needs to know how to call models for judges and how much they cost:
-
-```ts
-import { createModelTransport } from "@tangle-network/agent-eval/transport";
-
-const transport = createModelTransport({
-  // Route through Tangle Router
-  provider: "tangle",
-  apiKey: process.env.TANGLE_API_KEY!,
-  baseUrl: "https://router.tangle.tools/v1",
-
-  // Pricing: how much each model costs per token
-  pricing: {
-    "anthropic/claude-sonnet-4-6": {
-      input: 0.000003,
-      output: 0.000015,
-    },
-    "groq/llama-3.1-8b-instant": {
-      input: 0.00000005,
-      output: 0.00000008,
+  judge: {
+    name: "suite",
+    dimensions: [{ key: "pass", description: "the tagged test passes after the turn" }],
+    score: ({ artifact }) => {
+      const pass = artifact === 0 ? 1 : 0;
+      return { dimensions: { pass }, composite: pass, notes: "" };
     },
   },
+  expectUsage: "off",
 });
+
+for (const harness of ["claude-code", "codex"]) {
+  const result = await evalKit.evaluate({ surface: harness });
+  console.log(harness, result.aggregates.byJudge.suite?.mean);
+}
 ```
 
-## What eval records
+`evaluate()` runs every case against the baseline surface; `evaluate({ surface })`
+runs them against another one. `aggregates.byJudge.<name>.mean` is the mean
+composite score.
 
-Every run records:
+`expectUsage: "off"` fits here because the sandbox meters each turn itself.
+Set `expectUsage: "assert"` when the agent makes model calls agent-eval should
+see, so a missing usage record counts as a failure.
 
-| Field | What it means |
-|---|---|
-| Output | The agent's actual response |
-| Passed | Whether the judge approved it |
-| Cost | Actual USD spent (tokens × price) |
-| Tokens | Input and output token counts |
-| Latency | Wall-clock time for the scenario |
-| Failure | If the agent errored, what went wrong |
-| Evidence | The full event trace, replayable |
+To compare models instead, keep the coding agent fixed (OpenCode below; Claude
+Code and Codex take a model the same way) and pass the model as the surface: `backend: { type: "opencode", model: { model: String(surface) } }`.
+Model ids come from `GET /v1/router-models` with your Sandbox key, or the
+[model list](/gateway/models).
 
-Unknown never becomes zero or success. If a field can't be observed, it stays unknown.
+## Grade text with a model judge
 
-## What belongs where
+`llmJudge` scores an artifact against a rubric with a model on the Tangle
+Router. It works on any text, with or without a sandbox.
 
-| Package | Owns |
-|---|---|
-| `agent-eval` | Scoring, comparison, statistical tests, promotion gates |
-| `agent-runtime` | Execution, budgets, supervision |
-| `sandbox` | Isolated Linux environments |
+```ts
+import { createChatClient, llmJudge } from "@tangle-network/agent-eval/contract";
 
-## Next steps
+const judge = llmJudge("support", "Score this reply to the customer's message against the policy.", {
+  chat: createChatClient({
+    transport: "openai-compatible",
+    baseUrl: "https://router.tangle.tools/v1",
+    apiKey: process.env.TANGLE_API_KEY!,
+    defaultModel: process.env.TANGLE_MODEL!,
+  }),
+  dimensions: [
+    { key: "answers", description: "Answers the question the customer asked" },
+    { key: "honest", description: "Promises nothing the policy does not allow" },
+  ],
+});
 
-- [Run agents with agent-runtime](/sandbox/agent-runtime)
-- [Run on E2B, Daytona, or Boat](/sandbox/other-providers)
-- [agent-eval on npm](https://www.npmjs.com/package/@tangle-network/agent-eval)
-- [agent-eval on GitHub](https://github.com/tangle-network/agent-eval)
+const score = await judge.score({
+  artifact: { message, policy, reply },
+  scenario: { id: "refund", kind: "support" },
+  signal: AbortSignal.timeout(60_000),
+});
+console.log(score.composite, score.dimensions, score.notes);
+```
+
+To grade an agent run, pass the run's answer and tool calls as the artifact:
+`{ task, answer: run.response, tools: run.toolInvocations }` from
+`box.prompt()`. A judge can then score whether the answer is grounded and
+whether the agent repeated work.
+
+A model judge is itself a measurement. Check it against results you graded by
+hand before you let it decide a release.
+
+## Fail CI when a change scores lower
+
+Score the shipped surface and the candidate on the same cases, and exit
+non-zero when the candidate scores lower:
+
+```ts
+const score = async (surface: string) =>
+  (await evalKit.evaluate({ surface })).aggregates.byJudge.suite?.mean ?? 0;
+
+const before = await score(shippedPrompt);
+const after = await score(candidatePrompt);
+if (after < before) {
+  console.error("Regression: the candidate passes fewer cases.", { before, after });
+  process.exit(1);
+}
+```
+
+A mean over a few cases moves with noise. For a release rule with
+uncertainty, `heldOutGate` from `@tangle-network/agent-eval/contract` ships a
+candidate only when the lower bound of the paired interval on its score
+improvement clears the `deltaThreshold` you set, on cases held out from any
+tuning.
+
+## Read what a run did
+
+Every sandbox turn is traced. An Intelligence report reads a sandbox's traces
+and reports what the agent did:
+
+```ts
+const job = await client.intelligence.createReport({
+  subject: { type: "sandbox", id: box.id },
+  mode: "deterministic",
+});
+const report = await client.intelligence.waitForReport(job.jobId, { timeoutMs: 180_000 });
+console.log(report.status, report.billing.costUsd);
+console.log(JSON.stringify(report.result, null, 2));
+```
+
+Create the report before you delete the sandbox. See
+[Observability](/sandbox/observability) for traces and the
+[Intelligence commands](/sandbox/cli/intelligence) for the CLI.
+
+The complete programs for comparing coding agents and models, grading replies,
+scoring a trace and gating CI are in
+[eval and runtime examples](/sandbox/examples/evals-and-runtime).
+
+## Next
+
+- [Eval and runtime examples](/sandbox/examples/evals-and-runtime)
+- [agent-runtime](/sandbox/agent-runtime)
+- [Observability](/sandbox/observability)

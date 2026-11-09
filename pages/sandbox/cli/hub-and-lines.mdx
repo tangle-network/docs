@@ -1,0 +1,564 @@
+---
+title: Hub and line commands
+description: Reference for tangle hub, lines and context: connect accounts such as GitHub, call their tools with approvals, and attach phone and email lines to agents.
+---
+
+# Hub and line commands
+
+Hub holds your connections to outside accounts, such as GitHub, and runs their tools with your approval rules. Lines give an agent a phone number or mailbox.
+
+```bash
+tangle hub connect github
+tangle hub tools search "create issue"
+tangle agent prompt my-box "Triage new issues" --connection github:github.issues.create
+tangle lines list
+```
+
+`tangle hub exec` runs a Hub tool, not a shell command; `tangle exec` runs a shell command in a sandbox.
+Hub and lines live on Tangle Platform, so `--base-url` on these commands points at the Platform host.
+
+## Commands on this page
+
+| Command | What it does |
+| --- | --- |
+| [`tangle hub status`](#tangle-hub-status) | Show Hub auth and connection status |
+| [`tangle hub connect`](#tangle-hub-connect) | Connect a provider account |
+| [`tangle hub connections`](#tangle-hub-connections) | List Hub provider connections |
+| [`tangle hub connections revoke`](#tangle-hub-connections-revoke) | Revoke a Hub provider connection |
+| [`tangle hub tools sources`](#tangle-hub-tools-sources) | List Hub tool sources |
+| [`tangle hub tools describe`](#tangle-hub-tools-describe) | Describe a Hub tool |
+| [`tangle hub tools search`](#tangle-hub-tools-search) | Search Hub tools |
+| [`tangle hub call`](#tangle-hub-call) | Execute a Hub tool |
+| [`tangle hub exec`](#tangle-hub-exec) | Execute a Hub tool |
+| [`tangle hub resume`](#tangle-hub-resume) | Resolve a Hub approval created by a paused execution |
+| [`tangle hub approvals list`](#tangle-hub-approvals-list) | List pending Hub execution approvals |
+| [`tangle hub approvals approve`](#tangle-hub-approvals-approve) | Approve a pending Hub execution approval |
+| [`tangle hub approvals deny`](#tangle-hub-approvals-deny) | Deny a pending Hub execution approval |
+| [`tangle hub permissions list`](#tangle-hub-permissions-list) | List Hub permissions for a connection |
+| [`tangle hub permissions set`](#tangle-hub-permissions-set) | Set Hub permission for one action |
+| [`tangle hub permissions revert-writes`](#tangle-hub-permissions-revert-writes) | Revoke a bulk `--allow-writes` grant for a connection (deletes only the auto-granted write rows; manual permissions are untouched) |
+| [`tangle lines providers`](#tangle-lines-providers) | List provider transports supported by this Hub deployment |
+| [`tangle lines list`](#tangle-lines-list) | List owned lines, optionally for a saved agent profile or sandbox |
+| [`tangle lines get`](#tangle-lines-get) | Inspect a line and its current attachment |
+| [`tangle lines numbers`](#tangle-lines-numbers) | Discover owned provider numbers; this does not purchase or reserve a number |
+| [`tangle lines connect`](#tangle-lines-connect) | Bind an owned number or identity through Hub; no provider rental is purchased |
+| [`tangle lines attach`](#tangle-lines-attach) | Attach a saved agent to any sandbox, or use an isolated on-demand member instance |
+| [`tangle lines detach`](#tangle-lines-detach) | Stop dispatch; preserve history and provider rental |
+| [`tangle lines release`](#tangle-lines-release) | Retire a detached Hub line; does not cancel provider rental |
+| [`tangle lines threads`](#tangle-lines-threads) | List this line's separate participant threads |
+| [`tangle lines messages`](#tangle-lines-messages) | Read one authorized participant thread |
+| [`tangle lines members`](#tangle-lines-members) | List names, roles and consent on this line |
+| [`tangle lines send`](#tangle-lines-send) | Send to a consenting member through Hub |
+| [`tangle lines remind`](#tangle-lines-remind) | Wake the agent at a future time to write your reminder |
+| [`tangle context`](#tangle-context) | Show live line identity, members, consent, reminders and quotas |
+
+## Hub
+
+### `tangle hub status`
+
+Show Hub auth and connection status.
+
+Shows Hub authentication and connection status.
+
+```bash
+tangle hub status
+```
+
+Request: `GET /v1/hub/status`
+
+```bash
+tangle hub status
+```
+
+### `tangle hub connect`
+
+Connect a provider account.
+
+Starts OAuth for a provider, opens the authorization URL in a browser (or prints it with `--no-browser`) and exits.
+
+```bash
+tangle hub connect <provider> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--no-browser` |  | Print the authorization URL instead of opening it |
+| `--parameter <key=value>` |  | Provider-specific OAuth value. Repeatable. |
+
+Request: `POST /v1/hub/connections/{provider}/start`
+
+```bash
+tangle hub connect github
+```
+
+- With no credential on a terminal it runs browser login first.
+- It does not wait for authorization; check with `tangle hub status`.
+- `--json` prints the start response with the OAuth state removed.
+
+### `tangle hub connections`
+
+List Hub provider connections.
+
+Lists Hub provider connections.
+
+```bash
+tangle hub connections
+```
+
+Request: `GET /v1/hub/connections`
+
+```bash
+tangle hub connections
+```
+
+### `tangle hub connections revoke`
+
+Revoke a Hub provider connection.
+
+Revokes a connection after confirmation (`--force` skips).
+
+```bash
+tangle hub connections revoke <connection-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--force` |  | Skip confirmation prompt |
+
+Request: `DELETE /v1/hub/connections/{connectionId}`
+
+```bash
+tangle hub connections revoke hubconn_github_abc123
+```
+
+### `tangle hub tools sources`
+
+List Hub tool sources.
+
+Lists tool sources (providers).
+
+```bash
+tangle hub tools sources
+```
+
+Request: `GET /v1/hub/tools/sources`
+
+```bash
+tangle hub tools sources
+```
+
+### `tangle hub tools describe`
+
+Describe a Hub tool.
+
+Prints a tool's input and output schema.
+
+```bash
+tangle hub tools describe <path>
+```
+
+Request: `POST /v1/hub/tools/describe`
+
+```bash
+tangle hub tools describe github.issues.create
+```
+
+### `tangle hub tools search`
+
+Search Hub tools.
+
+Searches tools, optionally within one provider.
+
+```bash
+tangle hub tools search <query...> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--provider <provider>` |  | Filter by provider/source ID |
+
+Request: `POST /v1/hub/tools/search`
+
+```bash
+tangle hub tools search "create issue"
+```
+
+### `tangle hub call`
+
+Execute a Hub tool.
+
+Executes a Hub tool: path tokens followed by a JSON input argument.
+
+```bash
+tangle hub call <args...> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--connection <ref>` |  | Hub connection id, or provider[:account] |
+| `--auto-approve` |  | Approve a HUB_APPROVAL_REQUIRED execution and retry once |
+| `--approve` |  | Alias for `--auto-approve` |
+| `--no-hub-key` |  | Do not auto-mint a platform Hub key; use the stored credential as-is |
+
+Request: `POST /v1/hub/exec`
+
+- Always prints the tool result as JSON.
+- `--approve`/`--auto-approve` approves a HUB_APPROVAL_REQUIRED execution and retries once.
+
+### `tangle hub exec`
+
+Execute a Hub tool.
+
+Same as `tangle hub call`; runs a Hub tool, not a sandbox command.
+
+```bash
+tangle hub exec <args...> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--connection <ref>` |  | Hub connection id, or provider[:account] |
+| `--auto-approve` |  | Approve a HUB_APPROVAL_REQUIRED execution and retry once |
+| `--approve` |  | Alias for `--auto-approve` |
+| `--no-hub-key` |  | Do not auto-mint a platform Hub key; use the stored credential as-is |
+
+Request: `POST /v1/hub/exec`
+
+- Not the same as `tangle exec`, which runs a shell command in a sandbox.
+
+### `tangle hub resume`
+
+Resolve a Hub approval created by a paused execution.
+
+Accepts or declines the approval a paused execution created; it does not rerun the execution.
+
+```bash
+tangle hub resume <approval-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--accept` |  | Approve the execution approval |
+| `--decline` |  | Deny the execution approval |
+| `--cancel` |  | Unsupported for approval-backed Hub resume |
+
+Request: `POST /v1/hub/approvals/{approvalId}/approve`
+
+```bash
+tangle hub resume appr_123
+```
+
+- `--decline` posts .../deny; `--cancel` is accepted but unsupported.
+
+### `tangle hub approvals list`
+
+List pending Hub execution approvals.
+
+Lists pending approvals.
+
+```bash
+tangle hub approvals list
+```
+
+Request: `GET /v1/hub/approvals`
+
+```bash
+tangle hub approvals list
+```
+
+### `tangle hub approvals approve`
+
+Approve a pending Hub execution approval.
+
+Approves a pending approval.
+
+```bash
+tangle hub approvals approve <approval-id>
+```
+
+Request: `POST /v1/hub/approvals/{approvalId}/approve`
+
+```bash
+tangle hub approvals approve appr_123 --json
+```
+
+### `tangle hub approvals deny`
+
+Deny a pending Hub execution approval.
+
+Denies a pending approval.
+
+```bash
+tangle hub approvals deny <approval-id>
+```
+
+Request: `POST /v1/hub/approvals/{approvalId}/deny`
+
+```bash
+tangle hub approvals deny appr_123 --json
+```
+
+### `tangle hub permissions list`
+
+List Hub permissions for a connection.
+
+Lists permissions for one connection.
+
+```bash
+tangle hub permissions list [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--connection <ref>` |  | Hub connection id, or provider[:account]. Required. |
+
+Request: `GET /v1/hub/policies`
+
+```bash
+tangle hub permissions list --connection hubconn_github_abc123
+```
+
+### `tangle hub permissions set`
+
+Set Hub permission for one action.
+
+Sets allow, ask or deny for one action on a connection.
+
+```bash
+tangle hub permissions set [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--connection <ref>` |  | Hub connection id, or provider[:account]. Required. |
+| `--action <path>` |  | Executor action path. Required. |
+| `--decision <allow\|ask\|deny>` |  | Permission decision. Required. |
+
+Request: `PUT /v1/hub/policies`
+
+```bash
+tangle hub permissions set --connection hubconn_github_abc123 --action github.issues.create --decision ask
+```
+
+### `tangle hub permissions revert-writes`
+
+Revoke a bulk `--allow-writes` grant for a connection (deletes only the auto-granted write rows; manual permissions are untouched).
+
+Removes the write grants that `--allow-writes` added for a connection; manual permissions stay.
+
+```bash
+tangle hub permissions revert-writes [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--connection <ref>` |  | Hub connection id, or provider[:account]. Required. |
+
+Request: `POST /v1/hub/policies/revert-writes`
+
+```bash
+tangle hub permissions revert-writes --connection hubconn_github_abc123
+```
+
+## Lines
+
+### `tangle lines providers`
+
+List provider transports supported by this Hub deployment.
+
+```bash
+tangle lines providers
+```
+
+### `tangle lines list`
+
+List owned lines, optionally for a saved agent profile or sandbox.
+
+```bash
+tangle lines list [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile-id <id>` |  | Stored profile ID |
+| `--sandbox <id>` |  | Existing sandbox ID |
+
+### `tangle lines get`
+
+Inspect a line and its current attachment.
+
+```bash
+tangle lines get <line-id>
+```
+
+### `tangle lines numbers`
+
+Discover owned provider numbers; this does not purchase or reserve a number.
+
+Lists owned provider numbers for a connection; it does not buy or reserve a number.
+
+```bash
+tangle lines numbers <connection-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--transport <transport>` | `imessage` | imessage, whatsapp, or sms |
+
+### `tangle lines connect`
+
+Bind an owned number or identity through Hub; no provider rental is purchased.
+
+```bash
+tangle lines connect <connection-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--transport <transport>` | `imessage` | imessage, whatsapp, sms, email, voice, or telegram |
+| `--number-id <id>` |  | Exact owned provider number ID; required for voice, SMS, WhatsApp and Linq iMessage |
+| `--address <email>` |  | Owned mailbox on a verified email domain |
+| `--reference <reference>` |  | Stable client reference; keep it unchanged on retry. Required. |
+| `--label <label>` |  | Line display name |
+| `--yes` |  | Authorize provider webhook configuration and line binding |
+
+Request: `POST /v1/lines`
+
+```bash
+tangle lines connect conn_p --transport voice --number-id pn_voice --reference support --yes --json
+```
+
+- `--yes` authorizes provider webhook configuration and line binding.
+
+### `tangle lines attach`
+
+Attach a saved agent to any sandbox, or use an isolated on-demand member instance.
+
+Attaches a saved agent profile to a line, on an existing sandbox or an isolated on-demand instance.
+
+```bash
+tangle lines attach <line-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--file <path>` |  | Reviewed native attachment JSON (exclusive with quick-setup flags) |
+| `--profile-id <id>` |  | Owner-scoped saved profile; each turn pins its source revision |
+| `--member <address>` |  | The one allowed sender: E.164 phone or email |
+| `--sandbox <id>` |  | Use an existing sandbox instead of an on-demand instance |
+| `--instance-prefix <prefix>` |  | Stable instance namespace; defaults to profile:`<profile-id>`: |
+| `--tools <mode>` |  | chat denies tools; act applies the profile's tools and permissions |
+| `--turns-per-day <count>` |  | Per-member daily turn ceiling (default 30) |
+| `--yes` |  | Authorize agent execution and spend against your key limits |
+
+### `tangle lines detach`
+
+Stop dispatch; preserve history and provider rental.
+
+Stops dispatch on a line while keeping its history and provider rental.
+
+```bash
+tangle lines detach <line-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--yes` |  | Authorize this change |
+
+### `tangle lines release`
+
+Retire a detached Hub line; does not cancel provider rental.
+
+```bash
+tangle lines release <line-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--yes` |  | Authorize this change |
+
+### `tangle lines threads`
+
+List this line's separate participant threads.
+
+Lists a line's participant threads.
+
+```bash
+tangle lines threads <line-id>
+```
+
+### `tangle lines messages`
+
+Read one authorized participant thread.
+
+Reads one participant thread.
+
+```bash
+tangle lines messages <line-id> <thread-id>
+```
+
+### `tangle lines members`
+
+List names, roles and consent on this line.
+
+```bash
+tangle lines members [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--line <line-id>` |  | Line ID; inferred in a line box |
+
+- `--line` is inferred inside a line box; elsewhere pass it.
+
+### `tangle lines send`
+
+Send to a consenting member through Hub.
+
+```bash
+tangle lines send <to-member> <text> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--line <line-id>` |  | Line ID; inferred in a line box |
+| `--on-behalf-of <member>` |  | Verified sender for a member relay |
+| `--not-before <iso-time>` |  | Delay delivery until this ISO time |
+| `--idempotency-key <key>` |  | Stable key for a retry |
+
+- `--line` is inferred inside a line box; elsewhere pass it.
+
+### `tangle lines remind`
+
+Wake the agent at a future time to write your reminder.
+
+```bash
+tangle lines remind <text> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--at <iso-time>` |  | Future ISO time. Required. |
+| `--line <line-id>` |  | Line ID; inferred in a line box |
+| `--idempotency-key <key>` |  | Stable key for a retry |
+
+- `--line` is inferred inside a line box; elsewhere pass it.
+
+## Context inside a line sandbox
+
+### `tangle context`
+
+Show live line identity, members, consent, reminders and quotas.
+
+```bash
+tangle context
+```
+
+- Inside a line box it authenticates with TANGLE_LINE_TOKEN (lrc_ prefix) and TANGLE_HUB_URL; elsewhere it uses the platform credential.
+- Always prints JSON.
+
+## Next
+
+- [Lines](/sandbox/lines)
+- [Connections](/sandbox/connections)
+- [Agent, fleet, batch and graph commands](/sandbox/cli/agents)

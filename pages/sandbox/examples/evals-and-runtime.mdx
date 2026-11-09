@@ -1,0 +1,502 @@
+---
+title: Evaluation and other clouds
+description: Complete TypeScript programs that grade agent output with model judges, compare models and coding agents, gate prompt changes in CI, read intelligence reports, run through agent-runtime and run an agent graph.
+---
+
+import { Callout } from "nextra/components";
+
+# Evaluation and other clouds
+
+These programs measure coding agents: grade their output with a model judge, compare models and coding agents on the same cases, block a prompt change that scores worse, and read a report of what an agent did.
+The last sections run sandboxes through the agent-runtime provider interface and run a two-agent graph from the CLI.
+
+## Run the examples
+
+You need Node.js 22 or newer and an API key from [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys).
+
+```bash
+npm install @tangle-network/sandbox @tangle-network/agent-eval @tangle-network/agent-runtime @tangle-network/agent-provider-tangle tsx
+export TANGLE_API_KEY="sk-tan-..."
+npx tsx compare-models.mts
+```
+
+The judges call the Tangle Router at `router.tangle.tools` with the same key, so use a key that can call both the Sandbox API and the Router.
+The comparisons clone [tangle-network/sandbox-demo](https://github.com/tangle-network/sandbox-demo), whose tests tagged `cli-flag`, `null-guard` and `timezone` fail until an agent fixes them.
+Each comparison case runs a coding agent turn, so a comparison of two models on three cases runs six turns.
+
+| Example | Shows |
+| --- | --- |
+| [Grade replies with a rubric](#grade-replies-with-a-rubric) | Score text you already have against a rubric with a model judge on the Router. No sandbox. |
+| [Score an agent's run](#score-an-agents-run) | Run a coding agent on a question, then have a model judge read its answer and every tool call. |
+| [Compare two models](#compare-two-models) | Run the same three failing-test cases on two models with the same coding agent and judge. |
+| [Compare two coding agents](#compare-two-coding-agents) | Run the same cases on Claude Code and Codex and score each by whether the tagged test passes. |
+| [Gate a prompt change in CI](#gate-a-prompt-change-in-ci) | Fail the build when a candidate prompt passes fewer cases than the shipped one. |
+| [Ask what an agent did](#ask-what-an-agent-did) | Run a coding agent, then start an intelligence report on the sandbox and wait for it. |
+| [Run an agent through agent-runtime](#run-an-agent-through-agent-runtime) | Create a sandbox through the agent-runtime provider interface, so the same code can target another provider. |
+| [Time a cold start](#time-a-cold-start) | Measure create, first command and delete through the provider interface. |
+| [Run an agent graph from the CLI](#run-an-agent-graph-from-the-cli) | Two agents write and judge a haiku with `tangle graph run`. |
+
+## Evaluate agents
+
+[Evaluate agents](/sandbox/evaluation) explains `defineAgentEval`, judges and scores.
+
+### Grade replies with a rubric
+
+Score text you already have against a rubric with a model judge on the Router. No sandbox.
+
+```ts
+import { createChatClient, llmJudge } from "@tangle-network/agent-eval/contract";
+
+// A rubric judge on the Router. No sandbox: it scores text you already have.
+const judge = llmJudge("support", "Score this reply to the customer's message against the policy.", {
+  chat: createChatClient({
+    transport: "openai-compatible",
+    baseUrl: "https://router.tangle.tools/v1",
+    apiKey: process.env.TANGLE_API_KEY!,
+    defaultModel: "glm-5.3",
+  }),
+  dimensions: [
+    { key: "answers", description: "Answers the question the customer asked" },
+    { key: "honest", description: "Promises nothing the policy does not allow" },
+  ],
+});
+
+const message = "My order arrived broken. Can I get a refund?";
+const policy = "Refund within 30 days of delivery, with a photo of the damage.";
+const replies = [
+  "Sorry about that. Send a photo of the damage and we refund you; it has to be within 30 days of delivery.",
+  "Refunds are not possible, but here is 10% off your next order.",
+  "Thanks for reaching out! We value your feedback and will look into it.",
+];
+for (const reply of replies) {
+  const score = await judge.score({
+    artifact: { message, policy, reply },
+    scenario: { id: "refund", kind: "support" },
+    signal: AbortSignal.timeout(60_000),
+  });
+  console.log(score.composite.toFixed(2), score.dimensions, reply.slice(0, 48));
+}
+```
+
+```text
+1.00 { answers: 1, honest: 1 } Sorry about that. Send a photo of the damage and
+0.25 { answers: 0.3, honest: 0.2 } Refunds are not possible, but here is 10% off yo
+0.55 { answers: 0.1, honest: 1 } Thanks for reaching out! We value your feedback 
+```
+
+Scores come from a model and vary between runs.
+
+### Score an agent's run
+
+Run a coding agent on a question, then have a model judge read its answer and every tool call.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+import { createChatClient, llmJudge } from "@tangle-network/agent-eval/contract";
+
+const apiKey = process.env.TANGLE_API_KEY!;
+const client = new Sandbox({ apiKey, baseUrl: "https://sandbox.tangle.tools" });
+
+// A model judge on the Router reads the answer and every tool call.
+const judge = llmJudge("trace-review", "Score this agent run against its task.", {
+  chat: createChatClient({
+    transport: "openai-compatible",
+    baseUrl: "https://router.tangle.tools/v1",
+    apiKey,
+    defaultModel: "glm-5.3",
+  }),
+  dimensions: [
+    { key: "grounded", description: "Every file and line it names exists" },
+    { key: "economical", description: "No tool call repeats earlier work" },
+  ],
+});
+
+const task = "List each place the API validates a request body, as file:line.";
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  backend: { type: "claude-code" },
+});
+try {
+  const run = await box.prompt(task);
+  const score = await judge.score({
+    artifact: { task, answer: run.response, tools: run.toolInvocations },
+    scenario: { id: "body-validation", kind: "trace" },
+    signal: AbortSignal.timeout(120_000),
+  });
+  console.log(run.traceId, score.dimensions, score.notes);
+} finally {
+  await box.delete();
+}
+```
+
+```text
+ptid_... { grounded: 1, economical: 1 } Every cited file:line (server.js:10,21,22,28,29,37,45; validate.js:2,5) matches the actual file contents exactly, and the four tool calls ... each served a distinct purpose with no repeated work.
+```
+
+`run.toolInvocations` lists each tool call with its input and output, and `run.traceId` names the trace.
+
+### Compare two models
+
+Run the same three failing-test cases on two models with the same coding agent and judge.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+import { defineAgentEval, type Scenario } from "@tangle-network/agent-eval/contract";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+// Same cases, same coding agent, same judge. Only the model changes.
+const evalKit = defineAgentEval<Scenario & { task: string }, number>({
+  scenarios: [
+    { id: "cli-flag", kind: "fix", task: "The test tagged cli-flag fails." },
+    { id: "null-guard", kind: "fix", task: "The test tagged null-guard fails." },
+    { id: "timezone", kind: "fix", task: "The test tagged timezone fails." },
+  ],
+  baselineSurface: "glm-5.3",
+  agent: async (model, scenario) => {
+    const box = await client.create({
+      git: { url: "https://github.com/tangle-network/sandbox-demo" },
+      backend: { type: "opencode", model: { model: String(model) } },
+    });
+    try {
+      await box.prompt(`${scenario.task} Fix the cause.`);
+      return (await box.exec(`npm test -- --test-name-pattern=${scenario.id}`)).exitCode;
+    } finally {
+      await box.delete();
+    }
+  },
+  judge: {
+    name: "suite",
+    dimensions: [{ key: "pass", description: "the tagged test passes after the turn" }],
+    score: ({ artifact }) => {
+      const pass = artifact === 0 ? 1 : 0;
+      return { dimensions: { pass }, composite: pass, notes: "" };
+    },
+  },
+  expectUsage: "off", // the sandbox meters each turn itself
+});
+
+for (const model of ["glm-5.3", "deepseek/deepseek-v4.1-flash"]) {
+  const result = await evalKit.evaluate({ surface: model });
+  console.log(model, result.aggregates.byJudge.suite?.mean);
+}
+```
+
+```text
+glm-5.3 0.6666666666666666
+deepseek/deepseek-v4.1-flash 1
+```
+
+Each number is the share of cases whose tagged test passes after the agent's turn.
+
+### Compare two coding agents
+
+Run the same cases on Claude Code and Codex and score each by whether the tagged test passes.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+import { defineAgentEval, type Scenario } from "@tangle-network/agent-eval/contract";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+// Same cases, same judge. Only the coding agent changes.
+const evalKit = defineAgentEval<Scenario & { task: string }, number>({
+  scenarios: [
+    { id: "cli-flag", kind: "fix", task: "The test tagged cli-flag fails." },
+    { id: "null-guard", kind: "fix", task: "The test tagged null-guard fails." },
+    { id: "timezone", kind: "fix", task: "The test tagged timezone fails." },
+  ],
+  baselineSurface: "claude-code",
+  agent: async (harness, scenario) => {
+    const box = await client.create({
+      git: { url: "https://github.com/tangle-network/sandbox-demo" },
+      backend: { type: harness as "claude-code" | "codex" },
+    });
+    try {
+      await box.prompt(`${scenario.task} Fix the cause.`);
+      return (await box.exec(`npm test -- --test-name-pattern=${scenario.id}`)).exitCode;
+    } finally {
+      await box.delete();
+    }
+  },
+  judge: {
+    name: "suite",
+    dimensions: [{ key: "pass", description: "the tagged test passes after the turn" }],
+    score: ({ artifact }) => {
+      const pass = artifact === 0 ? 1 : 0;
+      return { dimensions: { pass }, composite: pass, notes: "" };
+    },
+  },
+  expectUsage: "off",
+});
+
+for (const harness of ["claude-code", "codex"]) {
+  const result = await evalKit.evaluate({ surface: harness });
+  console.log(harness, result.aggregates.byJudge.suite?.mean);
+}
+```
+
+```text
+claude-code 1
+codex 1
+```
+
+
+### Gate a prompt change in CI
+
+Fail the build when a candidate prompt passes fewer cases than the shipped one.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+import { defineAgentEval, type Scenario } from "@tangle-network/agent-eval/contract";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+// Run in CI: the build fails when the new prompt scores below the shipped one.
+const shipped = "Fix the cause.";
+const candidate =
+  process.env.CANDIDATE_PROMPT ?? "Fix the cause. Change only what the test needs.";
+
+const evalKit = defineAgentEval<Scenario & { task: string }, number>({
+  scenarios: [
+    { id: "cli-flag", kind: "fix", task: "The test tagged cli-flag fails." },
+    { id: "null-guard", kind: "fix", task: "The test tagged null-guard fails." },
+  ],
+  baselineSurface: shipped,
+  agent: async (prompt, scenario) => {
+    const box = await client.create({
+      git: { url: "https://github.com/tangle-network/sandbox-demo" },
+      backend: { type: "claude-code" },
+    });
+    try {
+      await box.prompt(`${scenario.task} ${String(prompt)}`);
+      return (await box.exec(`npm test -- --test-name-pattern=${scenario.id}`)).exitCode;
+    } finally {
+      await box.delete();
+    }
+  },
+  judge: {
+    name: "suite",
+    dimensions: [{ key: "pass", description: "the tagged test passes after the turn" }],
+    score: ({ artifact }) => {
+      const pass = artifact === 0 ? 1 : 0;
+      return { dimensions: { pass }, composite: pass, notes: "" };
+    },
+  },
+  expectUsage: "off",
+});
+
+const score = async (surface: string) =>
+  (await evalKit.evaluate({ surface })).aggregates.byJudge.suite?.mean ?? 0;
+const before = await score(shipped);
+const after = await score(candidate);
+console.log({ shipped: before, candidate: after });
+if (after < before) {
+  console.error("Regression: the candidate passes fewer cases.");
+  process.exit(1);
+}
+```
+
+```text
+{ shipped: 1, candidate: 1 }
+```
+
+The script exits 1 when the candidate scores lower, which fails a CI step.
+
+### Ask what an agent did
+
+Run a coding agent, then start an intelligence report on the sandbox and wait for it.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+// Every turn is traced. Intelligence reads the trace and reports what the agent did.
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  backend: { type: "claude-code" },
+});
+try {
+  const run = await box.prompt("The test tagged timezone fails. Fix the cause.");
+  console.log(run.success, run.toolInvocations?.length, "tool calls");
+
+  const job = await client.intelligence.createReport({
+    subject: { type: "sandbox", id: box.id },
+    mode: "deterministic",
+  });
+  const report = await client.intelligence.waitForReport(job.jobId, { timeoutMs: 180_000 });
+  console.log(report.status, report.billing.costUsd);
+} finally {
+  await box.delete();
+}
+```
+
+```text
+true 9 tool calls
+completed 0
+```
+
+`report.result` holds the findings and recommended actions, and `report.billing` the charge for the report. See [Traces and resource usage](/sandbox/observability).
+
+## Run sandboxes through agent-runtime
+
+`@tangle-network/agent-runtime` drives any sandbox provider through one interface; `@tangle-network/agent-provider-tangle` is the Tangle provider. [Run agents with agent-runtime](/sandbox/agent-runtime) covers the interface, and [Run on E2B, Daytona and more](/sandbox/other-providers) covers the other providers.
+
+### Run an agent through agent-runtime
+
+Create a sandbox through the agent-runtime provider interface, so the same code can target another provider.
+
+```ts
+import { createTangleProvider } from "@tangle-network/agent-provider-tangle";
+import { providerAsSandboxClient } from "@tangle-network/agent-runtime/kernel";
+import { Sandbox } from "@tangle-network/sandbox";
+
+// Any AgentEnvironmentProvider fits here; this one runs on Tangle.
+const provider = createTangleProvider({
+  client: new Sandbox({
+    apiKey: process.env.TANGLE_API_KEY!,
+    baseUrl: "https://sandbox.tangle.tools",
+  }),
+});
+
+// The coding agent is a profile field: "claude-code", "codex", "opencode", "pi".
+const client = providerAsSandboxClient(provider, {
+  defaults: { profile: { name: "repo-reader", harness: "opencode" } },
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+});
+try {
+  const task = "Read this repository. In two sentences, say what it does.";
+  for await (const event of box.streamPrompt(task)) {
+    if (event.type === "result") console.log(event.data.finalText);
+    if (event.type === "done") console.log(`$${Number(event.data.totalCostUsd).toFixed(4)}`);
+  }
+} finally {
+  await box.delete();
+}
+```
+
+The `done` event carries the run's total cost in USD.
+
+### Time a cold start
+
+Measure create, first command and delete through the provider interface.
+
+```ts
+import { createTangleProvider } from "@tangle-network/agent-provider-tangle";
+import { providerAsSandboxClient } from "@tangle-network/agent-runtime/kernel";
+import { Sandbox } from "@tangle-network/sandbox";
+
+// Swap the provider and these three numbers compare clouds like for like.
+const provider = createTangleProvider({
+  client: new Sandbox({
+    apiKey: process.env.TANGLE_API_KEY!,
+    baseUrl: "https://sandbox.tangle.tools",
+  }),
+});
+const client = providerAsSandboxClient(provider, {
+  defaults: { profile: { name: "timer", harness: "claude-code" } },
+});
+
+const ms = (from: number) => `${Math.round(performance.now() - from)} ms`;
+const t0 = performance.now();
+const box = await client.create();
+console.log("create", ms(t0));
+try {
+  const t1 = performance.now();
+  await box.exec("true");
+  console.log("first command", ms(t1));
+} finally {
+  const t2 = performance.now();
+  await box.delete();
+  console.log("delete", ms(t2));
+}
+```
+
+```text
+create 1578 ms
+first command 281 ms
+delete 1559 ms
+```
+
+Times depend on region, shape and load; run it a few times before you compare.
+
+## Run an agent graph from the CLI
+
+`haiku-review.yaml` ships with the CLI. A poet writes a haiku, an independent critic counts its syllables, and the run passes only when the critic approves a five, seven, five poem.
+
+```yaml
+graph: haiku-review
+describe: Two independent agents write and judge a haiku; use the detected local subscription.
+params:
+  topic: { type: string, default: rain at dawn }
+nodes:
+  - id: poet
+    profile:
+      prompt:
+        systemPrompt: >-
+          Write one original English haiku about the assigned topic. Return only
+          JSON with poem containing exactly three strings. Use five, seven and
+          five syllables. Do not judge or approve your own poem.
+  - id: critic
+    profile:
+      prompt:
+        systemPrompt: >-
+          Judge the poet's result supplied in the task evidence. Independently
+          count the syllables in each line and assess whether it is a haiku
+          about the requested topic. Do not rewrite the poem. Return only JSON
+          with approved (boolean), poem (the same three strings), syllables
+          (three integer counts), and reason. Approve only a five/seven/five
+          haiku; explain any failure honestly.
+entry:
+  - node: poet
+    task: 'Write a haiku about ${params.topic}.'
+edges:
+  - kind: routes
+    from: poet
+    to: critic
+    directive: { surface: delegates/worker-brief, version: 1 }
+budget:
+  maxIterations: 6
+  maxTokens: 64000
+  deadlineMs: 120000
+check:
+  describe: PASS when the independent critic approves and reports five/seven/five; FAIL otherwise.
+  all:
+    - { node: critic, pointer: /approved, equals: true }
+    - { node: critic, pointer: /syllables/0, equals: 5 }
+    - { node: critic, pointer: /syllables/1, equals: 7 }
+    - { node: critic, pointer: /syllables/2, equals: 5 }
+```
+
+```bash
+tangle graph show haiku-review.yaml
+tangle graph run haiku-review.yaml --param topic="first snow"
+tangle graph inspect <run-id>
+```
+
+`tangle graph run` runs each node on a coding agent you are signed in to on your machine, such as Claude Code or Codex.
+With none signed in, it stops before running with `SEAT_NONE_DETECTED`, even with `--dry-run`.
+`graph show` draws the nodes and routes, and `graph inspect` reads a live or finished run. The file is in the installed package at `node_modules/@tangle-network/sandbox-cli/examples/haiku-review.yaml`.
+[Agent graphs](/sandbox/agents-graphs) explains nodes, edges, budgets and checks.
+
+## Next
+
+- [Evaluate agents](/sandbox/evaluation)
+- [Agent graphs](/sandbox/agents-graphs)
+- [All examples](/sandbox/examples)

@@ -1,141 +1,119 @@
 import type { Meta } from "nextra";
 
 const meta: Meta = {
-  overview: {
-    title: "Overview",
-  },
-  quickstart: {
-    title: "Quickstart",
-  },
-  authentication: {
-    title: "Authentication & browser access",
-  },
-  cost: {
-    title: "Cost, limits & spin-down",
-  },
-  comparison: {
-    title: "vs e2b / Daytona / Modal",
-  },
-  "-- runtime": {
+  "-- get-started": {
     type: "separator",
-    title: "Agent Runtime",
+    title: "Get started",
   },
-  "agent-runtime": {
-    title: "Run agents with agent-runtime",
-  },
-  "other-providers": {
-    title: "Run on E2B, Daytona, or Boat",
-  },
-  evaluation: {
-    title: "Evaluate agents with agent-eval",
-  },
-  "-- cloud-agents": {
+  overview: "Overview",
+  quickstart: "Quickstart",
+  authentication: "API keys and tokens",
+  teams: "Teams",
+  concepts: "How sandboxes work",
+  "-- sandboxes": {
     type: "separator",
-    title: "Cloud agents",
+    title: "Sandboxes",
   },
-  "cloud-agents": {
-    title: "Start a cloud agent",
+  lifecycle: "Create, stop and delete",
+  commands: "Run commands and code",
+  streaming: "Stream output",
+  files: "Files",
+  git: "Git",
+  "ports-previews": "Ports and preview links",
+  terminals: "Shells and terminals",
+  snapshots: "Snapshots and forks",
+  "templates-gallery": "Templates and images",
+  "startup-scripts": "Startup scripts",
+  "gpu-leases": "GPU leases",
+  observability: "Traces and resource usage",
+  "-- network": {
+    type: "separator",
+    title: "Network, secrets and security",
   },
-  "cloud-agents-claude-code": {
-    title: "Claude Code subscription",
+  egress: "Network access",
+  secrets: "Secrets",
+  security: "Isolation and compliance",
+  "-- coding-agents": {
+    type: "separator",
+    title: "Coding agents",
   },
-  "cloud-agents-codex": {
-    title: "Codex & ChatGPT plan",
-  },
-  "cloud-agents-coding-plans": {
-    title: "Coding plans (GLM, Kimi, MiniMax)",
-  },
-  "cloud-agents-profiles": {
-    title: "Agent profiles",
-  },
+  "cloud-agents": "Run a coding agent",
+  interactive: "Interactive mode",
+  sessions: "Sessions",
+  "cloud-agents-claude-code": "Claude Code on your Claude plan",
+  "cloud-agents-codex": "Codex on your ChatGPT plan",
+  "cloud-agents-coding-plans": "GLM, Kimi and MiniMax plans",
+  "cloud-agents-profiles": "AgentProfiles",
+  connections: "Connections",
+  "agents-multiple": "Several agents in one sandbox",
+  instances: "One sandbox per user",
+  lines: "Email, iMessage and voice lines",
   "-- scale": {
     type: "separator",
     title: "Scale out",
   },
-  "agents-multiple": {
-    title: "Multiple agents in one sandbox",
-  },
-  "agents-fleet": {
-    title: "Fleets",
-  },
-  "agents-graphs": {
-    title: "Agent graphs",
-  },
-  "-- sdk": {
-    type: "separator",
-    title: "SDK",
-  },
-  "sdk-typescript": {
-    title: "TypeScript SDK",
-  },
-  "sdk-python": {
-    title: "Python",
-  },
-  "-- capabilities": {
-    type: "separator",
-    title: "Capabilities",
-  },
-  egress: {
-    title: "Network egress rules",
-  },
-  "gpu-leases": {
-    title: "GPU leases",
-  },
-  "templates-gallery": {
-    title: "Templates",
-  },
+  "agents-fleet": "Fleets",
+  "runs-and-batch": "Batches and hosted runs",
+  "agents-graphs": "Agent graphs",
   "-- frameworks": {
     type: "separator",
     title: "Agent frameworks",
   },
-  "agents-anthropic": {
-    title: "Anthropic (Claude)",
-  },
-  "agents-openai": {
-    title: "OpenAI",
-  },
-  "agents-vercel-ai": {
-    title: "Vercel AI SDK",
-  },
-  "agents-mastra": {
-    title: "Mastra",
-  },
-  "agents-mcp": {
-    title: "MCP (hosted + local)",
-  },
-  "-- cli": {
+  integrations: "Integrations",
+  "agents-anthropic": "Anthropic SDK",
+  "agents-openai": "OpenAI",
+  "agents-vercel-ai": "Vercel AI SDK",
+  "agents-mastra": "Mastra",
+  "agents-mcp": "MCP clients",
+  "-- runtime": {
     type: "separator",
-    title: "CLI",
+    title: "Agent runtime and evaluation",
   },
-  cli: {
-    title: "tangle CLI",
-  },
+  "agent-runtime": "Run agents with agent-runtime",
+  "other-providers": "Run on E2B, Daytona and more",
+  evaluation: "Evaluate agents",
   "-- workflows": {
     type: "separator",
     title: "Workflows",
   },
-  workflows: {
-    title: "Overview & quickstart",
+  workflows: "Workflows",
+  "workflows-run": "Run and inspect workflows",
+  "workflows-yaml": "Workflow YAML",
+  "workflows-templates": "Workflow templates",
+  "-- examples": {
+    type: "separator",
+    title: "Examples",
   },
-  "workflows-run": {
-    title: "Run, inspect & trace",
-  },
-  "workflows-yaml": {
-    title: "YAML reference",
-  },
-  "workflows-templates": {
-    title: "Workflow templates",
-  },
+  examples: "Examples",
   "-- reference": {
     type: "separator",
     title: "Reference",
   },
-  "api-reference": {
-    title: "API reference (OpenAPI)",
+  "sdk-typescript": "TypeScript SDK",
+  "sdk-python": "Python SDK",
+  cli: "CLI",
+  "api-reference": "REST API",
+  "-- operate": {
+    type: "separator",
+    title: "Operate",
   },
-  "web-app": {
-    title: "Dashboard guide",
+  cost: "Pricing and spend",
+  limits: "Limits and timeouts",
+  errors: "Error codes",
+  troubleshooting: "Troubleshooting",
+  "web-app": "Dashboard",
+  "release-notes": {
+    title: "Release notes",
+    href: "/release-notes/sandbox",
   },
+  "-- compare": {
+    type: "separator",
+    title: "Compare and migrate",
+  },
+  comparison: "Compare sandboxes",
+  "migrate-e2b": "Move from E2B",
+  "migrate-daytona": "Move from Daytona",
+  "migrate-modal": "Move from Modal",
 };
 
 export default meta;

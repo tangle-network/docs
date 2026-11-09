@@ -1,13 +1,19 @@
-# Coding plans: GLM, Kimi, MiniMax, and more
+---
+title: Use GLM, Kimi and MiniMax coding plans
+description: Run the OpenCode coding agent in a sandbox against a Z.ai GLM Coding Plan or any OpenAI-compatible provider key you already pay for.
+---
 
-Run a cloud coding agent on a provider plan you already pay for. The OpenCode
-harness speaks to Z.ai's GLM Coding Plan directly and to any
-OpenAI-compatible endpoint, which covers Kimi, MiniMax, DeepSeek, OpenRouter,
-and self-hosted gateways.
+# Use GLM, Kimi and MiniMax coding plans
 
-Every recipe has the same three parts: store the key as a secret, name it with
+OpenCode runs against a provider plan you already pay for: Z.ai's GLM Coding
+Plan directly, and Kimi, MiniMax, DeepSeek, OpenRouter or a self-hosted
+gateway through any OpenAI-compatible endpoint. For Claude Code or Codex on
+their own plans, see [Claude Code on your Claude plan](/sandbox/cloud-agents-claude-code)
+and [Codex on your ChatGPT plan](/sandbox/cloud-agents-codex).
+
+Every recipe has three parts: store the key as a secret, name it with
 `apiKeyEnv`, and grant it with `secrets`. The key never appears in the create
-request.
+request, and the platform mints no Router key for the sandbox.
 
 ## Z.ai GLM Coding Plan
 
@@ -21,44 +27,51 @@ const client = new Sandbox({
 
 await client.secrets.create("ZAI_KEY", process.env.ZAI_API_KEY!);
 
-const agent = await client.create({
-  name: "glm-agent",
+// The plan key drives OpenCode; Claude Code and Codex sign in with their own plans.
+const box = await client.create({
   backend: {
     type: "opencode",
     model: {
       provider: "zai-coding-plan",
-      model: "glm-4.6",
+      model: "<model-id>",
       apiKeyEnv: "ZAI_KEY",
-      // International (z.ai) accounts; omit for open.bigmodel.cn accounts.
+      // For keys bought on z.ai; omit for open.bigmodel.cn keys.
       baseUrl: "https://api.z.ai/api/coding/paas/v4",
     },
   },
   secrets: ["ZAI_KEY"],
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
 });
-await agent.waitFor("running");
-
-const result = await agent.prompt("Write a CLI that converts CSV to JSON.", {
-  sessionId: "main",
-});
-console.log(result.response);
+try {
+  const run = await box.prompt("Write a CLI that converts CSV to JSON.", { sessionId: "main" });
+  console.log(run.success ? run.response : run.error);
+} finally {
+  await box.delete();
+}
 ```
 
-Without `baseUrl`, `zai-coding-plan` calls BigModel's endpoint,
-`open.bigmodel.cn`. Keys from z.ai and from BigModel are separate accounts, so
-match the endpoint to where you bought the plan.
+Without `baseUrl`, `zai-coding-plan` calls
+`https://open.bigmodel.cn/api/coding/paas/v4`. Keys from z.ai and from BigModel
+belong to separate accounts, so match the endpoint to where you bought the
+plan. Use the model ids from your plan's model list.
 
-## Kimi (Moonshot)
+## Kimi, MiniMax and other OpenAI-compatible providers
+
+`provider: "openai-compat"` takes any base URL that serves
+`/chat/completions`. Set `baseUrl` to the URL up to, but not including,
+`/chat/completions`, and `model` to the id that provider lists. Like the Z.ai
+recipe, this runs OpenCode, not Claude Code or Codex.
 
 ```ts
 await client.secrets.create("MOONSHOT_KEY", process.env.MOONSHOT_API_KEY!);
 
-const agent = await client.create({
+const box = await client.create({
   backend: {
     type: "opencode",
     model: {
       provider: "openai-compat",
       baseUrl: "https://api.moonshot.ai/v1",
-      model: "kimi-k2-0905-preview",
+      model: "<model-id>",
       apiKeyEnv: "MOONSHOT_KEY",
     },
   },
@@ -66,66 +79,51 @@ const agent = await client.create({
 });
 ```
 
-## MiniMax
-
-```ts
-await client.secrets.create("MINIMAX_KEY", process.env.MINIMAX_API_KEY!);
-
-const agent = await client.create({
-  backend: {
-    type: "opencode",
-    model: {
-      provider: "openai-compat",
-      baseUrl: "https://api.minimax.io/v1",
-      model: "MiniMax-M2",
-      apiKeyEnv: "MINIMAX_KEY",
-    },
-  },
-  secrets: ["MINIMAX_KEY"],
-});
-```
-
-## Any OpenAI-compatible endpoint
-
-`provider: "openai-compat"` takes any base URL that serves
-`/chat/completions`: OpenRouter, DeepSeek, Together, Fireworks, or your own
-vLLM or LiteLLM gateway. Set `baseUrl` to the URL that ends before
-`/chat/completions` and `model.model` to the model name that endpoint expects.
-
 | Provider | `baseUrl` |
 |---|---|
-| OpenRouter | `https://openrouter.ai/api/v1` |
-| DeepSeek | `https://api.deepseek.com/v1` |
-| Kimi | `https://api.moonshot.ai/v1` |
+| Kimi (Moonshot) | `https://api.moonshot.ai/v1` |
 | MiniMax | `https://api.minimax.io/v1` |
+| DeepSeek | `https://api.deepseek.com/v1` |
+| OpenRouter | `https://openrouter.ai/api/v1` |
 
-## Check where the agent's model calls went
+Each provider publishes its own model list; take the model id from there.
 
-Egress activity records every host the sandbox reached, so you can confirm the
-agent called your provider and nothing else:
+OpenCode accepts these `provider` values: `openai`, `anthropic`,
+`openai-compat`, `openrouter`, `zai` (and `zai-` variants such as
+`zai-coding-plan`), `codex-cli` and `claude-code`. A `baseUrl` on `z.ai` or
+`bigmodel.cn` selects Z.ai, and one containing `openrouter` selects OpenRouter.
+These values configure OpenCode only; Claude Code and Codex have their own pages.
+
+## Check where the model calls went
+
+Egress activity lists every host the sandbox reached, so you can confirm the
+agent called your provider:
 
 ```ts
-const activity = await agent.egress.activity({ limit: 100 });
+const activity = await box.egress.activity({ limit: 100 });
 for (const destination of activity.destinations) {
   console.log(destination.action, destination.host, destination.count);
 }
-// allow api.moonshot.ai 2
+if (!activity.complete) console.log("Partial:", activity.incompleteReasons);
 ```
 
-To make that a rule instead of an observation, create the agent with a strict
-egress policy that lists only the provider's host. See
-[Network egress rules](/docs/egress).
+`activity.complete` is `false` when part of the record could not be read. The
+call answers 409 on a sandbox without egress control enabled. To make the
+provider the only host the agent can reach, create the sandbox with a strict
+egress policy. See [Network access](/sandbox/egress).
 
 ## Troubleshooting
 
-| Result | Cause | Fix |
-|---|---|---|
-| `APIError 401` | The provider rejected the key, or the key belongs to a different endpoint (z.ai vs BigModel). | Check the key and `baseUrl` pair. |
-| `400 … apiKeyEnv names …, which is not in secrets` | The secret is not granted. | Add it to `secrets`. |
-| `Unsupported OpenCode provider` | `provider` is not one OpenCode knows. | Use `zai-coding-plan`, `zai`, `openai-compat`, `openrouter`, `anthropic`, or `openai`. |
+| Message | Fix |
+|---|---|
+| `backend.model.apiKeyEnv names ZAI_KEY, which is not a selected secret or proxy alias` | Add the secret to `secrets`. |
+| `Unsupported OpenCode provider "..."` | Use one of the `provider` values above. |
+| A 401 from the provider | Check that the key and `baseUrl` belong to the same account (z.ai or BigModel). |
 
-## Related
+For Claude Code and Codex sign-in errors, see their own pages.
 
-- [Start a cloud agent](/docs/cloud-agents)
-- [Claude Code subscription](/docs/cloud-agents/claude-code)
-- [Codex & ChatGPT plan](/docs/cloud-agents/codex)
+## Next
+
+- [Run a coding agent](/sandbox/cloud-agents)
+- [Secrets](/sandbox/secrets): how stored keys are kept and delivered.
+- [Network access](/sandbox/egress)

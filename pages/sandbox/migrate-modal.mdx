@@ -1,0 +1,129 @@
+---
+title: Move from Modal Sandboxes to Tangle Sandbox
+description: Map Modal Sandbox creation, exec, file access, tunnels, network controls, snapshots and timeouts to the Tangle Sandbox Python and TypeScript SDKs.
+---
+
+import { Tabs } from "nextra/components";
+
+# Move from Modal Sandboxes
+
+This guide maps Modal Sandbox calls to Tangle Sandbox. Most Modal code is Python, so the Python SDK comes first; the TypeScript SDK covers more, and the table says where.
+
+## What maps to what
+
+| Modal | Tangle Sandbox (Python) | TypeScript |
+|---|---|---|
+| `modal.App.lookup(...)` and a Modal token | `Sandbox(api_key=..., base_url="https://sandbox.tangle.tools")`; no app object | `new Sandbox({ apiKey, baseUrl })` |
+| `modal.Sandbox.create(image=...)` | `client.create(environment=...)`, then `wait_for(SandboxStatus.RUNNING)`. `environment` takes a catalog environment or a container image reference. | `client.create({ environment })` |
+| `modal.Sandbox.from_id(id)` | `client.get(id)` | `client.get(id)` |
+| `sb.exec("python", "-c", code)` | `box.exec("python3 -c '...'")`, which returns `exit_code` and `stdout` | `box.exec(...)` |
+| Reading `p.stdout` while it runs | Not available | `box.process.spawn(cmd)`, then `proc.stdout()` |
+| `sb.open(path)` | `box.read(path)`, `box.write(path, text)` | `box.read`, `box.write`, `box.fs.*` |
+| `timeout=` | `max_lifetime_seconds=` | `maxLifetimeSeconds` |
+| `idle_timeout=` | `idle_timeout_seconds=` | `idleTimeoutSeconds` |
+| `cpu=`, `memory=` | `resources=SandboxResources(cpu_cores=..., memory_mb=...)` | `resources: { cpuCores, memoryMB }` |
+| `gpu=` | See [GPU leases](/sandbox/gpu-leases) | `box.gpu.attach(...)` |
+| `encrypted_ports=` and `sb.tunnels()` | `client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/preview-links", json={"port": port})` | `box.previewLinks.create(port)` |
+| `block_network=True` | `egress_policy=EgressPolicy(mode="blocked")` | `egressPolicy: { mode: "blocked" }` |
+| `cidr_allowlist=` | `EgressPolicy(mode="strict", allow_domains=[...])`; rules name domains | `egressPolicy: { mode: "strict", allowDomains }` |
+| `secrets=[modal.Secret.from_name(...)]` | `secrets=["NAME"]`, stored with `client.secrets.create` | `secrets: ["NAME"]` |
+| `sb.snapshot_filesystem()` | `box.snapshot()`, then `client.create(from_snapshot=snapshot_id, from_sandbox_id=box.id)` | `box.snapshot()`, `client.create({ fromSnapshot, fromSandboxId })` |
+| `sb.terminate()` | `box.delete()` | `box.delete()` |
+| `volumes=` | No equivalent. Keep data in a snapshot, a git remote or your own object storage. | |
+
+A stopped Tangle sandbox keeps its files until you delete it or `deleteAfterStoppedSeconds` passes, so delete in a `finally` block.
+
+## The same program on Tangle
+
+Run Python with no network access, then snapshot the result and start a second sandbox from it:
+
+<Tabs items={["Python", "TypeScript"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+
+```python filename="from_modal.py"
+import os
+
+from tangle_sandbox import (
+    CreateSandboxOptions,
+    EgressPolicy,
+    Sandbox,
+    SandboxStatus,
+)
+
+client = Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+)
+
+box = client.create(
+    CreateSandboxOptions(
+        max_lifetime_seconds=600,
+        egress_policy=EgressPolicy(mode="blocked"),
+    )
+)
+copy = None
+try:
+    box.wait_for(SandboxStatus.RUNNING)
+    box.write("data.csv", "a,b\n1,2\n3,4\n")
+    result = box.exec("python3 -c \"import csv; print(sum(int(r['b']) for r in csv.DictReader(open('data.csv'))))\"")
+    print(result.exit_code, result.stdout)
+
+    snapshot = box.snapshot()
+    copy = client.create(
+        CreateSandboxOptions(from_snapshot=snapshot.snapshot_id, from_sandbox_id=box.id)
+    )
+    copy.wait_for(SandboxStatus.RUNNING)
+    print(copy.exec("cat data.csv").stdout)
+finally:
+    box.delete()
+    if copy is not None:
+        copy.delete()
+    client.close()
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```ts filename="from-modal.mts"
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  maxLifetimeSeconds: 600,
+  egressPolicy: { mode: "blocked" },
+});
+let copy: Awaited<ReturnType<typeof client.create>> | undefined;
+try {
+  await box.write("data.csv", "a,b\n1,2\n3,4\n");
+  const result = await box.exec(
+    `python3 -c "import csv; print(sum(int(r['b']) for r in csv.DictReader(open('data.csv'))))"`,
+  );
+  console.log(result.exitCode, result.stdout);
+
+  const { snapshotId } = await box.snapshot();
+  copy = await client.create({ fromSnapshot: snapshotId, fromSandboxId: box.id });
+  console.log((await copy.exec("cat data.csv")).stdout);
+} finally {
+  await box.delete();
+  await copy?.delete();
+}
+```
+
+</Tabs.Tab>
+</Tabs>
+
+A relative path such as `data.csv` is in the sandbox's workspace, which is where commands run and what a snapshot saves. See [Snapshots and forks](/sandbox/snapshots).
+
+## Coding agents
+
+Every Tangle sandbox can run a coding agent. Give it a task with `box.prompt()`, and pick Claude Code, Codex or another agent with `backend.type`. See [Run a coding agent](/sandbox/cloud-agents).
+
+## Next steps
+
+- [Python SDK](/sandbox/sdk-python): every Python class and method.
+- [Network access](/sandbox/egress): strict, blocked and open policies.
+- [Compare sandboxes](/sandbox/comparison): features side by side.

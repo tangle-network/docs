@@ -1,0 +1,416 @@
+---
+title: SandboxInstance
+description: Reference for the Python SandboxInstance and AsyncSandboxInstance: lifecycle, exec, files, search, coding agent prompts, git, snapshots, network rules, SSH and traces.
+---
+
+import { Callout } from "nextra/components";
+
+# SandboxInstance
+
+`client.create()`, `client.get()` and `client.list()` return a `SandboxInstance`; `AsyncSandbox` returns an `AsyncSandboxInstance` whose methods are coroutines.
+Each instance caches the sandbox's details. `refresh()`, `wait_for()`, `stop()` and `resume()` update the cache; runtime calls check it and raise `StateError` unless the status is `RUNNING`.
+
+```python
+box = client.create()
+box.wait_for(SandboxStatus.RUNNING)
+print(box.exec("uname -s").stdout.strip())
+box.delete()
+```
+
+## Properties
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `id` | `str` | Sandbox id |
+| `name` | `str \| None` | Display name |
+| `status` | `SandboxStatus` | Cached status |
+| `connection` | `SandboxConnection \| None` | `runtime_url`, `host_url`, `auth_token`, `auth_token_expires_at`, `ssh`, `web_terminal_url`. `auth_token` opens the sandbox's runtime; keep it secret |
+| `metadata` | `dict` | Your metadata |
+| `created_at`, `started_at`, `last_activity_at`, `expires_at` | `datetime \| None` | Timestamps |
+| `error` | `str \| None` | Why the sandbox failed, when it did |
+| `git` | `GitCapability` | Git operations; see [Git](#git) |
+
+## Lifecycle
+
+### `refresh`
+
+```python
+refresh() -> None
+```
+
+Reads the sandbox again and replaces the cached details. Raises `NotFoundError` after the sandbox is deleted.
+Request: `GET /v1/sandboxes/{id}`
+
+### `wait_for`
+
+```python
+wait_for(status: SandboxStatus | list[SandboxStatus], options: WaitForOptions | None = None) -> None
+```
+
+Polls until the status is one of the targets. `WaitForOptions(timeout_ms=120000, poll_interval_ms=2000)` are the defaults.
+Raises `StateError` with the sandbox's error when it reaches `FAILED`, and `TimeoutError` after `timeout_ms`. A sandbox that is `EXPIRED` or `DELETED` keeps polling until the timeout.
+
+```python
+from tangle_sandbox import SandboxStatus, WaitForOptions
+
+box.wait_for(SandboxStatus.RUNNING, WaitForOptions(timeout_ms=180_000))
+```
+
+### `stop`
+
+```python
+stop() -> None
+```
+
+Stops the sandbox and keeps its disk. `status` reads `STOPPED` when it returns.
+Request: `POST /v1/sandboxes/{id}/stop`
+
+### `resume`
+
+```python
+resume() -> None
+```
+
+Starts a stopped sandbox. The status may still be `provisioning`; call `wait_for(SandboxStatus.RUNNING)` next.
+Request: `POST /v1/sandboxes/{id}/resume`
+
+### `delete`
+
+```python
+delete() -> None
+```
+
+Deletes the sandbox and its disk for good. The cached `status` does not change.
+A sandbox that has live branch children is refused with `CHILDREN_EXIST`; delete the children first.
+Request: `DELETE /v1/sandboxes/{id}`
+
+## Commands
+
+### `exec`
+
+```python
+exec(command: str, options: ExecOptions | None = None) -> ExecResult
+```
+
+Runs `command` with bash and waits for it. Returns `ExecResult(exit_code, stdout, stderr)`; a non-zero exit code is returned, not raised.
+stderr is merged into stdout, so `stderr` is empty.
+
+| `ExecOptions` field | Description |
+| --- | --- |
+| `cwd` | Directory to run in. A directory that does not exist is ignored and the command runs in the default directory |
+| `env` | Extra environment variables |
+| `timeout_ms` | Default 30000. A command that runs longer raises an error that names the timeout |
+| `session_id` | Accepted and not sent |
+
+The default directory is `/home/agent`, or the cloned repository when the sandbox was created with `git`.
+Request: `POST /v1/sandboxes/{id}/runtime/process/spawn`
+
+```python
+from tangle_sandbox import ExecOptions
+
+result = box.exec("npm test", ExecOptions(cwd="/home/agent/sandbox-demo", timeout_ms=120_000))
+print(result.exit_code)
+print(result.stdout[-500:])
+```
+
+For background processes, separate stderr or structured code output, see [What Python can do](/sandbox/sdk-python#what-python-can-do-and-what-to-use-for-the-rest).
+
+## Files
+
+### `read`
+
+```python
+read(path: str) -> str
+```
+
+Reads a UTF-8 text file. A relative path resolves in the working directory. An absolute path outside the paths the sandbox allows is refused with a 403 error.
+Request: `POST /v1/sandboxes/{id}/runtime/files/read`
+
+### `write`
+
+```python
+write(path: str, content: str) -> None
+```
+
+Writes a UTF-8 text file, replacing any content.
+Request: `POST /v1/sandboxes/{id}/runtime/files/write`
+
+```python
+box.write("orders.csv", "customer,amount\nacme,1500\n")
+print(box.read("orders.csv"))
+```
+
+### `search`
+
+```python
+search(pattern: str, options: SearchOptions | None = None) -> list[SearchMatch]
+```
+
+Searches workspace files for a regular expression with ripgrep. `SearchOptions` takes `glob`, `cwd`, `max_results`, `ignore_case` and `context` (lines before and after).
+Each `SearchMatch` has `path`, `line`, `column`, `text`, `before` and `after`.
+Request: `POST /v1/sandboxes/{id}/runtime/search`
+
+If `search` returns no matches for text you know is there, run `grep -rn` through `exec`.
+
+## Coding agents
+
+### `prompt`
+
+```python
+prompt(message: str, options: PromptOptions | None = None) -> PromptResult
+```
+
+Sends `message` to the sandbox's coding agent and waits for the whole turn.
+Returns `PromptResult(success, response, error, trace_id, duration_ms, usage)`. A failed turn comes back with `success=False` and `error` set; it does not raise.
+
+| `PromptOptions` field | Description |
+| --- | --- |
+| `session_id` | Continue a conversation |
+| `backend` | `BackendConfig(type=..., model=..., profile=...)` for this turn |
+| `timeout_ms` | Longest wait between events |
+| `context` | Sent as metadata with the turn |
+
+Request: `POST /v1/sandboxes/{id}/runtime/agents/run/stream`
+
+```python
+from tangle_sandbox import PromptOptions
+
+run = box.prompt(
+    "The test tagged null-guard fails. Find the cause and fix it.",
+    PromptOptions(timeout_ms=600_000),
+)
+if not run.success:
+    raise RuntimeError(run.error)
+print(run.usage)
+```
+
+```text
+TokenUsage(input_tokens=119425, output_tokens=1265)
+```
+
+### `stream_prompt`
+
+```python
+stream_prompt(message: str, options: PromptOptions | None = None) -> Iterator[SandboxEvent]
+```
+
+Yields `SandboxEvent(type, data, id)` as the agent works. On `AsyncSandboxInstance` it is an async iterator.
+
+| Event `type` | `data` |
+| --- | --- |
+| `message.part.updated` | `part` (with `type` such as `text` or `tool`) and, for text, `delta` |
+| `result` | `finalText` and `tokenUsage` |
+| `trace.id` | `traceId` |
+| `error` | `message` |
+
+```python
+seen = set()
+for event in box.stream_prompt("The test tagged timezone fails. Fix the cause."):
+    part = event.data.get("part") or {}
+    if event.type == "message.part.updated" and part.get("type") == "tool":
+        if part.get("id") not in seen:
+            seen.add(part.get("id"))
+            print(f"{len(seen)}.", part.get("tool"))
+    if event.type == "result":
+        print(event.data.get("finalText"))
+```
+
+```text
+1. Bash
+2. Bash
+3. Bash
+4. Read
+...
+Fixed. ...
+```
+
+## Git
+
+`box.git` runs git in the working directory. `AsyncSandboxInstance.git` has the same methods as coroutines.
+
+| Method | Returns | Request |
+| --- | --- | --- |
+| `status()` | `GitStatus`: `is_repo`, `branch`, `head`, `is_dirty`, `ahead`, `behind`, `staged`, `modified`, `untracked` | `GET .../runtime/git/status` |
+| `log(limit=10)` | `list[GitCommit]` | `GET .../runtime/git/log` |
+| `diff(ref=None)` | `GitDiff`: `files`, `additions`, `deletions`, `raw`. `diff()` shows unstaged changes; `diff("HEAD")` adds staged ones | `GET .../runtime/git/diff` |
+| `add(paths)` | | `POST .../runtime/git/add` |
+| `commit(message, *, amend=False)` | `GitCommit`: `sha`, `short_sha`, `message`, `author`, `email`, `date` | `POST .../runtime/git/commit` |
+| `push(*, force=False)` | | `POST .../runtime/git/push` |
+| `pull(*, rebase=False)` | | `POST .../runtime/git/pull` |
+| `branches()` | `list[GitBranch]`: `name`, `current`, `upstream`, `commit` | `GET .../runtime/git/branches` |
+| `checkout(ref, *, create=False)` | | `POST .../runtime/git/checkout` |
+
+`push` and `pull` use the credentials in the sandbox, such as a token from `GitConfig(auth=GitAuth(token=...))` at create.
+`commit` takes no author, and the sandbox has no git identity, so set one first:
+
+```python
+changed = [f["path"] for f in box.git.diff("HEAD").files]
+box.exec('git config --global user.name "Docs Example"')
+box.exec("git config --global user.email docs@example.com")
+box.git.add(changed)
+commit = box.git.commit("fix: guard a null request body")
+print(commit.short_sha, commit.message)
+```
+
+## Snapshots
+
+### `snapshot`
+
+```python
+snapshot(options: SnapshotOptions | None = None) -> SnapshotResult
+```
+
+Saves the workspace and waits up to 600 s for the save. Returns `snapshot_id`, `created_at`, `size_bytes` and `tags`.
+With `SnapshotOptions(storage=StorageConfig(...))` the snapshot goes to your own bucket.
+Request: `POST /v1/sandboxes/{id}/snapshots`
+
+### `list_snapshots`
+
+```python
+list_snapshots() -> list[SnapshotInfo]
+```
+
+Lists the sandbox's snapshots. A new snapshot takes a few seconds to appear.
+Request: `GET /v1/sandboxes/{id}/snapshots`
+
+### `restore_paths`
+
+```python
+restore_paths(snapshot_id: str, paths: list[str]) -> SnapshotResult
+```
+
+Copies the listed workspace paths back from a snapshot into the running sandbox. Wait for the snapshot to appear in `list_snapshots()` first.
+Request: `POST /v1/sandboxes/{id}/snapshots/{snapshotId}/restore`
+
+### Start a sandbox from a snapshot
+
+Pass `from_snapshot` with `from_sandbox_id`, the sandbox that took it:
+
+```python
+import time
+
+from tangle_sandbox import CreateSandboxOptions, SnapshotOptions
+
+box.write("config.json", '{"retries": 3}\n')
+clean = box.snapshot(SnapshotOptions(tags=["clean"]))
+
+# A new snapshot takes a few seconds to appear in the list.
+for _ in range(60):
+    if clean.snapshot_id in [s.snapshot_id for s in box.list_snapshots()]:
+        break
+    time.sleep(1)
+
+box.write("config.json", '{"retries": "oops"}\n')
+box.restore_paths(clean.snapshot_id, ["config.json"])
+print("restored", box.read("config.json"), end="")
+
+copy = client.create(CreateSandboxOptions(from_snapshot=clean.snapshot_id, from_sandbox_id=box.id))
+copy.wait_for(SandboxStatus.RUNNING)
+print("copy", copy.read("config.json"), end="")
+copy.delete()
+```
+
+```text
+restored {"retries": 3}
+copy {"retries": 3}
+```
+
+Reverting a whole sandbox and deleting snapshots are in the TypeScript SDK and the CLI; see [Snapshots and forks](/sandbox/snapshots).
+
+## Network rules
+
+```python
+egress_get() -> tuple[EgressPolicy, str]
+egress_update(policy: EgressPolicy) -> tuple[EgressPolicy, str]
+egress_denials(limit: int | None = None) -> list[EgressDenial]
+```
+
+`EgressPolicy(mode, allow_domains=None, include_implicit_domains=None)`: `mode` is `open`, `strict` or `blocked`. `strict` reaches the listed domains and the sandbox's own model endpoint.
+The second value says where the policy comes from: `sandbox`, `team` or `platform`.
+`egress_denials` lists refused destinations, newest first, with `host`, `rejected_by`, `count` and `last_at`. `limit` is 1 to 50.
+
+Requests: `GET /v1/sandboxes/{id}`, `PATCH /v1/sandboxes/{id}/egress`, `GET /v1/sandboxes/{id}/egress/denials`
+
+```python
+from tangle_sandbox import EgressPolicy
+
+for denial in box.egress_denials():
+    print("refused", denial.host, denial.count)
+
+policy, source = box.egress_update(
+    EgressPolicy(mode="strict", allow_domains=["pypi.org", "example.com"])
+)
+print(policy.mode, policy.allow_domains, source)
+```
+
+```text
+refused example.com 1
+strict ['pypi.org', 'example.com'] sandbox
+```
+
+[Network access](/sandbox/egress) explains the modes.
+
+## SSH
+
+```python
+ssh() -> SSHCredentials
+```
+
+Returns `SSHCredentials(host, port, username)` from the cached connection, without a request.
+Create the sandbox with `ssh_enabled=True` and `ssh_public_keys` or `ssh_key_ids`, or `ssh()` raises `StateError`. For a ready-made command, use `tangle ssh` from the CLI.
+
+## Traces and reports
+
+```python
+trace(*, include_intelligence=False) -> SandboxTraceBundle
+intelligence() -> dict
+export_trace(url: str, *, headers=None, format="tangle", service_name="tangle-sandbox", timeout=30.0) -> dict
+create_intelligence_report(*, mode="deterministic", acknowledge_cost=False, budget=None, metadata=None) -> IntelligenceReport
+create_agentic_intelligence_report(*, max_usd: float, metadata=None) -> IntelligenceReport
+```
+
+`trace()` returns the sandbox's lifecycle events, timings and critical path. `intelligence()` returns only the derived analysis and raises `RuntimeError` when there is none.
+`export_trace` posts the trace to your collector, as Tangle JSON or with `format="otel-json"` as OpenTelemetry JSON, and raises `RuntimeError` when the collector answers with an error.
+The report methods start a report job for this sandbox; the agentic mode is billed up to `max_usd`.
+
+Requests: `GET /v1/sandboxes/{id}/trace`, `POST /v1/intelligence/reports`
+
+## `direct`
+
+```python
+direct() -> SandboxInstance
+```
+
+Returns an instance whose `exec`, file, git and prompt calls go straight to the sandbox's runtime with its own token, skipping the Sandbox API. Network and preview calls still go through the API.
+Raises `StateError` when the sandbox has no runtime URL.
+
+## `fetch`
+
+```python
+fetch(method: str, path: str, *, json=None, params=None, headers=None, timeout=None) -> httpx.Response
+```
+
+The same raw request as `client.fetch`, on this instance's connection. Use it for routes the SDK does not wrap, such as the MCP endpoint:
+
+```python
+response = box.fetch("GET", f"/v1/sandboxes/{box.id}/mcp?capabilities=computer_use")
+print(response.status_code)
+```
+
+A sandbox created without `capabilities=["computer_use"]` answers 400 `VALIDATION_ERROR` here.
+
+## `collaborate`
+
+```python
+collaborate(path: str, *, access="write") -> dict
+refresh_collaboration_token(document_id: str, current_token: str) -> dict
+```
+
+Starts a live collaborative editing session for one file through `POST /v1/collaboration/bootstrap`.
+The hosted service at `sandbox.tangle.tools` does not serve that route, so `collaborate()` raises `NotFoundError` there.
+
+## Next
+
+- [Fleets and optional modules](/sandbox/sdk-python/fleets-and-extras)
+- [Types and errors](/sandbox/sdk-python/types-and-errors)
+- [Python examples](/sandbox/examples/python)

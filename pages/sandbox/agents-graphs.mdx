@@ -1,26 +1,91 @@
-# Agent graphs on sandboxes
+---
+title: Agent graphs
+description: Run a team of agents with a fixed shape, from a YAML graph file with tangle graph run, or in TypeScript with agent-runtime, where each worker runs in its own sandbox.
+---
 
-An agent graph is a team with a fixed shape: a lead that plans and delegates,
-workers that do the work, and a check that decides when the job is done.
-`runGraph` from `@tangle-network/agent-runtime` runs the graph, and each
-worker node runs in its own Tangle sandbox, created when the lead delegates
-and deleted when the worker settles.
+import { Callout } from "nextra/components";
 
-Use a graph when the roles and their order are known ahead of time. For many
-independent agents doing the same kind of task, a [fleet](/docs/agents/fleet)
-is simpler. For several agents sharing one machine, see
-[Multiple agents](/docs/agents/multiple).
+# Agent graphs
 
-## Install
+An agent graph is a team with a fixed shape: nodes that do the work, edges that pass work between them, a budget, and a check that decides when the job is done.
+You can run one from a YAML file with the `tangle graph` commands, or build one in TypeScript with `runGraph` from `@tangle-network/agent-runtime`, where each worker node runs in its own Tangle sandbox.
+
+Use a graph when the roles and their order are known ahead of time. For many independent agents doing the same kind of task, a [fleet](/sandbox/agents-fleet) is simpler. For several agents sharing one machine, see [Several agents in one sandbox](/sandbox/agents-multiple).
+
+## Run a graph file from the CLI
+
+`haiku-review.yaml` ships with the CLI. A poet writes a haiku, an independent critic counts its syllables, and the run passes only when the critic approves a five, seven, five poem. The key parts:
+
+```yaml
+graph: haiku-review
+params:
+  topic: { type: string, default: rain at dawn }
+nodes:
+  - id: poet
+    profile:
+      prompt:
+        systemPrompt: >-
+          Write one original English haiku about the assigned topic. ...
+  - id: critic
+    profile:
+      prompt:
+        systemPrompt: >-
+          Judge the poet's result supplied in the task evidence. ...
+entry:
+  - node: poet
+    task: 'Write a haiku about ${params.topic}.'
+edges:
+  - kind: routes
+    from: poet
+    to: critic
+    directive: { surface: delegates/worker-brief, version: 1 }
+budget:
+  maxIterations: 6
+  maxTokens: 64000
+  deadlineMs: 120000
+check:
+  all:
+    - { node: critic, pointer: /approved, equals: true }
+    - { node: critic, pointer: /syllables/0, equals: 5 }
+```
+
+The whole file, with its output, is in [Evaluation and runtime examples](/sandbox/examples/evals-and-runtime#run-an-agent-graph-from-the-cli). It is also in the installed package at `node_modules/@tangle-network/sandbox-cli/examples/haiku-review.yaml`.
+
+```bash
+tangle graph show haiku-review.yaml
+tangle graph run haiku-review.yaml --param topic="first snow"
+tangle graph inspect <run-id>
+```
+
+| Command | What it does |
+| --- | --- |
+| `tangle graph show <file>` | Draws the nodes, routes, loops and stops in the terminal. `--open` writes one offline page and opens it; `--json` prints the shape |
+| `tangle graph run <file>` | Runs the graph. `--param key=value` sets a parameter, `--dry-run` validates and prints the graph without starting agents, and `--resume <run>` continues a saved run |
+| `tangle graph inspect <run>` | Reads a live or finished run |
+
+`graph run` runs each node on a coding agent you are signed in to on your machine, such as Claude Code or Codex. With none signed in, it stops before running with `SEAT_NONE_DETECTED`, even with `--dry-run`.
+`--seat harness/model@effort` picks the coding agent and model for every node. `--cloud` runs the graph on Tangle Platform as a durable workflow instead of on your machine.
+
+### Answer a gate
+
+A graph can declare gates: points where a person picks one of a fixed set of choices. In a terminal, `graph run` asks you when it reaches one.
+In a script, answer ahead of time with `--param gate.<gate-id>=<choice>`:
+
+```bash
+tangle graph run release.yaml --param gate.ship=approve
+```
+
+A gate with no answer and no terminal fails with `GATE_ANSWER_REQUIRED`, and a choice the gate does not list fails with `GATE_CHOICE_INVALID`. Both errors name the gate and its choices.
+
+## Build a graph in TypeScript
 
 ```bash
 npm install @tangle-network/agent-runtime @tangle-network/sandbox
 ```
 
-## A lead and a coder
+`@tangle-network/agent-runtime` needs Node 22.19 or later. Save the program as `graph.mts` and run it with `npx tsx graph.mts`.
 
-The lead runs on the Tangle Router and delegates once. The coder runs
-OpenCode inside a sandbox, runs a command, and reports the file it wrote.
+The lead runs on the Tangle Router and delegates once. The coder runs OpenCode in a sandbox, runs a command and reports what it wrote.
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -29,8 +94,8 @@ import { promptHandle, runGraph } from "@tangle-network/agent-runtime/kernel";
 const apiKey = process.env.TANGLE_API_KEY!;
 const sandbox = new Sandbox({ apiKey, baseUrl: "https://sandbox.tangle.tools" });
 
-// Every profile names a concrete model.
-const model = { provider: "tangle-router", default: "glm-5.3" };
+// Name the model's own vendor; a sandbox prefixes a bare model id with the provider.
+const model = { provider: "zai", default: "zai/glm-5.3" };
 
 const graph = {
   nodes: [
@@ -38,7 +103,7 @@ const graph = {
       id: "lead",
       profile: {
         name: "lead", // must equal the node id
-        harness: "cli-base", // the root runs on the router
+        harness: "cli-base", // the root runs on the Router
         model,
         tools: { agent_runtime_coordination_spawn_worker: true },
         prompt: {
@@ -80,32 +145,29 @@ const { result, ledger } = await runGraph(graph, {
 });
 
 console.log(result.kind); // "winner" when the deliverable check passed
-console.log(ledger);      // one row per delegation, with its outcome
+console.log(ledger);
 ```
 
-## Rules the runtime enforces
+`ledger` has one row per delegation, with its outcome.
+
+### Rules the runtime enforces
 
 | Rule | Why |
-|---|---|
-| Exactly one root: a node that delegates and is never delegated to. | The root owns the plan and the stop decision. |
-| The root's profile sets `tools.agent_runtime_coordination_spawn_worker: true`. | Delegation is a tool the root must be allowed to call. |
-| Only the root delegates. | Workers cannot spawn further workers. |
-| `profile.name` equals the node id. | The lead spawns a worker by name. |
-| Every profile has `harness`, `model.provider`, and a concrete `model.default`. | A graph is refused before it runs if a model is left to a default. |
-| `backend` places worker nodes. | The root runs on the router (`router`), or on a harness through `driverBackend`. |
+| --- | --- |
+| Exactly one root: a node that delegates and is never delegated to | The root owns the plan and the stop decision |
+| The root's profile sets `tools.agent_runtime_coordination_spawn_worker: true` | Delegation is a tool the root must be allowed to call |
+| Only the root delegates | Workers cannot start further workers |
+| `profile.name` equals the node id | The lead starts a worker by name |
+| Every profile has `harness`, `model.provider` and a concrete `model.default` | A graph that leaves a model to a default is refused before it runs |
+| `backend` places worker nodes | The root runs on the Router (`router`), or on a coding agent through `driverBackend` |
 
-## Budgets
+### Budgets
 
-`budget` bounds the whole graph by iterations, tokens, and a deadline;
-`perWorker` bounds each worker. Bound sandbox workers with tokens and a
-deadline. In the current release a dollar cap (`maxUsd`) fails sandbox
-workers, because they report token usage but not a dollar cost.
+`budget` bounds the whole graph by iterations, tokens and a deadline; `perWorker` bounds each worker. Bound sandbox workers with tokens and a deadline.
 
-## Control the worker sandboxes
+### Control the worker sandboxes
 
-`sandboxClient` is any object with the SDK's `create` (and, optionally,
-`list`). Wrap the client to set create options the runtime does not, such as
-a lifetime cap or an egress policy:
+`sandboxClient` is any object with the SDK's `create` and, optionally, `list`. Wrap the client to set create options the runtime does not, such as a lifetime cap or network rules:
 
 ```ts
 const sandboxClient = {
@@ -124,11 +186,9 @@ const sandboxClient = {
 
 The runtime deletes each worker sandbox when the worker settles.
 
-## Read why a run failed
+### Read why a run failed
 
-`result.kind` is `"winner"` when the deliverable check passed. When a worker
-fails, the reason is in the spawn journal. Pass a journal and a blob store to
-keep it:
+`result.kind` is `"winner"` when the deliverable check passed. When a worker fails, the reason is in the spawn journal. Pass a journal and a blob store to keep it:
 
 ```ts
 import {
@@ -146,9 +206,12 @@ await runGraph(graph, {
 });
 ```
 
-## Related
+<Callout type="info">
+A workflow's `script.run` step can also run an agent loop with the bundled agent-runtime functions; see [Workflow templates](/sandbox/workflows-templates#code-mode-supervisor-code-mode-supervisor).
+</Callout>
 
-- [Agent profiles](/docs/cloud-agents/profiles): the profile fields each node
-  uses.
-- [Fleets](/docs/agents/fleet): many independent agents under one budget.
-- [Network egress rules](/docs/egress): limit what worker sandboxes reach.
+## Next
+
+- [AgentProfiles](/sandbox/cloud-agents-profiles): the profile fields each node uses.
+- [Fleets](/sandbox/agents-fleet): many independent agents under one budget.
+- [Network access](/sandbox/egress): limit what worker sandboxes reach.

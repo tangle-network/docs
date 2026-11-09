@@ -1,0 +1,189 @@
+---
+title: Limits and timeouts
+description: The account limits you read at runtime, the API rate limit, and the fixed size, count and time limits on commands, files, coding-agent runs, batches and preview links.
+---
+
+import { Tabs } from "nextra/components";
+
+# Limits and timeouts
+
+Some limits depend on your plan; read those from the API at runtime. Others are the same for every account and are listed here.
+A request over a fixed size limit fails with `PAYLOAD_TOO_LARGE` (413); see [Error codes](/sandbox/errors).
+
+## Read your account's limits
+
+Your plan sets how many sandboxes can run at once, the largest CPU, memory and disk a sandbox can have, and your API rate limit.
+
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+
+```ts
+const plan = await client.subscription();
+console.log(plan.plan, plan.maxConcurrentSandboxes, plan.limits);
+
+const { ceiling } = await client.shapes();
+console.log(ceiling);
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```python
+plan = client.subscription()
+print(plan)
+
+shapes = client.fetch("GET", "/v1/shapes").json()
+print(shapes["ceiling"])
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```bash
+tangle usage
+tangle sandbox shapes
+```
+
+</Tabs.Tab>
+</Tabs>
+
+| Field | Meaning |
+|---|---|
+| `maxConcurrentSandboxes` | Sandboxes that can run at once. `0` means no limit. Over it, a create fails with `QUOTA_EXCEEDED` or `CONCURRENT_LIMIT` (429). |
+| `limits.maxCpuCores`, `limits.maxRamGB`, `limits.maxStorageGB` | The plan's per-sandbox size limits. |
+| `ceiling` from shapes | The largest `cpuCores`, `memoryMB` and `diskGB` a create can ask for. Over it, a create fails with `RESOURCES_EXCEED_LIMIT` (400). |
+
+A create that sends no `resources` gets 2 GiB of disk. Set `resources.diskGB` to get more, up to your ceiling.
+
+## API rate limit
+
+Your plan sets a per-minute request limit for your account. It applies to authenticated `/v1/` requests and is counted in three separate buckets:
+
+| Bucket | Requests |
+|---|---|
+| `runtime` | Commands, files, coding-agent turns and other work inside a sandbox |
+| `read` | Other `GET` and `HEAD` requests, such as status polls |
+| `management` | Other requests, such as create, stop and delete |
+
+So a busy sandbox cannot use up the budget you need to create or delete sandboxes.
+Every response carries these headers:
+
+| Header | Value |
+|---|---|
+| `X-RateLimit-Limit` | Requests per minute in this bucket |
+| `X-RateLimit-Remaining` | Requests left in the current window |
+| `X-RateLimit-Reset` | When the window resets, in Unix seconds |
+| `X-RateLimit-Bucket` | `runtime`, `read` or `management` |
+
+Over the limit, the API answers 429 with a `Retry-After` header. The body has `code: "RATE_LIMIT_EXCEEDED"`, the `bucket`, its `limit` and `retryAfter` in seconds.
+
+A key created with `--rpm-limit` also has its own requests-per-minute cap; see [API keys and tokens](/sandbox/authentication#limit-what-a-key-can-do).
+
+## Sandbox lifetimes
+
+| Setting | Limit |
+|---|---|
+| `deleteAfterStoppedSeconds` | At least 300. The default is 30 days. |
+| `coldTimeoutSeconds` | At least 1. |
+| `name` | Up to 256 characters. |
+| Branches per `box.branch()` call | 1 to 16. |
+
+## Commands and code
+
+| Limit | Value |
+|---|---|
+| `box.exec()` `timeoutMs` | Default 30,000 ms. Allowed 100 to 600,000 ms (10 minutes). |
+| `tangle exec --timeout` | Default 60,000 ms. |
+| `box.runCode()` request timeout | 60,000 ms by default. |
+
+A command that needs longer than 10 minutes belongs in a background process; see [Run commands and code](/sandbox/commands).
+
+## Coding-agent runs
+
+| Limit | Value |
+|---|---|
+| `ttlMs`, how long one run can live | Default 1 hour. At most 6 hours; a larger value fails with `EXECUTION_TTL_EXCEEDS_LIMIT` before the run starts. |
+| A blocking `prompt()` call | Waits at most 1 hour. For longer runs, stream the turn or send it as a session message. |
+| One text part in a prompt | 2,000,000 bytes, base64-encoded. |
+| `tangle agent prompt --timeout` | Default 300,000 ms. |
+
+See [Sessions](/sandbox/sessions) and [Stream output](/sandbox/streaming).
+
+## Files and request bodies
+
+| Limit | Value |
+|---|---|
+| Body of a request sent through the API to a sandbox | 1 MiB |
+| Body of a file request sent straight to the sandbox | 32 MiB |
+| Content of one file write | 5 MiB |
+| One multipart upload | 5 MiB |
+| One archive upload | 10 MiB |
+| One JSON file read | 10 MiB |
+| One chunked upload, such as `box.fs.upload(localPath)` | 64 MiB, sent in parts of up to 768 KiB |
+| All chunked uploads open in one sandbox at once | 128 MiB. Over it, a new upload fails with 429; retry when one finishes. |
+| `box.uploadDirectory()` archive | 100 MB |
+| Inline file content in a create request | 256 KiB. Write larger files after the sandbox starts. |
+| File write through the E2B-compatible routes | 5 MiB |
+
+## Batches
+
+| Limit | Value |
+|---|---|
+| Tasks per batch | 1,000 |
+| Coding agents per batch | 20 |
+| One task message | 64 KiB |
+| Whole batch request | 512 KiB |
+| Shared context | 64 KiB |
+| AgentProfile | 128 KiB |
+| JSON nesting | 16 levels |
+| Batch or task `timeoutMs` | 86,400,000 ms (24 hours) |
+
+## Network
+
+| Limit | Value |
+|---|---|
+| `box.egress.denials()` `limit` | Up to 50 per call |
+| `box.egress.activity()` `limit` | Up to 500 per call |
+| `allowDomains` in an egress policy | 100 entries |
+
+## Preview links
+
+Preview links (`https://<sandbox>-<port>.tangle.sh`) have limits of their own. SDK and CLI traffic does not go through them.
+
+| Limit | Value |
+|---|---|
+| Time between reads on one request | 125 seconds |
+| Request body | 100 MB |
+| WebSocket connections | Can drop during edge network updates. Reconnect, as a dev server's hot reload does. |
+
+## SDK request timeouts
+
+Each SDK call has a request deadline. Pass `timeoutMs` on the call, or on the client, to change it.
+
+| TypeScript call | Default deadline |
+|---|---|
+| Any call without its own deadline | 30,000 ms |
+| `client.create()`, from request to running | 120,000 ms |
+| `client.create()` with a GPU | 900,000 ms |
+| `box.runCode()` | 60,000 ms |
+| `box.snapshot()` | 600,000 ms |
+| Waiting for a background operation | 600,000 ms |
+| `client.deleteMatching()` | 120,000 ms, or 300,000 ms when waiting until removed |
+| Fleet dispatch | 600,000 ms |
+| Preview link ready | 120,000 ms |
+| Terminal connect | 15,000 ms |
+
+`box.exec()` waits for its `timeoutMs` plus 15,000 ms.
+
+| Python | Default |
+|---|---|
+| `Sandbox(timeout_ms=...)`, any call | 30,000 ms |
+| Streaming calls | 300 seconds |
+| Fleet dispatch | 600 seconds |
+| `box.wait_for()` | 120,000 ms, polling every 2,000 ms |
+
+## Next steps
+
+- [Error codes](/sandbox/errors): the codes behind 413 and 429 answers and how to retry.
+- [Pricing and spend](/sandbox/cost): how running sandboxes are billed and how to cap spend.
+- [Troubleshooting](/sandbox/troubleshooting): fixes for common problems.

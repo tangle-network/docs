@@ -1,0 +1,666 @@
+---
+title: Sandbox commands
+description: Reference for tangle sandbox, use, exec, ssh, ssh-keys, snapshot, branch and usage: every flag, its default, the request it sends and an example.
+---
+
+# Sandbox commands
+
+Create, inspect, stop, resume and delete sandboxes; run commands in them; open a shell; and save, restore and branch their disks.
+Each command lists its flags with defaults, the API request it sends and an example.
+
+```bash
+tangle sandbox create --name my-box --ssh
+tangle exec my-box -- uname -a
+tangle snapshot create my-box --tags clean
+tangle sandbox delete my-box --force
+```
+
+`sandbox create` waits up to 120 s for the sandbox to run. Its `--timeout` is the HTTP timeout in milliseconds; the sandbox's own limits are `--lifetime` and `--idle-timeout` in seconds.
+A sandbox that hits either limit stops and is not deleted. `exec`, `ssh` and the other runtime commands resume it first.
+
+## Commands on this page
+
+| Command | What it does |
+| --- | --- |
+| [`tangle sandbox create`](#tangle-sandbox-create) | Create a new sandbox |
+| [`tangle sandbox get`](#tangle-sandbox-get) | Get sandbox details |
+| [`tangle sandbox list`](#tangle-sandbox-list) | List all sandboxes |
+| [`tangle sandbox shapes`](#tangle-sandbox-shapes) | List the named sandbox sizes, the default, and this account's ceiling |
+| [`tangle sandbox attestation`](#tangle-sandbox-attestation) | Fetch TEE attestation evidence for a sandbox |
+| [`tangle sandbox stop`](#tangle-sandbox-stop) | Stop a running sandbox |
+| [`tangle sandbox resume`](#tangle-sandbox-resume) | Resume a stopped sandbox |
+| [`tangle sandbox delete`](#tangle-sandbox-delete) | Delete a sandbox |
+| [`tangle sandbox expose`](#tangle-sandbox-expose) | Expose a port and get a public URL |
+| [`tangle sandbox urls`](#tangle-sandbox-urls) | List exposed port URLs for a sandbox |
+| [`tangle sandbox network`](#tangle-sandbox-network) | Show runtime network state (exposed ports) for a sandbox. Outbound policy is the sandbox's egress policy. |
+| [`tangle use`](#tangle-use) | Set or show the active sandbox (used when a command omits the id) |
+| [`tangle exec`](#tangle-exec) | Execute a command in a sandbox |
+| [`tangle ssh`](#tangle-ssh) | Open SSH session to a sandbox |
+| [`tangle ssh-proxy`](#tangle-ssh-proxy) | SSH proxy helper that pipes stdin/stdout to WebSocket |
+| [`tangle ssh-keys list`](#tangle-ssh-keys-list) | List SSH keys |
+| [`tangle ssh-keys add`](#tangle-ssh-keys-add) | Add SSH key |
+| [`tangle ssh-keys delete`](#tangle-ssh-keys-delete) | Delete SSH key |
+| [`tangle snapshot create`](#tangle-snapshot-create) | Create a snapshot of a sandbox |
+| [`tangle snapshot list`](#tangle-snapshot-list) | List snapshots for a sandbox |
+| [`tangle snapshot restore`](#tangle-snapshot-restore) | Create a new sandbox from a snapshot |
+| [`tangle snapshot revert`](#tangle-snapshot-revert) | Revert an existing sandbox to a snapshot |
+| [`tangle snapshot delete`](#tangle-snapshot-delete) | Delete a sandbox snapshot |
+| [`tangle branch create`](#tangle-branch-create) | Branch a running sandbox into N copy-on-write children |
+| [`tangle usage`](#tangle-usage) | Show account usage and billing information |
+
+## Create and inspect sandboxes
+
+### `tangle sandbox create`
+
+Create a new sandbox.
+
+Creates a sandbox from flags and, by default, waits up to 120000 ms for it to reach running, then prints its details, SSH command line and URLs.
+
+```bash
+tangle sandbox create [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-n, --name <name>` |  | Sandbox name |
+| `-e, --environment <environment>` |  | A catalog environment, a container image reference, or a built image ID. Firecracker runs only images pinned by repository@sha256 that the platform's Firecracker hosts carry; `environments list` shows each image's runtimes |
+| `--runtime <runtime>` |  | Isolation on the platform's hosts: docker runs a container on the host kernel, firecracker a microVM with its own kernel. Omit for the platform default. Choices: docker, firecracker. |
+| `--bare` |  | Create a bare sandbox without the agent runtime |
+| `--ssh` |  | Enable SSH access |
+| `--ssh-key <key>` |  | SSH public key for authentication |
+| `--ssh-keys <names...>` |  | Stored SSH key names or IDs for authentication |
+| `--ssh-key-file <paths...>` |  | SSH public key file paths for authentication |
+| `--web-terminal` |  | Enable web terminal |
+| `--env <vars...>` |  | Environment variables (KEY=VALUE) |
+| `--secret <names...>` |  | Secrets selected by bare name for box delivery (value in the sandbox env). For proxy custody use `--proxy-secret` |
+| `--proxy-secret <bindings...>` |  | Canonical proxy custody binding(s): one binding as inline JSON, or @file with a JSON array. The value stays at the egress proxy and is redeemed only within the binding's scope (hosts/methods/paths/TTL); the box reads a placeholder. Repeatable |
+| `--metadata <entries...>` |  | Metadata entries (KEY=VALUE or KEY=JSON) |
+| `--cpu <cores>` |  | CPU cores (omit for the platform default; see `sandbox shapes`) |
+| `--memory <mb>` |  | Memory in MB (omit for the platform default) |
+| `--disk <gb>` |  | Disk size in GB (omit for the platform default) |
+| `--accelerator-kind <kind>` |  | Accelerator kind, for example nvidia-h100 or amd-mi300x |
+| `--accelerator-count <count>` | `1` | Accelerator device count |
+| `--accelerator-memory <gb>` |  | Minimum memory per GPU in decimal GB |
+| `--gpu-provider <provider>` |  | GPU cloud provider; omitted picks the cheapest configured provider |
+| `--gpu-worker-image <image>` |  | GPU worker image override |
+| `--gpu-env <vars...>` |  | Environment variables for the GPU worker (KEY=VALUE) |
+| `--gpu-max-spend-usd <usd>` |  | Maximum customer spend for the create-time GPU lease |
+| `--gpu-max-lifetime <seconds>` |  | Maximum create-time GPU lease lifetime in seconds |
+| `--gpu-idle-timeout <seconds>` |  | Destroy the create-time GPU lease after this many idle seconds |
+| `--lifetime <seconds>` | `3600` | Max wall-clock lifetime before the sandbox is suspended, stopped, not deleted; resume it within the cold window (default 3600 = 1h). Raise it for long sessions, e.g. `--lifetime` 7200 |
+| `--idle-timeout <seconds>` | `900` | Idle time before the sandbox is stopped, not deleted (default 900 = 15m). Resume it later with `tangle sandbox resume <id-or-name>`, or it auto-resumes on next use. Raise it for demos, e.g. `--idle-timeout` 3600 |
+| `--from-snapshot <id>` |  | Create the sandbox from a snapshot |
+| `--public-template <id-or-slug>` |  | Create the sandbox from a published public template |
+| `--public-template-version <id>` |  | Pin creation to a specific published public-template version |
+| `--billing-owner <userId>` |  | Platform user that pays for the sandbox. The API accepts this only from a first-party service key that is listed as a billing delegate, and refuses such a key that names no payer. |
+| `--team <team>` |  | Create in a team by id or name |
+| `--personal` |  | Create a personal sandbox even when a team is active |
+| `--git-url <url>` |  | Git repository URL to clone during provisioning |
+| `--git-ref <ref>` |  | Git branch, tag, or commit to checkout |
+| `--git-depth <depth>` |  | Git clone depth |
+| `--git-sparse <paths...>` |  | Sparse checkout paths |
+| `--git-token-env <name>` |  | Name of an environment variable containing the Git HTTPS auth token |
+| `--git-token-stdin` |  | Read the Git HTTPS auth token from stdin |
+| `--storage-type <type>` |  | BYOS3 storage type (s3, gcs, r2) |
+| `--storage-bucket <name>` |  | BYOS3 bucket name |
+| `--storage-endpoint <url>` |  | BYOS3 endpoint URL |
+| `--storage-region <region>` |  | BYOS3 region |
+| `--storage-prefix <prefix>` |  | BYOS3 path prefix |
+| `--storage-access-key-id <id>` |  | BYOS3 access key ID |
+| `--storage-secret-access-key-env <name>` |  | Name of an environment variable containing the BYOS3 secret access key |
+| `--storage-secret-access-key-stdin` |  | Read the BYOS3 secret access key from stdin |
+| `--driver <type>` |  | Run on Tangle network operators instead of the platform's hosts (`--tee` needs it). Choices: tangle. |
+| `--backend <type>` |  | Backend agent type (opencode, claude-code, kimi-code, codex, amp, factory-droids, pi, prime, hermes, openclaw, nanoclaw, acp, cursor, grok, cli-base) |
+| `--backend-model <model>` |  | Model override (format: provider/model) |
+| `--reasoning-effort <level>` |  | Reasoning effort for the backend's model; overrides the profile's model.reasoningEffort. Choices: none, minimal, low, medium, high, xhigh, ultracode. |
+| `--backend-api-key-env <name>` |  | Name of an environment variable containing the BYOK backend API key |
+| `--backend-api-key-stdin` |  | Read the BYOK backend API key from stdin |
+| `--cli-auth <secret>` |  | Run `--backend` claude-code or codex on your own subscription: the stored secret holding a `claude setup-token` token or a Codex auth.json (see `tangle secret create`) |
+| `--profile <path>` |  | Path to an AgentProfile JSON file to install as the sandbox's backend profile (carries skills, tools, MCP, model). Use with `--backend`; the profile's inline skills materialize into the coding agent's native skill directory on first turn |
+| `--profile-stdin` |  | Read the AgentProfile JSON from stdin instead of a file (use with `--profile`) |
+| `--tee <type>` |  | Require a TEE backend (any, tdx, nitro, sev-snp, phala-dstack) |
+| `--sealed` |  | Request TEE sealed-secret support |
+| `--attestation-nonce <hex\|auto>` |  | Deploy-time attestation nonce; use auto to generate one |
+| `--attestation-refresh` |  | Generate a fresh deploy-time attestation nonce when `--tee` is set |
+| `--require-attestation` |  | Fail unless TEE attestation evidence is returned |
+| `--wait` | `true` | Wait for sandbox to be running |
+| `--timeout <ms>` | `30000` | HTTP timeout in milliseconds |
+
+Request: `POST /v1/sandboxes`
+
+```bash
+tangle sandbox create --name my-box --ssh --git-url https://github.com/tangle-network/sandbox-demo
+```
+
+- `--wait` defaults to true and the CLI defines no `--no-wait`, so create always waits.
+- `--timeout` is the per-request HTTP timeout in milliseconds, not the sandbox lifetime; use `--lifetime` and `--idle-timeout` (seconds) for that.
+- `--ssh` with no `--ssh-key`, `--ssh-keys` or `--ssh-key-file` uploads the first of ~/.ssh/id_ed25519.pub, id_ecdsa.pub, id_rsa.pub and fails if none exists.
+- Size flags are sent only when typed; an unsized create gets the platform default shape.
+- `--profile <value>`: a value starting with '.' or '/' or ending in .json is read as a local AgentProfile file; anything else is resolved as a platform profile name.
+- `--cli-auth` needs `--backend` claude-code or `--backend` codex and cannot be combined with `--backend-api-key-env`/`--backend-api-key-stdin`.
+- `--secret` accepts bare names only; names containing '@' or ':' are refused in favor of `--proxy-secret`.
+- Each sensitive value comes from an environment variable named by a `-env` flag or from stdin with a `-stdin` flag, never from argv; passing both forms for one value is refused.
+- `--tee` routes through createConfidentialSandbox and requires attestation evidence unless the API returns it (requireAttestation defaults true).
+- `--json` prints `{id, name, status, resources, createdAt, expiresAt, connection, teamId, gpuLease, confidential, attestation, attestationNonce}`; connection.authToken and execToken are replaced by [REDACTED].
+- `--team` and `--personal` are mutually exclusive; with neither, the active team of the profile is used.
+
+### `tangle sandbox get`
+
+Get sandbox details.
+
+Prints one sandbox's details: id, name, status, resources, created and expiry times, SSH command line, web terminal URL and runtime URL.
+
+```bash
+tangle sandbox get <id-or-name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile` |  | Show the active agent profile provenance (name, hash, skills) |
+
+Request: `GET /v1/sandboxes/{id}`
+
+```bash
+tangle sandbox get my-box
+```
+
+- `--profile` here is a boolean that prints the agent profile provenance (base and effective hash), unlike the `--profile` flags of other commands.
+- The printed SSH line contains the placeholder TANGLE_SSH_PROXY_AUTH_TOKEN='`<token>`'; substitute your API key or use `tangle ssh`.
+- Accepts a sandbox id or a name; an id lookup wins, a generated-looking id that is missing fails without a name search, and an ambiguous name lists every match.
+
+### `tangle sandbox list`
+
+List all sandboxes.
+
+Lists sandboxes in the active scope as a table of ID, status, created time and name.
+
+```bash
+tangle sandbox list [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-s, --status <status>` |  | Filter by status (running, stopped, all) |
+| `-l, --limit <n>` | `50` | Limit results |
+| `--team <team>` |  | List sandboxes for a team by id or name |
+| `--personal` |  | List personal sandboxes |
+| `--all-scopes` |  | List personal and team sandboxes |
+
+Request: `GET /v1/sandboxes`
+
+```bash
+tangle sandbox list
+```
+
+- `--status` all sends no status filter; `--limit` defaults to 50.
+- Scope: `--team`, `--personal` and `--all-scopes` are mutually exclusive; with none, the profile's active team is used.
+- `--json` prints the SDK sandbox array.
+
+### `tangle sandbox shapes`
+
+List the named sandbox sizes, the default, and this account's ceiling.
+
+Lists the named sandbox sizes, marks the default and whether each fits this account's ceiling.
+
+```bash
+tangle sandbox shapes
+```
+
+Request: `GET /v1/shapes`
+
+```bash
+tangle sandbox shapes
+```
+
+- The default row reads 'clamped to ceiling' when it exceeds the ceiling; naming those numbers explicitly is refused.
+
+### `tangle sandbox attestation`
+
+Fetch TEE attestation evidence for a sandbox.
+
+Fetches TEE attestation evidence for a confidential sandbox, optionally bound to a nonce.
+
+```bash
+tangle sandbox attestation <id-or-name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--nonce <hex\|auto>` |  | Nonce to bind into a fresh attestation report; use auto to generate one |
+
+Request: `GET /v1/sandboxes/{id}/tee/attestation`
+
+```bash
+tangle sandbox attestation my-box
+```
+
+- With `--nonce` (or `--nonce` auto) the request is POST /v1/sandboxes/`{id}`/tee/attestation with attestation_nonce in the body (sandbox contract snapshot).
+- Accepts a sandbox id or a name; an id lookup wins, a generated-looking id that is missing fails without a name search, and an ambiguous name lists every match.
+
+## Stop, resume and delete
+
+### `tangle sandbox stop`
+
+Stop a running sandbox.
+
+Stops a running sandbox and waits for the stop to finish.
+
+```bash
+tangle sandbox stop <id-or-name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--name` |  | Treat the reference as a sandbox name |
+| `--no-wait` |  | Return once the stop is accepted and print the operation to poll |
+
+Request: `POST /v1/sandboxes/{id}/stop`
+
+```bash
+tangle sandbox stop my-box
+```
+
+- `--no-wait` sends POST /v1/sandboxes/`{id}`/stop?wait=false and prints the accepted operation id and its status URL.
+- No CLI command polls that operation; poll the printed status URL or use the SDK.
+
+### `tangle sandbox resume`
+
+Resume a stopped sandbox.
+
+Resumes a stopped sandbox and waits for it to run.
+
+```bash
+tangle sandbox resume <id-or-name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--wait` | `true` | Wait for sandbox to be running |
+| `-t, --timeout <ms>` | `120000` | Resume timeout in milliseconds; a cold resume re-provisions the sandbox, so this defaults higher than other commands (default 120000) |
+
+Request: `POST /v1/sandboxes/{id}/resume`
+
+```bash
+tangle sandbox resume my-box
+```
+
+- `--timeout` (ms, default 120000) bounds both the resume request and the wait, because a cold resume re-provisions the sandbox.
+
+### `tangle sandbox delete`
+
+Delete a sandbox.
+
+Deletes a sandbox after a y/N confirmation and reports whether it was deleted or already gone.
+
+```bash
+tangle sandbox delete <id-or-name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-f, --force` |  | Skip confirmation |
+| `--name` |  | Treat the reference as a sandbox name |
+| `--retry-cleanup` |  | Retry server-side cleanup after the sandbox disappeared from get/list |
+
+Request: `DELETE /v1/sandboxes/{id}`
+
+```bash
+tangle sandbox delete my-box
+```
+
+- Prompts 'Delete sandbox `<id>`? [y/N]' unless `--force`, even with `--json`; with no stdin answer it fails with 'Pass `--force` to skip the confirmation'.
+- `--name` treats the reference as a name only; `--retry-cleanup` retries server cleanup for an id that no longer appears in get/list.
+- Prints no JSON document; the success line goes to stderr under `--json`.
+
+## Ports and network
+
+### `tangle sandbox expose`
+
+Expose a port and get a public URL.
+
+Exposes a sandbox port and prints its public URL.
+
+```bash
+tangle sandbox expose <id-or-name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-p, --port <port>` | `8000` | Port to expose |
+
+Request: `POST /v1/sandboxes/{id}/runtime/network/expose`
+
+```bash
+tangle sandbox expose my-box --port 3000
+```
+
+- `--port` defaults to 8000 and must be 1-65535.
+- `--json` prints `{port, url}`.
+
+### `tangle sandbox urls`
+
+List exposed port URLs for a sandbox.
+
+Lists exposed ports and their public URLs.
+
+```bash
+tangle sandbox urls <id-or-name>
+```
+
+Request: `GET /v1/sandboxes/{id}/runtime/network/urls`
+
+```bash
+tangle sandbox urls my-box
+```
+
+- `--json` prints an object keyed by port.
+
+### `tangle sandbox network`
+
+Show runtime network state (exposed ports) for a sandbox. Outbound policy is the sandbox's egress policy.
+
+Shows the sandbox's exposed ports.
+
+```bash
+tangle sandbox network <id-or-name>
+```
+
+Request: `GET /v1/sandboxes/{id}/runtime/network`
+
+```bash
+tangle sandbox network my-box
+```
+
+- Read-only, although its spinner says 'Updating network configuration...'.
+
+## Choose the active sandbox
+
+### `tangle use`
+
+Set or show the active sandbox (used when a command omits the id).
+
+Sets, shows or clears the active sandbox id in ~/.tangle/config.json.
+
+```bash
+tangle use [id] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--clear` |  | Clear the active sandbox |
+
+- Only `tangle agent prompt` with a single argument reads the active sandbox; every other command still requires the sandbox positional.
+- The id is stored as typed; it is not validated against the API.
+- TANGLE_SANDBOX overrides the stored value for one invocation.
+
+## Run commands and open a shell
+
+### `tangle exec`
+
+Execute a command in a sandbox.
+
+Runs a command in a sandbox and waits for it, writing remote stdout and stderr to the matching local streams and exiting with the remote exit code.
+
+```bash
+tangle exec <id-or-name> <command...> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--cwd <dir>` |  | Working directory |
+| `--env <vars...>` |  | Environment variables (KEY=VALUE) |
+| `-t, --timeout <ms>` | `60000` | Timeout in milliseconds |
+
+Request: `POST /v1/sandboxes/{id}/runtime/process/spawn`
+
+```bash
+tangle exec my-box -- npm test
+```
+
+- The CLI then reads the result from GET `{runtimeUrl}`/process/`{pid}`.
+- One argument is sent as a shell script; several arguments are each shell-quoted and joined.
+- `--json` prints `{exitCode, stdout, stderr}` and still exits with the remote exit code.
+- `--timeout` defaults to 60000 ms.
+- If the connection drops before a status arrives, it reports that the remote status is unknown and suggests `tangle process spawn` for long work.
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+- Accepts a sandbox id or a name; an id lookup wins, a generated-looking id that is missing fails without a name search, and an ambiguous name lists every match.
+
+### `tangle ssh`
+
+Open SSH session to a sandbox.
+
+Opens an interactive OpenSSH session to a sandbox through the sandbox API's WebSocket SSH proxy.
+
+```bash
+tangle ssh <ref> [sshArgs...] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-i, --identity-file <path>` |  | Private key file to pass to ssh |
+| `--print` |  | Print SSH command instead of connecting |
+
+Request: `GET /v1/sandboxes/{id}/runtime/ssh`
+
+```bash
+tangle ssh my-box
+```
+
+- Spawns the local `ssh` binary with ProxyCommand `tangle ssh-proxy <base-url>/v1/sandboxes/<id>/runtime/ssh` and passes the API key in TANGLE_SSH_PROXY_AUTH_TOKEN, never in argv.
+- SSH must be enabled at create (`--ssh`, `--ssh-key`, `--ssh-keys` or `--ssh-key-file`); otherwise it prints 'SSH is not enabled for this sandbox.' and exits 1.
+- Host keys are not checked (StrictHostKeyChecking=no, known_hosts /dev/null); keepalive is 15 s.
+- Exits with ssh's exit code; 'SSH client not found. Please install OpenSSH.' when ssh is missing.
+- `--print` prints the full ssh command with a `<token>` placeholder instead of connecting.
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle ssh-proxy`
+
+SSH proxy helper that pipes stdin/stdout to WebSocket.
+
+Bridges stdin/stdout to a sandbox SSH WebSocket; used as an ssh ProxyCommand.
+
+```bash
+tangle ssh-proxy <runtime-url>
+```
+
+Request: `GET /v1/sandboxes/{id}/runtime/ssh`
+
+- Requires TANGLE_SSH_PROXY_AUTH_TOKEN; exits 1 with 'TANGLE_SSH_PROXY_AUTH_TOKEN not set' otherwise.
+- Raw binary frames, no framing; exits 0 on a normal close and 1 otherwise.
+
+### `tangle ssh-keys list`
+
+List SSH keys.
+
+Lists stored SSH keys.
+
+```bash
+tangle ssh-keys list
+```
+
+Request: `GET /v1/ssh-keys`
+
+- `--json` prints `{sshKeys:[...]}`.
+
+### `tangle ssh-keys add`
+
+Add SSH key.
+
+Stores an SSH public key read from `--key-file` under a name.
+
+```bash
+tangle ssh-keys add <name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--key-file <path>` |  | Public key file path. Required. |
+
+Request: `POST /v1/ssh-keys`
+
+- `--key-file` is required.
+- `--json` prints `{sshKey:{...}}` including the fingerprint.
+
+### `tangle ssh-keys delete`
+
+Delete SSH key.
+
+Deletes a stored SSH key by name or id.
+
+```bash
+tangle ssh-keys delete <name>
+```
+
+Request: `DELETE /v1/ssh-keys/{id}`
+
+- Prints no JSON document.
+
+## Snapshots and branches
+
+### `tangle snapshot create`
+
+Create a snapshot of a sandbox.
+
+Snapshots a sandbox and prints the snapshot id and size.
+
+```bash
+tangle snapshot create <sandbox-id-or-name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--tags <tags...>` |  | Tags for the snapshot |
+| `--no-wait` |  | Return once the snapshot is accepted and print the operation to poll |
+
+Request: `POST /v1/sandboxes/{id}/snapshots`
+
+```bash
+tangle snapshot create my-box --tags green-tests
+```
+
+- `--no-wait` prints the accepted operation id and status URL instead of waiting.
+
+### `tangle snapshot list`
+
+List snapshots for a sandbox.
+
+Lists a sandbox's snapshots with id, created time, size and source sandbox.
+
+```bash
+tangle snapshot list <sandbox-id-or-name>
+```
+
+Request: `GET /v1/sandboxes/{id}/snapshots`
+
+```bash
+tangle snapshot list my-box
+```
+
+### `tangle snapshot restore`
+
+Create a new sandbox from a snapshot.
+
+Creates a NEW sandbox from a snapshot and waits up to 120000 ms for it to run; the source sandbox is untouched.
+
+```bash
+tangle snapshot restore <sandbox-id> <snapshot-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--billing-owner <userId>` |  | Platform user that pays for the restored sandbox. The API accepts this only from a first-party service key that is listed as a billing delegate, and refuses such a key that names no payer. |
+
+Request: `POST /v1/sandboxes`
+
+```bash
+tangle snapshot restore <sandbox-id> <snapshot-id>
+```
+
+- The first argument must be a sandbox id; names are not resolved here.
+- `--json` prints `{sandboxId, restoredFrom, status}`.
+- To roll an existing sandbox back in place, use `tangle snapshot revert`.
+
+### `tangle snapshot revert`
+
+Revert an existing sandbox to a snapshot.
+
+```bash
+tangle snapshot revert <sandbox-id-or-name> <snapshot-id>
+```
+
+Request: `POST /v1/sandboxes/{id}/snapshots/{snapshotId}/restore`
+
+```bash
+tangle snapshot revert my-box <snap-id>
+```
+
+- `--json` prints `{sandboxId, snapshotId, status}`.
+
+### `tangle snapshot delete`
+
+Delete a sandbox snapshot.
+
+Deletes a snapshot and reports whether it was deleted or already gone.
+
+```bash
+tangle snapshot delete <sandbox-id-or-name> <snapshot-id>
+```
+
+Request: `DELETE /v1/sandboxes/{id}/snapshots/{snapshotId}`
+
+```bash
+tangle snapshot delete <sandbox-id> <snapshot-id>
+```
+
+- `--json` prints `{success, sandboxId, snapshotId, outcome}`; sandboxId is the reference as typed.
+
+### `tangle branch create`
+
+Branch a running sandbox into N copy-on-write children.
+
+Branches a running sandbox into N copy-on-write children; the parent keeps running.
+
+```bash
+tangle branch create <sandbox-id-or-name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--count <n>` | `1` | Number of children to create |
+| `--idempotency-key <key>` |  | Retry identity: the same key and count replays the first fan-out and creates no second one |
+
+Request: `POST /v1/sandboxes/{id}/branch`
+
+- A partial fan-out is reported as 'Branched X of N'; `--idempotency-key` replays an earlier fan-out instead of creating a second one.
+- `--json` prints `{children:[{sandboxId}], requestedCount, materializedCount, complete, idempotency?}`.
+
+## Usage
+
+### `tangle usage`
+
+Show account usage and billing information.
+
+Shows account usage (active and total sandboxes, compute minutes, GPU seconds and spend) and the subscription.
+
+```bash
+tangle usage
+```
+
+Request: `GET /usage`
+
+```bash
+tangle usage
+```
+
+- Also calls GET /subscription; `--json` prints the usage object with a nested subscription field (null when unavailable).
+
+## GPUs
+
+`tangle sandbox gpu` attaches a GPU to a sandbox while a command runs, with a spend cap and a lifetime.
+[GPU leases](/sandbox/gpu-leases) documents its subcommands and flags: `providers`, `attach`, `run`, `list`, `exec` and `detach`.
+
+## Next
+
+- [File, git, process and preview commands](/sandbox/cli/workspace)
+- [Sandbox lifecycle](/sandbox/lifecycle)
+- [Snapshots](/sandbox/snapshots)

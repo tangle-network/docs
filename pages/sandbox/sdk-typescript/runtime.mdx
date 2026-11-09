@@ -1,0 +1,170 @@
+# Runtime reference: commands, files, git, ports and terminals
+
+Every `SandboxInstance` member that acts inside a running sandbox, and the clients a browser or Worker uses with a scoped token. Each call needs the sandbox running; on a stopped sandbox it throws `INVALID_STATE`.
+
+Every runtime call goes through `ALL /v1/sandboxes/{id}/runtime/{path}`, so any route below can be called over REST with your API key.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create();
+try {
+  await box.write("hello.py", "print('hi')\n");
+  const { exitCode, stdout } = await box.exec("python3 hello.py");
+  console.log(exitCode, stdout);
+} finally {
+  await box.delete();
+}
+```
+
+## Commands and code
+
+| Member | Returns | Route |
+|---|---|---|
+| `exec(command, { cwd?, env?, timeoutMs?, sessionId?, signal? })` | `{ exitCode, stdout, stderr }`. A non-zero exit returns normally. | `POST /runtime/process/spawn` |
+| `runCode(language, source, { timeoutMs?, env?, cwd?, sessionId? })` | `{ exitCode, stdout, stderr, durationMs, results }`. `language` is `python`, `node`, `typescript` or `bash`. | `POST /runtime/code/exec` |
+| `setRuntimeEnv(env, { ttlMs? })` | `void`. New processes see the variables; running ones do not. Repeat it after a resume. | `POST /runtime/config/config/app-env` |
+
+See [Run commands and code](/sandbox/commands).
+
+## Processes: `box.process`
+
+| Member | Returns |
+|---|---|
+| `spawn(command, options?)` | A `Process` handle. Runs under a shell. |
+| `spawnExact(executable, args, { stdin?, idempotencyKey?, retentionMs?, cwd?, env? })` | A `Process` handle. No shell. |
+| `list(options?)`, `get(pid)` | Process records. |
+| `jobs.submit(spec, options?)` | Admits a durable job the platform runs and restarts by its policy. |
+| `jobs.get(id)` | The job, or `null`. |
+| `jobs.resume(id, options)` | Retries a failed job with the same command, deadline and attempt budget. |
+| `jobs.cancel(id)` | `stopping` until termination is confirmed. |
+| `ensureDevServer({ cwd?, sessionId? })` | The running dev server, started if needed. |
+
+`Process` handle: `pid`, `status()`, `wait()`, `kill(signal, { tree })`, `logs()`, `stdout()`, `stderr()`. Routes: `POST /runtime/process/spawn`, `POST /runtime/process/jobs`, `POST /runtime/process/ensure-dev-server`.
+
+## Files
+
+| Member | Returns |
+|---|---|
+| `read(path)` | UTF-8 text. |
+| `write(path, content, { encoding?, mode?, ifHash?, ifAbsent? })` | A write receipt. `ifHash` throws `FILE_WRITE_CONFLICT` when the file changed. |
+| `writeMany(files, options?)` | One receipt per file. |
+| `search(pattern, { glob?, cwd?, maxResults?, ignoreCase?, context? })` | An async iterable of `{ path, line, column, text }`. |
+
+`box.fs` has the full set:
+
+| Member | Use |
+|---|---|
+| `read`, `readBatch`, `write`, `writeMany` | Text files, singly or in batches. |
+| `list(path)`, `stat(path)`, `exists(path)`, `tree(path)`, `usage(path)` | Inspect the filesystem. |
+| `mkdir`, `rename`, `delete` | Change it. |
+| `upload`, `uploadData`, `uploadDir` | Send local files, in-memory data or a directory. |
+| `download`, `downloadDir`, `downloadArchive` | Fetch a file, a directory, or a `tar.gz` with a SHA-256 receipt. |
+| `openArchive(remoteDir)` | The archive as a `ReadableStream`. |
+| `search` | The same as `box.search`. |
+
+Routes include `POST /runtime/files/read`, `POST /runtime/files/write` and `GET /runtime/fs/list/{path}`. See [Files](/sandbox/files).
+
+## Git: `box.git`
+
+| Member | Returns |
+|---|---|
+| `status()` | `{ branch, head, isDirty, ahead, behind, staged, modified, untracked }`. |
+| `log(limit?)` | Commits. |
+| `diff(ref?)` | Changed files, totals and the unified diff in `raw`. |
+| `branches()` | Branches with `current` and `upstream`. |
+| `add(paths)`, `commit(message, { amend? })`, `push({ force? })`, `pull({ rebase? })`, `checkout(ref, { create? })` | Run the git command. |
+
+Route: `/runtime/git/*`. See [Git](/sandbox/git).
+
+## Ports and preview links
+
+| Member | Returns |
+|---|---|
+| `previewLinks.create(port, { protocol?, metadata? })` | The public link, created or existing, with `created`. |
+| `previewLinks.get(previewId)`, `previewLinks.list()` | Links with `url` and `lastProbe`. |
+| `previewLinks.waitUntilReady(previewId, { timeoutMs?, pollIntervalMs?, signal? })` | The link once the public route reaches your app. |
+| `previewLinks.remove(previewId)` | Closes the link. |
+| `network.exposePort(port)` | A public URL for the port. |
+| `network.listUrls()` | `{ [port]: url }`. |
+| `network.getConfig()` | Exposed ports. Outbound policy is on `box.egress`. |
+
+Routes: `POST /runtime/preview-links`, `POST /runtime/network/expose`. See [Ports and previews](/sandbox/ports-previews).
+
+## Terminals: `box.terminals`
+
+| Member | Returns |
+|---|---|
+| `create(options?)` | The new terminal's info, including its id. |
+| `input(terminalId, data)` | `void`. Sends keystrokes without a socket. |
+| `list()` | Open terminals. |
+| `get(sessionId)` | One terminal, or `null`. |
+| `attach(connectionId, { cols?, rows?, command?, cwd?, env?, handlers? })` | A live `TerminalStream`. A reused id replays the existing terminal. |
+
+`TerminalStream`: `write(data)`, `resize(cols, rows)`, `close()`. `TerminalStream.connect({ url, connectionId, token, cols, rows, handlers })` connects from a browser. Route: `POST /runtime/terminals`. See [Terminals](/sandbox/terminals).
+
+## Health and resources
+
+| Member | Returns |
+|---|---|
+| `runtimeHealth()` | Health of the runtime inside the sandbox. |
+| `ports()` | Listening ports. Throws `PORT_WATCHER_DISABLED` when the watcher is off. |
+| `resourceUsage()` | Memory current, peak and limit in MB, and CPU time in microseconds, or `null`. |
+| `capabilities()` | What the image supports. |
+
+See [Trace and inspect what ran](/sandbox/observability#watch-the-sandbox-itself).
+
+## Browser and Worker clients
+
+Your server mints a scoped token with `box.mintScopedToken(...)` and sends the browser only that token and its URLs.
+
+### `createSandboxRuntimeClient` from `@tangle-network/sandbox/runtime`
+
+```ts
+import { createSandboxRuntimeClient } from "@tangle-network/sandbox/runtime";
+
+const runtime = createSandboxRuntimeClient({
+  baseUrl: scoped.sidecarProxyUrl,
+  token: scoped.token,
+});
+
+for await (const event of runtime.events("issue-482", { since: lastEventId })) {
+  console.log(event.type);
+}
+```
+
+| Config | Meaning |
+|---|---|
+| `baseUrl` | `scoped.sidecarProxyUrl`. |
+| `token` | `scoped.token`. |
+| `timeoutMs`, `fetch` | Optional request timeout and fetch implementation. |
+
+It calls the runtime routes the token allows: session events, messages and runs, file uploads and reads. `runtime.updateToken(token)` swaps in a fresh token before the old one expires.
+
+### `SessionGatewayClient` from `@tangle-network/sandbox/session-gateway`
+
+Streams a session's events with replay after a reconnect. Construct it with `url`, `token`, `sessionId` and `handlers`; in a browser, `url` is `scoped.sidecarProxyUrl`. See [Streaming](/sandbox/streaming).
+
+### `BrowserInteractiveSessionController` from `@tangle-network/sandbox/interactive-control`
+
+Drives a coding agent's own terminal UI from a browser. See [Agents](/sandbox/sdk-typescript/agents#interactive-sessions).
+
+## Python and REST
+
+Python has `exec`, `read`, `write`, `search` and `box.git` (`status`, `log`, `diff`, `branches`, `add`, `commit`, `push`, `pull`, `checkout`); see [Python SDK](/sandbox/sdk-python). It has no kernel code runs, processes, file transfers, preview links or terminals. Call those runtime routes through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/code/exec", json={"language": "python", "source": "print(2 + 2)"})
+client.fetch("GET", f"/v1/sandboxes/{box.id}/runtime/health")
+```
+
+## Next
+
+- [Agents reference](/sandbox/sdk-typescript/agents)
+- [Run commands and code](/sandbox/commands)
+- [Files](/sandbox/files)

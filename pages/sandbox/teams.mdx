@@ -1,0 +1,293 @@
+---
+title: Share sandboxes, secrets and templates with your team
+description: Create a team, invite people with a role, create sandboxes the whole team can use, and share secrets, templates and network rules, from TypeScript, Python, the CLI or the REST API.
+---
+
+import { Callout, Tabs } from "nextra/components";
+
+# Share sandboxes, secrets and templates with your team
+
+A team lets several people use the same sandboxes, secrets and templates. Each member has a role that decides what they can do.
+Create a team, invite people, then create sandboxes in it; everyone on the team can see them.
+
+## Roles
+
+| Role | Can |
+| --- | --- |
+| `owner` | Everything, including deleting the team and handing ownership to another member. The person who creates a team is its owner |
+| `admin` | Invite and remove members, change roles, rename the team, delete any team sandbox, and manage team secrets, templates and network rules |
+| `member` | Create team sandboxes, run commands and agents in them, and read secret names and templates |
+| `viewer` | Read team sandboxes, secret names and templates; change nothing |
+
+Each team has one owner. Invitations can grant `admin`, `member` or `viewer`.
+
+## Create a team
+
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const team = await client.teams.create({ name: "Acme" });
+console.log(team.id, team.currentUserRole);
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```python
+import os
+
+from tangle_sandbox import CreateTeamOptions, Sandbox
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    team = client.teams.create(CreateTeamOptions(name="Acme"))
+    print(team.id, team.current_user_role)
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```bash
+tangle team create Acme
+```
+
+`team create` also makes the new team your active team. Pass `--no-switch` to keep your current one.
+
+</Tabs.Tab>
+</Tabs>
+
+Request: `POST /v1/teams` with `{"name": "Acme"}`. `orgId` (`--org-id`, `org_id`) links the team to an organization.
+
+## Invite people
+
+Owners and admins invite by email with a role. The invitation carries a token; the person accepts it while signed in with the invited email.
+
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+
+```ts
+const invitation = await client.teams.invite(team.id, {
+  email: "bob@example.com",
+  role: "member",
+});
+
+// Bob, signed in with bob@example.com:
+await bobClient.teams.acceptInvitation(invitation.token);
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```python
+from tangle_sandbox import InviteTeamMemberOptions
+
+invitation = client.teams.invite(
+    team.id, InviteTeamMemberOptions(email="bob@example.com", role="member")
+)
+
+# Bob, signed in with bob@example.com:
+bob_client.teams.accept_invitation(invitation.token)
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```bash
+tangle team invite bob@example.com --role member
+tangle team invitations
+
+# Bob, logged in as bob@example.com:
+tangle team accept <token>
+```
+
+`--ttl-hours` sets how long the invitation lasts. `team accept` switches Bob to the team unless he passes `--no-switch`.
+
+</Tabs.Tab>
+</Tabs>
+
+Accepting with a different email is refused with 403. To cancel an invitation, revoke it by id: `client.teams.revokeInvitation(id)`, `revoke_invitation(id)` or `tangle team revoke-invitation <id>`.
+
+## Manage members
+
+| Task | TypeScript | Python | CLI |
+| --- | --- | --- | --- |
+| List members | `teams.listMembers(teamId)` | `teams.list_members(team_id)` | `tangle team members` |
+| Change a role | `teams.updateMember(teamId, memberId, { role })` | `teams.update_member(team_id, member_id, role=...)` | `tangle team update-member <member-id> --role viewer` |
+| Remove a member | `teams.removeMember(teamId, memberId)` | `teams.remove_member(team_id, member_id)` | `tangle team remove-member <member-id>` |
+| Leave a team | `teams.leave(teamId)` | `teams.leave(team_id)` | `tangle team leave --force` |
+| Hand over ownership | `teams.transferOwnership(teamId, newOwnerCustomerId)` | `client.fetch("POST", f"/v1/teams/{team_id}/transfer", json={"newOwnerCustomerId": ...})` | `tangle team transfer <customer-id> --force` |
+| Rename | `teams.update(teamId, { name })` | `teams.update(team_id, name=...)` | |
+| Delete the team | `teams.delete(teamId)` | `teams.delete(team_id)` | |
+
+Only the owner can transfer ownership or delete the team. After a transfer the old owner becomes an admin.
+`team leave` and `team transfer` ask for confirmation; in a script, pass `--force` (`team leave` also accepts `--json`).
+
+## Create sandboxes the team can use
+
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+
+```ts
+const box = await client.create({ name: "shared-box", teamId: team.id });
+
+const shared = await client.list({ scope: `team:${team.id}` });
+console.log(shared.map((s) => s.name));
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```python
+from tangle_sandbox import CreateSandboxOptions
+
+box = client.create(CreateSandboxOptions(name="shared-box", team_id=team.id))
+
+# list() has no scope argument; the REST route takes one.
+shared = client.fetch("GET", "/v1/sandboxes", params={"scope": f"team:{team.id}"})
+print([s["name"] for s in shared.json()["sandboxes"]])
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```bash
+tangle team switch Acme
+tangle sandbox create --name shared-box
+tangle sandbox list --team Acme
+```
+
+</Tabs.Tab>
+</Tabs>
+
+A create with a team id checks that you are the team's owner, an admin or a member before it starts the sandbox; a viewer cannot create one. Without a team id, the sandbox is personal.
+
+The CLI keeps an active team per profile:
+
+| Command | Effect |
+| --- | --- |
+| `tangle team switch <name-or-id>` | Make a team active; `sandbox create` then creates team sandboxes |
+| `tangle team current` | Show the active team |
+| `tangle team clear` | Go back to personal sandboxes |
+| `tangle sandbox create --team <team>` | Create in this team once, whatever is active |
+| `tangle sandbox create --personal` | Create a personal sandbox while a team is active |
+
+### List sandboxes by scope
+
+`GET /v1/sandboxes` takes a `scope`:
+
+| `scope` | Lists |
+| --- | --- |
+| `personal` | Your personal sandboxes |
+| `team` | Sandboxes in every team you belong to |
+| `team:<id>` | Sandboxes in one team |
+| `all` | Personal and team sandboxes together |
+
+TypeScript passes it as `client.list({ scope })`; the CLI as `sandbox list --team <team>`, `--personal` or `--all-scopes`; Python through `client.fetch`.
+
+## Share secrets
+
+Team secrets are available to every team sandbox. Owners and admins set, reveal and delete them; every member can list their names.
+
+<Tabs items={["TypeScript", "CLI", "REST"]} storageKey="sandbox-lang-rest">
+<Tabs.Tab>
+
+```ts
+await client.teams.upsertSecret(team.id, "NPM_TOKEN", process.env.NPM_TOKEN!);
+const names = (await client.teams.listSecrets(team.id)).map((s) => s.name);
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```bash
+printf %s "$NPM_TOKEN" | tangle team secret set NPM_TOKEN --value-stdin
+tangle team secret list
+tangle team secret delete NPM_TOKEN --force
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```text
+GET    /v1/teams/{id}/secrets
+PUT    /v1/teams/{id}/secrets/{name}         {"value": "..."}
+POST   /v1/teams/{id}/secrets/{name}/reveal
+DELETE /v1/teams/{id}/secrets/{name}
+```
+
+</Tabs.Tab>
+</Tabs>
+
+Every reveal is written to the audit log. The Python SDK has no team secret methods; use `client.fetch` with the routes above. [Secrets](/sandbox/secrets) explains how secrets reach a sandbox.
+
+## Share templates
+
+A team template is a snapshot the whole team can start sandboxes from. Owners and admins create and delete them; every member can list and use them.
+
+<Tabs items={["TypeScript", "CLI", "REST"]} storageKey="sandbox-lang-rest">
+<Tabs.Tab>
+
+```ts
+const template = await client.teams.createTemplate(team.id, {
+  name: "node-base",
+  snapshotId: snapshot.snapshotId,
+});
+const templates = await client.teams.listTemplates(team.id);
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```bash
+tangle team templates create node-base <snapshot-id> --description "Node 22 with deps"
+tangle team templates list
+tangle team templates delete <template-id> --force
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```text
+GET    /v1/teams/{id}/templates
+POST   /v1/teams/{id}/templates
+DELETE /v1/teams/{id}/templates/{templateId}
+```
+
+</Tabs.Tab>
+</Tabs>
+
+[Templates and images](/sandbox/templates-gallery) covers publishing templates.
+
+## Set network rules for the team
+
+A team can set a default network policy for its sandboxes. Owners and admins set and clear it; this is REST only.
+
+```text
+GET    /v1/teams/{id}/egress
+PUT    /v1/teams/{id}/egress     {"mode": "strict", "allowDomains": ["registry.npmjs.org"]}
+DELETE /v1/teams/{id}/egress
+```
+
+`GET` returns `{"policy": null}` when the team has no policy. After `DELETE`, team sandboxes fall back to the platform default.
+A sandbox's own policy reports where it came from: `sandbox`, `team` or `platform`. See [Network access](/sandbox/egress).
+
+## Python and the team API
+
+The Python SDK covers creating, reading, updating and deleting teams, members and invitations.
+For team secrets, team templates, team network rules, ownership transfer and team-scoped lists, call the REST routes on this page with `client.fetch(method, path, json=..., params=...)`, which returns the raw response without raising.
+
+## Next
+
+- [Secrets](/sandbox/secrets)
+- [Account, key, secret, team and template commands](/sandbox/cli/account)
+- [Sandbox and AsyncSandbox](/sandbox/sdk-python/client#clientteams)

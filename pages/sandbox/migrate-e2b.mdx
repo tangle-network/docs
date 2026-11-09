@@ -1,0 +1,137 @@
+---
+title: Move from E2B to Tangle Sandbox
+description: Map E2B sandboxes, commands, files, public URLs and timeouts to the Tangle Sandbox SDKs, and call Tangle's E2B-compatible REST routes from existing HTTP code.
+---
+
+import { Callout, Tabs } from "nextra/components";
+
+# Move from E2B
+
+This guide maps E2B calls to Tangle Sandbox, shows the same program in both, and covers the E2B-compatible REST routes for HTTP code you keep unchanged.
+
+## What maps to what
+
+| E2B | Tangle Sandbox (TypeScript) | Python |
+|---|---|---|
+| `E2B_API_KEY` | An `sk-tan-` key from [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys), passed as `apiKey` | `api_key` |
+| `Sandbox.create()` | `client.create()` | `client.create()`, then `wait_for(SandboxStatus.RUNNING)` |
+| `Sandbox.connect(id)` | `client.get(id)` | `client.get(id)` |
+| `sandbox.commands.run(cmd)` | `box.exec(cmd)` | `box.exec(cmd)` |
+| `commands.run(cmd, { background: true })` | `box.process.spawn(cmd)` | `client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/process/spawn", json={"executable": "python3", "args": [...]})` |
+| `onStdout` and `onStderr` callbacks | `proc.stdout()` and `proc.stderr()` on a spawned process | Not available |
+| `sandbox.files.write(path, data)` | `box.write(path, data)` or `box.fs.write` | `box.write(path, data)` |
+| `sandbox.files.read(path)` | `box.read(path)` | `box.read(path)` |
+| `sandbox.getHost(port)` | `box.previewLinks.create(port)` | `client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/preview-links", json={"port": port})` |
+| `sandbox.setTimeout(ms)` | `maxLifetimeSeconds` and `idleTimeoutSeconds` on create | `max_lifetime_seconds`, `idle_timeout_seconds` |
+| Pause and resume | `box.stop()` and `box.resume()` | `box.stop()`, `box.resume()` |
+| `sandbox.kill()` | `box.delete()` | `box.delete()` |
+| Templates | Environments, templates and snapshots; see [Templates and images](/sandbox/templates-gallery) | `environment=`, `template_id=`, `from_snapshot=` with `from_sandbox_id=` |
+| PTY | `box.terminals`; see [Shells and terminals](/sandbox/terminals) | Not available |
+
+Two differences change how you write code:
+
+- **Timers stop a sandbox; they do not delete it.** A stopped sandbox keeps its files until you delete it or `deleteAfterStoppedSeconds` passes. Delete in a `finally` block.
+- **Every sandbox has a coding agent.** `box.prompt()` gives it a task, so you do not need to install one. Pass `agent: false` for plain compute.
+
+## The same program on Tangle
+
+Create a sandbox, write a file, run it, share a port and delete the sandbox:
+
+<Tabs items={["TypeScript", "Python"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+
+```ts filename="from-e2b.mts"
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ idleTimeoutSeconds: 600 });
+try {
+  await box.write("/tmp/hello.py", "print('hello from Tangle')\n");
+  const run = await box.exec("python3 /tmp/hello.py");
+  console.log(run.exitCode, run.stdout);
+
+  const server = await box.process.spawn("python3 -m http.server 8000");
+  const link = await box.previewLinks.create(8000);
+  const { url } = await box.previewLinks.waitUntilReady(link.previewId);
+  console.log(url);
+  await server.kill();
+} finally {
+  await box.delete();
+}
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```python filename="from_e2b.py"
+import os
+
+from tangle_sandbox import Sandbox, SandboxStatus
+
+client = Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+)
+
+box = client.create(idle_timeout_seconds=600)
+try:
+    box.wait_for(SandboxStatus.RUNNING)
+    box.write("/tmp/hello.py", "print('hello from Tangle')\n")
+    run = box.exec("python3 /tmp/hello.py")
+    print(run.exit_code, run.stdout)
+
+    # The Python SDK has no preview-link method; this is the REST route the TypeScript SDK calls.
+    response = client.fetch(
+        "POST", f"/v1/sandboxes/{box.id}/runtime/preview-links", json={"port": 8000}
+    )
+    print(response.status_code, response.json()["previewLink"]["url"])
+finally:
+    box.delete()
+    client.close()
+```
+
+</Tabs.Tab>
+</Tabs>
+
+`exec` does not throw on a non-zero exit; read `exitCode`. Errors carry a `code` you can branch on; see [Error codes](/sandbox/errors).
+
+## Call the E2B-compatible REST routes
+
+If your code calls E2B's REST API over HTTP, point it at `https://sandbox.tangle.tools/e2b` and send your Tangle key in `X-API-Key`:
+
+```bash
+curl -s https://sandbox.tangle.tools/e2b/templates \
+  -H "X-API-Key: $TANGLE_API_KEY"
+
+curl -s -X POST https://sandbox.tangle.tools/e2b/sandboxes \
+  -H "X-API-Key: $TANGLE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"templateID": "<templateID from /e2b/templates>", "timeout": 600}'
+```
+
+| Route | Does |
+|---|---|
+| `GET /e2b/templates` | Lists one template per coding agent. Pass its `templateID` to create. |
+| `POST /e2b/sandboxes` | Creates a sandbox and answers once it runs. `timeout` is the lifetime in seconds. |
+| `GET /e2b/sandboxes`, `GET /e2b/sandboxes/{sandboxID}` | Lists sandboxes, or reads one. |
+| `DELETE /e2b/sandboxes/{sandboxID}` | Kills the sandbox and answers after it is removed. |
+| `GET`, `POST`, `DELETE /e2b/sandboxes/{sandboxID}/files`, `GET .../files/list` | Reads, writes, deletes and lists files. |
+| `POST /e2b/sandboxes/{sandboxID}/processes` | Runs a command to completion and answers with its exit code and output. |
+| `GET`, `DELETE /e2b/sandboxes/{sandboxID}/processes/{pid}` | Reads or kills a process. |
+| `POST /e2b/sandboxes/{sandboxID}/timeout` | Answers 501. Set lifetimes on create instead. |
+
+<Callout type="warning">
+These routes serve plain HTTP callers. The E2B SDK's `commands` and `files` calls connect to the sandbox directly, not to these routes, so port SDK code to the Tangle SDK as shown above.
+</Callout>
+
+The full request and response shapes are in the [E2B-compatible routes reference](/sandbox/api-reference/e2b). Upload limits are in [Limits and timeouts](/sandbox/limits).
+
+## Next steps
+
+- [Quickstart](/sandbox/quickstart): the Tangle SDKs and CLI from the start.
+- [Run commands and code](/sandbox/commands): `exec`, background processes and code kernels.
+- [Compare sandboxes](/sandbox/comparison): features side by side.

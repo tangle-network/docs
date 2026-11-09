@@ -1,72 +1,196 @@
-# Templates
+import { Tabs, Callout } from "nextra/components";
 
-A public template is a published snapshot that anyone can start a sandbox from. The default image already carries Python 3.12 with numpy, pandas, matplotlib and scikit-learn, and Node 22 with pnpm and tsx, so publish a template when your agents need more than that.
+# Start from templates and custom images
 
-## Use a template
+Start sandboxes with your tools already installed: pick an environment, start from a public, team or personal template, publish your own, or bring a container image.
 
+The default image already carries Python 3.12 with numpy, pandas, matplotlib and scikit-learn, and Node 22 with pnpm and TypeScript. Reach for a template or an image when your coding agent needs more than that.
+
+## Pick an environment
+
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
+
 const client = new Sandbox({
   apiKey: process.env.TANGLE_API_KEY!,
   baseUrl: "https://sandbox.tangle.tools",
 });
-const [template] = await client.publicTemplates.list();
-if (!template) throw new Error("No public template is published yet");
+
+for (const env of await client.environments.list()) {
+  console.log(env.id, env.runtimes, env.description);
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import os
+from tangle_sandbox import Sandbox
+
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+for env in client.environments.list():
+    print(env.id, env.description)
+client.close()
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+tangle environments list
+```
+</Tabs.Tab>
+</Tabs>
+
+The list holds `universal`, the default, and each of your saved templates as `template:<id>`. `runtimes` says whether an environment can run under `docker`, `firecracker` or both. Pass an id as `environment` at create, or omit it for the default.
+
+## Start from a public template
+
+```ts
+const [template] = await client.publicTemplates.list({ query: "python" });
+if (!template) throw new Error("No matching public template");
+
 const box = await client.create({ publicTemplateId: template.id });
+try {
+  console.log((await box.exec("ls")).stdout);
+} finally {
+  await box.delete();
+}
 ```
 
-Or via CLI:
+`publicTemplates.list({ query, tag, featuredOnly, limit, offset })` searches the gallery, `featured()` returns the featured set, `get(idOrSlug)` returns one template, and `versions(idOrSlug)` lists its published versions. Explicit create fields win over what the template sets.
+
+### Pin a version
+
+Templates are versioned. Pin the version when you need every sandbox to start the same:
+
+```ts
+const [version] = await client.publicTemplates.versions(template.id);
+const box = await client.create({
+  publicTemplateId: template.id,
+  publicTemplateVersionId: version.id,
+});
+```
 
 ```bash
-tangle template list                      # browse published templates
-tangle template get <slug>                # see the manifest + tags
-tangle sandbox create --public-template <slug>
+tangle template list
+tangle template get <slug>
+tangle template versions <slug>
 tangle sandbox create --public-template <slug> --public-template-version <version-id>
 ```
 
-## Build your own
+## Publish your own template
 
-### Publish an existing snapshot
-
-Public snapshots pass through an asynchronous publication job. The SDK returns the template or version after that job is ready and the published artifact is visible:
+Set up a sandbox the way you want it, snapshot it, and publish the snapshot. Publication runs as a job: the SDK waits until the template is published and visible.
 
 ```ts
-const input = {
-  name: "My harness",
-  snapshotId,
-  sourceSandboxId: box.id,
-};
-const controller = new AbortController();
-const template = await client.publicTemplates.publish(input, {
-  onProgress: (job) => console.log(job.id, job.status),
-  signal: controller.signal,
-});
+const box = await client.create({ name: "duckdb-agent-base" });
+await box.exec("pip install duckdb polars");
+const snap = await box.snapshot({ tags: ["duckdb"] });
+
+const template = await client.publicTemplates.publish(
+  {
+    name: "DuckDB coding agent",
+    snapshotId: snap.snapshotId,
+    sourceSandboxId: box.id,
+    description: "DuckDB and Polars for data coding agents",
+    tags: ["duckdb", "python"],
+  },
+  { onProgress: (job) => console.log(job.id, job.status) },
+);
+console.log(template.id);
 ```
 
-Keep the accepted job ID. An interrupted wait raises `PublicTemplatePublishError` with `job`; the publication can still be running. Continue that job with `client.publicTemplates.publish(input, { resumeJobId: error.job.id })`. Use the same input and source snapshot. `publishVersion` accepts the same wait and recovery options.
+`name`, `snapshotId` and `sourceSandboxId` are required. `publishVersion(idOrSlug, { snapshotId, sourceSandboxId, releaseNotes })` adds a version to a template you own. `forkedFromTemplateId` records which template yours was built from; it copies nothing.
 
-The CLI exposes recovery on the existing commands:
+A publication that is interrupted, or a wait you stop with `signal`, throws `PublicTemplatePublishError` with the accepted `job`. The job may still be running. Continue it with the same input:
+
+```ts
+import { PublicTemplatePublishError } from "@tangle-network/sandbox";
+
+try {
+  await client.publicTemplates.publish(input);
+} catch (error) {
+  if (error instanceof PublicTemplatePublishError && error.job) {
+    await client.publicTemplates.publish(input, { resumeJobId: error.job.id });
+  } else {
+    throw error;
+  }
+}
+```
 
 ```bash
-tangle template publish <name> <snapshot-id> <sandbox-id> --json
-tangle template publish <name> <snapshot-id> <sandbox-id> --resume-job <job-id> --json
-tangle template publish-version <id-or-slug> <snapshot-id> <sandbox-id> --resume-job <job-id> --json
+tangle template publish "DuckDB coding agent" <snapshot-id> <sandbox-id> --tags duckdb --json
+tangle template publish "DuckDB coding agent" <snapshot-id> <sandbox-id> --resume-job <job-id> --json
+tangle template publish-version <id-or-slug> <snapshot-id> <sandbox-id> --release-notes "Adds polars"
 ```
 
-Progress goes to stderr; JSON errors preserve the accepted job. The dashboard's **Stop waiting** keeps that receipt, and **Continue publication** resumes it after closing or reloading the dialog. A blocked or failed scan does not count as a published template.
+The CLI's `--timeout` on `template publish` is in seconds. Progress goes to stderr, and a JSON error keeps the accepted job id. A blocked or failed scan does not publish the template.
 
-For direct HTTP callers, the publication POST returns `202` with `{ job, artifact }`. Read `/v1/public-templates/publish-jobs/{jobId}` for progress; an accepted request is not a completed publication.
+Over REST, the publish POST answers `202` with `{ job, artifact }`. Read `GET /v1/public-templates/publish-jobs/{jobId}` until the job finishes; an accepted request is not a published template.
 
-## Forking a template
+## Share a template with your team
 
-Templates are versioned. Pin a sandbox to a specific version when stability matters:
+A team template is visible to everyone in the team.
 
 ```ts
-const template = await client.publicTemplates.get("<slug>");
-const box = await client.create({
-  publicTemplateId: template.id,
-  publicTemplateVersionId: template.latestVersion!.id,
+const tmpl = await client.teams.createTemplate(teamId, {
+  name: "checkout-service",
+  snapshotId: snap.snapshotId,
+  description: "Repo cloned, dependencies installed",
 });
+const box = await client.create({ templateId: tmpl.id, teamId });
+
+console.log(await client.teams.listTemplates(teamId));
+await client.teams.deleteTemplate(teamId, tmpl.id);
 ```
 
-Or fork a published template into your team's namespace as a starting point: `client.publicTemplates.publish({ forkedFromTemplateId: "tmpl_..." })`.
+```bash
+tangle team templates create checkout-service <snapshot-id> --description "Repo cloned"
+tangle team templates list
+tangle team templates delete <template-id>
+```
+
+Personal templates have no SDK or CLI command. Create them with `POST /v1/templates` (`name`, `snapshotId`, `sourceSandboxId`, optional `description`, `environment` and `config`), list with `GET /v1/templates`, and delete with `DELETE /v1/templates/{id}`. They appear in `environments.list()` as `template:<id>`.
+
+## Bring a container image
+
+`environment` also takes a container image reference:
+
+```ts
+const box = await client.create({ environment: "python:3.12-slim", runtime: "docker" });
+```
+
+Under `runtime: "firecracker"`, the image must be pinned as `repository@sha256:<digest>` and carried by the Firecracker hosts. `environments.list()` shows which runtimes each catalog image supports.
+
+### Publish an image from a running sandbox
+
+`box.images.publish` builds the sandbox's workspace with a Dockerfile and pushes it to your registry. The registry credentials go to the builder, never into the sandbox.
+
+```ts
+await box.write("Dockerfile", "FROM python:3.12-slim\nRUN pip install duckdb\n");
+const image = await box.images.publish({
+  repository: "ghcr.io/acme/agent-base",
+  auth: { username: "acme-bot", password: process.env.GHCR_TOKEN! },
+  platform: "linux/amd64",
+});
+console.log(image.image, image.digest);
+
+const next = await client.create({ environment: image.image, runtime: "docker" });
+```
+
+`contextPath` and `dockerfilePath` default to `.` and `Dockerfile`. Where no builder is available, the call fails with `WORKSPACE_IMAGE_BUILDER_UNAVAILABLE` or `IN_BOX_DOCKER_UNAVAILABLE`. Image builds through `POST /v1/images` are not offered and answer `403 IMAGE_BUILDS_DISABLED`.
+
+## Python and REST
+
+Python lists environments and starts from templates with `template_id`, `public_template_id` and `public_template_version_id` on create. It has no public template, team template or image publishing methods. Call those routes with `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+templates = client.fetch("GET", "/v1/public-templates", params={"q": "python"}).json()["templates"]
+client.fetch("POST", "/v1/templates", json={"name": "base", "snapshotId": snapshot_id, "sourceSandboxId": box.id})
+```
+
+## Next
+
+- [Snapshot, fork and restore](/sandbox/snapshots)
+- [Create, stop, resume and delete](/sandbox/lifecycle)
+- [Run a coding agent in a sandbox](/sandbox/cloud-agents)

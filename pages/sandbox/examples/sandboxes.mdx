@@ -1,0 +1,437 @@
+---
+title: Sandbox examples
+description: Complete TypeScript programs that run commands, analyse files, stop and resume, snapshot and revert, branch, lock down the network and share preview links, each with its output.
+---
+
+# Sandbox examples
+
+Each program below is complete: copy it into a file, set your key and run it. Every program deletes its sandbox in a `finally` block, so a failure does not leave one running.
+The output under each program is what it printed; ids, URLs and versions differ on your run.
+
+## Run the examples
+
+You need Node.js 22 or newer and an API key from [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys).
+
+```bash
+npm install @tangle-network/sandbox tsx
+export TANGLE_API_KEY="sk-tan-..."
+npx tsx run-code.mts
+```
+
+Save each program with the `.mts` extension so Node runs it as a module with top-level `await`.
+Examples that clone a repository use [tangle-network/sandbox-demo](https://github.com/tangle-network/sandbox-demo), a small Node project with failing tests.
+
+| Example | Shows |
+| --- | --- |
+| [Run one command](#run-one-command) | Create a sandbox, run one command, print its exit code and output, and delete the sandbox. |
+| [Analyse a CSV with Python](#analyse-a-csv-with-python) | Write a file into the sandbox and run Python on it with `runCode`. |
+| [Stop and resume](#stop-and-resume) | Stop a sandbox and resume it with its files intact. |
+| [Snapshot and revert](#snapshot-and-revert) | Snapshot a cloned repository, delete half of it, and revert the sandbox to the snapshot. |
+| [Branch into two](#branch-into-two) | Copy a running sandbox into two children that then diverge. |
+| [Find TODOs in a repository](#find-todos-in-a-repository) | Clone a repository at create and search it with `grep`, with no coding agent involved. |
+| [Lock down the network](#lock-down-the-network) | Allow only the npm registry and GitHub, and check that another host is refused. |
+| [Host a page on a public URL](#host-a-page-on-a-public-url) | Start a web server in the sandbox, give its port a public preview link and fetch it. |
+| [Share a dev server](#share-a-dev-server) | Install a project, run its dev server in the background and share a link to it until you press Enter. |
+| [Pause a coding agent and continue later](#pause-a-coding-agent-and-continue-later) | Ask a coding agent for a plan, stop the sandbox, then resume it from another process and continue the same conversation. |
+
+## Run one command
+
+Create a sandbox, run one command, print its exit code and output, and delete the sandbox.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create();
+try {
+  const { exitCode, stdout } = await box.exec(
+    "python3 -c 'import platform; print(platform.platform())'",
+  );
+  console.log(exitCode, stdout);
+} finally {
+  await box.delete();
+}
+```
+
+```text
+0 Linux-6.8.0-101-generic-x86_64-with-glibc2.42
+```
+
+The kernel version changes as hosts are updated.
+
+Read more: [Run commands and code](/sandbox/commands).
+
+## Analyse a CSV with Python
+
+Write a file into the sandbox and run Python on it with `runCode`.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+// Python 3 is preinstalled; runCode returns what the code printed.
+const box = await client.create();
+try {
+  await box.write("/home/agent/orders.csv", [
+    "customer,amount",
+    "acme,1200",
+    "globex,950",
+    "acme,300",
+    "initech,80",
+    "globex,410",
+  ].join("\n"));
+  const run = await box.runCode("python", `
+import csv, json
+from collections import defaultdict
+totals = defaultdict(float)
+for row in csv.DictReader(open("/home/agent/orders.csv")):
+    totals[row["customer"]] += float(row["amount"])
+print(json.dumps(sorted(totals.items(), key=lambda kv: -kv[1])))
+`);
+  console.log(run.exitCode, JSON.parse(run.stdout));
+} finally {
+  await box.delete();
+}
+```
+
+```text
+0 [ [ 'acme', 1500 ], [ 'globex', 1360 ], [ 'initech', 80 ] ]
+```
+
+Read more: [Files](/sandbox/files), [Run commands and code](/sandbox/commands).
+
+## Stop and resume
+
+Stop a sandbox and resume it with its files intact.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+// A stopped sandbox keeps its disk; resume brings every file back.
+const box = await client.create();
+try {
+  await box.exec("echo 'first draft' > notes.md");
+  await box.stop();
+  await box.resume();
+  const { stdout } = await box.exec("cat notes.md");
+  console.log(stdout.trim());
+} finally {
+  await box.delete();
+}
+```
+
+```text
+first draft
+```
+
+Read more: [Create, stop and delete](/sandbox/lifecycle).
+
+## Snapshot and revert
+
+Snapshot a cloned repository, delete half of it, and revert the sandbox to the snapshot.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+// A snapshot holds the whole disk; reverting undoes everything since.
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+});
+try {
+  const clean = await box.snapshot({ tags: ["clean"] });
+
+  await box.exec("rm -rf packages test");
+  console.log("after", (await box.exec("ls")).stdout.trim().split("\n"));
+
+  await box.revertToSnapshot(clean.snapshotId);
+  console.log("reverted", (await box.exec("ls")).stdout.trim().split("\n"));
+  console.log((await box.exec("npm test 2>&1 | grep -c '^ok'")).stdout.trim(), "tests pass again");
+} finally {
+  await box.delete();
+}
+```
+
+```text
+after [
+  'README.md',
+  'bench',
+  'opencode.json',
+  'package-lock.json',
+  'package.json',
+  'src'
+]
+reverted [
+  'README.md',
+  'bench',
+  'opencode.json',
+  'package-lock.json',
+  'package.json',
+  'packages',
+  'src',
+  'test'
+]
+6 tests pass again
+```
+
+Read more: [Snapshots and forks](/sandbox/snapshots).
+
+## Branch into two
+
+Copy a running sandbox into two children that then diverge.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+// Each child starts as a copy of the parent, files and memory included.
+const parent = await client.create();
+try {
+  await parent.exec("echo 'shared setup' > base.txt");
+  const [a, b] = await parent.branch(2);
+  try {
+    await a.exec("echo 'child a' >> base.txt");
+    await b.exec("echo 'child b' >> base.txt");
+    for (const child of [a, b]) {
+      const { stdout } = await child.exec("cat base.txt");
+      console.log(child.id, stdout.trim().split("\n"));
+    }
+  } finally {
+    await Promise.all([a.delete(), b.delete()]);
+  }
+} finally {
+  await parent.delete();
+}
+```
+
+```text
+sandbox-8c8cbc0632af-branch-mw9mn8lk-0 [ 'shared setup', 'child a' ]
+sandbox-8c8cbc0632af-branch-mw9mn8lk-1 [ 'shared setup', 'child b' ]
+```
+
+Child ids are the parent id plus a branch suffix. Delete the children before the parent; a sandbox with live children cannot be deleted.
+
+Read more: [Snapshots and forks](/sandbox/snapshots).
+
+## Find TODOs in a repository
+
+Clone a repository at create and search it with `grep`, with no coding agent involved.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+});
+try {
+  // Commands start in the cloned repository.
+  const { stdout } = await box.exec("grep -rn --include='*.js' TODO packages src");
+  console.log(stdout.trim());
+} finally {
+  await box.delete();
+}
+```
+
+```text
+packages/api/src/server.js:36:    // TODO: check that the user exists
+packages/cli/src/flags.js:12:      flags[name] = next; // TODO: numbers stay strings
+packages/web/src/client.js:13:// TODO: expire cached entries
+packages/worker/src/queue.js:12:    if (job) job.run(); // TODO: retry failed jobs
+```
+
+Read more: [Git](/sandbox/git).
+
+## Lock down the network
+
+Allow only the npm registry and GitHub, and check that another host is refused.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  egressPolicy: {
+    mode: "strict",
+    allowDomains: ["registry.npmjs.org", "github.com"],
+  },
+});
+try {
+  const blocked = await box.exec("curl -sS -m 5 https://example.com");
+  console.log(blocked.exitCode === 0 ? "reachable (unexpected)" : "blocked as configured");
+
+  const npm = await box.exec("npm view left-pad version");
+  console.log("npm", npm.exitCode, npm.stdout.trim());
+} finally {
+  await box.delete();
+}
+```
+
+```text
+blocked as configured
+npm 0 1.3.0
+```
+
+Read more: [Network access](/sandbox/egress).
+
+## Host a page on a public URL
+
+Start a web server in the sandbox, give its port a public preview link and fetch it.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create();
+try {
+  const server = await box.process.spawn(
+    `node -e "require('http').createServer((q, s) => s.end('<h1>Served from a sandbox</h1>')).listen(3000)"`,
+  );
+  const link = await box.previewLinks.create(3000);
+  const { url } = await box.previewLinks.waitUntilReady(link.previewId);
+  console.log(url);
+
+  const page = await fetch(url);
+  console.log(page.status, await page.text());
+  await server.kill();
+} finally {
+  await box.delete();
+}
+```
+
+```text
+https://sandbox-a6c5874d874e-3000.tangle.sh
+200 <h1>Served from a sandbox</h1>
+```
+
+Read more: [Ports and preview links](/sandbox/ports-previews).
+
+## Share a dev server
+
+Install a project, run its dev server in the background and share a link to it until you press Enter.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  maxLifetimeSeconds: 3600, // the box stops after an hour
+});
+try {
+  await box.exec("npm ci");
+  // Long-running processes are spawned, not exec'd.
+  await box.process.spawnExact("npm", ["run", "dev", "--", "--port", "5173"], {
+    timeoutMs: 3_600_000,
+  });
+
+  const link = await box.previewLinks.create(5173);
+  const { url } = await box.previewLinks.waitUntilReady(link.previewId);
+  console.log(`Share this link: ${url}`);
+  console.log((await fetch(`${url}/orders`, { method: "POST", body: "{}" })).status);
+
+  console.log("Press Enter to delete the sandbox.");
+  await new Promise((done) => process.stdin.once("data", done).once("end", done).resume());
+} finally {
+  await box.delete();
+}
+```
+
+```text
+Share this link: https://sandbox-9cb6f2874e08-5173.tangle.sh
+400
+Press Enter to delete the sandbox.
+```
+
+The `POST /orders` answers 400 because the demo app refuses an empty order, which shows the request reached the app.
+
+Read more: [Ports and preview links](/sandbox/ports-previews), [Run commands and code](/sandbox/commands).
+
+## Pause a coding agent and continue later
+
+Ask a coding agent for a plan, stop the sandbox, then resume it from another process and continue the same conversation.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const backend = { type: "claude-code" } as const;
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  backend,
+});
+try {
+  await box.prompt("Read the codebase and draft a plan for adding a GET /orders route.", {
+    sessionId: "orders",
+  });
+  await box.stop(); // files and the conversation survive; compute billing stops
+
+  // Later, from any process:
+  const again = await client.get(box.id);
+  if (!again) throw new Error("sandbox not found");
+  await again.resume();
+  const run = await again.prompt("Implement step 1 of your plan.", {
+    sessionId: "orders",
+    backend, // resend the backend: the resumed session needs its credential again
+  });
+  console.log(run.success, run.response?.slice(0, 300));
+} finally {
+  await box.delete();
+}
+```
+
+```text
+true Done. Added the `GET /orders` branch to `route()` in `packages/api/src/server.js`, ...
+```
+
+Pass the same `sessionId` after resuming to continue the conversation.
+
+Read more: [Sessions](/sandbox/sessions), [Create, stop and delete](/sandbox/lifecycle).
+
+## Next
+
+- [Python examples](/sandbox/examples/python)
+- [Evaluation and other clouds](/sandbox/examples/evals-and-runtime)
+- [All examples](/sandbox/examples)

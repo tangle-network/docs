@@ -1,7 +1,16 @@
-# Codex on your ChatGPT plan or OpenAI key
+---
+title: Run Codex on your ChatGPT plan
+description: Run OpenAI's Codex in a sandbox signed in with your ChatGPT plan, or with your own OpenAI API key.
+---
 
-Run OpenAI's Codex CLI in a cloud sandbox. Sign it in with your ChatGPT plan,
-so usage counts against that plan, or give it an OpenAI API key.
+import { Tabs } from 'nextra/components'
+
+# Run Codex on your ChatGPT plan
+
+Codex in a sandbox can sign in with your ChatGPT plan, so usage counts against
+that plan, or use your own OpenAI API key. Tangle bills only the sandbox's
+compute. For Claude Code on a Claude plan, see
+[Claude Code on your Claude plan](/sandbox/cloud-agents-claude-code).
 
 ## With your ChatGPT plan
 
@@ -11,17 +20,13 @@ so usage counts against that plan, or give it an OpenAI API key.
 codex login
 ```
 
-Codex writes your login to `~/.codex/auth.json`. That file is a credential:
-anyone holding it can use your ChatGPT plan.
+Codex writes your login to `~/.codex/auth.json`. Anyone holding that file can
+use your ChatGPT plan.
 
 ### 2. Store the login as a secret
 
-```bash
-tangle secret create CODEX_AUTH --value-stdin < ~/.codex/auth.json
-```
-
-Or from TypeScript:
-
+<Tabs items={["TypeScript", "Python", "CLI"]}>
+<Tabs.Tab>
 ```ts
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -32,9 +37,25 @@ await client.secrets.create(
   readFileSync(join(homedir(), ".codex/auth.json"), "utf8"),
 );
 ```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+from pathlib import Path
 
-### 3. Start the agent
+client.secrets.create("CODEX_AUTH", (Path.home() / ".codex/auth.json").read_text())
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+tangle secret create CODEX_AUTH --value-stdin < ~/.codex/auth.json
+```
+</Tabs.Tab>
+</Tabs>
 
+### 3. Start Codex
+
+<Tabs items={["TypeScript", "Python", "CLI"]}>
+<Tabs.Tab>
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -43,8 +64,7 @@ const client = new Sandbox({
   baseUrl: "https://sandbox.tangle.tools",
 });
 
-const agent = await client.create({
-  name: "codex-on-my-plan",
+const box = await client.create({
   backend: {
     type: "codex",
     model: {
@@ -52,38 +72,75 @@ const agent = await client.create({
     },
   },
   secrets: ["CODEX_AUTH"],
-  git: { url: "https://github.com/your-org/your-repo" },
-  idleTimeoutSeconds: 900,
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
 });
-await agent.waitFor("running");
-
-const result = await agent.prompt("Add input validation to the signup handler.", {
-  sessionId: "main",
-});
-console.log(result.success, result.response);
+try {
+  const run = await box.prompt("Add input validation to the signup handler.", {
+    sessionId: "main",
+  });
+  console.log(run.success ? run.response : run.error);
+} finally {
+  await box.delete();
+}
 ```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import os
 
-From a terminal:
+from tangle_sandbox import BackendConfig, CreateSandboxOptions, GitConfig, PromptOptions, Sandbox
 
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+box = client.create(
+    CreateSandboxOptions(
+        backend=BackendConfig(
+            type="codex",
+            model={"cliAuth": {"account": "me", "secretEnv": "CODEX_AUTH", "format": "bundle"}},
+        ),
+        secrets=["CODEX_AUTH"],
+        git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"),
+    )
+)
+box.wait_for("running")
+try:
+    run = box.prompt("Add input validation to the signup handler.", PromptOptions(session_id="main"))
+    print(run.response if run.success else run.error)
+finally:
+    box.delete()
+    client.close()
+```
+</Tabs.Tab>
+<Tabs.Tab>
 ```bash
-tangle sandbox create --name codex-on-my-plan --backend codex --cli-auth CODEX_AUTH
+tangle sandbox create --name codex-on-my-plan --backend codex --cli-auth CODEX_AUTH \
+  --git-url https://github.com/tangle-network/sandbox-demo
 tangle agent prompt <sandbox-id> "Add input validation to the signup handler." \
   --session main --stream
 ```
+</Tabs.Tab>
+</Tabs>
 
-`format: "bundle"` means the secret holds the contents of `auth.json`. The
-sandbox writes it to `~/.codex/auth.json` with owner-only permissions before
-Codex starts. The platform does not mint a Tangle model key for the sandbox.
+`cliAuth.format` says what the secret holds:
+
+| Format | The secret holds |
+|---|---|
+| `bundle` | The contents of `~/.codex/auth.json`. |
+| `files` | A JSON array with one auth file whose `path` is `.codex/auth.json` and whose `content` is that file. |
+
+The sandbox writes the login to `~/.codex/auth.json` before Codex starts. The
+create request is refused when `cliAuth` names a secret that is not in
+`secrets`; the CLI's `--cli-auth` adds it for you. `cliAuth` cannot be combined
+with `apiKey`, `apiKeyEnv`, `baseUrl` or `authFiles`.
 
 ## With an OpenAI API key
 
-Store the key as a secret and reference it with `apiKeyEnv`. The key stays out
-of the create request.
+Store the key as a secret and name it with `apiKeyEnv`. The key stays out of
+the create request, and the platform mints no Router key for the sandbox.
 
 ```ts
 await client.secrets.create("OPENAI_KEY", process.env.OPENAI_API_KEY!);
 
-const agent = await client.create({
+const box = await client.create({
   backend: {
     type: "codex",
     model: {
@@ -95,15 +152,47 @@ const agent = await client.create({
 });
 ```
 
-Set `baseUrl` to OpenAI's API. Without it, Codex sends requests to the Tangle
-Router, which does not accept an OpenAI key.
+`apiKeyEnv` must name a secret listed in `secrets`. Otherwise the request is
+refused with `backend.model.apiKeyEnv names OPENAI_KEY, which is not a selected
+secret or proxy alias`.
 
-`apiKeyEnv` must name a secret listed in `secrets`; otherwise the request is
-refused, because the sandbox would hold no such variable.
+## Rotate the login
+
+After `codex login` writes a new file, replace the stored value.
+`client.secrets.update()` replaces it and re-keys running sandboxes that use it:
+
+<Tabs items={["TypeScript", "Python", "CLI"]}>
+<Tabs.Tab>
+```ts
+await client.secrets.update("CODEX_AUTH", readFileSync(join(homedir(), ".codex/auth.json"), "utf8"));
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+client.secrets.update("CODEX_AUTH", (Path.home() / ".codex/auth.json").read_text())
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+# The CLI has no update command; sandboxes created after this use the new login.
+tangle secret delete CODEX_AUTH --force
+tangle secret create CODEX_AUTH --value-stdin < ~/.codex/auth.json
+```
+</Tabs.Tab>
+</Tabs>
+
+To cut access everywhere, sign out of the session in your ChatGPT account
+settings.
+
+## In a workflow
+
+A workflow's `agent.run` step runs on the same login when its profile sets
+`model.metadata.credentialSource: subscription` on a `codex` profile and your
+account stored the login as `CODEX_AUTH`. The run creates its sandbox with
+`cliAuth` (format `bundle`) and `CODEX_AUTH` in `secrets`. See
+[Workflows](/sandbox/workflows).
 
 ## From HTTP
-
-Credential fields sit under `backend.model` on the wire:
 
 ```bash
 curl -X POST https://sandbox.tangle.tools/v1/sandboxes \
@@ -120,30 +209,8 @@ curl -X POST https://sandbox.tangle.tools/v1/sandboxes \
   }'
 ```
 
-## In a workflow
+## Next
 
-A workflow's `agent.run` runs on the same login when its profile declares
-`model.metadata.credentialSource: subscription` on a `codex` profile and your
-account stored the login as `CODEX_AUTH`. The run creates its sandbox with
-`backend.cliAuth` (format `bundle`) and `CODEX_AUTH` in `secrets`, and mints no
-Router key.
-
-## Rotate or revoke
-
-Secret names cannot be overwritten. After `codex login` writes a new file,
-replace the secret:
-
-```bash
-tangle secret delete CODEX_AUTH --force
-tangle secret create CODEX_AUTH --value-stdin < ~/.codex/auth.json
-```
-
-To cut access everywhere, sign out of the session in your ChatGPT account
-settings.
-
-## Related
-
-- [Start a cloud agent](/docs/cloud-agents): streaming, sessions, and
-  spin-down.
-- [Claude Code subscription](/docs/cloud-agents/claude-code)
-- [Coding plans (GLM, Kimi, MiniMax)](/docs/cloud-agents/coding-plans)
+- [Claude Code on your Claude plan](/sandbox/cloud-agents-claude-code)
+- [GLM, Kimi and MiniMax plans](/sandbox/cloud-agents-coding-plans)
+- [Sessions](/sandbox/sessions): continue the conversation from any process.

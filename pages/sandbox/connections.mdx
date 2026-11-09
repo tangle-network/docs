@@ -1,0 +1,133 @@
+---
+title: Give an agent your accounts with connections
+description: Connect accounts such as Gmail, GitHub or Slack in Tangle Hub once, then grant a coding agent exactly the actions it may use.
+---
+
+# Give an agent your accounts with connections
+
+A connection is an account you connect once in Tangle Hub, such as Gmail,
+GitHub or Slack. A coding agent in a sandbox uses a connection as MCP tools,
+limited to the actions you grant.
+
+## Connect an account
+
+```bash
+tangle hub connect <provider>
+```
+
+The CLI opens the provider's sign-in page in your browser. Add `--no-browser`
+to print the URL instead, and `--parameter key=value` for a provider that needs
+an extra OAuth value.
+
+```bash
+tangle hub connections                       # list your connections and their ids
+tangle hub connections revoke <connection-id> --force
+tangle hub status                            # Hub sign-in and connection status
+```
+
+## Find the actions a connection offers
+
+Each action has a path such as `gmail.messages.list`.
+
+```bash
+tangle hub tools sources                     # tool sources by provider
+tangle hub tools search unread email         # search actions by keyword
+tangle hub tools search issues --provider github
+tangle hub tools describe gmail.messages.list
+```
+
+Run an action yourself before you grant it to an agent:
+
+```bash
+tangle hub call gmail.messages.list '{}' --connection <connection-id>
+```
+
+`--connection` takes a connection id or `provider[:account]`.
+
+## Grant a connection for one turn
+
+`--connection` on `tangle agent prompt` grants a connection for that turn. The
+agent sees the granted actions as MCP tools.
+
+```bash
+tangle agent prompt <sandbox-id> "Summarize my unread email from today." \
+  --connection <connection-id>:gmail.messages.list,gmail.messages.get
+```
+
+| Spec | Grants |
+|---|---|
+| `<connection>:<action>,<action>` | Only the listed actions. Use this by default. |
+| `<connection>:*` | Every action of one connection. |
+| `*:*` | Every action of every connection. |
+
+`<connection>` is a connection id or a provider name. Repeat `--connection`
+for several connections. The flag works with `--interactive` too.
+
+## Grant connections in a profile
+
+Put the grant in an [AgentProfile](/sandbox/cloud-agents-profiles) so every
+agent started from it gets the same tools:
+
+```json
+{
+  "name": "inbox-triage",
+  "prompt": { "appendSystemPrompt": "Triage the inbox. Never send email." },
+  "connections": [
+    {
+      "connectionId": "<connection-id>",
+      "capabilities": ["gmail.messages.list", "gmail.messages.get"]
+    }
+  ]
+}
+```
+
+```ts
+const box = await client.create({
+  backend: { type: "claude-code", profile: inboxTriage },
+});
+```
+
+## Reads, writes and approvals
+
+Read actions are allowed. Each other action follows its permission: `allow`,
+`ask` or `deny`.
+
+```bash
+tangle hub permissions list --connection <connection-id>
+tangle hub permissions set --connection <connection-id> \
+  --action gmail.messages.send --decision ask
+```
+
+`--allow-writes` on `tangle agent prompt` allows every write action of each
+connection granted with `--connection`, so the agent can write unattended.
+Destructive actions still ask. It needs explicit connection ids, never `*:*`,
+and it prints the command that undoes it:
+
+```bash
+tangle hub permissions revert-writes --connection <connection-id>
+```
+
+When an action needs approval, a headless turn stops with status
+`blocked_on_approval` and the CLI prints the approval id:
+
+```bash
+tangle hub approvals list
+tangle hub approvals approve <approval-id>
+tangle hub approvals deny <approval-id>
+```
+
+## Connections in hosted runs and lines
+
+- `client.run({ profile, prompt, connections: ["github"] })` runs a profile
+  with Hub providers by name. See [Batches and hosted runs](/sandbox/runs-and-batch).
+- A Hub mailbox or phone number becomes a line that people can message. See
+  [Email, iMessage and voice lines](/sandbox/lines).
+
+Hub commands are CLI only. From the TypeScript or Python SDK, grant
+connections through the profile's `connections` field.
+
+## Next
+
+- [AgentProfiles](/sandbox/cloud-agents-profiles)
+- [Email, iMessage and voice lines](/sandbox/lines)
+- [Hub and line commands](/sandbox/cli/hub-and-lines)

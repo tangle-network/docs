@@ -1,80 +1,117 @@
-# Overview
+---
+title: Tangle Sandbox overview
+description: Tangle Sandbox gives your code and coding agents isolated Linux sandboxes, driven from TypeScript, Python, the tangle CLI or REST.
+---
 
-Tangle Sandbox gives applications isolated Linux computers for code,
-agents, evaluation, CI, and remote development. A sandbox may run through a
-managed container, a microVM, or an operator-backed driver; the SDK presents
-the same lifecycle and runtime surface across them.
+import { Tabs } from "nextra/components";
 
-A **Sandbox is the computer, resource envelope, and trust boundary**. A
-managed Sandbox can host zero, one, or many durable Agent sessions without
-allocating a separate machine for every AgentProfile.
+# Tangle Sandbox
 
-## Start here
+Tangle Sandbox gives your application and your coding agents isolated Linux sandboxes.
+Create one in a call, run commands and coding agents in it, keep or fork its disk, and delete it when the work is done.
 
-- **Run a coding agent in the cloud**: [Start a cloud agent](/docs/cloud-agents)
-  with your Claude subscription, ChatGPT plan, coding plan, or no credential
-  at all.
-- **Run code in a sandbox from your app**: [Quickstart](/docs/quickstart).
-- **Automate it on a trigger**: [Workflows](/docs/workflows).
+## What you can do in a sandbox
 
-## Product surfaces
-
-- **TypeScript SDK** creates sandboxes and drives lifecycle,
-  processes, files, sessions, snapshots, fleets, and delegated access.
-- **HTTP API** supports Python and other languages.
-- **CLI** is the terminal-first surface for operators and developers.
-- **Dashboard** is the visual surface for sandboxes, templates, teams,
-  secrets, billing, and session inspection.
-- **Scoped browser clients** use short-lived delegated tokens. Account API
-  keys stay server-side.
-
-These surfaces share the same API and durable session model. A sandbox
-created from one surface can be fetched and operated from another, subject
-to the same ownership checks.
-
-## Core concepts
-
-- **Sandbox**: one isolated computer with a filesystem, network policy,
-  compute allocation, lifecycle, and optional managed runtime.
-- **Managed runtime**: the sidecar that serves files, terminals, processes,
-  Agent sessions, events, and other typed runtime capabilities.
-- **Bare Sandbox**: compute and lifecycle without the managed session
-  runtime. Use it for exact process workloads, not managed Agents.
-- **Agent session**: a durable conversation and execution identity inside a
-  managed Sandbox. Different session IDs may execute concurrently; turns
-  within one session remain serialized.
-- **AgentProfile**: the exact harness, model, instructions, tools,
-  permissions, connections, and credentials used by an Agent session.
-- **Template and snapshot**: reusable starting state and captured filesystem
-  state. They are not the same thing as conversation history.
-- **Scoped token**: a short-lived delegated credential for one browser
-  session, one runtime session, project-level reads, or one named
-  capability.
-- **Fleet**: several Sandboxes under one policy and lifecycle when workloads
-  need separate machines or failure domains.
-- **Workflow**: a durable platform automation whose graph can provision
-  Sandboxes, drive Agents, run code and integrations, wait for human
-  decisions, and resume.
-
-## Choose the right shape
-
-| Need | Start with |
+| Task | Where to read |
 |---|---|
-| One command or exact process | `box.exec()` |
-| A coding agent on your own subscription | [`backend.cliAuth`](/docs/cloud-agents) |
-| One durable Agent conversation | `box.prompt()` or `box.session(id)` |
-| Several trusted Agents sharing one computer | `box.agents` |
-| Independent machines or hard resource boundaries | a Fleet |
-| A lead that delegates to workers in their own sandboxes | [agent graphs](/docs/agents/graphs) |
-| Browser observation or interaction | a short-lived scoped token |
+| Run shell commands, long-running processes and Python, Node, TypeScript or Bash code | [Run commands and code](/sandbox/commands) |
+| Run a coding agent such as Claude Code, Codex or OpenCode on a task | [Run a coding agent](/sandbox/cloud-agents) |
+| Drive a coding agent's own terminal UI inside the sandbox, from your terminal or a browser | [Interactive mode](/sandbox/interactive) |
+| Read, write, upload and download files | [Files](/sandbox/files) |
+| Clone repositories, commit and push | [Git](/sandbox/git) |
+| Share a web server running in the sandbox through a public preview link | [Ports and preview links](/sandbox/ports-previews) |
+| Snapshot a sandbox, restore it, or fork a running sandbox into copies | [Snapshots and forks](/sandbox/snapshots) |
+| Limit which hosts the sandbox can reach | [Network access](/sandbox/egress) |
+| Give a coding agent a desktop it can see and control (computer use) | [MCP clients](/sandbox/agents-mcp) |
+| Open a shell over SSH or a terminal in your own app | [Shells and terminals](/sandbox/terminals) |
+| Run the same work across many sandboxes | [Fleets](/sandbox/agents-fleet) |
+| Attach a GPU for a fixed time and spend cap | [GPU leases](/sandbox/gpu-leases) |
 
-## Where to go next
+The coding agents a deployment offers come from the API, not from this page. List them with `client.listBackends()` in TypeScript, or `GET /v1/backends` from Python, the CLI or any HTTP client:
 
-- [Quickstart](/docs/quickstart)
-- [Authentication and browser access](/docs/authentication)
-- [TypeScript SDK](/docs/sdk/typescript)
-- [Multiple Agents](/docs/agents/multiple)
-- [Python](/docs/sdk/python)
-- [CLI](/docs/cli)
-- [Dashboard Guide](/docs/web-app)
-- [Workflows](/docs/workflows)
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+
+```ts
+const { backends } = await client.listBackends();
+for (const backend of backends) console.log(backend.type, backend.name);
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```python
+response = client.fetch("GET", "/v1/backends")
+for backend in response.json()["backends"]:
+    print(backend["type"], backend["name"])
+```
+
+`client.fetch` sends an authenticated request and returns the raw response without raising on an error status.
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```bash
+curl -s https://sandbox.tangle.tools/v1/backends \
+  -H "Authorization: Bearer $TANGLE_API_KEY"
+```
+
+</Tabs.Tab>
+</Tabs>
+
+Each entry says whether the agent runs only on your own credential (`callerCredentialOnly`) and what it supports, such as streaming, MCP and sessions.
+
+## Four ways to use it
+
+| Way in | Install | Reference |
+|---|---|---|
+| TypeScript SDK | `npm install @tangle-network/sandbox` | [TypeScript SDK](/sandbox/sdk-typescript) |
+| Python SDK | `pip install tangle-sandbox` ([PyPI](https://pypi.org/project/tangle-sandbox/)) | [Python SDK](/sandbox/sdk-python) |
+| CLI, the `tangle` command | `npm install -g @tangle-network/sandbox-cli` | [CLI](/sandbox/cli) |
+| REST API at `https://sandbox.tangle.tools` | Any HTTP client | [REST API](/sandbox/api-reference) |
+
+All four call the same API with the same account key, so a sandbox created from one can be used from the others.
+The dashboard at [sandbox.tangle.tools/dashboard](https://sandbox.tangle.tools/dashboard) shows the same sandboxes; see [Dashboard](/sandbox/web-app).
+
+Never run bare `npx tangle`: that npm name belongs to an unrelated package. Use `npx @tangle-network/sandbox-cli`.
+
+The Python SDK covers creating, running and deleting sandboxes, files, git, prompts, snapshots, egress rules, fleets and batches.
+Interactive terminals, preview links, sessions and GPU leases are TypeScript, CLI or REST only; each guide names the path to use.
+
+## The parts of a sandbox
+
+Each term has a full explanation in [How sandboxes work](/sandbox/concepts).
+
+- **Sandbox**: an isolated Linux workspace with its own filesystem, network policy, size and lifetime.
+- **Coding agent**: the agent installed in a sandbox, such as Claude Code, Codex or OpenCode. Pick it with `backend.type`.
+- **AgentProfile**: the agent's model, instructions, tools, MCP servers and permissions. See [AgentProfiles](/sandbox/cloud-agents-profiles).
+- **Session**: one conversation with a coding agent. Reuse its id to continue it. See [Sessions](/sandbox/sessions).
+- **Template and snapshot**: a saved starting state and a saved copy of a sandbox's files. See [Snapshots and forks](/sandbox/snapshots).
+- **Scoped token**: a short-lived token that lets a browser reach one sandbox without your account key. See [API keys and tokens](/sandbox/authentication).
+- **Fleet**: several sandboxes under one budget and lifecycle. See [Fleets](/sandbox/agents-fleet).
+
+## Choose a starting point
+
+| You want | Start with |
+|---|---|
+| One command or an exact process | `box.exec()` |
+| A coding agent on your own Claude, ChatGPT or coding plan | `backend.model.cliAuth`; see [Run a coding agent](/sandbox/cloud-agents) |
+| One continuing agent conversation | `box.prompt()` with a `sessionId`, or `box.session(id)` |
+| Several agents sharing one sandbox | `box.agents` |
+| Separate machines or hard resource limits | A [fleet](/sandbox/agents-fleet) |
+| A lead agent that hands work to workers in their own sandboxes | [Agent graphs](/sandbox/agents-graphs) |
+| A browser view of a sandbox or session | A short-lived [scoped token](/sandbox/authentication) |
+
+`box.agents` exists only after you import `@tangle-network/sandbox/agent`, which adds it to every sandbox handle:
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox/agent";
+```
+
+## Next steps
+
+- [Quickstart](/sandbox/quickstart): create a sandbox, run a command and prompt a coding agent.
+- [How sandboxes work](/sandbox/concepts): states, lifetimes and what survives a stop.
+- [API keys and tokens](/sandbox/authentication): keys, CLI login and browser tokens.
+
+Changes to the SDKs, CLI and API are listed in the [Sandbox release notes](/release-notes/sandbox).
