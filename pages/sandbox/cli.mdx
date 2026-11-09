@@ -91,7 +91,7 @@ tangle sandbox gpu detach sbx_a8f3c2d1 gpu_abc
 ```
 
 The final detach output includes billed seconds and customer cost.
-See [GPU Leases](/docs/gpu-leases) for provider choice, fleet usage, and billing fields.
+See [GPU Leases](/sandbox/gpu-leases) for provider choice, fleet usage, and billing fields.
 
 ## Run an AI agent
 
@@ -122,7 +122,7 @@ tangle agent prompt <sandbox-id> "Find the failing test and fix it." --session m
 ```
 
 `--cli-auth` names the secret; the token never appears in the request. See
-[Start a cloud agent](/docs/cloud-agents) for coding plans, profiles, and
+[Start a cloud agent](/sandbox/cloud-agents) for coding plans, profiles, and
 spin-down.
 
 ## SSH
@@ -146,7 +146,7 @@ tangle secret create OPENAI_API_KEY --value-stdin <<< "$OPENAI_API_KEY"
 tangle secret delete OPENAI_API_KEY
 ```
 
-`tangle sandbox create --secret NAME` injects the value. `--secret NAME@host` keeps the value out of the sandbox and sends it to that host only; see [Network egress rules](/docs/egress).
+`tangle sandbox create --secret NAME` injects the value. `--secret NAME@host` keeps the value out of the sandbox and sends it to that host only; see [Network egress rules](/sandbox/egress).
 
 ## Filesystem and processes
 
@@ -176,19 +176,19 @@ tangle usage                           # today's usage, credit balance, and plan
 tangle keys create ci-agents --budget-usd 25   # an API key that stops at $25
 ```
 
-See [Cost, limits & spin-down](/docs/cost) for a live cost meter.
+See [Cost, limits & spin-down](/sandbox/cost) for a live cost meter.
 
 ## Network egress
 
 The CLI has no egress flag yet. Set a policy at create time from the SDK, or
 change it on a running sandbox over HTTP; see
-[Network egress rules](/docs/egress).
+[Network egress rules](/sandbox/egress).
 
 ## Workflows
 
-For a guided create → run → inspect loop from the terminal, TypeScript, or HTTP, see [Run, inspect & trace](/docs/workflows/run).
+For a guided create → run → inspect loop from the terminal, TypeScript, or HTTP, see [Run, inspect & trace](/sandbox/workflows-run).
 
-Tangle Workflows is the durable graph workflow engine — one YAML file (a trigger plus a graph of nodes) that the platform runs every time the trigger fires. The full authoring contract is the [Workflow YAML reference](/docs/workflows/yaml); the guided intro is [Workflows](/docs/workflows). Workflows live on the platform hub, so these commands use the same `sk-tan-*` API key and take `--base-url <url>` (or `TANGLE_BASE_URL`, or `TANGLE_HUB_URL` inside a sandbox) to target a non-production deployment.
+Tangle Workflows is the durable graph workflow engine — one YAML file (a trigger plus a graph of nodes) that the platform runs every time the trigger fires. The full authoring contract is the [Workflow YAML reference](/sandbox/workflows-yaml); the guided intro is [Workflows](/sandbox/workflows). Workflows live on the platform hub, so these commands use the same `sk-tan-*` API key and take `--base-url <url>` (or `TANGLE_BASE_URL`, or `TANGLE_HUB_URL` inside a sandbox) to target a non-production deployment.
 
 Author and deploy:
 
@@ -231,7 +231,7 @@ tangle workflows decisions wf_abc                   # pending human approvals
 tangle workflows decision-resolve wf_abc <runId> --choice approve
 ```
 
-Cross-run state and run artifacts (see [Artifacts and KV state](/docs/workflows/yaml#artifacts-and-kv-state)):
+Cross-run state and run artifacts (see [Artifacts and KV state](/sandbox/workflows-yaml#artifacts-and-kv-state)):
 
 ```bash
 tangle workflows kv list wf_abc

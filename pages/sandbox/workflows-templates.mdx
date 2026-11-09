@@ -4,7 +4,7 @@ The curated starter catalog opens an editable draft with safe defaults and a gra
 
 Schedules have defaults. Optional notification destinations live in Advanced settings: leave them blank to retain results in the run without a webhook delivery. Human approval gates remain in place. Real execution targets, such as a repository and issue, a child workflow, or a ph0ny agent and caller number, still need your values. Example values are never used as defaults.
 
-Templates are also the fastest way to learn the format: instantiate one, then read and edit its YAML. The [YAML reference](/docs/workflows/yaml) explains every construct they use. Triggers that listen to a provider (`github`, `gmail`, …) need that provider connected on the hub first.
+Templates are also the fastest way to learn the format: instantiate one, then read and edit its YAML. The [YAML reference](/sandbox/workflows-yaml) explains every construct they use. Triggers that listen to a provider (`github`, `gmail`, …) need that provider connected on the hub first.
 
 ## Code Review
 
@@ -82,4 +82,4 @@ The weekly schedule has a default. Choose the real workflow to review. Before ru
 
 ## Beyond the catalog
 
-Every template is ordinary YAML — after instantiating, export it with `tangle workflows get <id>`, edit, and re-apply with `tangle workflows update <id> file.yml`. The platform hub's assistant can also author workflows conversationally (it teaches itself from these same templates), and the [YAML reference](/docs/workflows/yaml) documents the complete surface.
+Every template is ordinary YAML — after instantiating, export it with `tangle workflows get <id>`, edit, and re-apply with `tangle workflows update <id> file.yml`. The platform hub's assistant can also author workflows conversationally (it teaches itself from these same templates), and the [YAML reference](/sandbox/workflows-yaml) documents the complete surface.

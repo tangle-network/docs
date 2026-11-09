@@ -1,26 +1,26 @@
 # Tangle Docs
 
-Tangle Docs explain how to build and operate services on Tangle: Blueprints, operators, sandbox runtime, Router, and x402 payments.
+Tangle Docs explain how to run coding agents in Tangle Sandbox, call models through Tangle Router, and use one Tangle account, key and balance for both.
 
 ## Core pages
 
-- Docs home: https://docs.tangle.tools/
-- Developers: https://docs.tangle.tools/developers
-- Blueprints: https://docs.tangle.tools/developers/blueprints/introduction
-- Blueprint quickstart: https://docs.tangle.tools/developers/cli/quickstart
-- Sandbox docs: https://docs.tangle.tools/infrastructure/sandboxing
-- Router: https://router.tangle.tools/
-- Integration Hub: https://docs.tangle.tools/integrations
-- Cloudbeds setup guide: https://docs.tangle.tools/integrations/cloudbeds
-- PriceLabs setup guide: https://docs.tangle.tools/integrations/pricelabs
-- Deepgram setup guide: https://docs.tangle.tools/integrations/deepgram
-- WhatsApp business line guide: https://docs.tangle.tools/integrations/whatsapp
-- Marketing overview: https://tangle.tools/
+- Sandbox quickstart: https://docs.tangle.tools/sandbox/quickstart
+- Sandbox overview: https://docs.tangle.tools/sandbox/overview
+- TypeScript SDK: https://docs.tangle.tools/sandbox/sdk-typescript
+- Python: https://docs.tangle.tools/sandbox/sdk-python
+- CLI: https://docs.tangle.tools/sandbox/cli
+- Start a cloud agent: https://docs.tangle.tools/sandbox/cloud-agents
+- Run the same agent on E2B or Daytona: https://docs.tangle.tools/sandbox/other-providers
+- Router: https://docs.tangle.tools/gateway
+- Router quickstart: https://docs.tangle.tools/gateway/getting-started
+- Platform account and keys: https://docs.tangle.tools/platform
+- Release notes: https://docs.tangle.tools/release-notes
+- Benchmarks: https://tangle.tools/benchmarks
 
 ## Agent guidance
 
 - Use the docs setup skill at https://docs.tangle.tools/agent-setup.md.
 - Use the Tangle product manifest at https://tangle.tools/.well-known/tangle-agent.json.
 - Use Router OpenAPI at https://router.tangle.tools/openapi.json for model-routing calls.
-- Install scoped npm packages only: `@tangle-network/tcloud`, `@tangle-network/sandbox`, `@tangle-network/browser-agent-driver`.
+- Install scoped packages only: `@tangle-network/sandbox` and `@tangle-network/tcloud` from npm, `tangle-sandbox` from PyPI.
 - Use `TANGLE_API_KEY` for authenticated calls.

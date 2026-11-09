@@ -9,11 +9,11 @@ description: How billing works on Tangle Inference.
 
 | Credential type                  | Markup                                      |
 | -------------------------------- | ------------------------------------------- |
-| Platform credentials             | 20% above provider list price               |
+| Platform credentials             | Provider list price × `pricing_policy.markup` |
 | [BYOK](/gateway/byok)            | **0%** - provider list price, no markup     |
 | [SpendAuth](/gateway/spend-auth) | Operator-set prices (shown at request time) |
 
-The 20% platform markup on non-BYOK requests funds operator payouts and platform infrastructure. Operators earn a share of every request routed through them.
+Read the current multiplier from `pricing_policy.markup` in [`GET /v1/models`](/gateway/models) with your key; BYOK requests use `pricing_policy.byokMarkup`. The platform markup on non-BYOK requests funds operator payouts and platform infrastructure. Operators earn a share of every request routed through them.
 
 ## Credits
 
@@ -45,7 +45,7 @@ Each request is charged based on tokens:
 cost = (input_tokens × input_price) + (output_tokens × output_price)
 ```
 
-Pricing varies by model. Check per-model pricing at [`GET /api/models`](https://router.tangle.tools/api/models) or in the `X-Tangle-Price-Input` / `X-Tangle-Price-Output` response headers.
+Pricing varies by model. Check per-model pricing in `data[].pricing` of [`GET /v1/models`](/gateway/models) or in the `X-Tangle-Price-Input` / `X-Tangle-Price-Output` response headers.
 
 ## Pricing headers on every response
 
