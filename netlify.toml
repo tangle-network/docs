@@ -1,5 +1,5 @@
 [build]
     # yarn build also writes sitemap.xml and robots.txt (next-sitemap) and the
     # Pagefind search index; `next build` alone shipped neither.
-    command = "yarn build"
+    command = "yarn build && node scripts/check-public.mjs dist dist https://docs.tangle.tools"
     publish = "dist"
