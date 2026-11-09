@@ -1,0 +1,30 @@
+# Sections deleted in the 2026-11-06 consolidation go to their maintained home.
+# Protocol and Blueprint paths are 302 until a protocol docs home is decided.
+/sandbox            /sandbox/overview                        301
+/ai                 /gateway                                 301
+/ai/*               /gateway                                 301
+/infrastructure     /sandbox/overview                        301
+/infrastructure/*   /sandbox/overview                        301
+/intelligence       https://intelligence.tangle.tools/       301
+/intelligence/*     https://intelligence.tangle.tools/       301
+/vision             https://tangle.tools/what-is-tangle/     301
+/vision/*           https://tangle.tools/what-is-tangle/     301
+/integrations       https://github.com/tangle-network/agent-integrations  301
+/integrations/*     https://github.com/tangle-network/agent-integrations  301
+/blueprint-agent    https://ai.tangle.tools/                 301
+/blueprint-agent/*  https://ai.tangle.tools/                 301
+/vibe               https://ai.tangle.tools/                 301
+/vibe/*             https://ai.tangle.tools/                 301
+/workbench          https://ai.tangle.tools/                 301
+/workbench/*        https://ai.tangle.tools/                 301
+/developers         https://github.com/tangle-network/blueprint  302
+/developers/*       https://github.com/tangle-network/blueprint  302
+/blueprints         https://github.com/tangle-network/blueprint  302
+/blueprints/*       https://github.com/tangle-network/blueprint  302
+/operators          https://github.com/tangle-network/blueprint  302
+/operators/*        https://github.com/tangle-network/blueprint  302
+/network            https://tangle.tools/blog/series/tangle-protocol/  302
+/network/*          https://tangle.tools/blog/series/tangle-protocol/  302
+/staking            https://tangle.tools/blog/series/tangle-protocol/  302
+/staking/*          https://tangle.tools/blog/series/tangle-protocol/  302
+/restake            https://tangle.tools/blog/series/tangle-protocol/  302
