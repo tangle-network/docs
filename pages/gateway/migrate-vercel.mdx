@@ -28,7 +28,7 @@ Tangle Inference supports the same `providerOptions.gateway` schema as Vercel AI
 | --------------------- | ------------------------- | ------------------------------------------------------------------ |
 | **Base URL**          | `ai-gateway.vercel.sh/v1` | `router.tangle.tools/v1`                                           |
 | **Auth**              | API key or OIDC token     | API key, session, or SpendAuth (on-chain)                          |
-| **Pricing**           | Zero markup               | 20% markup (0% with BYOK)                                          |
+| **Pricing**           | Zero markup               | List price × `pricing_policy.markup` ([pricing](/gateway/pricing)); 0% with BYOK |
 | **Operator network**  | None                      | Managed provider endpoints, selected by health, price, and latency |
 | **On-chain payments** | None                      | SpendAuth (EIP-712) - pay without a credit card                    |
 | **Guardrails**        | None                      | PII + injection detection built-in                                 |
