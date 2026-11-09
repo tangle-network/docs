@@ -78,7 +78,7 @@ const LandingPage = () => {
           </p>
           <p>
             <strong className="text-gray-900 dark:text-white">Route inference.</strong>{" "}
-            One OpenAI-compatible API to 68+ providers, with BYOK, spend caps,
+            One OpenAI-compatible API to dozens of providers, with BYOK, spend caps,
             and operator routing. <a href="/gateway/getting-started" className="text-blue-700 underline dark:text-blue-300">Get started →</a>
           </p>
           <p>
