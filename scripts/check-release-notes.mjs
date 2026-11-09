@@ -8,15 +8,6 @@ const repoRoot = path.resolve(__dirname, "..");
 const releaseRoot = path.join(repoRoot, "pages/release-notes");
 
 const productLines = {
-  "blueprint-agent": {
-    label: "Blueprint Agent",
-    notePattern: /^\d{4}-\d{2}-\d{2}\.mdx$/,
-    requiredSections: [
-      "## Customer Impact",
-      "## What Changed",
-      "## Related Links",
-    ],
-  },
   sandbox: {
     label: "Sandbox",
     notePattern: /^\d{4}-\d{2}-\d{2}\.mdx$/,
@@ -26,45 +17,8 @@ const productLines = {
       "## Related Links",
     ],
   },
-  router: {
-    label: "Router",
-    notePattern: /^\d{4}-\d{2}-\d{2}\.mdx$/,
-    requiredSections: [
-      "## Customer Impact",
-      "## What Changed",
-      "## Related Links",
-    ],
-  },
-  "browser-agent": {
-    label: "Browser Agent",
-    notePattern: /^\d{4}-\d{2}-\d{2}\.mdx$/,
-    requiredSections: [
-      "## Customer Impact",
-      "## What Changed",
-      "## Related Links",
-    ],
-  },
-  "audit-agent": {
-    label: "Audit Agent",
-    notePattern: /^\d{4}-\d{2}-\d{2}\.mdx$/,
-    requiredSections: [
-      "## Customer Impact",
-      "## What Changed",
-      "## Related Links",
-    ],
-  },
-  "tnt-core": {
-    label: "tnt-core",
-    notePattern: /^\d+\.\d+\.\d+\.mdx$/,
-    requiredSections: [
-      "## Breaking Changes",
-      "## Migration Checklist",
-      "## Reference",
-    ],
-  },
 };
 
-const allowedBridgeDirs = new Set(["protocol"]);
 const allowedRootFiles = new Set([
   "index.mdx",
   "all.mdx",
@@ -212,10 +166,9 @@ for (const targetPath of releaseFiles) {
   const rel = path.relative(releaseRoot, targetPath);
   const [firstSegment] = rel.split(path.sep);
   const isProductLine = Object.hasOwn(productLines, firstSegment);
-  const isBridge = allowedBridgeDirs.has(firstSegment);
   const isRootFile = !rel.includes(path.sep) && allowedRootFiles.has(rel);
 
-  if (!isProductLine && !isBridge && !isRootFile) {
+  if (!isProductLine && !isRootFile) {
     fail(
       `Unexpected release-note file: ${path.relative(repoRoot, targetPath)}`,
     );
