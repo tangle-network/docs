@@ -1,19 +1,19 @@
 {
   "schema_version": "2026-06-16",
   "name": "Tangle Docs",
-  "description": "Documentation for Tangle Blueprints, operators, sandbox runtime, Router, and x402 payments.",
+  "description": "Documentation for Tangle Sandbox, Tangle Router and the Tangle Platform account.",
   "homepage": "https://docs.tangle.tools/",
   "llms": "https://docs.tangle.tools/llms.txt",
   "agent_setup": "https://docs.tangle.tools/agent-setup.md",
   "product_manifest": "https://tangle.tools/.well-known/tangle-agent.json",
   "recommended_first_reads": [
-    "https://docs.tangle.tools/developers/cli/quickstart",
-    "https://docs.tangle.tools/developers/blueprints/introduction",
-    "https://docs.tangle.tools/infrastructure/sandboxing"
+    "https://docs.tangle.tools/sandbox/quickstart",
+    "https://docs.tangle.tools/sandbox/sdk-typescript",
+    "https://docs.tangle.tools/gateway/getting-started"
   ],
   "install": [
-    "npm install @tangle-network/tcloud",
     "npm install @tangle-network/sandbox",
-    "npm install -g @tangle-network/browser-agent-driver"
+    "pip install tangle-sandbox",
+    "npm install @tangle-network/tcloud"
   ]
 }

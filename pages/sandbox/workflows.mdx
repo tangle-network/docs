@@ -13,7 +13,7 @@ A workflow is for anything that should happen *every time* something happens: re
 - **Durable runs** — a run that hits a `decision`, `wait`, or `workflow.run` parks (status `waiting`) and releases its worker; it resumes when the wait settles. Runs survive restarts, and every step's output is recorded for inspection.
 - **Revisions** — every update to a workflow appends a revision; the history stays available and you can roll back.
 
-Workflows are owned by the platform hub. The [dashboard](/dashboard/workflows) lists your workflows and lets you enable, disable, or delete them; authoring, the full run history, decision approvals, and revision history live on the [platform app](https://id.tangle.tools/app/workflows) — and the fastest way to author one is the CLI, below.
+Workflows are owned by the platform hub. The [dashboard](https://sandbox.tangle.tools/dashboard/workflows) lists your workflows and lets you enable, disable, or delete them; authoring, the full run history, decision approvals, and revision history live on the [platform app](https://id.tangle.tools/app/workflows) — and the fastest way to author one is the CLI, below.
 
 ## Quickstart: your first workflow in five minutes
 
@@ -68,7 +68,7 @@ Other lifecycle commands: `tangle workflows list`, `get`, `update <id> file.yml`
 
 ### 5. Start from a template instead
 
-Real workflows — PR review, issue triage, daily digests, draft/review loops — are one click away. Browse the catalog in the [workflow templates gallery](/docs/workflows/templates), instantiate one from the [platform app's Workflows page](https://id.tangle.tools/app/workflows), fill in its parameters, and it is live.
+Real workflows — PR review, issue triage, daily digests, draft/review loops — are one click away. Browse the catalog in the [workflow templates gallery](/sandbox/workflows-templates), instantiate one from the [platform app's Workflows page](https://id.tangle.tools/app/workflows), fill in its parameters, and it is live.
 
 ## Connecting providers
 
@@ -158,12 +158,12 @@ How the loop works:
 4. **Steps address each other by id or index, everywhere.** `${steps.draft.text}`, an edge `when`, and a step-level `if` all take `steps.<id>.field` or `steps[N].field`; a hyphenated id needs the quoted form (`${steps["my-id"].text}`). Prefer the id form — it survives reordering the `do:` list.
 5. **An `if` guard may read any step the action depends on.** Not "any earlier step in the list": what a guard may read is decided by the graph, so a dependency declared *later* in `do:` is readable, while an earlier-listed action this one does not depend on is rejected at author time (it would resolve to nothing and silently skip the action).
 
-`identity: app` is what makes this a review BOT. Without it the review is written with the credential of the person who connected GitHub, so it carries their authority — and GitHub refuses a `REQUEST_CHANGES` on a pull request that person opened themselves, which is exactly the work an always-on reviewer exists to cover. `event: APPROVE` is not available under `identity: app`; see the [YAML reference](/docs/workflows/yaml#integrationinvoke) for why, for the actions it applies to, and for what it requires.
+`identity: app` is what makes this a review BOT. Without it the review is written with the credential of the person who connected GitHub, so it carries their authority — and GitHub refuses a `REQUEST_CHANGES` on a pull request that person opened themselves, which is exactly the work an always-on reviewer exists to cover. `event: APPROVE` is not available under `identity: app`; see the [YAML reference](/sandbox/workflows-yaml#integrationinvoke) for why, for the actions it applies to, and for what it requires.
 
-This example needs a [connected GitHub account](#connecting-providers) (`connection: github`). The `identity: app` step needs three more things, and fails loud when any is missing: the deployment has the Tangle Hub GitHub App configured, your App installation covers the repository, and you personally reach that repository with write access. Try the no-connection variant first — the [Ralph loop](/docs/workflows/templates) template runs the same draft/review/steer/publish skeleton on a schedule.
+This example needs a [connected GitHub account](#connecting-providers) (`connection: github`). The `identity: app` step needs three more things, and fails loud when any is missing: the deployment has the Tangle Hub GitHub App configured, your App installation covers the repository, and you personally reach that repository with write access. Try the no-connection variant first — the [Ralph loop](/sandbox/workflows-templates) template runs the same draft/review/steer/publish skeleton on a schedule.
 
 ## Where to go next
 
-- [YAML reference](/docs/workflows/yaml) — every trigger, action kind, expression, and condition, with the exact limits.
-- [Workflow templates](/docs/workflows/templates) — the curated catalog you can instantiate in one click.
-- [CLI](/docs/cli) — the full `tangle` command surface.
+- [YAML reference](/sandbox/workflows-yaml) — every trigger, action kind, expression, and condition, with the exact limits.
+- [Workflow templates](/sandbox/workflows-templates) — the curated catalog you can instantiate in one click.
+- [CLI](/sandbox/cli) — the full `tangle` command surface.

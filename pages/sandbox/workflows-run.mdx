@@ -21,7 +21,7 @@ do:
       prompt: "Triage this report: ${trigger.text}"
 ```
 
-See the [YAML reference](/docs/workflows/yaml) for every trigger and action.
+See the [YAML reference](/sandbox/workflows-yaml) for every trigger and action.
 
 ## From the terminal
 
@@ -141,6 +141,6 @@ await box.exportTrace({                          // push the bundle to your coll
 });
 ```
 
-`fleet.trace()` and `fleet.exportTrace()` do the same for a [fleet](/docs/agents/fleet).
+`fleet.trace()` and `fleet.exportTrace()` do the same for a [fleet](/sandbox/agents-fleet).
 `format: "otel-json"` sends OpenTelemetry JSON that any OTLP/HTTP collector
 accepts.

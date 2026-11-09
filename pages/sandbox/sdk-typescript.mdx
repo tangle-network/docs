@@ -39,7 +39,7 @@ const client = new Sandbox({
 ```
 
 The account API key can create and destroy compute.
-Keep it out of browser bundles. See [Authentication and browser access](/docs/authentication).
+Keep it out of browser bundles. See [Authentication and browser access](/sandbox/authentication).
 
 ## Create a Sandbox
 
@@ -155,7 +155,7 @@ const [planner, builder] = await managed.agents.startMany([
 
 These are existing durable `SandboxSession` handles, not another
 orchestration engine. Read the complete
-[Multiple Agents guide](/docs/agents/multiple).
+[Multiple Agents guide](/sandbox/agents-multiple).
 
 ## Browser and Worker access
 
@@ -201,13 +201,13 @@ branching operations.
 
 ## Parallel compute
 
-- Use [`box.agents`](/docs/agents/multiple) when trusted Agents should share
+- Use [`box.agents`](/sandbox/agents-multiple) when trusted Agents should share
   one computer.
-- Use [Fleets](/docs/agents/fleet) for separate machines, failure domains,
+- Use [Fleets](/sandbox/agents-fleet) for separate machines, failure domains,
   or hard resource boundaries.
 - Use `runBatch()` for ad-hoc parallel tasks that do not need stable fleet
   membership.
-- Use [GPU leases](/docs/gpu-leases) to attach temporary accelerators with
+- Use [GPU leases](/sandbox/gpu-leases) to attach temporary accelerators with
   explicit spend and lifetime caps.
 
 ## Errors and retries

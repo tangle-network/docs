@@ -10,14 +10,14 @@ let it stop itself, when the work is done.
 
 | Credential | Use it when | Model usage is billed to |
 |---|---|---|
-| [Claude subscription](/docs/cloud-agents/claude-code) | You have Claude Pro or Max and want Claude Code in the cloud. | Your Claude plan |
-| [ChatGPT plan or OpenAI key](/docs/cloud-agents/codex) | You use Codex with your ChatGPT login or an OpenAI key. | Your ChatGPT plan or OpenAI account |
-| [Coding plan](/docs/cloud-agents/coding-plans) | You pay for Z.ai GLM, Kimi, MiniMax, or another provider's plan. | That provider |
+| [Claude subscription](/sandbox/cloud-agents-claude-code) | You have Claude Pro or Max and want Claude Code in the cloud. | Your Claude plan |
+| [ChatGPT plan or OpenAI key](/sandbox/cloud-agents-codex) | You use Codex with your ChatGPT login or an OpenAI key. | Your ChatGPT plan or OpenAI account |
+| [Coding plan](/sandbox/cloud-agents-coding-plans) | You pay for Z.ai GLM, Kimi, MiniMax, or another provider's plan. | That provider |
 | Tangle Router (default) | You want no setup: pass no credential at all. | Your Tangle credit |
 
 Tangle bills sandbox compute per second in every case. With your own
 subscription or key, model tokens never touch your Tangle credit. See
-[Cost, limits & spin-down](/docs/cost).
+[Cost, limits & spin-down](/sandbox/cost).
 
 ## Claude Code on your subscription, in one call
 
@@ -101,7 +101,7 @@ await again?.session("fix-tests").prompt("Open a pull request with the fix.");
 
 From a terminal, `tangle agent prompt <sandbox-id> "…" --session fix-tests
 --stream` continues the same session, `tangle ssh <sandbox-id>` opens a shell
-beside the agent, and the [dashboard](/dashboard) shows the session live.
+beside the agent, and the [dashboard](https://sandbox.tangle.tools/dashboard) shows the session live.
 
 ## Spin it down
 
@@ -112,7 +112,7 @@ await agent.delete(); // permanent: the sandbox and its files are gone
 `idleTimeoutSeconds` stops an agent nobody is talking to, and
 `maxLifetimeSeconds` caps how long it may run. A stopped sandbox keeps its
 files and resumes with `agent.resume()`. See
-[Cost, limits & spin-down](/docs/cost) for a live cost meter.
+[Cost, limits & spin-down](/sandbox/cost) for a live cost meter.
 
 ## How your credential is handled
 
@@ -125,12 +125,12 @@ files and resumes with `agent.resume()`. See
 
 ## Next
 
-- [Claude Code subscription](/docs/cloud-agents/claude-code): tokens,
+- [Claude Code subscription](/sandbox/cloud-agents-claude-code): tokens,
   rotation, adding a token to a running sandbox, and HTTP.
-- [Codex & ChatGPT plan](/docs/cloud-agents/codex)
-- [Coding plans (GLM, Kimi, MiniMax)](/docs/cloud-agents/coding-plans)
-- [Agent profiles](/docs/cloud-agents/profiles): give the agent a role,
+- [Codex & ChatGPT plan](/sandbox/cloud-agents-codex)
+- [Coding plans (GLM, Kimi, MiniMax)](/sandbox/cloud-agents-coding-plans)
+- [Agent profiles](/sandbox/cloud-agents-profiles): give the agent a role,
   instructions, and tools.
-- [Network egress rules](/docs/egress): limit what the agent can reach.
-- [Multiple agents](/docs/agents/multiple) and [Fleets](/docs/agents/fleet):
+- [Network egress rules](/sandbox/egress): limit what the agent can reach.
+- [Multiple agents](/sandbox/agents-multiple) and [Fleets](/sandbox/agents-fleet):
   run many at once.
