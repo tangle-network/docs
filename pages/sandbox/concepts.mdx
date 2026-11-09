@@ -116,7 +116,7 @@ A long stop can release the sandbox's compute. Resume then starts it again from 
 
 ## The coding agent inside a sandbox
 
-By default (`agent: true`) a sandbox has a coding agent installed: OpenCode, or the one you pick with `backend.type`.
+By default (`agent: true`) a sandbox has a coding agent installed: OpenCode, or Claude Code, Codex or another one you pick with `backend.type`.
 You talk to it with `box.prompt()` and sessions.
 
 `agent: false` gives plain compute. Files, commands and lifecycle work, but the sandbox gets no model credentials, no coding agent and no startup scripts; a create that names a startup script with `agent: false` is refused with a 400.
