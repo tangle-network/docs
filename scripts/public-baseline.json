@@ -1,0 +1,15 @@
+{
+  "copy": [
+    "docs.tangle.tools|/gateway/hipaa/enable|meta description|em dash|Enroll an app or team in HIPAA-Ready protection — dashboard click-through and the compliance API.",
+    "docs.tangle.tools|/gateway/hipaa/per-request-zdr|heading|em dash|Limits — read these before relying on the flag",
+    "docs.tangle.tools|/gateway/hipaa/per-request-zdr|meta description|em dash|The zeroDataRetention flag — what it does on one call, and its limits.",
+    "docs.tangle.tools|/gateway/hipaa/sandbox-pinning|meta description|em dash|Reference — what the orchestrator pins on a sandbox created under a HIPAA-enrolled key, and which create paths refuse claimed workloads.",
+    "docs.tangle.tools|/gateway/hipaa|meta description|em dash|The HIPAA-Ready protection model for apps and teams on Tangle — one toggle, server-side enforcement, and an honest read on current readiness.",
+    "docs.tangle.tools|/sandbox/other-providers|heading|generic heading|How it works",
+    "docs.tangle.tools|/sandbox/workflows-yaml|heading|em dash|Multiple triggers — as a list",
+    "docs.tangle.tools|/sandbox/workflows-yaml|heading|em dash|Switching one entry off —",
+    "docs.tangle.tools|/sandbox/workflows-yaml|heading|em dash|— a connected provider fires the run",
+    "docs.tangle.tools|/sandbox/workflows-yaml|heading|em dash|— cron",
+    "docs.tangle.tools|/sandbox/workflows-yaml|heading|em dash|— the workflow’s own inbound hook"
+  ]
+}
