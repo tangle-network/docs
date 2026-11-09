@@ -1,22 +1,104 @@
-# API reference
+---
+title: Tangle Sandbox REST API reference
+description: The Tangle Sandbox HTTP API, covering base URL, authentication, a first request, the OpenAPI document and a reference page for every route group.
+---
 
-The sandbox lifecycle API is documented as an OpenAPI specification, served live from the product.
+import { Tabs } from "nextra/components";
 
-**Browse the interactive reference:** [sandbox.tangle.tools/docs/api-reference](https://sandbox.tangle.tools/docs/api-reference)
+# REST API reference
 
-The interactive viewer includes:
-- Every endpoint with parameters, request/response schemas, and examples
-- Search across all operations
-- Authentication requirements per route
+The SDKs and the CLI call this HTTP API. Call it directly from any language, or when an SDK has no method for what you need.
 
-## Quick reference
+## Base URL and authentication
 
-The base URL is `https://sandbox.tangle.tools`.
+Every route is on `https://sandbox.tangle.tools`. Send your account API key as a bearer token:
 
-All requests need an API key:
-
-```bash
-Authorization: Bearer <tangle-api-key>
+```http
+Authorization: Bearer sk-tan-...
 ```
 
-Create a key at [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys).
+Create a key at [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys). Keep it on a server; for browsers, mint a scoped token as shown in [Authentication](/sandbox/authentication).
+
+## A first request
+
+Create a sandbox, run a command in it, and delete it:
+
+<Tabs items={["curl", "Python"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+
+```bash
+API=https://sandbox.tangle.tools
+AUTH="Authorization: Bearer $TANGLE_API_KEY"
+
+SANDBOX_ID=$(curl -s -X POST "$API/v1/sandboxes" -H "$AUTH" \
+  -H "Content-Type: application/json" -d '{"name": "api-demo"}' | jq -r .id)
+
+# Create usually answers with a running sandbox; a provisioning one is polled until it runs.
+until [ "$(curl -s "$API/v1/sandboxes/$SANDBOX_ID" -H "$AUTH" | jq -r .status)" = running ]; do sleep 2; done
+
+curl -s -X POST "$API/v1/sandboxes/$SANDBOX_ID/runtime/process/spawn" -H "$AUTH" \
+  -H "Content-Type: application/json" \
+  -d '{"executable": "uname", "args": ["-a"], "blocking": true}' | jq .data.stdout
+
+curl -s -X DELETE "$API/v1/sandboxes/$SANDBOX_ID" -H "$AUTH"
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```python
+import os
+
+from tangle_sandbox import Sandbox, SandboxStatus
+
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+
+# fetch sends any route with your key and returns the raw httpx.Response.
+created = client.fetch("POST", "/v1/sandboxes", json={"name": "api-demo"})
+sandbox_id = created.json()["id"]
+try:
+    client.get(sandbox_id).wait_for(SandboxStatus.RUNNING)
+    run = client.fetch(
+        "POST",
+        f"/v1/sandboxes/{sandbox_id}/runtime/process/spawn",
+        json={"executable": "uname", "args": ["-a"], "blocking": True},
+    )
+    print(run.status_code, run.json()["data"]["stdout"])
+finally:
+    client.fetch("DELETE", f"/v1/sandboxes/{sandbox_id}")
+    client.close()
+```
+
+</Tabs.Tab>
+</Tabs>
+
+`client.fetch` does not raise on an error status; check `status_code`. The TypeScript SDK's `client.create()` and `box.exec()` make the same calls; see the [Quickstart](/sandbox/quickstart).
+
+## Route groups
+
+| Page | Covers |
+|---|---|
+| [Sandboxes and GPU](/sandbox/api-reference/sandboxes) | Create, list, read, stop, resume, snapshot, branch and delete sandboxes; egress rules, events and GPU leases. |
+| [In-sandbox runtime](/sandbox/api-reference/runtime) | Commands, processes, code kernels, files, git, terminals, ports, preview links and coding-agent runs inside one sandbox. |
+| [Sessions and backends](/sandbox/api-reference/sessions) | Coding-agent sessions, plans, the coding agents and models your key can use, and intelligence reports. |
+| [Fleets, templates and teams](/sandbox/api-reference/resources) | Fleets, templates, images, instances, secrets, SSH keys, startup scripts, lines and teams. |
+| [Account, usage and pricing](/sandbox/api-reference/account) | Your account, usage, egress, billing, public prices, notifications, sign-in and service health. |
+| [E2B-compatible routes](/sandbox/api-reference/e2b) | E2B's REST shape under `/e2b`, for code written against E2B's API. |
+
+## OpenAPI document
+
+The full API, with every request and response schema, is in one OpenAPI 3 document: [/sandbox-openapi.json](/sandbox-openapi.json).
+Load it into an API client such as Postman or Insomnia, or generate a client from it.
+
+## Requests and responses
+
+- Bodies are JSON unless a route says otherwise. Send `Content-Type: application/json`.
+- An error answers with a JSON body whose `code` names it. Branch on `code`; see [Error codes](/sandbox/errors).
+- To retry a create safely, send an `Idempotency-Key` header and reuse it; see [Retry the right errors](/sandbox/errors#retry-the-right-errors).
+- Responses carry `X-RateLimit-*` headers; the limits are on [Limits and timeouts](/sandbox/limits).
+
+## Next steps
+
+- [Sandboxes and GPU routes](/sandbox/api-reference/sandboxes): the routes most programs start with.
+- [In-sandbox runtime routes](/sandbox/api-reference/runtime): run commands and read files over HTTP.
+- [Error codes](/sandbox/errors): every error code and what to do about it.

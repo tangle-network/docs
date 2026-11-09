@@ -1,0 +1,138 @@
+import { Tabs, Callout } from "nextra/components";
+
+# Trace and inspect what ran
+
+See what a sandbox and its coding agent are doing while they run, and get a report of what they did afterwards: the conversation, each run, resource use, and an analysis of the trace.
+
+## Get a report of what an agent did
+
+Every turn is traced. An intelligence report reads the trace and summarizes what the agent did.
+
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  backend: { type: "claude-code" },
+});
+try {
+  const run = await box.prompt("The test tagged timezone fails. Fix the cause.");
+  console.log(run.success, run.toolInvocations?.length, "tool calls");
+
+  const job = await client.intelligence.createReport({
+    subject: { type: "sandbox", id: box.id },
+    mode: "deterministic",
+  });
+  const report = await client.intelligence.waitForReport(job.jobId, { timeoutMs: 180_000 });
+  console.log(report.status, report.billing.costUsd);
+  console.log(JSON.stringify(report.result, null, 2));
+} finally {
+  await box.delete();
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+report = client.create_intelligence_report(subject_type="sandbox", subject_id=box.id, mode="deterministic")
+print(report)
+print(client.list_intelligence_reports(subject_type="sandbox", subject_id=box.id))
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+tangle intelligence sandbox <sandbox-id> --mode deterministic
+tangle intelligence get <job-id>
+tangle intelligence list --subject-type sandbox --subject-id <sandbox-id>
+```
+</Tabs.Tab>
+</Tabs>
+
+| Mode | What it does |
+|---|---|
+| `deterministic` | A fixed analysis of the trace. |
+| `agentic` | An agent analyzes the trace. Set `budget: { billTo: "customer", maxUsd }`; a report that would cost more is refused with `402` before any charge. |
+
+`estimateReport({ subject, mode })` returns the cost and who pays before you create one. `getReport(jobId)` reads a report, and `listReports({ subjectType, subjectId, limit })` lists them. The subject can be a `sandbox` or a `fleet`; `tangle intelligence fleet <fleet-id>` reports on a whole fleet.
+
+## Read the conversation and its runs
+
+```ts
+const session = box.session("issue-482");
+
+for (const m of await session.messages({ limit: 50 })) {
+  console.log(m.role, m.timestamp, m.metadata?.status);
+}
+
+for (const r of await session.runs()) {
+  console.log(r.executionId, r.status, r.eventCount);
+}
+```
+
+`messages` includes assistant text from a turn that is still running. `runs()` is the session's execution ledger, newest first, so you can count runs without inferring them from files the agent wrote. To follow events live or replay them after a disconnect, see [Stream output](/sandbox/streaming#reconnect-without-losing-events).
+
+## Watch the sandbox itself
+
+```ts
+const usage = await box.resourceUsage();
+if (usage) console.log(usage.memoryCurrentMb, usage.memoryPeakMb, usage.memoryLimitMb, usage.cpuUsageUsec);
+
+const ports = await box.ports();
+console.log(ports);
+
+console.log(await box.runtimeHealth());
+console.log(await box.capabilities());
+```
+
+| Method | Returns |
+|---|---|
+| `resourceUsage()` | Current and peak memory in MB, the memory limit, and cumulative CPU time in microseconds, or `null` where the host cannot report it. CPU use between two samples is the change in `cpuUsageUsec` over the change in wall time. |
+| `ports()` | The ports processes are listening on. Throws `PORT_WATCHER_DISABLED` when the port watcher is off, rather than returning an empty list. |
+| `runtimeHealth()` | Health of the runtime inside the sandbox. |
+| `capabilities()` | What the deployed image supports. |
+
+## Read the sandbox's trace
+
+`box.trace()` returns the sandbox's lifecycle, runtime and usage trace. `box.exportTrace(sink)` sends it to your own trace store, and `box.exportConversations()` exports the coding agent's conversations. To keep the agent's own session files after the sandbox is deleted, `session.exportRawEvidence(destination, options)` writes them to a new local directory and verifies them.
+
+In the CLI, `tangle traces` reads traces across your runs:
+
+```bash
+tangle traces list --from 2026-11-01T00:00:00Z --limit 20
+tangle traces get <trace-id>
+tangle traces get <trace-id> --ndjson > spans.ndjson
+tangle traces runs
+```
+
+## Usage and spend
+
+```ts
+const today = await client.usage();
+console.log(today);
+
+const egress = await box.egress.usage();
+console.log(egress);
+```
+
+`client.usage()` reports today's compute minutes, GPU seconds and cost, and your active and total sandboxes. `box.egress.usage({ month })` reports one sandbox's network egress for a month. `tangle usage` prints the account totals. Rates are on [Pricing](/sandbox/cost).
+
+## Python and REST
+
+Python has `box.trace()`, `box.intelligence()`, `box.export_trace(...)`, `client.create_intelligence_report(...)`, `client.get_intelligence_report(job_id)` and `client.list_intelligence_reports()`. It has no session messages or runs, resource usage, ports, `events`, `export_conversations`, `export_raw_evidence`, `wait_for_report` or `estimate_report`. Call those routes with `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+client.fetch("GET", f"/v1/sandboxes/{box.id}/runtime/health/detailed").json()
+client.fetch("GET", f"/v1/sandboxes/{box.id}/runtime/messages", params={"sessionId": session_id, "limit": 50}).json()
+```
+
+## Next
+
+- [Evaluate agents with agent-eval](/sandbox/evaluation)
+- [Keep conversations across turns and processes](/sandbox/sessions)
+- [Pricing and spend controls](/sandbox/cost)

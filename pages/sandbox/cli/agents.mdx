@@ -1,0 +1,761 @@
+---
+title: Agent, fleet, batch and graph commands
+description: "Reference for tangle agent, backend, batch, fleet, mcp, supervise, graph and skill: run coding agents in sandboxes from the terminal."
+---
+
+# Agent, fleet, batch and graph commands
+
+Give a coding agent a task in a sandbox, attach your terminal to its own interface, write agent profiles, run batches and fleets, serve a sandbox to an MCP client and run agent graphs.
+
+```bash
+tangle agent prompt my-box "Fix the failing test" --stream
+tangle agent prompt my-box "Start on the issue" --interactive --harness codex
+tangle agent profile create --name critic --harness codex
+tangle fleet create --count 4
+```
+
+`--harness` picks the coding agent for one run. The flag table under `tangle agent prompt` lists the names it accepts; `GET /v1/backends` lists every coding agent the service offers.
+[Interactive mode](/sandbox/interactive) explains `--interactive`: what you see, the keys, and how to detach and reattach.
+
+## Commands on this page
+
+| Command | What it does |
+| --- | --- |
+| [`tangle agent prompt`](#tangle-agent-prompt) | Send a single prompt to the agent. With one arg it's the prompt and the box comes from `tangle use` / `--box` / TANGLE_SANDBOX; with two it's `<id>` `<message>`. |
+| [`tangle agent profile create`](#tangle-agent-profile-create) | Create a profile, interactively (a wizard), or fully via flags |
+| [`tangle agent profile show`](#tangle-agent-profile-show) | Load and print a profile (local path, https URL, or github:owner/repo/path[@ref]) |
+| [`tangle agent profile validate`](#tangle-agent-profile-validate) | Validate a profile against the canonical AgentProfile schema |
+| [`tangle agent connect`](#tangle-agent-connect) | Print a copy-paste SDK integration snippet for one of: anthropic, openai, vercel-ai, mastra, mcp-local, claude-desktop, cursor, zed (to stream a local agent's telemetry to Intelligence, see 'tangle connect') |
+| [`tangle backend status`](#tangle-backend-status) | Get backend agent status |
+| [`tangle backend configure`](#tangle-backend-configure) | Update backend configuration |
+| [`tangle backend mcp-status`](#tangle-backend-mcp-status) | Get status of MCP servers |
+| [`tangle backend restart`](#tangle-backend-restart) | Restart the backend agent |
+| [`tangle batch run`](#tangle-batch-run) | Execute a batch of tasks. Provide tasks via `--tasks <file.json>` and/or repeated `--task` id=message flags. |
+| [`tangle fleet create`](#tangle-fleet-create) | Create a sandbox fleet |
+| [`tangle fleet list`](#tangle-fleet-list) | List the machines of one fleet (fleet id is required) |
+| [`tangle fleet get`](#tangle-fleet-get) | Show one fleet's manifest (server record) |
+| [`tangle fleet delete`](#tangle-fleet-delete) | Delete a fleet's machine sandboxes and its record |
+| [`tangle fleet reap`](#tangle-fleet-reap) | TTL cleanup of all expired fleets (fleet-wide) |
+| [`tangle fleet reconcile`](#tangle-fleet-reconcile) | Drop fleet records whose underlying sandboxes vanished |
+| [`tangle fleet workspace snapshot`](#tangle-fleet-workspace-snapshot) | Snapshot the fleet's shared workspace |
+| [`tangle fleet workspace restore`](#tangle-fleet-workspace-restore) | Restore the fleet's shared workspace from a snapshot |
+| [`tangle fleet workspace reconcile`](#tangle-fleet-workspace-reconcile) | Re-mount the shared workspace on all fleet machines |
+| [`tangle fleet exec`](#tangle-fleet-exec) | Run a shell command across the fleet's machines |
+| [`tangle fleet run`](#tangle-fleet-run) | Create a fleet of agents, run one turn on every agent, print each result, then delete the fleet |
+| [`tangle fleet cancel`](#tangle-fleet-cancel) | Interrupt every agent of a fleet and cancel its child fleets; sandboxes keep running |
+| [`tangle fleet capabilities`](#tangle-fleet-capabilities) | List fleet drivers and their supported features |
+| [`tangle fleet usage`](#tangle-fleet-usage) | Show fleet usage and reliability insights |
+| [`tangle fleet cost`](#tangle-fleet-cost) | Show the fleet's cost estimate |
+| [`tangle fleet token`](#tangle-fleet-token) | Mint a scoped fleet bearer token (treated as a secret) |
+| [`tangle mcp serve`](#tangle-mcp-serve) | Run a local MCP server (stdio) backed by the given sandbox (ID or name). Pipe its stdio from an MCP client config to expose sandbox tools. |
+| [`tangle supervise`](#tangle-supervise) | Run a budget-conserving supervisor that spawns isolated sandbox workers to deliver a task. |
+| [`tangle graph new`](#tangle-graph-new) | Design, validate and run one portable graph |
+| [`tangle graph analyze`](#tangle-graph-analyze) | Analyze retained graph evidence through Braid |
+| [`tangle graph repair`](#tangle-graph-repair) | Diagnose a failed local graph run; patch and resume it when the graph owns the fix |
+| [`tangle graph improve`](#tangle-graph-improve) | Measure graph arms on js-issues by offline replay |
+| [`tangle graph show`](#tangle-graph-show) | Draw a graph file: labelled nodes, routes, loops and stops |
+| [`tangle graph inspect`](#tangle-graph-inspect) | Inspect a live or retained graph run |
+| [`tangle graph run`](#tangle-graph-run) | Run a saved graph over native subscriptions |
+| [`tangle skill path`](#tangle-skill-path) | Print the absolute path to the SKILL.md shipped with this CLI |
+
+## Prompt a coding agent
+
+### `tangle agent prompt`
+
+Send a single prompt to the agent. With one arg it's the prompt and the box comes from `tangle use` / `--box` / TANGLE_SANDBOX; with two it's `<id>` `<message>`.
+
+Sends one prompt to the sandbox's agent. Default: waits and prints the response with duration and token counts. `--stream` prints text as it arrives. `--interactive` starts the coding agent's native terminal UI in the sandbox and attaches your terminal to it.
+
+```bash
+tangle agent prompt <idOrMessage> [message] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--box <id>` |  | Target sandbox (overrides the active one) |
+| `--session <id>` |  | Continue existing session |
+| `--model <model>` |  | Model to use |
+| `-t, --timeout <ms>` | `300000` | Timeout in milliseconds |
+| `--stream` |  | Stream response in real-time |
+| `--interactive` |  | Spawn the coding agent's interactive TUI in the sandbox, inject this prompt, and print a link to watch + drive the live session in the browser (omit for the default headless run) |
+| `--harness <name>` |  | Coding agent that executes this run (claude-code, codex, kimi-code, opencode, pi, amp, hermes). Defaults to the sandbox's configured backend. The box ships all coding agents, so this is a per-run choice. |
+| `--profile <source>` |  | Agent profile to run: a local JSON path, an https URL, or github:`<owner>`/`<repo>`/`<path>`[@`<ref>`] |
+| `--skills <ref...>` |  | Attach skills (repeatable): a local file path, or github:`<owner>`/`<repo>`/`<path>`[@`<ref>`] to pull from a repo |
+| `--tools <ref...>` |  | Attach tools (repeatable): a local file path, or github:`<owner>`/`<repo>`/`<path>`[@`<ref>`] |
+| `--system-prompt <text>` |  | Override the agent's system prompt for this run |
+| `--connection <spec>` |  | Grant a Hub connection to the agent as MCP tools (repeatable). The connection is a connection id or a provider name. Modes: `<connection>`:`<cap1>`,`<cap2>` (least privilege, recommended), `<connection>`:* (all of one connection), or *:* (all connections). List connections with `tangle hub connections`; paths with `tangle hub tools search <keyword>`. |
+| `--allow-writes` |  | Pre-approve every WRITE action of each granted `--connection` so the agent can write unattended (reads are already allowed; destructive actions still prompt). Revert with `tangle hub permissions revert-writes`. |
+| `--no-hub-key` |  | Do not auto-mint a platform Hub key for `--allow-writes`; use the stored credential as-is |
+
+Request: `POST /v1/sandboxes/{id}/runtime/agents/run/stream`
+
+```bash
+tangle agent prompt my-box "Summarize the README" --stream
+```
+
+- One positional is the prompt and the sandbox comes from `--box`, TANGLE_SANDBOX or `tangle use`; two positionals are `<id>` `<message>`.
+- `--profile` here is an AgentProfile source (path, https URL or github:owner/repo/path@ref), not a credential profile.
+- `--timeout` defaults to 300000 ms.
+- `--harness` picks the coding agent for this run; the help lists claude-code, codex, kimi-code, opencode, pi, amp, hermes.
+- `--connection` grants Hub connections as MCP tools: `<connection>`:`<cap1>`,`<cap2>`, `<connection>`:* or *:*; `--allow-writes` pre-approves write actions of each named connection and refuses the *:* wildcard.
+- A non-successful result exits 1 with guidance: blocked_on_approval prints `tangle hub approvals approve <id>`; awaiting_question suggests re-running with `--interactive`.
+- `--json` (blocking) prints the SDK prompt result; `--json` `--stream` prints one final document with the outcome, response, tokenUsage and durationMs.
+- `--interactive` `--json` prints `{state, sessionId, harness, streamUrl?, webUrl}` and does not attach.
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+## Agent profiles
+
+### `tangle agent profile create`
+
+Create a profile, interactively (a wizard), or fully via flags.
+
+Creates an AgentProfile JSON file from flags, or through a prompt wizard when `--name` is omitted on a terminal.
+
+```bash
+tangle agent profile create [output] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--name <name>` |  | Profile name (when set, skips the wizard) |
+| `--description <text>` |  | Profile description |
+| `--model <model>` |  | Model (provider/model) |
+| `--system-prompt <text>` |  | System prompt |
+| `--skills <ref...>` |  | Skill refs: local path or github:`<owner>`/`<repo>`/`<path>`[@`<ref>`] |
+| `--tools <ref...>` |  | Tool refs: local path or github:`<owner>`/`<repo>`/`<path>`[@`<ref>`] |
+| `--harness <name>` |  | Coding agent hint shown in the run command |
+
+```bash
+tangle agent profile create --name critic --harness codex --json
+```
+
+- Writes ./agent-profile.json unless an [output] path is given; `--json` prints the profile instead of writing it.
+- Without a terminal, `--name` is required.
+
+### `tangle agent profile show`
+
+Load and print a profile (local path, https URL, or github:owner/repo/path[@ref]).
+
+Loads a profile from a path, https URL or github: ref and prints it as JSON.
+
+```bash
+tangle agent profile show <source>
+```
+
+```bash
+tangle agent profile show ./agent-profile.json
+```
+
+- Always prints JSON, including errors, even without `--json`.
+
+### `tangle agent profile validate`
+
+Validate a profile against the canonical AgentProfile schema.
+
+```bash
+tangle agent profile validate <source>
+```
+
+```bash
+tangle agent profile validate ~/profile.json --json
+```
+
+- Invalid profiles exit 65 with code PROFILE_INVALID before any authentication.
+- `--json` prints `{ok:true, name}`.
+
+## Framework snippets
+
+### `tangle agent connect`
+
+Print a copy-paste SDK integration snippet for one of: anthropic, openai, vercel-ai, mastra, mcp-local, claude-desktop, cursor, zed (to stream a local agent's telemetry to Intelligence, see 'tangle connect').
+
+Prints a ready-to-paste integration snippet for anthropic, openai, vercel-ai, mastra, mcp-local, claude-desktop, cursor or zed; makes no network call.
+
+```bash
+tangle agent connect <framework> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-i, --sandbox <id>` | `<SANDBOX_ID>` | Sandbox ID to embed in the snippet |
+| `-s, --session <id>` | `default` | Session ID to embed in the snippet |
+
+- Unknown framework exits 2, not the usage code 64.
+- `-i` here means `--sandbox` (the id embedded in the snippet), unlike `tangle ssh -i`.
+
+## Agent backend in a sandbox
+
+### `tangle backend status`
+
+Get backend agent status.
+
+Shows the backend agent's status.
+
+```bash
+tangle backend status <sandboxId-or-name>
+```
+
+Request: `GET /v1/sandboxes/{id}/runtime/backend`
+
+```bash
+tangle backend status my-box
+```
+
+### `tangle backend configure`
+
+Update backend configuration.
+
+Updates the backend's model.
+
+```bash
+tangle backend configure <sandboxId-or-name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--model <model>` |  | Model id (e.g. provider/model) |
+
+Request: `POST /v1/sandboxes/{id}/runtime/backend/configure`
+
+```bash
+tangle backend configure my-box
+```
+
+- With no `--model` it sends an empty configuration.
+- `--json` prints the configuration that was sent.
+
+### `tangle backend mcp-status`
+
+Get status of MCP servers.
+
+Shows the status of the backend's MCP servers.
+
+```bash
+tangle backend mcp-status <sandboxId-or-name>
+```
+
+Request: `GET /v1/sandboxes/{id}/runtime/backend/mcp`
+
+### `tangle backend restart`
+
+Restart the backend agent.
+
+Restarts the backend agent.
+
+```bash
+tangle backend restart <sandboxId-or-name>
+```
+
+Request: `POST /v1/sandboxes/{id}/runtime/backend/restart`
+
+```bash
+tangle backend restart my-box
+```
+
+- Prints no JSON document.
+
+## Batches
+
+### `tangle batch run`
+
+Execute a batch of tasks. Provide tasks via `--tasks <file.json>` and/or repeated `--task` id=message flags.
+
+Runs a batch of tasks against one or more named backends and prints totals and per-task results.
+
+```bash
+tangle batch run [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--tasks <file>` |  | Path to a JSON file with an array of tasks (or `{tasks: [...]}`) |
+| `--request <file>` |  | Path to a complete batch request JSON file |
+| `--task <id=message>` |  | Inline task, id=message. Repeatable. |
+| `--stream` |  | Stream per-task events as they arrive |
+| `-t, --timeout <ms>` | `300000` | Per-task timeout in milliseconds |
+| `--persistent` |  | Keep sandboxes alive after completion |
+| `--reuse-key <key>` |  | Stable workspace identity required by `--persistent` |
+| `--replay-only` |  | Rejoin existing keyed work; refuse missing custody |
+| `--idempotency-key <key>` |  | Retry identity; keyed runs continue after disconnect |
+| `--backend <id=type>` |  | Backend identity and type. Required and repeatable without `--request`. |
+| `--model <provider/model>` |  | Model override when exactly one backend is selected |
+
+Request: `POST /v1/sandboxes/batch/run`
+
+```bash
+tangle batch run --request ~/request.json --json
+```
+
+- Without `--request`, at least one `--backend <id=type>` is required; `--model` applies only when exactly one backend is selected.
+- `--request` takes a complete SDK batch request file and cannot be combined with inline task or backend flags.
+- `--stream` prints task.started/retry/completed/failed lines as they arrive; with `--json` those lines go to stderr and the final document to stdout.
+- Exits 1 when any task failed; Ctrl-C prints 'Batch cancelled.' and exits 130.
+
+## Fleets
+
+### `tangle fleet create`
+
+Create a sandbox fleet.
+
+Creates a fleet of worker sandboxes from flags or a `--spec` JSON file and prints its machines.
+
+```bash
+tangle fleet create [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--fleet-id <id>` |  | Stable fleet id (generated when omitted) |
+| `--count <n>` | `1` | Number of worker machines |
+| `--environment <environment>` |  | A catalog environment, a container image reference, or a built image ID. Firecracker runs only images pinned by repository@sha256 that the platform's Firecracker hosts carry; `environments list` shows each image's runtimes |
+| `--runtime <runtime>` |  | Isolation on the platform's hosts: docker runs a container on the host kernel, firecracker a microVM with its own kernel. Omit for the platform default. Choices: docker, firecracker. |
+| `--cpu <cores>` |  | CPU cores per machine |
+| `--memory <mb>` |  | Memory in MB per machine |
+| `--disk <gb>` |  | Disk in GB per machine |
+| `--accelerator-kind <kind>` |  | Accelerator kind per machine, for example nvidia-l4 or nvidia-h100 |
+| `--accelerator-count <count>` |  | Accelerator devices per machine |
+| `--accelerator-memory <gb>` |  | Minimum memory per GPU in decimal GB |
+| `--gpu-provider <provider>` |  | GPU cloud provider per machine; omitted picks the cheapest configured provider |
+| `--gpu-worker-image <image>` |  | GPU worker image override |
+| `--gpu-env <vars...>` |  | Environment variables for each GPU worker (KEY=VALUE) |
+| `--gpu-max-spend-usd <usd>` |  | Maximum spend per machine GPU lease |
+| `--gpu-max-lifetime <seconds>` |  | Maximum GPU lease lifetime per machine in seconds |
+| `--gpu-idle-timeout <seconds>` |  | Destroy each GPU lease after this many idle seconds |
+| `--backend <id>` |  | Agent backend type |
+| `--workspace <mode>` | `isolated` | Workspace mode: isolated (shared workspaces are refused) |
+| `--max-spend-usd <n>` |  | Fleet spend cap in USD (policy) |
+| `--max-lifetime <s>` |  | Max machine lifetime in seconds (policy) |
+| `--spec <file.json>` |  | Path to a JSON file describing the fleet (overrides synthesized machines) |
+| `--coordinator` |  | Create a coordinator + workers fleet (routes to createWithCoordinator) |
+
+Request: `POST /v1/fleets`
+
+```bash
+tangle fleet create --count 4
+```
+
+- `--coordinator` creates a coordinator plus workers.
+- `--json` prints `{fleetId, machines}`.
+
+### `tangle fleet list`
+
+List the machines of one fleet (fleet id is required).
+
+```bash
+tangle fleet list <fleet-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--status <status>` |  | Filter machines by status |
+
+### `tangle fleet get`
+
+Show one fleet's manifest (server record).
+
+Prints one fleet's manifest.
+
+```bash
+tangle fleet get <fleet-id>
+```
+
+Request: `GET /v1/fleets/{fleetId}/manifest`
+
+### `tangle fleet delete`
+
+Delete a fleet's machine sandboxes and its record.
+
+```bash
+tangle fleet delete <fleet-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--continue-on-error` |  | Keep deleting remaining machines if one delete fails |
+
+Request: `DELETE /v1/fleets/{fleetId}`
+
+- `--json` prints `{success:true, fleetId}`.
+
+### `tangle fleet reap`
+
+TTL cleanup of all expired fleets (fleet-wide).
+
+Deletes every expired fleet; `--dry-run` reports what would be removed.
+
+```bash
+tangle fleet reap [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--dry-run` |  | Report what would be reaped without deleting |
+
+Request: `POST /v1/fleets/reap-expired`
+
+### `tangle fleet reconcile`
+
+Drop fleet records whose underlying sandboxes vanished.
+
+Drops fleet records whose sandboxes no longer exist; `--dry-run` reports them.
+
+```bash
+tangle fleet reconcile [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--dry-run` |  | Report orphans without removing them |
+
+Request: `POST /v1/fleets/reconcile`
+
+### `tangle fleet workspace snapshot`
+
+Snapshot the fleet's shared workspace.
+
+Snapshots the fleet's shared workspace.
+
+```bash
+tangle fleet workspace snapshot <fleet-id>
+```
+
+Request: `POST /v1/fleets/{fleetId}/workspace/snapshots`
+
+### `tangle fleet workspace restore`
+
+Restore the fleet's shared workspace from a snapshot.
+
+```bash
+tangle fleet workspace restore <fleet-id> <snapshot-id>
+```
+
+Request: `POST /v1/fleets/{fleetId}/workspace/snapshots/{snapshotId}/restore`
+
+### `tangle fleet workspace reconcile`
+
+Re-mount the shared workspace on all fleet machines.
+
+```bash
+tangle fleet workspace reconcile <fleet-id>
+```
+
+Request: `POST /v1/fleets/{fleetId}/workspace/reconcile`
+
+### `tangle fleet exec`
+
+Run a shell command across the fleet's machines.
+
+Runs one shell command on every machine of a fleet (or a `--machine` subset) and prints a result table plus each machine's output.
+
+```bash
+tangle fleet exec <fleet-id> <command> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--machine <id...>` |  | Restrict to a subset of machine ids (default: all) |
+| `--cwd <dir>` |  | Working directory for the command |
+| `--timeout <ms>` |  | Per-machine timeout in milliseconds |
+| `--max-concurrent <n>` |  | Max concurrent dispatches |
+
+- Exits 1 when any machine fails.
+
+### `tangle fleet run`
+
+Create a fleet of agents, run one turn on every agent, print each result, then delete the fleet.
+
+```bash
+tangle fleet run [prompt] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--agents <n\|file>` |  | Number of agents, or a JSON file with an array of agent specs (agentId, coding agent, model, profile or `{ profileId, revision }`, task). Required. |
+| `--placement <mode>` | `auto` | auto (pack by sandbox memory), dedicated (one sandbox per agent), or a number of agents per sandbox |
+| `--model <id>` |  | Model every agent runs, e.g. gpt-4.1-mini |
+| `--memory <mb>` |  | Memory in MB per sandbox; auto placement packs by it |
+| `--environment <environment>` |  | Environment for each sandbox |
+| `--max-spend-usd <usd>` |  | Budget for the fleet in USD, enforced by the Platform on the fleet's own key |
+| `--timeout <ms>` |  | Per-agent turn timeout in milliseconds |
+| `--fleet-id <id>` |  | Stable fleet id (generated when omitted) |
+| `--parent-fleet <id>` |  | Fleet that spawns this one; its cap must cover this cap |
+| `--parent-agent <id>` |  | Agent of `--parent-fleet` that spawns this one |
+| `--keep` |  | Keep the fleet after the run instead of deleting it |
+
+- `--agents` is required: a count, or a JSON file of agent specs; a count needs the [prompt] argument.
+- `--model` forces the opencode backend for every agent.
+- The fleet is deleted even when the run fails, unless `--keep`.
+- Exits 1 when any agent did not complete; `--json` prints `{fleetId, createMs, sandboxes, results, spend, deleted}`.
+
+### `tangle fleet cancel`
+
+Interrupt every agent of a fleet and cancel its child fleets; sandboxes keep running.
+
+```bash
+tangle fleet cancel <fleet-id>
+```
+
+- `--json` prints `{fleetId, interrupted, children}`.
+
+### `tangle fleet capabilities`
+
+List fleet drivers and their supported features.
+
+Lists fleet drivers and the features each supports.
+
+```bash
+tangle fleet capabilities
+```
+
+Request: `GET /v1/fleets/capabilities`
+
+### `tangle fleet usage`
+
+Show fleet usage and reliability insights.
+
+Shows a fleet's usage and reliability insights.
+
+```bash
+tangle fleet usage <fleet-id>
+```
+
+Request: `GET /v1/fleets/{fleetId}/usage`
+
+### `tangle fleet cost`
+
+Show the fleet's cost estimate.
+
+Shows a fleet's cost estimate.
+
+```bash
+tangle fleet cost <fleet-id>
+```
+
+Request: `GET /v1/fleets/{fleetId}/cost`
+
+### `tangle fleet token`
+
+Mint a scoped fleet bearer token (treated as a secret).
+
+Mints a scoped bearer token for a fleet; treat the output as a secret.
+
+```bash
+tangle fleet token <fleet-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--action <a...>` |  | Allowed actions: list create delete exec prompt read write (prompt grants nothing since fleet prompt dispatch was removed) |
+| `--ttl-minutes <n>` |  | Token lifetime in minutes |
+
+Request: `POST /v1/fleets/{fleetId}/token`
+
+- The `--action` help says the 'prompt' action grants nothing because fleet prompt dispatch was removed.
+
+## MCP server
+
+### `tangle mcp serve`
+
+Run a local MCP server (stdio) backed by the given sandbox (ID or name). Pipe its stdio from an MCP client config to expose sandbox tools.
+
+Runs a local MCP server on stdio backed by a sandbox, for MCP clients such as Claude Desktop, Cursor or Zed.
+
+```bash
+tangle mcp serve <id-or-name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-s, --session <id>` | `mcp-local` | Session id for kernel scoping |
+| `--name <name>` | `tangle-sandbox` | MCP server name reported to clients |
+
+```bash
+tangle mcp serve my-box
+```
+
+- Requires @modelcontextprotocol/sdk installed separately; otherwise it fails with an install hint.
+- Runs until stdin closes or SIGINT/SIGTERM.
+
+## Supervisor
+
+### `tangle supervise`
+
+Run a budget-conserving supervisor that spawns isolated sandbox workers to deliver a task.
+
+Runs a budget-limited supervisor that spawns isolated sandbox workers to deliver a task and reports measured tokens and cost.
+
+```bash
+tangle supervise <task> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--harness <name>` | `claude-code` | Worker coding agent (claude-code \| opencode \| codex \| kimi-code \| prime) |
+| `--model <id>` |  | Model for the supervisor + workers |
+| `--max-tokens <n>` | `200000` | Conserved token budget for the whole run |
+| `--max-iterations <n>` | `50` | Conserved iteration budget for the whole run |
+| `--max-workers <n>` |  | Bound the fanout; each worker reserves floor(max-tokens / n) tokens and floor(max-iterations / n) iterations |
+
+```bash
+tangle supervise "Add input validation to POST /users" --harness opencode --max-workers 2
+```
+
+- The supervisor itself calls the Tangle router (TANGLE_ROUTER_URL overrides it) with your key.
+- `--model` must name a provider, e.g. google/`<model>`.
+- `--harness` accepts claude-code, opencode, codex, kimi-code, prime.
+
+## Agent graphs
+
+### `tangle graph new`
+
+Design, validate and run one portable graph.
+
+Designs, validates and runs one graph from a plain-language intent; `--name` saves it.
+
+```bash
+tangle graph new <intent> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--seat <seat>` |  | Use `harness/model@effort` for the designer and graph |
+| `--name <name>` |  | Save this graph name |
+
+```bash
+tangle graph new "Write and independently judge a haiku" --name haiku-review
+```
+
+### `tangle graph analyze`
+
+Analyze retained graph evidence through Braid.
+
+Analyzes a retained graph run through the separately installed Braid CLI.
+
+```bash
+tangle graph analyze <run> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <name\|path>` |  | Use a canonical analysis AgentProfile, distinct from the Tangle account profile. Required. |
+| `--dry-run` |  | Inspect Braid's selected analysis configuration without dispatch |
+| `--timeout <ms>` | `300000` | Bound the analysis process in milliseconds |
+
+```bash
+tangle graph analyze <run-id> --profile ./profiles/reviewer.json
+```
+
+- Requires `npm install --global @tangle-network/braid`; BRAID_BIN selects the executable.
+- `--profile` selects an analysis AgentProfile, not a credential profile.
+
+### `tangle graph repair`
+
+Diagnose a failed local graph run; patch and resume it when the graph owns the fix.
+
+Diagnoses a failed local graph run and, when the graph owns the fix, patches and resumes it.
+
+```bash
+tangle graph repair <run> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--seat-command <program>` |  | Executable that prints the account id |
+
+### `tangle graph improve`
+
+Measure graph arms on js-issues by offline replay.
+
+Measures graph variants ('arms') by offline replay on a dataset.
+
+```bash
+tangle graph improve <graph> [dataset] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--arm <graph>` |  | Another arm, interleaved; repeatable |
+| `--split <split>` | `train` | train, or test (needs `--unseal`) |
+| `--unseal <reason>` |  | Read the sealed test split, logging why |
+| `--probe <n>` |  | Stop after the first n cases |
+| `--reps <n>` |  | Reps of every case per arm (default 1) |
+| `--seat <seat>` |  | Replay seat; repeatable, one per replay |
+| `--docker-host <ssh>` |  | Build, verify and grade on this ssh host |
+
+```bash
+tangle graph improve ~/a.graph.yaml
+```
+
+### `tangle graph show`
+
+Draw a graph file: labelled nodes, routes, loops and stops.
+
+Draws a graph file in the terminal; `--open` writes an offline HTML page and opens it in the browser.
+
+```bash
+tangle graph show <name-or-file> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--open` |  | Write one offline page and open it in the browser |
+
+### `tangle graph inspect`
+
+Inspect a live or retained graph run.
+
+```bash
+tangle graph inspect <run>
+```
+
+```bash
+tangle --json graph inspect <run-id>
+```
+
+### `tangle graph run`
+
+Run a saved graph over native subscriptions.
+
+Runs a saved graph on the local coding agent subscriptions, or through cloud workflows with `--cloud`.
+
+```bash
+tangle graph run <name-or-file> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--cloud` |  | Run through Tangle's durable cloud workflow owner |
+| `--resume <run>` |  | Resume this run's saved graph and durable execution |
+| `--seat <seat>` |  | Use `harness/model@effort` for every node |
+| `--seat-account <account>` |  | Account id for an all-eligible authored seat |
+| `--seat-command <program>` |  | Executable that prints the account id; the coding agent is its first argument |
+| `--seat-credential <credential>` |  | Credential name passed to the seat command after the coding agent |
+| `--param <key=value>` |  | Graph parameter or gate.`<id>`=`<choice>`; repeatable |
+| `--dry-run` |  | Validate and print the graph without starting agents |
+
+```bash
+tangle graph run haiku-review --dry-run --json
+```
+
+- Progress goes to stderr; `--json` prints the result or the error document on stdout.
+- Gates ask on a terminal; without one, or with `--json`, pass `--param` gate.`<id>`=`<choice>`.
+- On a terminal, a missing Tangle login opens browser login and a missing provider connection opens the provider's browser authorization, then the run resumes.
+- Ctrl-C stops the run with code RUN_STOPPED and exit 130.
+
+## Skill file
+
+### `tangle skill path`
+
+Print the absolute path to the SKILL.md shipped with this CLI.
+
+Prints the absolute path of the SKILL.md bundled with the installed CLI.
+
+```bash
+tangle skill path
+```
+
+## Next
+
+- [Interactive mode](/sandbox/interactive)
+- [Start a cloud agent](/sandbox/cloud-agents)
+- [Agent graphs](/sandbox/agents-graphs)

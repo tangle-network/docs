@@ -1,0 +1,604 @@
+---
+title: Python examples
+description: Complete Python programs for tangle-sandbox that run commands, analyse files, snapshot and restore, drive coding agents, lock the network, run batches and use asyncio, each with its output.
+---
+
+# Python examples
+
+Every program here is complete: install the SDK, set your key and run it with `python`.
+Each one waits for the sandbox to run before using it and deletes it in a `finally` block.
+The output under each program is what it printed; ids, versions and the agent's words differ on your run.
+
+## Run the examples
+
+You need Python 3.10 or newer and an API key from [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys).
+
+```bash
+pip install tangle-sandbox
+export TANGLE_API_KEY="sk-tan-..."
+python hello.py
+```
+
+Programs that clone a repository use [tangle-network/sandbox-demo](https://github.com/tangle-network/sandbox-demo), a small Node project with failing tests.
+
+| Example | Shows |
+| --- | --- |
+| [Hello sandbox](#hello-sandbox) | Create a sandbox, run Python in it, write and read a file, ask the coding agent one question, and delete it. |
+| [Run one command](#run-one-command) | Run one command and print its exit code and output. |
+| [Analyse a CSV](#analyse-a-csv) | Write a CSV and a script into the sandbox and run the script. |
+| [Stop and resume](#stop-and-resume) | Stop a sandbox and resume it with its files intact. |
+| [Snapshot and restore files](#snapshot-and-restore-files) | Snapshot a file, break it, restore it from the snapshot, and start a second sandbox from the same snapshot. |
+| [Find TODOs in a cloned repository](#find-todos-in-a-cloned-repository) | Clone a repository at create, search it with `grep` and read its last commit. |
+| [Have a coding agent fix a test](#have-a-coding-agent-fix-a-test) | Ask Claude Code to fix a failing test, then run the test and read the diff yourself. |
+| [Fix and commit](#fix-and-commit) | Have Codex fix a test, check it, and commit only the files it changed. |
+| [Watch a coding agent work](#watch-a-coding-agent-work) | Stream a turn and print each tool the agent calls, then its final answer. |
+| [Lock down the network](#lock-down-the-network) | Start with only one domain allowed, see the refusal, then allow a second domain while the sandbox runs. |
+| [Run a batch across two coding agents](#run-a-batch-across-two-coding-agents) | Run two tasks on Claude Code and Codex, each in its own sandbox, and print every result. |
+| [Run sandboxes concurrently with asyncio](#run-sandboxes-concurrently-with-asyncio) | Create three sandboxes at once with `AsyncSandbox` and gather their results. |
+
+## Hello sandbox
+
+Create a sandbox, run Python in it, write and read a file, ask the coding agent one question, and delete it.
+
+```python
+import os
+
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    box = client.create(name="hello-python")
+    try:
+        # create() returns before the sandbox runs; runtime calls need RUNNING.
+        box.wait_for(SandboxStatus.RUNNING)
+
+        result = box.exec("python3 -c 'print(sum(range(1_000_000)))'")
+        print(result.exit_code, result.stdout.strip())
+
+        box.write("notes.md", "first draft\n")
+        print(box.read("notes.md"), end="")
+
+        turn = box.prompt("Reply with exactly the word OK")
+        print(turn.response if turn.success else turn.error)
+    finally:
+        box.delete()
+```
+
+```text
+0 499999500000
+first draft
+OK
+```
+
+Read more: [Python SDK](/sandbox/sdk-python).
+
+## Run one command
+
+Run one command and print its exit code and output.
+
+```python
+import os
+
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    box = client.create()
+    try:
+        box.wait_for(SandboxStatus.RUNNING)
+        result = box.exec("python3 -c 'import platform; print(platform.platform())'")
+        print(result.exit_code, result.stdout.strip())
+    finally:
+        box.delete()
+```
+
+```text
+0 Linux-6.8.0-146-generic-x86_64-with-glibc2.42
+```
+
+The kernel version changes as hosts are updated.
+
+Read more: [exec](/sandbox/sdk-python/instance#exec).
+
+## Analyse a CSV
+
+Write a CSV and a script into the sandbox and run the script.
+
+```python
+import json
+import os
+
+from tangle_sandbox import Sandbox, SandboxStatus
+
+ORDERS = "customer,amount\nacme,1200\nglobex,950\nacme,300\ninitech,80\nglobex,410\n"
+TOTALS = """
+import csv, json
+from collections import defaultdict
+totals = defaultdict(float)
+for row in csv.DictReader(open("orders.csv")):
+    totals[row["customer"]] += float(row["amount"])
+print(json.dumps(sorted(totals.items(), key=lambda kv: -kv[1])))
+"""
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    box = client.create()
+    try:
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("orders.csv", ORDERS)
+        box.write("totals.py", TOTALS)
+        result = box.exec("python3 totals.py")
+        print(result.exit_code, json.loads(result.stdout))
+    finally:
+        box.delete()
+```
+
+```text
+0 [['acme', 1500.0], ['globex', 1360.0], ['initech', 80.0]]
+```
+
+Relative paths resolve in `/home/agent`, where commands also start.
+
+Read more: [Files](/sandbox/sdk-python/instance#files).
+
+## Stop and resume
+
+Stop a sandbox and resume it with its files intact.
+
+```python
+import os
+
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    box = client.create()
+    try:
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("notes.md", "first draft\n")
+
+        box.stop()
+        print(box.status.value)
+
+        box.resume()
+        box.wait_for(SandboxStatus.RUNNING)
+        print(box.read("notes.md"), end="")
+    finally:
+        box.delete()
+```
+
+```text
+stopped
+first draft
+```
+
+Read more: [Lifecycle](/sandbox/sdk-python/instance#lifecycle).
+
+## Snapshot and restore files
+
+Snapshot a file, break it, restore it from the snapshot, and start a second sandbox from the same snapshot.
+
+```python
+import os
+import time
+
+from tangle_sandbox import CreateSandboxOptions, Sandbox, SandboxStatus, SnapshotOptions
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    box = client.create()
+    copy = None
+    try:
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("config.json", '{"retries": 3}\n')
+        clean = box.snapshot(SnapshotOptions(tags=["clean"]))
+
+        # A new snapshot takes a few seconds to appear in the list.
+        for _ in range(60):
+            if clean.snapshot_id in [s.snapshot_id for s in box.list_snapshots()]:
+                break
+            time.sleep(1)
+
+        box.write("config.json", '{"retries": "oops"}\n')
+        box.restore_paths(clean.snapshot_id, ["config.json"])
+        print("restored", box.read("config.json"), end="")
+
+        copy = client.create(
+            CreateSandboxOptions(from_snapshot=clean.snapshot_id, from_sandbox_id=box.id)
+        )
+        copy.wait_for(SandboxStatus.RUNNING)
+        print("copy", copy.read("config.json"), end="")
+    finally:
+        box.delete()
+        if copy:
+            copy.delete()
+```
+
+```text
+restored {"retries": 3}
+copy {"retries": 3}
+```
+
+Read more: [Snapshots](/sandbox/sdk-python/instance#snapshots).
+
+## Find TODOs in a cloned repository
+
+Clone a repository at create, search it with `grep` and read its last commit.
+
+```python
+import os
+
+from tangle_sandbox import CreateSandboxOptions, GitConfig, Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    box = client.create(
+        CreateSandboxOptions(git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"))
+    )
+    try:
+        box.wait_for(SandboxStatus.RUNNING)
+        # Commands start in the cloned repository.
+        hits = box.exec("grep -rn --include='*.js' TODO packages src")
+        print(hits.stdout, end="")
+        print(box.git.log(limit=1)[0].message)
+    finally:
+        box.delete()
+```
+
+```text
+packages/api/src/server.js:36:    // TODO: check that the user exists
+packages/cli/src/flags.js:12:      flags[name] = next; // TODO: numbers stay strings
+packages/web/src/client.js:13:// TODO: expire cached entries
+packages/worker/src/queue.js:12:    if (job) job.run(); // TODO: retry failed jobs
+Add a lockfile so the share-a-preview quickstart's npm ci installs (#2)
+```
+
+Read more: [Git](/sandbox/sdk-python/instance#git).
+
+## Have a coding agent fix a test
+
+Ask Claude Code to fix a failing test, then run the test and read the diff yourself.
+
+```python
+import os
+
+from tangle_sandbox import (
+    BackendConfig,
+    CreateSandboxOptions,
+    ExecOptions,
+    GitConfig,
+    PromptOptions,
+    Sandbox,
+    SandboxStatus,
+)
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    box = client.create(
+        CreateSandboxOptions(
+            git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"),
+            backend=BackendConfig(type="claude-code"),
+        )
+    )
+    try:
+        box.wait_for(SandboxStatus.RUNNING)
+        run = box.prompt(
+            "The test tagged null-guard fails. Find the cause and fix it.",
+            PromptOptions(timeout_ms=600_000),
+        )
+        if not run.success:
+            raise RuntimeError(run.error)
+
+        # Check the result yourself.
+        tests = box.exec(
+            "npm test -- --test-name-pattern=null-guard",
+            ExecOptions(timeout_ms=120_000),
+        )
+        print("tests exit", tests.exit_code)
+
+        diff = box.git.diff()
+        print(f"+{diff.additions} -{diff.deletions}", [f.get("path") for f in diff.files])
+        print(run.usage)
+    finally:
+        box.delete()
+```
+
+```text
+tests exit 0
++2 -1 ['packages/shared/src/format.js']
+TokenUsage(input_tokens=119425, output_tokens=1265)
+```
+
+The agent's turn can take a few minutes; `timeout_ms` is the longest wait between its events.
+
+Read more: [prompt](/sandbox/sdk-python/instance#prompt), [Run a coding agent](/sandbox/cloud-agents).
+
+## Fix and commit
+
+Have Codex fix a test, check it, and commit only the files it changed.
+
+```python
+import os
+
+from tangle_sandbox import (
+    BackendConfig,
+    CreateSandboxOptions,
+    GitConfig,
+    PromptOptions,
+    Sandbox,
+    SandboxStatus,
+)
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    box = client.create(
+        CreateSandboxOptions(
+            git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"),
+            backend=BackendConfig(type="codex"),
+        )
+    )
+    try:
+        box.wait_for(SandboxStatus.RUNNING)
+        run = box.prompt(
+            "The test tagged null-guard fails. Fix the cause.",
+            PromptOptions(timeout_ms=600_000),
+        )
+        if not run.success:
+            raise RuntimeError(run.error)
+
+        changed = [f["path"] for f in box.git.diff("HEAD").files]
+        print("changed", changed)
+        tests = box.exec("npm test -- --test-name-pattern=null-guard")
+        if tests.exit_code != 0:
+            raise RuntimeError("The test still fails.")
+
+        # The image has no git identity; git.commit sends no author.
+        box.exec('git config --global user.name "Docs Example"')
+        box.exec("git config --global user.email docs@example.com")
+        box.git.add(changed)
+        commit = box.git.commit("fix: guard a null request body")
+        print(commit.short_sha, commit.message)
+    finally:
+        box.delete()
+```
+
+```text
+changed ['packages/shared/src/format.js']
+8d1ace2 fix: guard a null request body
+```
+
+Read more: [Git](/sandbox/sdk-python/instance#git).
+
+## Watch a coding agent work
+
+Stream a turn and print each tool the agent calls, then its final answer.
+
+```python
+import os
+
+from tangle_sandbox import (
+    BackendConfig,
+    CreateSandboxOptions,
+    GitConfig,
+    PromptOptions,
+    Sandbox,
+    SandboxStatus,
+)
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    box = client.create(
+        CreateSandboxOptions(
+            git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"),
+            backend=BackendConfig(type="claude-code"),
+        )
+    )
+    try:
+        box.wait_for(SandboxStatus.RUNNING)
+        seen = set()
+        events = box.stream_prompt(
+            "The test tagged timezone fails. Fix the cause.",
+            PromptOptions(timeout_ms=600_000),
+        )
+        for event in events:
+            part = event.data.get("part") or {}
+            if event.type == "message.part.updated" and part.get("type") == "tool":
+                if part.get("id") not in seen:
+                    seen.add(part.get("id"))
+                    print(f"{len(seen)}.", part.get("tool"))
+            if event.type == "result":
+                print(event.data.get("finalText"))
+    finally:
+        box.delete()
+```
+
+```text
+1. Bash
+2. Bash
+3. Bash
+4. Read
+5. Read
+6. Bash
+7. Edit
+8. Bash
+9. Bash
+10. Bash
+11. Bash
+Fixed.
+
+**Root cause:** `dayKey()` in `packages/shared/src/dates.js` used local-time getters ...
+**Fix:** switched to the UTC equivalents ...
+```
+
+Read more: [stream_prompt](/sandbox/sdk-python/instance#stream_prompt), [Stream output](/sandbox/streaming).
+
+## Lock down the network
+
+Start with only one domain allowed, see the refusal, then allow a second domain while the sandbox runs.
+
+```python
+import os
+
+from tangle_sandbox import (
+    CreateSandboxOptions,
+    EgressPolicy,
+    Sandbox,
+    SandboxStatus,
+)
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    box = client.create(
+        CreateSandboxOptions(
+            egress_policy=EgressPolicy(mode="strict", allow_domains=["pypi.org"]),
+        )
+    )
+    try:
+        box.wait_for(SandboxStatus.RUNNING)
+        blocked = box.exec("curl -sS -m 5 -o /dev/null https://example.com")
+        print("example.com exit", blocked.exit_code)
+
+        for denial in box.egress_denials():
+            print("refused", denial.host, denial.count)
+
+        policy, source = box.egress_update(
+            EgressPolicy(mode="strict", allow_domains=["pypi.org", "example.com"])
+        )
+        print(policy.mode, policy.allow_domains, source)
+        allowed = box.exec("curl -sS -m 5 -o /dev/null -w '%{http_code}' https://example.com")
+        print("example.com", allowed.stdout)
+    finally:
+        box.delete()
+```
+
+```text
+example.com exit 7
+refused example.com 1
+strict ['pypi.org', 'example.com'] sandbox
+example.com 200
+```
+
+curl exit code 7 means the connection was refused.
+
+Read more: [Network rules](/sandbox/sdk-python/instance#network-rules), [Network access](/sandbox/egress).
+
+## Run a batch across two coding agents
+
+Run two tasks on Claude Code and Codex, each in its own sandbox, and print every result.
+
+```python
+import os
+
+from tangle_sandbox import BatchBackend, BatchRunRequest, BatchTask, Sandbox
+
+request = BatchRunRequest(
+    tasks=[
+        BatchTask(id="capital", message="Reply with only the capital of France."),
+        BatchTask(id="sum", message="Reply with only the result of 17 + 25."),
+    ],
+    # Each task runs once on each backend, each in its own sandbox.
+    backends=[
+        BatchBackend(id="claude", type="claude-code"),
+        BatchBackend(id="codex", type="codex"),
+    ],
+)
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    result = client.run_batch(request)
+    for task in result.results:
+        print(task.task_id, task.backend_id, task.success, task.result_summary or task.error)
+    print(f"{result.total_success}/{result.total_executions} succeeded")
+```
+
+```text
+capital claude True Paris
+capital codex True Paris
+sum claude True 42
+sum codex True 42
+4/4 succeeded
+```
+
+Read more: [run_batch](/sandbox/sdk-python/client#run_batch-and-stream_batch), [Batches and hosted runs](/sandbox/runs-and-batch).
+
+## Run sandboxes concurrently with asyncio
+
+Create three sandboxes at once with `AsyncSandbox` and gather their results.
+
+```python
+import asyncio
+import os
+
+from tangle_sandbox import AsyncSandbox, SandboxStatus
+
+
+async def word_count(client: AsyncSandbox, text: str) -> str:
+    box = await client.create()
+    try:
+        await box.wait_for(SandboxStatus.RUNNING)
+        await box.write("input.txt", text)
+        result = await box.exec("wc -w < input.txt")
+        return result.stdout.strip()
+    finally:
+        await box.delete()
+
+
+async def main() -> None:
+    async with AsyncSandbox(
+        api_key=os.environ["TANGLE_API_KEY"],
+        base_url="https://sandbox.tangle.tools",
+    ) as client:
+        texts = ["one two three", "four five", "six"]
+        counts = await asyncio.gather(*(word_count(client, t) for t in texts))
+        print(counts)
+
+
+asyncio.run(main())
+```
+
+```text
+['3', '2', '1']
+```
+
+Read more: [Async client](/sandbox/sdk-python#async-client).
+
+## Tasks with no Python method
+
+These examples use calls the Python SDK does not have. Run them with the TypeScript SDK, or call the REST route with `client.fetch`.
+
+| Task | Example |
+| --- | --- |
+| Serve a port on a public link | [Host a page on a public URL](/sandbox/examples/sandboxes#host-a-page-on-a-public-url) |
+| Run a dev server in the background | [Share a dev server](/sandbox/examples/sandboxes#share-a-dev-server) |
+| Revert a whole sandbox to a snapshot | [Snapshot and revert](/sandbox/examples/sandboxes#snapshot-and-revert) |
+| Copy a running sandbox | [Branch into two](/sandbox/examples/sandboxes#branch-into-two) |
+| Continue a named agent session after resume | [Pause a coding agent and continue later](/sandbox/examples/sandboxes#pause-a-coding-agent-and-continue-later) |
+| Fleets | [Fleets](/sandbox/agents-fleet) |
+
+## Next
+
+- [Python SDK](/sandbox/sdk-python)
+- [SandboxInstance](/sandbox/sdk-python/instance)
+- [All examples](/sandbox/examples)

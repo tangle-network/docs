@@ -1,21 +1,32 @@
-# Multiple Agents in one Sandbox
+---
+title: Run several agents in one sandbox
+description: Start a planner, an implementer and a reviewer side by side in one sandbox, each with its own profile and either a shared checkout or its own git worktree.
+---
 
-Use `box.agents` when several AgentProfiles should share one computer,
-filesystem, local network, and resource envelope.
+# Run several agents in one sandbox
 
-A Sandbox remains the trust boundary. Each Agent is an existing durable session—not another VM, database, scheduler, or lifecycle system.
+`box.agents` runs several agents in one sandbox, each with its own
+[AgentProfile](/sandbox/cloud-agents-profiles) and coding agent. They share one
+machine, its files and its network. Each agent is a durable session with an id
+you choose.
 
-## Choose the right primitive
-
-| Need | Primitive |
+| Need | Use |
 |---|---|
-| One Agent conversation | `box.prompt()` / `box.session(id)` |
-| Several trusted Agents on one computer | `box.agents` |
-| Separate machines or hard CPU/memory boundaries | Fleet |
-| Team strategy, supervisors, debate, recursive delegation | `agent-runtime` over Sandbox sessions |
-| Measurement and promotion | `agent-eval` |
+| One conversation | `box.prompt()` or `box.session(id)` |
+| Several trusted agents on one machine | `box.agents` |
+| Separate machines or hard CPU and memory limits | [Fleets](/sandbox/agents-fleet) |
+| Supervisors and budgets across many agents | [agent-runtime](/sandbox/agent-runtime) |
 
-## Create a managed Sandbox
+## Install
+
+```bash
+npm install @tangle-network/sandbox @tangle-network/agent-interface
+```
+
+`box.agents` exists after you import `@tangle-network/sandbox/agent`, which
+also exports `Sandbox`.
+
+## Start two agents side by side
 
 ```ts
 import type { AgentProfile } from "@tangle-network/agent-interface";
@@ -23,216 +34,178 @@ import { Sandbox } from "@tangle-network/sandbox/agent";
 
 const client = new Sandbox({
   apiKey: process.env.TANGLE_API_KEY!,
-  baseUrl: process.env.SANDBOX_BASE_URL!,
+  baseUrl: "https://sandbox.tangle.tools",
 });
 
 const plannerProfile = {
   name: "planner",
-  harness: "opencode",
-  prompt: { appendSystemPrompt: "Plan before editing files." },
+  harness: "codex",
+  prompt: { appendSystemPrompt: "Plan the work before changing files." },
 } satisfies AgentProfile;
 
 const builderProfile = {
   name: "builder",
   harness: "claude-code",
-  prompt: { appendSystemPrompt: "Implement and run tests." },
+  prompt: { appendSystemPrompt: "Implement the request and run the tests." },
 } satisfies AgentProfile;
 
 const box = await client.create({
   agent: false,
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
 });
+try {
+  const [planner, builder] = await box.agents.startMany([
+    { id: "planner-v1", name: "Planner", backend: { type: "codex", profile: plannerProfile } },
+    { id: "builder-v1", name: "Builder", backend: { type: "claude-code", profile: builderProfile } },
+  ]);
+
+  const [plan, implementation] = await Promise.all([
+    planner.prompt("Inspect the repository and propose a precise plan."),
+    builder.prompt("Inspect the repository and fix the failing test."),
+  ]);
+  console.log(plan.response, implementation.response);
+} finally {
+  await box.delete();
+}
 ```
 
-`agent: false` keeps the managed runtime but skips a default Agent. Do not
-use `bare: true`; bare Sandboxes have no managed session runtime.
+`agent: false` creates the sandbox without a default agent; agents you start
+later still work. Do not use `bare: true`, which removes the runtime agents
+need.
 
-## Start independent sessions concurrently
+Turns of one agent run one at a time. Different agents run side by side.
 
-```ts
-const [planner, builder] = await box.agents.startMany([
-  {
-    id: "planner-v1",
-    name: "Planner",
-    backend: { type: "opencode", profile: plannerProfile },
-  },
-  {
-    id: "builder-v1",
-    name: "Builder",
-    backend: { type: "claude-code", profile: builderProfile },
-  },
-]);
+`startMany()` starts every agent in parallel and is not a transaction: if one
+start fails, the others may already exist. Duplicate ids in one call throw
+before anything starts.
 
-const [plan, implementation] = await Promise.all([
-  planner.prompt("Inspect the repository and produce a precise plan."),
-  builder.prompt("Inspect the repository and implement the request."),
-]);
-```
+## Agent ids
 
-Different session IDs have independent execution queues. Turns within one
-session remain serialized so conversation state cannot be mutated by two
-executions at once.
+The id you pass is the agent's session id.
 
-`startMany()` is parallel, not transactional. If one start fails, another
-may already exist. Use stable IDs, then inspect `list()` or `get()` before
-retrying.
+- `box.agents.get(id)` reattaches from any process. It returns `null` when the
+  agent does not exist.
+- `box.agents.start({ id })` refuses an id that already exists and tells you to
+  use `get()` instead. Retry a failed start by calling `get()` first.
+- `box.agents.list()` lists the sandbox's agents.
 
-## Durable identity and exact retry behavior
+An id is 1 to 128 characters of letters, digits, `.`, `_`, `:` and `-`.
 
-A caller-selected Agent ID is the durable session ID.
+## Shared workspace
 
-- `start({ id })` creates a new generation.
-- `get(id)` reattaches from any SDK process.
-- The server serializes competing creates for the same ID.
-- An exact replay of the same validated create request returns the existing
-  session.
-- The same ID with a changed profile, model, credential, title, or other
-  create input returns `409 SESSION_CREATE_CONFLICT`.
-
-The server—not a client cache—owns correctness.
-
-## Shared workspaces
-
-Shared mode is the default. Agents see the same project files immediately.
+Agents share the sandbox's files by default. One agent sees another's edits
+at once. Nothing merges simultaneous edits to the same file, so coordinate
+which agent writes where.
 
 ```ts
+const reviewerProfile = {
+  name: "reviewer",
+  harness: "codex",
+  prompt: { appendSystemPrompt: "Review the diff. Report bugs with file:line." },
+} satisfies AgentProfile;
+
 const reviewer = await box.agents.start({
   id: "reviewer-shared",
   backend: { type: "codex", profile: reviewerProfile },
 });
 ```
 
-This is ordinary same-computer behavior. It does not merge simultaneous
-edits and is not a security boundary. Coordinate writes or use file
-preconditions when more than one actor can edit the same path.
+## Isolated git worktrees
 
-## Isolated Git worktrees
-
-Use an isolated workspace when independent changes or different harness
-control files must coexist:
+An isolated agent works in its own git worktree and branch, so its changes stay
+apart until you commit them. The sandbox needs a git repository, so create it
+with `git`.
 
 ```ts
-const reviewer = await box.agents.start({
+const isolated = await box.agents.start({
   id: "reviewer-v1",
   backend: { type: "codex", profile: reviewerProfile },
-  workspace: {
-    mode: "isolated",
-    parentSessionId: "builder-v1",
-  },
+  workspace: { mode: "isolated", parentSessionId: "builder-v1" },
 });
 
-const changes = await reviewer.changes();
-console.log(changes.diff);
+await isolated.prompt("Fix every bug you find in the builder's change.");
 
-await reviewer.commit({
-  message: "Apply reviewer corrections",
-});
+const changes = await isolated.changes();
+console.log(changes.files, changes.diff);
+
+const merged = await isolated.commit({ message: "Apply reviewer fixes" });
+console.log(merged.success, merged.commitSha, merged.conflicts);
 ```
 
-An isolated Agent is a `SandboxTaskSession`. It requires a Git repository.
-
-Lifecycle is explicit:
-
-- `commit()` merges or applies the selected changes, then removes the owned
-  worktree and task branch.
-- The task rollback route discards changes, then removes the worktree and
-  task branch.
-- `box.agents.stop(id)` deletes the session. For an isolated Agent it first
-  removes the owned worktree and task branch. If cleanup cannot be proven,
-  deletion fails and the durable session record retains the identifiers for
-  a safe retry.
-
-Stopping an isolated Agent without committing intentionally discards its
-unmerged work.
+| Call | Effect |
+|---|---|
+| `changes()` | Returns `{ files, diff, commits, worktreeInfo }`. |
+| `commit({ message, files })` | Applies the changes, or the listed files, to the parent. Returns `{ success, commitSha, conflicts, appliedFiles }`. |
+| `box.agents.stop(id)` | Deletes the agent. For an isolated agent it removes the worktree and branch first, so uncommitted work is discarded. Returns `{ agentId, outcome: "stopped" }` or `outcome: "not-found"`. |
 
 ## Reattach after a restart
 
 ```ts
 const reloaded = await client.get(box.id);
-if (!reloaded) throw new Error("Sandbox no longer exists");
+if (!reloaded) throw new Error("The sandbox was deleted.");
 
 const planner = await reloaded.agents.get("planner-v1");
-if (!planner) throw new Error("planner-v1 no longer exists");
+console.log(await planner?.status());
 
-console.log(await planner.status());
+const isolatedAgain = reloaded.agents.task("reviewer-v1");
+console.log(await isolatedAgain.changes());
 ```
 
-For a known isolated session:
+`task(id)` returns a handle for an isolated agent without a network call; its
+first operation checks the session.
+
+## Upgrade a profile
+
+Do not change an active agent's profile. Start a new agent with a new id, try
+it, then retire the old one:
 
 ```ts
-const reviewer = reloaded.agents.task("reviewer-v1");
-console.log(await reviewer.changes());
-```
+const plannerV2Profile = {
+  ...plannerProfile,
+  name: "planner",
+  prompt: { appendSystemPrompt: "Plan the work, then list the tests that prove it." },
+} satisfies AgentProfile;
 
-`task(id)` returns a typed handle without a network lookup; its first
-operation validates the durable task session.
-
-## Profile upgrades
-
-Do not hot-mutate an active AgentProfile. Create a new session generation:
-
-```ts
 const candidate = await box.agents.start({
-  id: "planner-v2-candidate",
-  backend: { type: "opencode", profile: updatedPlannerProfile },
-  workspace: {
-    mode: "isolated",
-    parentSessionId: "planner-v1",
-  },
-});
-
-await candidate.prompt("Verify the new profile against this repository.");
-
-// Promote only after verification.
-await box.agents.stop("planner-v1");
-const plannerV2 = await box.agents.start({
   id: "planner-v2",
-  backend: { type: "opencode", profile: updatedPlannerProfile },
+  backend: { type: "codex", profile: plannerV2Profile },
+  workspace: { mode: "isolated", parentSessionId: "planner-v1" },
 });
+await candidate.prompt("Plan the next feature against this repository.");
+
+await box.agents.stop("planner-v1");
 ```
 
-Use a new ID so observers can distinguish generations and an active turn
-never changes authority underneath itself.
+A new id lets observers tell versions apart, and a turn in progress never sees
+its profile change.
 
-## Authentication and delegation
+## Copy a conversation, files or a whole sandbox
 
-Keep `TANGLE_API_KEY` and `box.agents` lifecycle operations on a trusted
-backend. Browser clients receive short-lived scoped tokens for the exact
-session or read surface they need.
-
-A session-bound token cannot enumerate or operate a sibling session. A
-delegated token never becomes a general Agent manager. See
-[Authentication and browser access](/sandbox/authentication).
-
-## Trust and resources
-
-Sibling Agents share a broad trust domain:
-
-- project files and local network;
-- processes and terminals;
-- CPU, memory, disk, and accelerator pressure;
-- Sandbox-visible secrets.
-
-Use separate Sandboxes for different tenants, mutually untrusted Agents,
-separate secret domains, hard resource isolation, or independent failure
-boundaries.
-
-## Branching is not one operation
-
-| State being copied | API |
+| What to copy | API |
 |---|---|
-| Conversation history | `session.fork()` |
-| File changes inside one Sandbox | isolated Agent / `SandboxTaskSession` |
-| Complete filesystem | `box.snapshot()` and restore/create |
+| Conversation history | `box.session(id).fork()` |
+| File changes inside one sandbox | An isolated agent |
+| The whole filesystem | `box.snapshot()`, then create from the snapshot |
 
-## Cleanup
+## Trust between agents
 
-```ts
-try {
-  // Drive the Agent workflow.
-} finally {
-  await box.delete();
-}
-```
+Agents in one sandbox trust each other. They share:
 
-`stop(id)` deletes one Agent session. `box.delete()` deletes the entire
-computer and every session inside it.
+- project files and the local network;
+- processes and terminals;
+- CPU, memory, disk and accelerators;
+- every secret the sandbox can see.
+
+Use separate sandboxes for different customers, agents that must not trust
+each other, separate sets of secrets, hard resource limits or separate failure
+domains.
+
+Keep your account key and `box.agents` calls on your server. A browser gets a
+short-lived token scoped to one session, and that token cannot list or drive
+sibling sessions. See [API keys and tokens](/sandbox/authentication).
+
+## Next
+
+- [AgentProfiles](/sandbox/cloud-agents-profiles)
+- [Fleets](/sandbox/agents-fleet): agents on separate sandboxes.
+- [Coding agent examples](/sandbox/examples/coding-agents)

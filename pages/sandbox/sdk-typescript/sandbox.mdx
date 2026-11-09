@@ -1,0 +1,158 @@
+# Sandbox instance reference: lifecycle, snapshots and access
+
+Every `SandboxInstance` member for state, lifecycle, snapshots, branching, network policy, GPU leases and access. Commands, files and terminals are on [Runtime](/sandbox/sdk-typescript/runtime); prompts and sessions are on [Agents](/sandbox/sdk-typescript/agents).
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ name: "reference" });
+try {
+  console.log(box.id, box.name, box.status, box.resources, box.expiresAt);
+} finally {
+  await box.delete();
+}
+```
+
+## State
+
+| Member | Meaning |
+|---|---|
+| `id`, `name`, `metadata` | Identity and your tags. |
+| `status` | `pending`, `provisioning`, `running`, `stopped`, `failed`, `expired` or `deleted`, as of the last read. |
+| `connection` | Runtime URLs and SSH details. Contains tokens: never log it. |
+| `createdAt`, `startedAt`, `lastActivityAt`, `suspendedAt`, `expiresAt` | Timestamps. |
+| `error` | Why the sandbox failed, when it did. |
+| `resources` | The granted size and billing shape. Absent means unknown. |
+| `gpuLease` | The create-time GPU lease, if any. |
+| `url` | The web terminal URL, when enabled. |
+| `refresh(signal?)` | Read the sandbox again. Route: `GET /v1/sandboxes/{id}`. |
+| `toJSON()` | A serializable view without connection secrets. |
+| `startupDiagnostics()`, `createReceipt()` | What the create did and how long each step took. |
+
+### `waitFor(status, options?): Promise<void>`
+
+Waits for one status or any of several. Options: `timeoutMs`, `pollIntervalMs`, `signal`, `onProgress`. Throws when the sandbox fails or the time runs out.
+
+```ts
+await box.waitFor(["running", "failed"], { timeoutMs: 120_000 });
+```
+
+`box.events({ eventTypes?, signal? })` streams lifecycle and activity events, and `box.watchProvisioning()` yields provisioning steps and returns the result.
+
+## Lifecycle
+
+| Member | Returns | Route |
+|---|---|---|
+| `stop({ wait?, retain?, signal?, idempotencyKey? })` | `void`, or a `SandboxOperation` with `wait: false`. `retain: { paths }` needs `wait: true`. | `POST /v1/sandboxes/{id}/stop` |
+| `resume({ timeoutMs?, signal?, env? })` | `void` once running. `env` answers `RESUME_ENV_REQUIRED`. | `POST /v1/sandboxes/{id}/resume` |
+| `rebuild({ timeoutMs?, signal?, env? })` | `void`. Provisions again from stored config. | |
+| `delete({ until?, wait?, idempotencyKey?, signal? })` | `{ sandboxId, outcome, removal }`, or a `SandboxOperation` with `wait: false`. `until: "removed"` waits for storage reclaim. | `DELETE /v1/sandboxes/{id}` |
+| `getOperation(operationId)` | The `SandboxOperation`; call `op.wait()`. | |
+| `getEnvRecovery()`, `setEnvRecovery(envRecovery, { dryRun? })` | Read or change which withheld env keys a resume may supply. | |
+
+`delete` answers `409 CHILDREN_EXIST` while branch children are alive. See [Delete](/sandbox/lifecycle#delete).
+
+## Branches
+
+| Member | Returns |
+|---|---|
+| `branch(count, { env?, metadata?, idempotencyKey? })` | The child `SandboxInstance[]`. |
+| `fork(count, options?)` | `{ children, requestedCount, materializedCount, complete, idempotency? }`. |
+| `rollout(options)`, `getRollout(rolloutId)`, `waitForRollout(rolloutId, options?)` | Start branched rollouts scored by a scorer, and read their results. |
+
+Route: `POST /v1/sandboxes/{id}/branch`. Firecracker children inherit memory; Docker children get a copy-on-write disk. A fan-out the host cannot hold fails with `BRANCH_FANOUT_EXCEEDS_HOST` and `maxChildren`.
+
+## Snapshots
+
+| Member | Returns | Route |
+|---|---|---|
+| `snapshot({ tags?, storage?, idempotencyKey?, wait? })` | `{ snapshotId, createdAt, sizeBytes, tags }`, or a `SandboxOperation` with `wait: false`. | `POST /v1/sandboxes/{id}/snapshots` |
+| `listSnapshots(storage?)` | `SnapshotInfo[]`. | `GET /v1/sandboxes/{id}/snapshots` |
+| `revertToSnapshot(snapshotId)` | Restores the whole workspace in place. | `POST /v1/sandboxes/{id}/snapshots/{snapshotId}/restore` |
+| `restorePaths(snapshotId, paths)` | Restores only those paths. | same |
+| `deleteSnapshot(snapshotId)` | `{ snapshotId, outcome: "deleted" \| "already_absent" \| "unknown" }`. | `DELETE /v1/sandboxes/{id}/snapshots/{snapshotId}` |
+| `restoreFromStorage(storage)` | Restores the latest snapshot in your bucket, or `null`. | |
+| `getSnapshotOperation(key, options?)` | Whether a keyed snapshot or restore finished. | `POST /v1/sandboxes/{id}/workspace-operations/lookup` |
+
+A snapshot to your own `storage` refuses `idempotencyKey` and `wait: false`. See [Snapshots](/sandbox/snapshots).
+
+## Network policy: `box.egress`
+
+| Member | Returns | Route |
+|---|---|---|
+| `get()` | `{ policy, source }`, where `source` is `sandbox`, `team` or `platform`. | `GET /v1/sandboxes/{id}` |
+| `update(policy)` | The applied policy. Restarts the egress proxy. | `PATCH /v1/sandboxes/{id}/egress` |
+| `denials({ limit? })` | Refused hosts, newest first, with counts. Best effort. | `GET /v1/sandboxes/{id}/egress/denials` |
+| `activity({ limit? })` | `{ complete, incompleteReasons, destinations }`. `409` when egress control is off. | `GET /v1/sandboxes/{id}/egress/activity` |
+| `usage({ month? })` | A month's egress bytes and charge. | `GET /v1/sandboxes/{id}/egress/usage` |
+
+See [Egress](/sandbox/egress).
+
+## GPU leases: `box.gpu`
+
+| Member | Returns | Route |
+|---|---|---|
+| `providers({ accelerator? })` | `{ usable, statuses }`. | `GET /v1/sandboxes/{id}/gpu/providers` |
+| `attach({ accelerator, maxSpendUsd, maxLifetimeSeconds, idleTimeoutSeconds?, provider? })` | The `GpuLease`. | `POST /v1/sandboxes/{id}/gpu/leases` |
+| `renew(leaseId, { maxSpendUsd?, maxLifetimeSeconds? })` | The updated lease. | `PATCH /v1/sandboxes/{id}/gpu/leases/{leaseId}` |
+| `list()` | `GpuLease[]`. | `GET /v1/sandboxes/{id}/gpu/leases` |
+| `exec(leaseId, { command, timeoutMs?, env?, cwd? })` | `{ lease, result: { exitCode, stdout, stderr, durationMs } }`. | `POST /v1/sandboxes/{id}/gpu/leases/{leaseId}/exec` |
+| `detach(leaseId)` | The closed lease with `billing`. | `DELETE /v1/sandboxes/{id}/gpu/leases/{leaseId}` |
+
+`accelerator` is `{ kind, count?, vramGb? }`. See [GPU leases](/sandbox/gpu-leases).
+
+## Images: `box.images`
+
+`images.publish({ repository, auth: { username, password }, contextPath?, dockerfilePath?, platform? }, { timeoutMs?, idempotencyKey? })` builds the workspace and pushes it to your registry. Returns `{ image, digest, imageId, sizeBytes, exposedPorts, ... }`. Route: `POST /v1/sandboxes/{id}/images`. See [Templates and images](/sandbox/templates-gallery#publish-an-image-from-a-running-sandbox).
+
+## Access
+
+| Member | Returns |
+|---|---|
+| `ssh()` | `{ username, port, proxyCommand }`. Throws `INVALID_STATE` when SSH is off. |
+| `sshCommand()` | `{ command, env }`. `env` holds your API key. |
+| `mintScopedToken({ scope, sessionId?, runtimeSessionId?, access?, ttlMinutes? })` | `{ token, expiresAt, runtimeUrl, sidecarProxyUrl, scope, access? }`. Route: `POST /v1/sandboxes/{id}/scoped-token`. |
+| `getMcpEndpoint({ capabilities?, serverName?, ttlMinutes? })` | An MCP server config with a short-lived token, for an IDE's `mcp.json`. The sandbox must be created with the matching `capabilities`, such as `["computer_use"]`. Route: `GET /v1/sandboxes/{id}/mcp`. |
+| `getTeeAttestation({ attestationNonce? })` | Fresh TEE evidence, bound to your nonce. Throws `TEE_UNSUPPORTED` off confidential operators. |
+| `getTeePublicKey()` | An enclave key with its attestation. |
+| `getDriverInfo()` | The driver's type and capabilities. Route: `GET /v1/sandboxes/{id}/driver`. |
+
+Token scopes:
+
+| `scope` | For |
+|---|---|
+| `session-runtime` with `sessionId` | Runtime access for one session. Add `access: "read-only"` for an event stream that cannot write. A terminal token's `sessionId` must equal the terminal's connection id. |
+| `read-only` | Runtime reads with no workspace or terminal changes. |
+| `session`, `project` | The API's `/session` WebSocket. `session` needs `runtimeSessionId`. |
+
+## Trace and export
+
+| Member | Returns |
+|---|---|
+| `trace(options?)` | The sandbox's lifecycle, runtime and usage trace. Route: `GET /v1/sandboxes/{id}/trace`. |
+| `exportTrace(sink)` | Sends `trace()` to your trace store. |
+| `exportConversations()` | A `Map` of the coding agent's conversations by id, each `{ format, content }`. |
+| `exportRawEvidence(destination, options)` | Writes the agent's native session files to a new local directory and verifies them. |
+
+## Direct runtime handle
+
+`box.direct()` returns a handle whose runtime calls go straight to the sandbox with its connection token and no API fallback. Agent calls on it skip the API's credential refresh, plan grants and secret checks, so never use it for prompts.
+
+## Python and REST
+
+The Python instance has `refresh`, `wait_for`, `stop`, `resume`, `delete`, `snapshot`, `list_snapshots`, `restore_paths`, `ssh`, `egress_get`, `egress_update`, `egress_denials`, `trace` and `export_trace`. It has no branches, operations, env recovery, GPU leases, image publishing, scoped tokens, MCP endpoints or TEE attestation. Call those routes through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+client.fetch("POST", f"/v1/sandboxes/{box.id}/scoped-token", json={"scope": "read-only"})
+```
+
+## Next
+
+- [Runtime reference](/sandbox/sdk-typescript/runtime)
+- [Agents reference](/sandbox/sdk-typescript/agents)
+- [Client reference](/sandbox/sdk-typescript/client)

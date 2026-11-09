@@ -1,26 +1,152 @@
 # Tangle Docs
 
-Tangle Docs explain how to run coding agents in Tangle Sandbox, call models through Tangle Router, and use one Tangle account, key and balance for both.
+> Tangle Docs explain how to run coding agents in Tangle Sandbox, call models through Tangle Router, and use one Tangle account, key and balance for both.
 
-## Core pages
+## Start here
 
-- Sandbox quickstart: https://docs.tangle.tools/sandbox/quickstart
-- Sandbox overview: https://docs.tangle.tools/sandbox/overview
-- TypeScript SDK: https://docs.tangle.tools/sandbox/sdk-typescript
-- Python: https://docs.tangle.tools/sandbox/sdk-python
-- CLI: https://docs.tangle.tools/sandbox/cli
-- Start a cloud agent: https://docs.tangle.tools/sandbox/cloud-agents
-- Run the same agent on E2B or Daytona: https://docs.tangle.tools/sandbox/other-providers
-- Router: https://docs.tangle.tools/gateway
-- Router quickstart: https://docs.tangle.tools/gateway/getting-started
-- Platform account and keys: https://docs.tangle.tools/platform
-- Release notes: https://docs.tangle.tools/release-notes
-- Benchmarks: https://tangle.tools/benchmarks
+- [Docs home](https://docs.tangle.tools/): every Tangle product documented on this site.
+- [Sandbox overview](https://docs.tangle.tools/sandbox/overview): what Tangle Sandbox is and how to drive it from TypeScript, Python, the CLI or REST.
+- [Sandbox quickstart](https://docs.tangle.tools/sandbox/quickstart): create a sandbox, run a command, prompt a coding agent and delete the sandbox.
+- [Router](https://docs.tangle.tools/gateway): one API for supported models, with provider and Tangle operator routes.
+- [Router quickstart](https://docs.tangle.tools/gateway/getting-started): your first Router call.
+- [Platform](https://docs.tangle.tools/platform): one Tangle account, API key and balance behind every product.
+- [Release notes](https://docs.tangle.tools/release-notes): dated release notes for each product line.
+- [Benchmarks](https://tangle.tools/benchmarks): measured sandbox and coding-agent times.
+
+## Sandbox: get started
+
+- [Overview](https://docs.tangle.tools/sandbox/overview): what a sandbox gives your code and coding agents, and the ways to drive one.
+- [Quickstart](https://docs.tangle.tools/sandbox/quickstart): your first sandbox and coding-agent prompt in TypeScript, Python or the CLI.
+- [API keys and tokens](https://docs.tangle.tools/sandbox/authentication): create and rotate API keys, sign the CLI in, and give browsers scoped tokens.
+- [Teams](https://docs.tangle.tools/sandbox/teams): share sandboxes, secrets and templates with a team.
+- [How sandboxes work](https://docs.tangle.tools/sandbox/concepts): sandbox states, what survives a stop, the coding agent inside, network and ownership rules.
+
+## Sandbox: sandboxes
+
+- [Create, stop and delete](https://docs.tangle.tools/sandbox/lifecycle): every create option, timer, stop, resume and delete.
+- [Run commands and code](https://docs.tangle.tools/sandbox/commands): exec, background processes and persistent code kernels.
+- [Stream output](https://docs.tangle.tools/sandbox/streaming): stream command and coding-agent output as it happens.
+- [Files](https://docs.tangle.tools/sandbox/files): read, write, upload and download files.
+- [Git](https://docs.tangle.tools/sandbox/git): clone on create, then status, commit, push and pull inside the sandbox.
+- [Ports and preview links](https://docs.tangle.tools/sandbox/ports-previews): give a port in the sandbox a public URL.
+- [Shells and terminals](https://docs.tangle.tools/sandbox/terminals): interactive terminals and SSH into a sandbox.
+- [Snapshots and forks](https://docs.tangle.tools/sandbox/snapshots): save a sandbox's workspace and start new sandboxes from it.
+- [Templates and images](https://docs.tangle.tools/sandbox/templates-gallery): start sandboxes from environments, templates and container images.
+- [Startup scripts](https://docs.tangle.tools/sandbox/startup-scripts): run your own setup each time a sandbox starts.
+- [GPU leases](https://docs.tangle.tools/sandbox/gpu-leases): attach a GPU to a sandbox for a set time and spend cap.
+- [Traces and resource usage](https://docs.tangle.tools/sandbox/observability): read traces and CPU, memory and disk use.
+
+## Sandbox: network, secrets and security
+
+- [Network access](https://docs.tangle.tools/sandbox/egress): open, strict and blocked outbound network policies.
+- [Secrets](https://docs.tangle.tools/sandbox/secrets): store secrets once and inject them into sandboxes.
+- [Isolation and compliance](https://docs.tangle.tools/sandbox/security): the sandbox security boundary and HIPAA placement.
+- [Sandbox compliance pinning](https://docs.tangle.tools/gateway/hipaa/sandbox-pinning): how HIPAA-pinned sandboxes are placed and which calls refuse them.
+
+## Sandbox: coding agents
+
+- [Run a coding agent](https://docs.tangle.tools/sandbox/cloud-agents): start Claude Code, Codex, OpenCode or another coding agent on a repository.
+- [Interactive mode](https://docs.tangle.tools/sandbox/interactive): drive a coding agent's own terminal UI from your terminal or a browser.
+- [Sessions](https://docs.tangle.tools/sandbox/sessions): continue a coding agent's conversation across calls and processes.
+- [Claude Code on your Claude plan](https://docs.tangle.tools/sandbox/cloud-agents-claude-code): run Claude Code on your Claude subscription.
+- [Codex on your ChatGPT plan](https://docs.tangle.tools/sandbox/cloud-agents-codex): run Codex signed in with your ChatGPT plan or OpenAI key.
+- [GLM, Kimi and MiniMax plans](https://docs.tangle.tools/sandbox/cloud-agents-coding-plans): run OpenCode against a coding plan you already pay for.
+- [AgentProfiles](https://docs.tangle.tools/sandbox/cloud-agents-profiles): describe an agent once and run it on any coding agent.
+- [Connections](https://docs.tangle.tools/sandbox/connections): grant a coding agent actions on accounts such as GitHub or Gmail.
+- [Several agents in one sandbox](https://docs.tangle.tools/sandbox/agents-multiple): run a planner, an implementer and a reviewer side by side.
+- [One sandbox per user](https://docs.tangle.tools/sandbox/instances): keep one sandbox per customer that is created or resumed on demand.
+- [Email, iMessage and voice lines](https://docs.tangle.tools/sandbox/lines): reach a sandbox agent by email, message or phone.
+
+## Sandbox: scale out
+
+- [Fleets](https://docs.tangle.tools/sandbox/agents-fleet): run work across many sandboxes under one spend budget.
+- [Batches and hosted runs](https://docs.tangle.tools/sandbox/runs-and-batch): run a queue of tasks in one call, or let the platform place an AgentProfile run.
+- [Agent graphs](https://docs.tangle.tools/sandbox/agents-graphs): connect agents into a graph of roles and routes.
+
+## Sandbox: agent frameworks
+
+- [Integrations](https://docs.tangle.tools/sandbox/integrations): every framework, MCP client and sandbox cloud Tangle Sandbox works with.
+- [Anthropic SDK](https://docs.tangle.tools/sandbox/agents-anthropic): give Claude sandbox tools in your own Messages API loop.
+- [OpenAI](https://docs.tangle.tools/sandbox/agents-openai): give an OpenAI or Router model sandbox tools in Chat Completions.
+- [Vercel AI SDK](https://docs.tangle.tools/sandbox/agents-vercel-ai): add sandbox tools to generateText or streamText.
+- [Mastra](https://docs.tangle.tools/sandbox/agents-mastra): give a Mastra agent sandbox tools.
+- [MCP clients](https://docs.tangle.tools/sandbox/agents-mcp): connect Claude Desktop, Cursor or any MCP client to a sandbox.
+
+## Sandbox: agent runtime and evaluation
+
+- [Run agents with agent-runtime](https://docs.tangle.tools/sandbox/agent-runtime): supervise coding agents in their own sandboxes under one budget.
+- [Run on E2B, Daytona and more](https://docs.tangle.tools/sandbox/other-providers): run one AgentProfile on several sandbox clouds.
+- [Evaluate agents](https://docs.tangle.tools/sandbox/evaluation): score sandbox agents on fixed cases and compare models.
+
+## Sandbox: workflows
+
+- [Workflows](https://docs.tangle.tools/sandbox/workflows): define multi-step jobs that run in sandboxes.
+- [Run and inspect workflows](https://docs.tangle.tools/sandbox/workflows-run): start a workflow and read its state.
+- [Workflow YAML](https://docs.tangle.tools/sandbox/workflows-yaml): the workflow file format.
+- [Workflow templates](https://docs.tangle.tools/sandbox/workflows-templates): start from a ready-made workflow.
+
+## Sandbox: examples
+
+- [Examples](https://docs.tangle.tools/sandbox/examples): complete programs, grouped by task.
+- [Sandbox examples](https://docs.tangle.tools/sandbox/examples/sandboxes): commands, files, ports and snapshots.
+- [Coding agent examples](https://docs.tangle.tools/sandbox/examples/coding-agents): Claude Code, Codex and OpenCode fixing tests and committing.
+- [Product examples](https://docs.tangle.tools/sandbox/examples/products): sandbox agents behind a product, one sandbox per customer.
+- [Fleet examples](https://docs.tangle.tools/sandbox/examples/fleets): fan work out across many sandboxes under a budget.
+- [Evaluation and other clouds](https://docs.tangle.tools/sandbox/examples/evals-and-runtime): evaluation runs and other sandbox providers.
+- [Python examples](https://docs.tangle.tools/sandbox/examples/python): the same tasks with the Python SDK.
+- [CLI examples](https://docs.tangle.tools/sandbox/examples/cli): command sequences for the tangle CLI.
+
+## Sandbox: reference
+
+- [TypeScript SDK](https://docs.tangle.tools/sandbox/sdk-typescript): install @tangle-network/sandbox and use the client.
+- [TypeScript client](https://docs.tangle.tools/sandbox/sdk-typescript/client): the Sandbox client class and its options.
+- [TypeScript sandbox instance](https://docs.tangle.tools/sandbox/sdk-typescript/sandbox): lifecycle methods on a sandbox.
+- [TypeScript commands, files and ports](https://docs.tangle.tools/sandbox/sdk-typescript/runtime): exec, process, files, git and preview links.
+- [TypeScript agents and sessions](https://docs.tangle.tools/sandbox/sdk-typescript/agents): prompt, stream and session methods.
+- [TypeScript secrets, templates and fleets](https://docs.tangle.tools/sandbox/sdk-typescript/resources): account-level resources.
+- [Python SDK](https://docs.tangle.tools/sandbox/sdk-python): install tangle-sandbox and use the sync and async clients.
+- [Python Sandbox and AsyncSandbox](https://docs.tangle.tools/sandbox/sdk-python/client): the Python client classes.
+- [Python SandboxInstance](https://docs.tangle.tools/sandbox/sdk-python/instance): lifecycle, exec, files, prompts and git on one sandbox.
+- [Python fleets and optional modules](https://docs.tangle.tools/sandbox/sdk-python/fleets-and-extras): fleets, agent tools and trace export.
+- [Python types and errors](https://docs.tangle.tools/sandbox/sdk-python/types-and-errors): every option and result type, and SandboxError.
+- [CLI](https://docs.tangle.tools/sandbox/cli): install the tangle CLI, log in and script it.
+- [CLI sandbox commands](https://docs.tangle.tools/sandbox/cli/sandboxes): tangle sandbox, exec, ssh, snapshot, branch and usage.
+- [CLI file, git and process commands](https://docs.tangle.tools/sandbox/cli/workspace): tangle fs, git, process and preview.
+- [CLI agent, fleet and batch commands](https://docs.tangle.tools/sandbox/cli/agents): run coding agents from the terminal.
+- [CLI account and team commands](https://docs.tangle.tools/sandbox/cli/account): keys, secrets, teams and templates.
+- [CLI workflow commands](https://docs.tangle.tools/sandbox/cli/workflows): validate, deploy, run and inspect workflows.
+- [CLI hub and line commands](https://docs.tangle.tools/sandbox/cli/hub-and-lines): connect accounts and attach lines to agents.
+- [CLI intelligence and trace commands](https://docs.tangle.tools/sandbox/cli/intelligence): reports and agent traces.
+- [REST API](https://docs.tangle.tools/sandbox/api-reference): base URL, authentication, a first request and the route groups.
+- [Sandboxes and GPU routes](https://docs.tangle.tools/sandbox/api-reference/sandboxes): create, stop, snapshot, branch and delete sandboxes over HTTP.
+- [In-sandbox runtime routes](https://docs.tangle.tools/sandbox/api-reference/runtime): commands, files, git, terminals and agent runs inside one sandbox.
+- [Sessions and backends routes](https://docs.tangle.tools/sandbox/api-reference/sessions): coding-agent sessions, plans, backends and models.
+- [Fleets, templates and teams routes](https://docs.tangle.tools/sandbox/api-reference/resources): fleets, templates, secrets, SSH keys and teams.
+- [Account, usage and pricing routes](https://docs.tangle.tools/sandbox/api-reference/account): account, usage, billing and public prices.
+- [E2B-compatible routes](https://docs.tangle.tools/sandbox/api-reference/e2b): E2B's REST shape under /e2b with a Tangle key.
+- [OpenAPI document](https://docs.tangle.tools/sandbox-openapi.json): the full Sandbox API as OpenAPI 3 JSON.
+
+## Sandbox: operate
+
+- [Pricing and spend](https://docs.tangle.tools/sandbox/cost): what a sandbox bills for, where to read prices and how to cap spend.
+- [Limits and timeouts](https://docs.tangle.tools/sandbox/limits): account limits, the API rate limit and fixed size and time limits.
+- [Error codes](https://docs.tangle.tools/sandbox/errors): every error code with its status, whether to retry and the fix.
+- [Troubleshooting](https://docs.tangle.tools/sandbox/troubleshooting): fixes for common problems, by symptom.
+- [Dashboard](https://docs.tangle.tools/sandbox/web-app): a tour of the dashboard at sandbox.tangle.tools.
+- [Sandbox release notes](https://docs.tangle.tools/release-notes/sandbox): dated changes to Tangle Sandbox.
+
+## Sandbox: compare and migrate
+
+- [Compare sandboxes](https://docs.tangle.tools/sandbox/comparison): Tangle Sandbox beside E2B, Daytona, Modal, Vercel, Cloudflare and Runloop.
+- [Move from E2B](https://docs.tangle.tools/sandbox/migrate-e2b): map E2B calls to Tangle and use the E2B-compatible routes.
+- [Move from Daytona](https://docs.tangle.tools/sandbox/migrate-daytona): map Daytona calls and settings to Tangle.
+- [Move from Modal](https://docs.tangle.tools/sandbox/migrate-modal): map Modal Sandbox calls to Tangle.
 
 ## Agent guidance
 
+- Set up Tangle Sandbox with the product's setup skill: https://sandbox.tangle.tools/agent-setup.md.
 - Use the docs setup skill at https://docs.tangle.tools/agent-setup.md.
 - Use the Tangle product manifest at https://tangle.tools/.well-known/tangle-agent.json.
-- Use Router OpenAPI at https://router.tangle.tools/openapi.json for model-routing calls.
-- Install scoped packages only: `@tangle-network/sandbox` and `@tangle-network/tcloud` from npm, `tangle-sandbox` from PyPI.
-- Use `TANGLE_API_KEY` for authenticated calls.
+- Use the Sandbox OpenAPI document at https://docs.tangle.tools/sandbox-openapi.json and the Router OpenAPI document at https://router.tangle.tools/openapi.json.
+- Install scoped packages only: `@tangle-network/sandbox`, `@tangle-network/sandbox-cli` and `@tangle-network/tcloud` from npm, and `tangle-sandbox` from PyPI.
+- Send `TANGLE_API_KEY` as a bearer token, and pass `https://sandbox.tangle.tools` as the Sandbox base URL.

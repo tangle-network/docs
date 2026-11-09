@@ -1,0 +1,919 @@
+---
+title: Account, key, secret, team and template commands
+description: "Reference for tangle auth, keys, secret, team, template and environments: log in, mint keys, store secrets, share with a team and publish templates."
+---
+
+# Account, key, secret, team and template commands
+
+Log in, manage profiles, mint and revoke API keys, store secrets, run a team and publish templates.
+
+```bash
+tangle auth login
+tangle keys create ci-agents --budget-usd 25 --expires-in-days 30
+printf %s "$OPENAI_API_KEY" | tangle secret create OPENAI_API_KEY --value-stdin
+tangle team switch Acme
+```
+
+`keys create` and `keys revoke` need an API-key login (`tangle auth login --api-key ...` or `TANGLE_API_KEY`). A browser login cannot create or revoke keys.
+`keys` talks to Tangle Platform; `--platform-url` names that host and `--base-url` still names the Sandbox API.
+
+## Commands on this page
+
+| Command | What it does |
+| --- | --- |
+| [`tangle auth login`](#tangle-auth-login) | Authenticate with browser login, device code, or an API key |
+| [`tangle auth logout`](#tangle-auth-logout) | Remove stored credentials |
+| [`tangle auth status`](#tangle-auth-status) | Show current authentication status |
+| [`tangle auth profiles list`](#tangle-auth-profiles-list) | List configured profiles |
+| [`tangle auth profiles use`](#tangle-auth-profiles-use) | Set the active profile |
+| [`tangle auth profiles current`](#tangle-auth-profiles-current) | Show the active profile |
+| [`tangle keys list`](#tangle-keys-list) | List your active API keys |
+| [`tangle keys create`](#tangle-keys-create) | Create a new API key |
+| [`tangle keys revoke`](#tangle-keys-revoke) | Revoke an API key |
+| [`tangle secret create`](#tangle-secret-create) | Create a new secret |
+| [`tangle secret list`](#tangle-secret-list) | List all secrets |
+| [`tangle secret delete`](#tangle-secret-delete) | Delete a secret |
+| [`tangle team list`](#tangle-team-list) | List teams for the current account |
+| [`tangle team create`](#tangle-team-create) | Create a team |
+| [`tangle team switch`](#tangle-team-switch) | Set the active team for the current profile |
+| [`tangle team current`](#tangle-team-current) | Show the active team for the current profile |
+| [`tangle team clear`](#tangle-team-clear) | Clear the active team for the current profile |
+| [`tangle team members`](#tangle-team-members) | List team members |
+| [`tangle team update-member`](#tangle-team-update-member) | Update a team member role |
+| [`tangle team invite`](#tangle-team-invite) | Invite a user to a team |
+| [`tangle team leave`](#tangle-team-leave) | Leave a team as the current user |
+| [`tangle team transfer`](#tangle-team-transfer) | Transfer team ownership to another active member |
+| [`tangle team secret list`](#tangle-team-secret-list) | List team secret names |
+| [`tangle team secret set`](#tangle-team-secret-set) | Create or replace a team secret |
+| [`tangle team secret delete`](#tangle-team-secret-delete) | Delete a team secret |
+| [`tangle team secret reveal`](#tangle-team-secret-reveal) | Reveal a team secret value |
+| [`tangle team templates list`](#tangle-team-templates-list) | List a team's golden-path templates |
+| [`tangle team templates create`](#tangle-team-templates-create) | Create a golden-path template from a snapshot |
+| [`tangle team templates delete`](#tangle-team-templates-delete) | Delete a team golden-path template |
+| [`tangle team invitations`](#tangle-team-invitations) | List pending and historical team invitations |
+| [`tangle team accept`](#tangle-team-accept) | Accept a team invitation |
+| [`tangle team revoke-invitation`](#tangle-team-revoke-invitation) | Revoke a pending team invitation |
+| [`tangle team remove-member`](#tangle-team-remove-member) | Remove a member from a team |
+| [`tangle template list`](#tangle-template-list) |  |
+| [`tangle template get`](#tangle-template-get) |  |
+| [`tangle template versions`](#tangle-template-versions) |  |
+| [`tangle template publish`](#tangle-template-publish) |  |
+| [`tangle template publish-version`](#tangle-template-publish-version) |  |
+| [`tangle environments list`](#tangle-environments-list) | List available environments |
+| [`tangle environments get`](#tangle-environments-get) | Get environment details |
+
+## Log in and profiles
+
+### `tangle auth login`
+
+Authenticate with browser login, device code, or an API key.
+
+Authenticates and stores a credential for a profile. Default: browser login through a 127.0.0.1 loopback callback; `--no-browser`: device code; global `--api-key`: validates the key against GET /v1/account/me and stores it.
+
+```bash
+tangle auth login [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--no-browser` |  | Use device-code login instead of opening a browser |
+| `--profile <name>` |  | Profile name |
+| `--provider <provider>` |  | Identity provider (github, google, microsoft) |
+| `--app <app>` | `sandbox` | Product to authorize (sandbox or solve) |
+
+Request: `POST /auth/cli/exchange`
+
+```bash
+tangle auth login
+```
+
+- Browser flow: opens `<base-url>/auth/cli/login?callback_url=http://127.0.0.1:<port>/callback?state=<nonce>`, waits up to 2 minutes, then POST /auth/cli/exchange.
+- Device flow: POST /auth/cli/device/start, then polls POST /auth/cli/device/poll at the server interval (default 5 s) for up to 15 minutes.
+- `--app` solve always uses the device flow against the fixed platform host and also opens the prefilled URL unless `--no-browser`.
+- API keys must start with sk_ or sk-tan-; anything else exits 1 before any request.
+- Before any interactive login it proves the credential store can write, read and delete a probe value; without an OS keychain it fails unless TANGLE_ALLOW_PLAINTEXT_CREDENTIALS=1.
+- A sandbox login makes the profile active; a solve login does not.
+- No JSON document is printed; success lines go to stdout (stderr under `--json`).
+
+### `tangle auth logout`
+
+Remove stored credentials.
+
+Removes the profile's stored credential from the OS keychain and the credentials file, keeping its base URL and team settings.
+
+```bash
+tangle auth logout [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <name>` |  | Profile name |
+| `--app <app>` | `sandbox` | Product credentials to remove (sandbox or solve) |
+
+```bash
+tangle auth logout
+```
+
+- Local only; no network request.
+
+### `tangle auth status`
+
+Show current authentication status.
+
+Checks the stored or supplied credential against the sandbox API and probes the platform control plane with the same profile.
+
+```bash
+tangle auth status [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <name>` |  | Profile name |
+| `--app <app>` | `sandbox` | Product credentials to check (sandbox or solve) |
+
+Request: `GET /v1/account/me`
+
+```bash
+tangle auth status
+```
+
+- `--json` prints `{authenticated, profile, baseUrl, credentialSource, account, sandbox, platform}`; missing credentials print `{authenticated:false, reason:'missing_credentials'}` and exit 0.
+- Exits 1 when the sandbox API or the platform refuses the credential; an unreachable platform still exits 0 and sets platform.reachable=false.
+- credentialSource is one of flag, env, keychain, file.
+
+### `tangle auth profiles list`
+
+List configured profiles.
+
+Lists every profile with whether it is active, its base URL and where its credential lives.
+
+```bash
+tangle auth profiles list
+```
+
+```bash
+tangle auth profiles list
+```
+
+- `--json` prints an array of `{name, active, hasApiKey, baseUrl, apiKeySource}`.
+
+### `tangle auth profiles use`
+
+Set the active profile.
+
+Sets the active profile in ~/.tangle/config.json.
+
+```bash
+tangle auth profiles use <name>
+```
+
+```bash
+tangle auth profiles use staging
+```
+
+- Profile names are lowercased and limited to a-z, 0-9, '.', '_' and '-'.
+
+### `tangle auth profiles current`
+
+Show the active profile.
+
+Shows the active profile, its base URL and credential source.
+
+```bash
+tangle auth profiles current
+```
+
+```bash
+tangle auth profiles current
+```
+
+- `--json` prints `{name, active, baseUrl, credentialSource}`.
+
+## API keys
+
+### `tangle keys list`
+
+List your active API keys.
+
+Lists your active platform API keys.
+
+```bash
+tangle keys list [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--platform-url <url>` |  | Override the platform URL (id.tangle.tools) |
+
+Request: `GET /v1/keys`
+
+```bash
+tangle keys list
+```
+
+- Works from a browser login: the CLI exchanges the stored session for a short-lived platform key.
+- `--platform-url` names the platform host; the global `--base-url` names the sandbox host the session is exchanged at.
+
+### `tangle keys create`
+
+Create a new API key.
+
+Creates a platform API key with optional product, budget, rate and expiry limits and prints the key once.
+
+```bash
+tangle keys create <name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--product <product>` |  | Restrict the key to one product (router\|sandbox\|blueprint-agent\|evals\|agent-builder). Omit for all products. |
+| `--budget-usd <amount>` |  | Hard budget cap in USD |
+| `--rpm-limit <limit>` |  | Requests-per-minute cap |
+| `--expires-in-days <days>` |  | Expire the key after N days (integer) |
+| `--platform-url <url>` |  | Override the platform URL (id.tangle.tools) |
+
+Request: `POST /v1/keys`
+
+```bash
+tangle keys create ci-agents --budget-usd 25
+```
+
+- Refused before any request when the credential was minted from a browser login; set TANGLE_API_KEY or log in with `--api-key`.
+
+### `tangle keys revoke`
+
+Revoke an API key.
+
+Revokes a platform API key after confirmation.
+
+```bash
+tangle keys revoke <keyId> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--yes` |  | Skip the confirmation prompt |
+| `--platform-url <url>` |  | Override the platform URL (id.tangle.tools) |
+
+Request: `DELETE /v1/keys/{keyId}`
+
+```bash
+tangle keys revoke key_1
+```
+
+- Confirmation is skipped with `--yes` (not `--force`).
+- Same minted-credential refusal as keys create.
+
+## Secrets
+
+### `tangle secret create`
+
+Create a new secret.
+
+Creates an account secret; the value comes from the argument, from stdin with `--value-stdin`, or from a hidden prompt.
+
+```bash
+tangle secret create <name> [value] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--value-stdin` |  | Read secret value from stdin |
+
+Request: `POST /v1/secrets`
+
+```bash
+tangle secret create API_KEY
+```
+
+- With neither a value nor `--value-stdin` it prompts on stderr with echo off: "Enter value for secret '`<name>`': ".
+- A value argument and `--value-stdin` together are refused; an empty value is refused.
+- Select the secret for a sandbox with `tangle sandbox create --secret <name>`.
+
+### `tangle secret list`
+
+List all secrets.
+
+Lists secret names with created and updated times; values are never printed.
+
+```bash
+tangle secret list
+```
+
+Request: `GET /v1/secrets`
+
+```bash
+tangle secret list
+```
+
+### `tangle secret delete`
+
+Delete a secret.
+
+Deletes a secret after a y/N confirmation.
+
+```bash
+tangle secret delete <name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--force` |  | Skip confirmation prompt |
+
+Request: `DELETE /v1/secrets/{name}`
+
+```bash
+tangle secret delete API_KEY
+```
+
+- `--force` skips the prompt; `--json` prints `{success:true, deleted:<name>}`.
+
+## Teams
+
+### `tangle team list`
+
+List teams for the current account.
+
+```bash
+tangle team list [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+
+Request: `GET /v1/teams`
+
+```bash
+tangle team list
+```
+
+### `tangle team create`
+
+Create a team.
+
+Creates a team and makes it active unless `--no-switch`.
+
+```bash
+tangle team create <name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+| `--org-id <id>` |  | External organization id |
+| `--no-switch` |  | Do not set the new team as active |
+
+Request: `POST /v1/teams`
+
+```bash
+tangle team create Acme
+```
+
+### `tangle team switch`
+
+Set the active team for the current profile.
+
+Sets the active team (by id or name) for the profile.
+
+```bash
+tangle team switch <team> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+
+Request: `GET /v1/teams/{teamId}`
+
+```bash
+tangle team switch Acme
+```
+
+### `tangle team current`
+
+Show the active team for the current profile.
+
+Shows the profile's active team.
+
+```bash
+tangle team current [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+
+```bash
+tangle team current
+```
+
+### `tangle team clear`
+
+Clear the active team for the current profile.
+
+Clears the profile's active team.
+
+```bash
+tangle team clear [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+
+```bash
+tangle team clear
+```
+
+### `tangle team members`
+
+List team members.
+
+Lists members of a team (default: the active team).
+
+```bash
+tangle team members [team] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+
+Request: `GET /v1/teams/{teamId}/members`
+
+```bash
+tangle team members
+```
+
+### `tangle team update-member`
+
+Update a team member role.
+
+Changes a member's role to admin, member or viewer.
+
+```bash
+tangle team update-member <member-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+| `-t, --team <team>` |  | Team id or name (defaults to active team) |
+| `--role <role>` |  | Role: admin, member, viewer. Required. |
+
+Request: `PATCH /v1/teams/{teamId}/members/{memberId}`
+
+```bash
+tangle team update-member mem_1 --role viewer --json
+```
+
+### `tangle team invite`
+
+Invite a user to a team.
+
+Invites an email address to a team with a role (default member).
+
+```bash
+tangle team invite <email> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+| `-t, --team <team>` |  | Team id or name (defaults to active team) |
+| `--role <role>` | `member` | Role: admin, member, viewer |
+| `--ttl-hours <hours>` |  | Invitation lifetime in hours |
+
+Request: `POST /v1/teams/{teamId}/invitations`
+
+```bash
+tangle team invite bob@example.com --role member
+```
+
+### `tangle team leave`
+
+Leave a team as the current user.
+
+Leaves a team after confirmation.
+
+```bash
+tangle team leave [team] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+| `--force` |  | Skip confirmation prompt |
+
+Request: `POST /v1/teams/{teamId}/leave`
+
+```bash
+tangle team leave
+```
+
+- Skips the confirmation with `--force` or `--json`.
+
+### `tangle team transfer`
+
+Transfer team ownership to another active member.
+
+```bash
+tangle team transfer <new-owner-customer-id> [team] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+| `--force` |  | Skip confirmation prompt |
+
+Request: `POST /v1/teams/{teamId}/transfer`
+
+```bash
+tangle team transfer cust_123 --force
+```
+
+### `tangle team secret list`
+
+List team secret names.
+
+Lists team secret names.
+
+```bash
+tangle team secret list [team] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+
+Request: `GET /v1/teams/{teamId}/secrets`
+
+```bash
+tangle team secret list
+```
+
+### `tangle team secret set`
+
+Create or replace a team secret.
+
+Creates or replaces a team secret from the argument or stdin.
+
+```bash
+tangle team secret set <name> [value] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+| `-t, --team <team>` |  | Team id or name (defaults to active team) |
+| `--value-stdin` |  | Read secret value from stdin |
+
+Request: `PUT /v1/teams/{teamId}/secrets/{name}`
+
+```bash
+tangle team secret set NPM_TOKEN
+```
+
+### `tangle team secret delete`
+
+Delete a team secret.
+
+Deletes a team secret after confirmation.
+
+```bash
+tangle team secret delete <name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+| `-t, --team <team>` |  | Team id or name (defaults to active team) |
+| `--force` |  | Skip confirmation prompt |
+
+Request: `DELETE /v1/teams/{teamId}/secrets/{name}`
+
+```bash
+tangle team secret delete NPM_TOKEN
+```
+
+### `tangle team secret reveal`
+
+Reveal a team secret value.
+
+Prints a team secret's value.
+
+```bash
+tangle team secret reveal <name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+| `-t, --team <team>` |  | Team id or name (defaults to active team) |
+
+Request: `POST /v1/teams/{teamId}/secrets/{name}/reveal`
+
+```bash
+tangle team secret reveal NPM_TOKEN
+```
+
+### `tangle team templates list`
+
+List a team's golden-path templates.
+
+Lists a team's templates.
+
+```bash
+tangle team templates list [team] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+
+Request: `GET /v1/teams/{teamId}/templates`
+
+```bash
+tangle team templates list
+```
+
+### `tangle team templates create`
+
+Create a golden-path template from a snapshot.
+
+Creates a team template from a snapshot.
+
+```bash
+tangle team templates create <name> <snapshot-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+| `-t, --team <team>` |  | Team id or name (defaults to active team) |
+| `-d, --description <description>` |  | Human-readable description shown in the dashboard |
+| `-e, --environment <environment>` |  | Default environment to apply (defaults to 'universal') |
+| `--config <json>` |  | Optional JSON config object merged into sandboxes created from this template |
+
+Request: `POST /v1/teams/{teamId}/templates`
+
+```bash
+tangle team templates create Node snap_1
+```
+
+### `tangle team templates delete`
+
+Delete a team golden-path template.
+
+Deletes a team template after confirmation.
+
+```bash
+tangle team templates delete <template-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+| `-t, --team <team>` |  | Team id or name (defaults to active team) |
+| `--force` |  | Skip confirmation prompt |
+
+Request: `DELETE /v1/teams/{teamId}/templates/{templateId}`
+
+```bash
+tangle team templates delete tpl_1
+```
+
+### `tangle team invitations`
+
+List pending and historical team invitations.
+
+Lists pending and past invitations of a team.
+
+```bash
+tangle team invitations [team] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+
+Request: `GET /v1/teams/{teamId}/invitations`
+
+```bash
+tangle team invitations
+```
+
+### `tangle team accept`
+
+Accept a team invitation.
+
+Accepts an invitation token and makes the team active unless `--no-switch`.
+
+```bash
+tangle team accept <token> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+| `--no-switch` |  | Do not set the accepted team as active |
+
+Request: `POST /v1/teams/invitations/{token}/accept`
+
+```bash
+tangle team accept invite-token
+```
+
+### `tangle team revoke-invitation`
+
+Revoke a pending team invitation.
+
+Revokes a pending invitation.
+
+```bash
+tangle team revoke-invitation <invitation-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+
+Request: `DELETE /v1/teams/invitations/{invitationId}`
+
+```bash
+tangle team revoke-invitation inv_1
+```
+
+### `tangle team remove-member`
+
+Remove a member from a team.
+
+Removes a member from a team.
+
+```bash
+tangle team remove-member <member-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--profile <profile>` |  | Credential profile |
+| `-t, --team <team>` |  | Team id or name (defaults to active team) |
+
+Request: `DELETE /v1/teams/{teamId}/members/{memberId}`
+
+```bash
+tangle team remove-member mem_1
+```
+
+## Templates
+
+### `tangle template list`
+
+Lists public templates, filtered by `--query` or `--tag`, or only featured ones.
+
+```bash
+tangle template list [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-q, --query <query>` |  | Search query |
+| `--tag <tag>` |  | Filter by tag |
+| `--featured` |  | Show featured templates only |
+
+Request: `GET /v1/public-templates`
+
+```bash
+tangle template list --featured
+```
+
+- `--featured` calls GET /v1/public-templates/featured.
+- `--json` prints `{templates:[...]}`.
+
+### `tangle template get`
+
+Shows one public template by id or slug.
+
+```bash
+tangle template get <id-or-slug>
+```
+
+Request: `GET /v1/public-templates/{idOrSlug}`
+
+```bash
+tangle template get <id-or-slug>
+```
+
+### `tangle template versions`
+
+Lists a public template's versions.
+
+```bash
+tangle template versions <id-or-slug>
+```
+
+Request: `GET /v1/public-templates/{idOrSlug}/versions`
+
+```bash
+tangle template versions <id-or-slug>
+```
+
+### `tangle template publish`
+
+Publishes a snapshot of a sandbox as a new public template and waits for the publication job.
+
+```bash
+tangle template publish <name> <snapshot-id> <sandbox-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--timeout <seconds>` |  | Maximum wait for publication |
+| `--resume-job <id>` |  | Resume an accepted publication for this snapshot |
+| `--slug <slug>` |  | Stable public slug |
+| `-d, --description <description>` |  | Template description |
+| `--readme <markdown>` |  | README markdown |
+| `--tags <tags...>` |  | Template tags |
+| `--release-notes <text>` |  | Release notes |
+| `--team-id <id>` |  | Publish under a team |
+| `--forked-from <id>` |  | Fork source template id |
+
+Request: `POST /v1/public-templates`
+
+```bash
+tangle template publish <name> <snapshot-id> <sandbox-id>
+```
+
+- `--timeout` is in SECONDS here.
+- Progress lines 'Publication `<job>`: `<status>`' go to stderr; Ctrl-C stops waiting, and an interrupted or timed-out job prints the exact `--resume-job <id>` command to continue.
+
+### `tangle template publish-version`
+
+Publishes a snapshot as a new version of an existing public template.
+
+```bash
+tangle template publish-version <id-or-slug> <snapshot-id> <sandbox-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--timeout <seconds>` |  | Maximum wait for publication |
+| `--resume-job <id>` |  | Resume an accepted publication for this snapshot |
+| `--readme <markdown>` |  | README markdown |
+| `--tags <tags...>` |  | Template tags |
+| `--release-notes <text>` |  | Release notes |
+
+Request: `POST /v1/public-templates/{idOrSlug}/versions`
+
+```bash
+tangle template publish-version <id-or-slug> <snapshot-id> <sandbox-id>
+```
+
+- `--timeout` is in seconds; same resume behavior as template publish.
+
+## Environments
+
+### `tangle environments list`
+
+List available environments.
+
+Lists available environments.
+
+```bash
+tangle environments list
+```
+
+Aliases: `ls`
+
+Request: `GET /v1/environments`
+
+```bash
+tangle environments list
+```
+
+- Alias: ls.
+
+### `tangle environments get`
+
+Get environment details.
+
+Shows one environment's details.
+
+```bash
+tangle environments get <id>
+```
+
+Request: `GET /v1/environments`
+
+```bash
+tangle environments get universal
+```
+
+- Fetches the list and selects the id client-side.
+
+## Next
+
+- [API keys and tokens](/sandbox/authentication)
+- [Secrets](/sandbox/secrets)
+- [Share sandboxes with your team](/sandbox/teams)

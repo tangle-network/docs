@@ -1,165 +1,123 @@
-# Run agents with agent-runtime
+---
+title: Supervise agents with agent-runtime
+description: Run a supervisor that spawns coding agents in their own sandboxes under one token and iteration budget, from the CLI or from TypeScript with @tangle-network/agent-runtime.
+---
 
-`@tangle-network/agent-runtime` is the execution substrate for exact, measurable agent runs. It turns an `AgentProfile` into a real execution, coordinates one or many agents under conserved budgets, records what actually happened, and keeps candidate promotion separate from live activation.
+# Supervise agents with agent-runtime
 
-Combined with `@tangle-network/agent-provider-tangle`, it runs any supported coding agent — Claude Code, Codex, OpenCode, Kimi Code, and more — in a Tangle sandbox with full accounting.
+`@tangle-network/agent-runtime` runs an [AgentProfile](/sandbox/cloud-agents-profiles)
+as an exact execution: the coding agent, provider and model you declare are the
+ones that run, and spend is recorded as measured, never guessed. Its
+`supervise()` runs a supervisor agent that spawns workers, each in its own
+sandbox, under one budget they all draw from.
 
-## Install
+Use it when one agent should split a task across workers and you want a hard
+budget over the whole tree. For a fixed set of agents with their own tasks, use
+[fleets](/sandbox/agents-fleet). For a fixed topology written as data, use
+[agent graphs](/sandbox/agents-graphs).
+
+## Supervise from the CLI
 
 ```bash
-pnpm add @tangle-network/agent-runtime @tangle-network/agent-interface @tangle-network/agent-provider-tangle @tangle-network/sandbox
+tangle supervise "Add input validation to every API route and cover it with tests" \
+  --harness codex --max-tokens 200000 --max-iterations 50 --max-workers 4
 ```
 
-## Quickstart: one agent in a Tangle sandbox
-
-```ts
-import { Sandbox } from "@tangle-network/sandbox";
-import { createTangleProvider } from "@tangle-network/agent-provider-tangle";
-import { providerAsSandboxClient, runAgentRounds } from "@tangle-network/agent-runtime/kernel";
-import type { AgentProfile } from "@tangle-network/agent-interface";
-
-// 1. Connect to Tangle Sandbox
-const sandbox = new Sandbox({
-  apiKey: process.env.TANGLE_API_KEY!,
-  baseUrl: "https://sandbox.tangle.tools",
-});
-
-// 2. Wrap the sandbox as an environment provider
-const provider = createTangleProvider({ client: sandbox });
-
-// 3. Adapt the provider into the runtime's sandbox client
-const client = providerAsSandboxClient(provider);
-
-// 4. Define the agent you want to run
-const profile = {
-  name: "my-claude-agent",
-  harness: "claude-code",       // or "codex", "opencode", "kimi-code", "pi"
-  model: { provider: "anthropic", default: "anthropic/claude-sonnet-4-6" },
-} satisfies AgentProfile;
-
-// 5. Run it
-const result = await runAgentRounds({
-  task: "Review the last 5 commits and summarize the changes.",
-  driver: {
-    plan: async (task, history) => (history.length === 0 ? [task] : []),
-    decide: () => "done" as const,
-  },
-  agentRun: { profile, taskToPrompt: (t) => t },
-  output: { parse: (events) => events },
-  ctx: { sandboxClient: client },
-});
-
-console.log(`decision: ${result.decision} — ${result.iterations.length} iteration(s)`);
-```
-
-## What the runtime gives you
-
-| Capability | What it means |
-|---|---|
-| **Exact execution** | One declared harness, provider, model, tool surface, and profile is the execution that actually runs. No silent substitution. |
-| **Agent control** | Turns, tool loops, retries, supervision trees, graph traversals, steering, cancellation, and durable resume. |
-| **Truthful accounting** | Outputs, failures, tokens, dollars, timing, traces, and provider identity are observed facts. Unknown never becomes zero or success. |
-| **Independent completion checks** | A worker is delivered because a check passed, not because the worker said it finished. |
-| **Budget conservation** | `scope.spawn` reserves from a shared pool atomically and fails closed when the pool can't cover it. |
-
-## Multi-agent supervision
-
-Run a supervisor that spawns children on a conserved budget pool:
-
-```ts
-import {
-  createSupervisor,
-  definePersona,
-  fanout,
-  runPersonified,
-  type Agent,
-  type Scope,
-} from "@tangle-network/agent-runtime/kernel";
-
-// A driver that spawns two children, drains them, picks the best
-const driver: Agent<string, unknown> = {
-  name: "two-arm-driver",
-  act: async (task: string, scope: Scope<unknown>) => {
-    // Each spawn RESERVES its whole ceiling from the shared pool atomically
-    const [arm1, arm2] = await Promise.all([
-      scope.spawn({ task: `${task} (arm A)`, ceiling: { usd: 0.50 } }),
-      scope.spawn({ task: `${task} (arm B)`, ceiling: { usd: 0.50 } }),
-    ]);
-
-    // Drain both, then select the best valid settlement
-    const results = await Promise.all([arm1.result, arm2.result]);
-    return results.find((r) => r.ok) ?? results[0];
-  },
-};
-
-const persona = definePersona({
-  agent: driver,
-  profile: { harness: "claude-code", model: { provider: "anthropic", default: "anthropic/claude-sonnet-4-6" } },
-});
-
-// Run under a supervisor with a budget ceiling
-const outcome = await runPersonified({
-  persona,
-  task: "Review this PR from two angles: correctness and style.",
-  budget: { usd: 1.00 },
-  ctx: { sandboxClient: client },
-});
-```
-
-## Agent graphs
-
-Compose planner, worker, and reviewer agents into a graph whose every step runs in a sandbox:
-
-```ts
-import { promptHandle, runGraph } from "@tangle-network/agent-runtime/kernel";
-
-const plan = promptHandle("Review the failing tests and propose a fix.");
-const implement = promptHandle("Implement the fix you proposed.");
-const review = promptHandle("Review the implementation. Approve or request changes.");
-
-const graph = {
-  nodes: { plan, implement, review },
-  edges: [
-    { from: "plan", to: "implement" },
-    { from: "implement", to: "review" },
-    // review can loop back to implement if changes are requested
-  ],
-};
-
-for await (const event of runGraph(graph, { sandboxClient: client })) {
-  if (event.type === "node_complete") {
-    console.log(`${event.node}: ${event.outcome.type}`);
-  }
-}
-```
-
-## Supported harnesses
-
-Every sandbox ships these pre-installed. Set `profile.harness` to the ID:
-
-| Harness ID | Agent | Requires |
+| Flag | Default | Effect |
 |---|---|---|
-| `claude-code` | Claude Code | Anthropic key or Claude subscription token |
-| `codex` | OpenAI Codex | OpenAI key or ChatGPT login |
-| `opencode` | OpenCode | Any OpenAI-compatible endpoint |
-| `kimi-code` | Kimi Code | Moonshot API key |
-| `pi` | Pi | Pi API key |
-| `cli-base` | Generic CLI agent | Any provider |
+| `--harness` | `claude-code` | The coding agent each worker runs: Claude Code (`claude-code`), OpenCode (`opencode`), Codex (`codex`), Kimi Code (`kimi-code`) or `prime`. |
+| `--model` | A fast Router model | The supervisor's model, and the only model workers may use. Pass a canonical id with its provider, such as `google/<model-id>`. |
+| `--max-tokens` | `200000` | Token budget for the whole run. |
+| `--max-iterations` | `50` | Iteration budget for the whole run. |
+| `--max-workers` | none | Each worker reserves `max-tokens / n` tokens and `max-iterations / n` iterations, so at most `n` run at once. |
+| `--json` | off | Prints the task, result, worker sandboxes, token usage and cost. Exits 1 without a winner. |
 
-## What belongs where
+The supervisor runs on the Tangle Router with your key; each worker is a
+sandbox running the chosen coding agent. The command prints the result, input
+and output tokens, and cost, or "Unavailable" where a provider did not report
+them.
 
-| Package | Owns |
+## Supervise from TypeScript
+
+```bash
+npm install @tangle-network/agent-runtime @tangle-network/agent-interface @tangle-network/sandbox
+```
+
+agent-runtime needs Node.js 22.19 or later.
+
+```ts
+import { randomUUID } from "node:crypto";
+import * as kernel from "@tangle-network/agent-runtime/kernel";
+import type { MakeWorkerAgent, SupervisorProfile } from "@tangle-network/agent-runtime/kernel";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const apiKey = process.env.TANGLE_API_KEY!;
+const client = new Sandbox({ apiKey, baseUrl: "https://sandbox.tangle.tools" });
+
+const workerSeam = kernel.workerFromBackend({
+  backend: "sandbox",
+  sandboxClient: client,
+  maxIterations: 1,
+});
+const makeWorkerAgent: MakeWorkerAgent = (profile, context) =>
+  workerSeam({ ...profile, harness: "claude-code" }, context);
+
+const supervisor: SupervisorProfile = {
+  name: "supervisor",
+  harness: "cli-base",
+  model: { default: "gemini-3.5-flash-lite", provider: "google" },
+  tools: {
+    agent_runtime_coordination_spawn_worker: true,
+    agent_runtime_coordination_observe_agent: true,
+  },
+};
+
+const result = await kernel.supervise(
+  supervisor,
+  { goal: "Add input validation to every API route and cover it with tests" },
+  {
+    budget: { maxTokens: 200_000, maxIterations: 50 },
+    perWorker: { maxTokens: 50_000, maxIterations: 12 },
+    makeWorkerAgent,
+    router: { routerBaseUrl: "https://router.tangle.tools/v1", routerKey: apiKey },
+    runId: `supervise-${randomUUID()}`,
+  },
+);
+
+if (result.kind === "winner") console.log(result.out);
+else console.log("no winner:", result.reason);
+console.log(result.spentTotal);
+```
+
+`harness: "cli-base"` makes the supervisor a model that calls tools, not a
+coding agent process. The two coordination tools let it spawn workers and
+watch them. Each worker is a fresh sandbox from `sandboxClient.create()`.
+
+`result.kind` is `"winner"`, with the delivered output in `out`, or
+`"no-winner"`, with a `reason`. `spentTotal` holds `usd`, `tokens` and
+`iterations` for the whole tree; `usdKnown: false` or `tokensKnown: false`
+means a provider did not report that number, and it is not zero.
+
+The model list for the supervisor is `GET /v1/router-models` with your Sandbox
+key, or the [model list](/gateway/models).
+
+## Other entry points
+
+| Function | Use it for |
 |---|---|
-| `agent-runtime` | Execution, budgets, supervision, accounting |
-| `agent-eval` | Scoring, comparison, statistical tests, promotion gates |
-| `sandbox` | Isolated Linux environments |
-| `agent-provider-tangle` | Adapter from Sandbox to the provider contract |
+| `runAgentTaskStream` | One agent turn and a normalized event stream. |
+| `runToolLoop` | A model calling tools until it answers or stops. |
+| `runAgentRounds` | Your own plan and decide loop over agent turns. |
+| `supervise` | A supervisor driving workers under one budget. |
+| `runGraph` | A fixed topology expressed as data. See [agent graphs](/sandbox/agents-graphs). |
+| `startRetainedRun` | Work that must outlive the process that started it. |
 
-The packages release independently. Compatibility is proven through packed-consumer tests.
+Every function takes an AgentProfile, so the same profile runs on a Tangle
+sandbox, in a local process or on another sandbox cloud through
+`providerAsSandboxClient`. See [Run on E2B, Daytona and more](/sandbox/other-providers).
 
-## Next steps
+## Next
 
-- [Run the same agent on E2B, Daytona, or Boat](/sandbox/other-providers)
-- [Evaluate agents with agent-eval](/sandbox/evaluation)
-- [Agent profiles: define once, run anywhere](/sandbox/cloud-agents-profiles)
-- [agent-runtime on GitHub](https://github.com/tangle-network/agent-runtime)
+- [Agent graphs](/sandbox/agents-graphs)
+- [Run on E2B, Daytona and more](/sandbox/other-providers)
+- [Evaluate agents](/sandbox/evaluation)

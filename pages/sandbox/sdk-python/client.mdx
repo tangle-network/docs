@@ -1,0 +1,297 @@
+---
+title: Sandbox and AsyncSandbox
+description: Reference for the Python client classes Sandbox and AsyncSandbox, CreateSandboxOptions, and the secrets, environments, teams, batch and intelligence sub-clients.
+---
+
+import { Callout } from "nextra/components";
+
+# Sandbox and AsyncSandbox
+
+`Sandbox` creates, lists and fetches sandboxes and holds the sub-clients for secrets, environments, teams, batches, fleets and intelligence reports.
+`AsyncSandbox` has the same members as coroutines; `await` each call, and use `async with` and `await client.close()`.
+
+```python
+import os
+
+from tangle_sandbox import Sandbox
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    for box in client.list(limit=5):
+        print(box.id, box.status.value)
+```
+
+## Constructor
+
+```python
+Sandbox(api_key: str, base_url: str, *, timeout_ms: int = 30000)
+AsyncSandbox(api_key: str, base_url: str, *, timeout_ms: int = 30000)
+```
+
+| Parameter | Description |
+| --- | --- |
+| `api_key` | Your `sk-tan-` key. An empty string raises `AuthError`. |
+| `base_url` | `https://sandbox.tangle.tools`. An empty string raises `ValidationError`. |
+| `timeout_ms` | Budget for each request, including `create()` retries. |
+
+Every request carries `Authorization: Bearer <api_key>`.
+
+## `create`
+
+```python
+create(options: CreateSandboxOptions | None = None, **kwargs) -> SandboxInstance
+```
+
+Creates a sandbox and returns its instance with the status the API answered: `pending`, `provisioning` or `running`.
+Pass a `CreateSandboxOptions` or the same fields as keyword arguments. Call `wait_for(SandboxStatus.RUNNING)` before runtime calls.
+
+Request: `POST /v1/sandboxes`
+
+```python
+from tangle_sandbox import BackendConfig, CreateSandboxOptions, GitConfig
+
+box = client.create(
+    CreateSandboxOptions(
+        name="fixer",
+        git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"),
+        backend=BackendConfig(type="claude-code"),
+        max_lifetime_seconds=3600,
+    )
+)
+```
+
+Every create sends an `Idempotency-Key`. Two creates with the same `idempotency_key` return the same sandbox.
+When the service is out of capacity, `create()` sends the request again after the server's `Retry-After`, for up to 150 s or `timeout_ms`; a 429 rate limit stops after 5 attempts with `QuotaError`.
+A create that runs out of time raises `TimeoutError` whose message names the key; create again with that key to pick up the same sandbox.
+
+| Raises | When |
+| --- | --- |
+| `ValidationError` | A field is wrong, such as `from_snapshot` without `from_sandbox_id` |
+| `QuotaError` | You are at a sandbox, spend or rate limit |
+| `TimeoutError` | The create did not finish within `timeout_ms` |
+| `SandboxError` with another code | See [Error codes](/sandbox/errors) |
+
+### `CreateSandboxOptions`
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `name` | `str` | Display name |
+| `environment` | `str` | `universal`, `template:<id>`, or a container image reference such as `node:24-alpine`. `client.environments.list()` shows what you can name |
+| `runtime` | `"docker"` or `"firecracker"` | Container or microVM isolation; omit for the default |
+| `bare` | `bool` | Start without the coding agent runtime |
+| `backend` | `BackendConfig` | The coding agent and model; a missing `type` is sent as `opencode` |
+| `git` | `GitConfig` | Clone a repository at create. Commands then start in the clone |
+| `resources` | `SandboxResources` | CPU cores, memory in MB, disk in GB and an accelerator |
+| `env` | `dict[str, str]` | Environment variables |
+| `max_lifetime_seconds` | `int` | Wall-clock limit; the sandbox stops, it is not deleted |
+| `idle_timeout_seconds` | `int` | Idle limit; the sandbox stops, it is not deleted |
+| `ssh_enabled` | `bool` | Turn on SSH; `box.ssh()` then returns connection details |
+| `ssh_public_keys` | `list[str]` | Public keys to authorize |
+| `ssh_key_ids` | `list[str]` | Stored SSH key ids to authorize |
+| `web_terminal_enabled` | `bool` | Turn on the web terminal |
+| `storage` | `StorageConfig` | Your own S3, GCS or R2 bucket. The API requires `credentials` |
+| `from_snapshot` | `str` | Start from a snapshot; needs `from_sandbox_id` |
+| `from_sandbox_id` | `str` | The sandbox that took the snapshot |
+| `template_id` | `str` | Start from a saved template |
+| `public_template_id`, `public_template_version_id` | `str` | Start from a published template, optionally pinned to a version |
+| `secrets` | `list[str]` | Stored secret names delivered as environment variables |
+| `proxy_secrets` | `list[dict]` | Secrets held at the network proxy; the sandbox sees a placeholder. See [Secrets](/sandbox/secrets) |
+| `metadata` | `dict` | Your own key-value data |
+| `team_id` | `str` | Create in a team; see [Teams](/sandbox/teams) |
+| `idempotency_key` | `str` | Make retries return the same sandbox |
+| `egress_policy` | `EgressPolicy` | Outbound network rules from the start; see [Network access](/sandbox/egress) |
+| `privacy` | `dict` | `{"egress": "redact" \| "block" \| "off", "logs": "on" \| "off"}` |
+| `capabilities` | `list` | `["computer_use"]` boots a display and an MCP server for desktop control |
+| `driver` | `DriverConfig` | `DriverConfig(type="tangle")` runs on Tangle Network operators |
+| `confidential`, `tangle_secrets` | | Read only by the `[tangle]` client; `Sandbox` ignores them |
+
+The API also accepts `cwd`, `ephemeral`, `coldTimeoutSeconds`, `deleteAfterStoppedSeconds`, `retain`, `startupScriptIds`, `gpuLease`, `envRecovery`, `compliance` and `skipWarmPool`, which Python cannot send. Use the TypeScript SDK or `POST /v1/sandboxes` through `client.fetch` for those.
+
+## `list`
+
+```python
+list(options: ListSandboxOptions | None = None, **kwargs) -> list[SandboxInstance]
+```
+
+Lists your sandboxes. `ListSandboxOptions(status=..., limit=..., offset=...)`: `status` is one `SandboxStatus` or a list of them; `limit` is 0 to 1000.
+
+Request: `GET /v1/sandboxes`
+
+```python
+from tangle_sandbox import ListSandboxOptions, SandboxStatus
+
+running = client.list(ListSandboxOptions(status=SandboxStatus.RUNNING, limit=20))
+```
+
+`list()` returns personal sandboxes. To list team sandboxes, pass `scope` to the REST route: `team`, `team:<id>` or `all`.
+
+```python
+response = client.fetch("GET", "/v1/sandboxes", params={"scope": "all", "limit": 20})
+names = [s["name"] for s in response.json()["sandboxes"]]
+```
+
+## `get`
+
+```python
+get(sandbox_id: str) -> SandboxInstance | None
+```
+
+Fetches one sandbox, or `None` when the id does not exist. A deleted sandbox can come back with status `DELETED`.
+
+Request: `GET /v1/sandboxes/{id}`
+
+## `health`
+
+```python
+health() -> bool
+```
+
+`True` when `GET /health` answers 2xx; any failure returns `False`. The route needs no key, so `health()` does not check yours.
+
+## `usage`
+
+```python
+usage() -> UsageInfo
+```
+
+Compute minutes, active and total sandbox counts, and the reporting period, which is the current day.
+
+Request: `GET /usage`
+
+## `subscription`
+
+```python
+subscription() -> SubscriptionInfo
+```
+
+Plan, status, credit balance and credits used, monthly balance, maximum concurrent sandboxes, whether overage is on, plan limits and period end.
+
+Request: `GET /subscription`
+
+## `fetch`
+
+```python
+fetch(method: str, path: str, *, json=None, params=None, headers=None, timeout: float | None = None) -> httpx.Response
+```
+
+Sends an authenticated request to any Sandbox API route the SDK does not wrap. It returns the raw `httpx.Response` and does not raise on a 4xx or 5xx; check `status_code`.
+Connection failures and timeouts still raise `NetworkError` and `TimeoutError`, and `GET`, `PUT` and `DELETE` get the SDK's retries.
+
+```python
+shapes = client.fetch("GET", "/v1/shapes").json()
+print(shapes["default"], [p["name"] for p in shapes["presets"]])
+```
+
+```text
+small ['nano', 'small', 'medium', 'large']
+```
+
+## `close`
+
+```python
+close() -> None
+```
+
+Closes the connection pool. `with Sandbox(...) as client:` and `async with AsyncSandbox(...) as client:` call it for you.
+
+## `client.secrets`
+
+Encrypted secrets on your account. Values are never returned.
+
+```python
+client.secrets.create(name: str, value: str, options: dict | None = None) -> SecretInfo
+client.secrets.list() -> list[SecretInfo]
+client.secrets.update(name: str, value: str, options: dict | None = None) -> SecretInfo
+client.secrets.delete(name: str, expected_updated_at: str | None = None) -> None
+```
+
+`options` passes `host`, `header`, `exposeInBox`, `proxySecrets`, `reason` and, on update, `expectedUpdatedAt` to the API. `delete` raises `NotFoundError` for an unknown name.
+Deliver a stored secret with `CreateSandboxOptions(secrets=["NAME"])`. [Secrets](/sandbox/secrets) explains delivery and proxy custody.
+
+Requests: `POST /v1/secrets`, `GET /v1/secrets`, `PUT /v1/secrets/{name}`, `DELETE /v1/secrets/{name}`
+
+## `client.environments`
+
+```python
+client.environments.list() -> list[SandboxEnvironment]
+client.environments.get(env_id: str) -> SandboxEnvironment | None
+```
+
+Environments a create can name: `universal` and your templates as `template:<id>`. Each lists the runtimes it supports in `runtimes`. `get` filters the list.
+
+Request: `GET /v1/environments`
+
+## `client.teams`
+
+| Method | Request |
+| --- | --- |
+| `list() -> list[Team]` | `GET /v1/teams` |
+| `create(CreateTeamOptions(name, org_id=None)) -> Team` | `POST /v1/teams` |
+| `get(team_id) -> Team` | `GET /v1/teams/{id}` |
+| `update(team_id, *, name=None) -> Team` | `PATCH /v1/teams/{id}` |
+| `delete(team_id) -> None` | `DELETE /v1/teams/{id}` |
+| `leave(team_id) -> None` | `POST /v1/teams/{id}/leave` |
+| `list_members(team_id) -> list[TeamMember]` | `GET /v1/teams/{id}/members` |
+| `update_member(team_id, member_id, *, role=None, status=None) -> TeamMember` | `PATCH /v1/teams/{id}/members/{memberId}` |
+| `remove_member(team_id, member_id) -> None` | `DELETE /v1/teams/{id}/members/{memberId}` |
+| `list_invitations(team_id) -> list[TeamInvitation]` | `GET /v1/teams/{id}/invitations` |
+| `invite(team_id, InviteTeamMemberOptions(email, role, ttl_hours=None)) -> TeamInvitation` | `POST /v1/teams/{id}/invitations` |
+| `revoke_invitation(invitation_id) -> None` | `DELETE /v1/teams/invitations/{id}` |
+| `accept_invitation(token) -> TeamMember` | `POST /v1/teams/invitations/{token}/accept` |
+
+Roles are `owner`, `admin`, `member` and `viewer`. Team secrets, team templates and ownership transfer are not in the Python client; [Teams](/sandbox/teams) shows the TypeScript, CLI and REST calls.
+
+## `run_batch` and `stream_batch`
+
+```python
+run_batch(request: BatchRunRequest, *, idempotency_key: str | None = None) -> BatchResult
+stream_batch(request: BatchRunRequest, *, idempotency_key: str | None = None) -> Iterator[SandboxEvent]
+```
+
+Runs every task once on every backend, each in its own sandbox, in parallel. `run_batch` waits and returns totals and per-task results; `stream_batch` yields events such as `task.completed`, `task.failed` and `batch.failed` as they arrive.
+On `AsyncSandbox`, `stream_batch` returns an async generator: use `async for` without `await`.
+
+Request: `POST /v1/sandboxes/batch/run` (server-sent events)
+
+```python
+from tangle_sandbox import BatchBackend, BatchRunRequest, BatchTask
+
+result = client.run_batch(
+    BatchRunRequest(
+        tasks=[BatchTask(id="capital", message="Reply with only the capital of France.")],
+        backends=[BatchBackend(id="claude", type="claude-code"), BatchBackend(id="codex", type="codex")],
+    )
+)
+print(f"{result.total_success}/{result.total_executions} succeeded")
+```
+
+`BatchRunRequest` fields: `tasks`, `backends`, `timeout_ms` (default 300000), `execution_class` (default `simulation`), `persistent` (default `False`; needs `reuse_key`), `reuse_key`, `lifecycle` and `git` (both need `persistent`), and `grace_ms`.
+A `git` URL must be public HTTPS with no query, fragment or port.
+Without `idempotency_key`, disconnecting cancels the run. With one, the same key and body rejoin it.
+`run_batch` raises `BatchFailedError` (code `OPERATION_FAILED`, with a `cleanup` attribute) when the service reports `batch.failed`.
+
+## `client.fleets`
+
+Creates and manages fleets: named groups of sandboxes that run one workload. See [Fleets and optional modules](/sandbox/sdk-python/fleets-and-extras).
+
+## Intelligence reports
+
+```python
+client.create_intelligence_report(*, subject_type, subject_id, mode="deterministic", acknowledge_cost=False, budget=None, metadata=None) -> IntelligenceReport
+client.create_agentic_intelligence_report(*, subject_type, subject_id, max_usd, metadata=None) -> IntelligenceReport
+client.get_intelligence_report(job_id) -> IntelligenceReport
+client.list_intelligence_reports(*, subject_type=None, subject_id=None, limit=None) -> list[IntelligenceReport]
+```
+
+Starts and reads report jobs for a sandbox or a fleet. A report's `status` is `queued`, `running`, `completed` or `failed`; `result` holds the findings.
+The agentic mode is billed to you up to `max_usd`. Python has no estimate or wait helper; poll `get_intelligence_report`.
+
+Requests: `POST /v1/intelligence/reports`, `GET /v1/intelligence/reports/{jobId}`, `GET /v1/intelligence/reports`
+
+## Next
+
+- [SandboxInstance](/sandbox/sdk-python/instance)
+- [Types and errors](/sandbox/sdk-python/types-and-errors)
+- [Python examples](/sandbox/examples/python)

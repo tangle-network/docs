@@ -1,0 +1,137 @@
+import { Tabs, Callout } from "nextra/components";
+
+# Expose ports and share preview links
+
+Get a public HTTPS URL for a web server running in a sandbox, wait until it answers, and remove it when you are done.
+
+## Serve a page and open it
+
+<Tabs items={["TypeScript", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create();
+try {
+  await box.process.spawn(
+    `node -e "require('http').createServer((q, s) => s.end('<h1>Served from a sandbox</h1>')).listen(3000)"`,
+  );
+  const link = await box.previewLinks.create(3000);
+  const { url } = await box.previewLinks.waitUntilReady(link.previewId);
+  console.log(url);
+  console.log(await (await fetch(url)).text());
+} finally {
+  await box.delete();
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+tangle process spawn my-project "python3 -m http.server 3000"
+tangle preview create my-project 3000
+tangle preview list my-project --json
+```
+</Tabs.Tab>
+</Tabs>
+
+The URL has the form `https://<sandbox>-<port>.tangle.sh`. `waitUntilReady` resolves once the public route reaches your server, so the first visitor never sees a startup error.
+
+<Callout type="warning">
+A preview link is public. Anyone with the URL can open it, with no login. Treat the URL as a credential, put your own authentication in the app if it serves private data, and remove the link when you are done.
+</Callout>
+
+## Manage links
+
+```ts
+const link = await box.previewLinks.create(3000, { metadata: { purpose: "review" } });
+console.log(link.created, link.status, link.url);
+
+const fresh = await box.previewLinks.get(link.previewId);
+console.log(fresh.status, fresh.lastProbe?.httpStatus, fresh.lastProbe?.code);
+
+for (const l of await box.previewLinks.list()) console.log(l.port, l.url);
+await box.previewLinks.remove(link.previewId);
+```
+
+`create` returns the existing link when the port already has one; `created` says which happened. `status` is `provisioning`, `ready`, `error` or `disabled`. `get` refreshes the link's last delivery check:
+
+| `lastProbe.code` | Meaning |
+|---|---|
+| `PREVIEW_ROUTE_NOT_PUBLISHED` | The public route is still being published. |
+| `PREVIEW_UPSTREAM_UNAVAILABLE` | Nothing answered on the port inside the sandbox. |
+| `PREVIEW_REQUEST_TIMED_OUT` | The server did not answer in time. |
+| `PREVIEW_NETWORK_ERROR`, `PREVIEW_INVALID_URL` | The check could not reach the link. |
+
+`ready` means the route reached your app. It does not judge the response body, so keep your own health check.
+
+`waitUntilReady(previewId, { timeoutMs, pollIntervalMs, signal })` sets how long and how often to check. Aborting the signal stops the wait and leaves the link in place.
+
+## Start a dev server and publish it
+
+`process.ensureDevServer` detects a Node, Rust, Go or Python project, installs dependencies when they are missing, and starts its dev process. A second call returns the server that is already running.
+
+```ts
+const server = await box.process.ensureDevServer({ cwd: "app" });
+console.log(server.family, server.command, server.port, server.startedNow);
+
+if (server.port) {
+  const link = await box.previewLinks.create(server.port);
+  console.log((await box.previewLinks.waitUntilReady(link.previewId)).url);
+}
+```
+
+In the CLI, `tangle preview start` does both steps, and `tangle preview publish --port <port>` publishes a service that is already running without starting or replacing a process. Inside a sandbox, `--self` targets the sandbox the command runs in, so a coding agent can share its own work.
+
+## Expose a port without a link record
+
+`network.exposePort` returns a URL string for a port. `listUrls` returns every exposed port.
+
+```ts
+const url = await box.network.exposePort(8000);
+const urls = await box.network.listUrls(); // { 8000: "https://..." }
+const { ports } = await box.network.getConfig();
+```
+
+```bash
+tangle sandbox expose my-project --port 8000
+tangle sandbox urls my-project --json
+```
+
+Use `previewLinks` when you need readiness checks, status and removal by id.
+
+## WebSockets and long requests
+
+Preview traffic passes through Cloudflare. WebSockets work, and connections can drop when Cloudflare deploys a release, so an app's hot reload reconnects on its own. The idle read timeout and the request body cap are on [Limits](/sandbox/limits).
+
+## From the CLI
+
+```bash
+tangle preview create my-project 3000
+tangle preview list my-project          # ids are shortened in the table
+tangle preview list my-project --json   # full ids
+tangle preview remove my-project <preview-id>
+tangle preview start my-project --cwd app
+tangle preview publish my-project --port 3000
+```
+
+`tangle preview remove` needs the full preview id, so read it from `--json`.
+
+## Python and REST
+
+Python cannot create preview links or expose ports. Use TypeScript, the CLI, or the REST runtime routes through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+response = client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/network/expose", json={"port": 8000})
+print(response.json().get("url"))
+```
+
+## Next
+
+- [Run commands and code](/sandbox/commands)
+- [Isolation, privacy and compliance](/sandbox/security)
+- [Control network access](/sandbox/egress)

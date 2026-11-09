@@ -1,0 +1,95 @@
+---
+title: Integrations
+description: Every way to use Tangle Sandbox from coding agents, agent frameworks, MCP clients, other sandbox clouds and evaluation tools, and how retries behave in each.
+---
+
+# Integrations
+
+## Coding agents in the sandbox
+
+Claude Code, Codex, OpenCode, Pi and other coding agents run inside the sandbox
+itself. You send a task; the agent works in the sandbox and returns a result.
+`client.listBackends()` lists the ones your account can run.
+
+| Guide | Use it for |
+|---|---|
+| [Run a coding agent](/sandbox/cloud-agents) | Headless turns from the SDK, CLI or HTTP. |
+| [Interactive mode](/sandbox/interactive) | The agent's own terminal UI, in your terminal and the browser. |
+| [Claude Code on your Claude plan](/sandbox/cloud-agents-claude-code), [Codex on your ChatGPT plan](/sandbox/cloud-agents-codex), [coding plans](/sandbox/cloud-agents-coding-plans) | Paying for the model with your own subscription or key. |
+
+## Agent framework tool packs
+
+Your own agent loop calls the model, and the sandbox is its tools. Each pack
+turns the same tools into the framework's format and runs the calls in the
+sandbox. Import them from `@tangle-network/sandbox/agent`.
+
+| Framework | Function | Guide |
+|---|---|---|
+| Anthropic SDK | `anthropicTools(box)` | [Anthropic SDK](/sandbox/agents-anthropic) |
+| OpenAI Chat Completions | `openaiTools(box)` | [OpenAI](/sandbox/agents-openai) |
+| Vercel AI SDK | `vercelAiTools(box)` | [Vercel AI SDK](/sandbox/agents-vercel-ai) |
+| Mastra | `mastraTools(box)` | [Mastra](/sandbox/agents-mastra) |
+
+The tools: `sandbox_run_code` (Python, Node, TypeScript or Bash in a kernel
+that keeps its variables), `sandbox_exec`, `sandbox_read`, `sandbox_write`, `sandbox_list` and
+`sandbox_search`. Preview tools (`sandbox_preview` and its siblings) are off by
+default; name them in `allow` to expose them.
+
+These packs are TypeScript only.
+
+### Packs that manage sandboxes and fleets
+
+Two more packs let a model create and drop sandboxes itself. They take the
+client, not a sandbox:
+
+| Pack | Tools | Functions |
+|---|---|---|
+| Lifecycle | `sandbox_create`, `sandbox_run_command`, `sandbox_destroy` | `anthropicLifecycleTools(client)`, `openaiLifecycleTools(client)` |
+| Fleet | `sandbox_fleet_spawn`, `sandbox_fleet_dispatch`, `sandbox_fleet_status`, `sandbox_fleet_destroy`, `sandbox_fleet_run` | `anthropicFleetTools(client)`, `openaiFleetTools(client)`, `vercelAiFleetTools(client)`, `mastraFleetTools(client)` |
+
+A fleet pack built with `{ parent: { fleetId, agentId } }` records that parent
+on every fleet it spawns, so the child's budget comes out of the parent's.
+
+In Python, `create_manage_sandboxes_tool(client)` returns a `manageSandboxes`
+tool with a name, description, JSON parameters and `execute(input)`, which
+creates, inspects and deletes fleets. Wire it into any Python agent framework.
+
+## MCP
+
+| Path | Use it for | Guide |
+|---|---|---|
+| Local stdio server | Claude Desktop, Cursor, Zed or any MCP client gets the sandbox tools above. `tangle mcp serve <sandbox>` or `createMcpServer(box)`. | [MCP clients](/sandbox/agents-mcp) |
+| Hosted computer-use endpoint | An MCP client controls the sandbox's desktop over HTTPS with `box.getMcpEndpoint()`. | [MCP clients](/sandbox/agents-mcp#control-the-sandbox-desktop-over-mcp) |
+
+Coding agents inside the sandbox take MCP servers from their
+[AgentProfile](/sandbox/cloud-agents-profiles), and Hub accounts from
+[connections](/sandbox/connections).
+
+## Other sandbox clouds and runtimes
+
+| Package | Use it for | Guide |
+|---|---|---|
+| `@tangle-network/agent-runtime` | Supervised, budgeted agent runs on sandboxes. | [agent-runtime](/sandbox/agent-runtime) |
+| `@tangle-network/agent-provider-e2b`, `-daytona`, `-boat`, `-computesdk` | The same agent on E2B, Daytona, Boat or ComputeSDK, with models billed to your Tangle key. | [Run on E2B, Daytona and more](/sandbox/other-providers) |
+| `@tangle-network/agent-eval` | Scoring runs, comparing models and coding agents, gating releases. | [Evaluate agents](/sandbox/evaluation) |
+
+## Retries and duplicate work
+
+Framework loops and MCP clients run outside the sandbox, so the sandbox cannot
+make their loop durable. Three things it does provide:
+
+| Need | Use |
+|---|---|
+| Keep Python or Node variables between tool calls | Pass the same `sessionId` to the pack: `anthropicTools(box, { sessionId: conversationId })`. The kernel for that session keeps its state. Without a `sessionId`, calls share one default kernel. |
+| Run one `runCode` call at most once | `box.runCode(language, source, { sessionId, idempotencyKey })`. A second call with the same key and session within 15 minutes returns the first result, and one that arrives while the first is running waits for it. A failed run is not cached. The tool packs do not pass a key. |
+| Survive a restart of the whole agent turn | Run the sandbox's own coding agent with `box.dispatchPrompt(message, { sessionId, turnId })` instead of a local loop. See [Sessions](/sandbox/sessions). |
+
+`dispatchPrompt` runs the coding agent inside the sandbox. It does not replay or
+deduplicate a framework loop running in your process. If your loop restarts,
+it calls the model again; make the tools it calls safe to repeat, or key them.
+
+## Next
+
+- [Anthropic SDK](/sandbox/agents-anthropic)
+- [MCP clients](/sandbox/agents-mcp)
+- [Sessions](/sandbox/sessions)

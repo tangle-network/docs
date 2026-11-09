@@ -1,0 +1,150 @@
+---
+title: Examples
+description: Every Tangle Sandbox example in one index, by use case and language, with complete programs and their output.
+---
+
+# Examples
+
+Complete programs you can copy and run, grouped by what they do. Each example page lists the install step, then each program with its output.
+Programs that clone a repository use [tangle-network/sandbox-demo](https://github.com/tangle-network/sandbox-demo), a small Node project whose tests fail until a coding agent fixes them.
+
+## By use case
+
+| Page | Language | What the examples do |
+| --- | --- | --- |
+| [Sandboxes](/sandbox/examples/sandboxes) | TypeScript | Commands, files, lifecycle, snapshots, branches, network rules and preview links. |
+| [Coding agents](/sandbox/examples/coding-agents) | TypeScript | Claude Code, Codex and OpenCode fixing tests, committing, streaming, racing and running for hours. |
+| [Products](/sandbox/examples/products) | TypeScript | One sandbox per customer, chat routes, batches, hosted runs, per-turn cost and email or iMessage lines. |
+| [Fleets](/sandbox/examples/fleets) | TypeScript, Python | Many agents or commands across many sandboxes under one budget. |
+| [Evaluation and other clouds](/sandbox/examples/evals-and-runtime) | TypeScript, YAML | Model judges, model and coding agent comparisons, CI gates, intelligence reports, agent-runtime and agent graphs. |
+| [Python](/sandbox/examples/python) | Python | The Python SDK: commands, files, snapshots, coding agents, network rules, batches and asyncio. |
+| [CLI](/sandbox/examples/cli) | Shell | The tangle CLI: fix a test, pair interactively, continue a session, batches, fleets, Hub connections and JSON scripting. |
+
+## By language
+
+- TypeScript: [Sandboxes](/sandbox/examples/sandboxes), [Coding agents](/sandbox/examples/coding-agents), [Products](/sandbox/examples/products), [Fleets](/sandbox/examples/fleets), [Evaluation and other clouds](/sandbox/examples/evals-and-runtime).
+- Python: [Python](/sandbox/examples/python), and the Python program on [Fleets](/sandbox/examples/fleets).
+- Shell: [CLI](/sandbox/examples/cli).
+- YAML: the agent graph on [Evaluation and other clouds](/sandbox/examples/evals-and-runtime#run-an-agent-graph-from-the-cli).
+
+## Every example
+
+### Sandboxes
+
+- [Run one command](/sandbox/examples/sandboxes#run-one-command)
+- [Analyse a CSV with Python](/sandbox/examples/sandboxes#analyse-a-csv-with-python)
+- [Stop and resume](/sandbox/examples/sandboxes#stop-and-resume)
+- [Snapshot and revert](/sandbox/examples/sandboxes#snapshot-and-revert)
+- [Branch into two](/sandbox/examples/sandboxes#branch-into-two)
+- [Find TODOs in a repository](/sandbox/examples/sandboxes#find-todos-in-a-repository)
+- [Lock down the network](/sandbox/examples/sandboxes#lock-down-the-network)
+- [Host a page on a public URL](/sandbox/examples/sandboxes#host-a-page-on-a-public-url)
+- [Share a dev server](/sandbox/examples/sandboxes#share-a-dev-server)
+- [Pause a coding agent and continue later](/sandbox/examples/sandboxes#pause-a-coding-agent-and-continue-later)
+
+### Coding agents
+
+- [Fix a failing test and keep the patch](/sandbox/examples/coding-agents#fix-a-failing-test-and-keep-the-patch)
+- [Fix a bug and commit it](/sandbox/examples/coding-agents#fix-a-bug-and-commit-it)
+- [Watch each tool call as it happens](/sandbox/examples/coding-agents#watch-each-tool-call-as-it-happens)
+- [Stream the agent's text](/sandbox/examples/coding-agents#stream-the-agents-text)
+- [Race two coding agents on one task](/sandbox/examples/coding-agents#race-two-coding-agents-on-one-task)
+- [Start a long task and collect it later](/sandbox/examples/coding-agents#start-a-long-task-and-collect-it-later)
+- [Run a planner and an implementer in one sandbox](/sandbox/examples/coding-agents#run-a-planner-and-an-implementer-in-one-sandbox)
+- [Drive a browser](/sandbox/examples/coding-agents#drive-a-browser)
+
+### Products
+
+- [Review contracts with one sandbox per customer](/sandbox/examples/products#review-contracts-with-one-sandbox-per-customer)
+- [Walk one customer's sandbox through its lifecycle](/sandbox/examples/products#walk-one-customers-sandbox-through-its-lifecycle)
+- [Keep a support conversation per customer](/sandbox/examples/products#keep-a-support-conversation-per-customer)
+- [Triage a queue of tickets in one call](/sandbox/examples/products#triage-a-queue-of-tickets-in-one-call)
+- [Research a company with a hosted run](/sandbox/examples/products#research-a-company-with-a-hosted-run)
+- [Report what each turn cost](/sandbox/examples/products#report-what-each-turn-cost)
+- [Run your own tool loop on a Router model](/sandbox/examples/products#run-your-own-tool-loop-on-a-router-model)
+- [Chat from a Cloudflare Worker](/sandbox/examples/products#chat-from-a-cloudflare-worker)
+- [Stream to a browser that survives reloads](/sandbox/examples/products#stream-to-a-browser-that-survives-reloads)
+- [Answer email with a per-member sandbox](/sandbox/examples/products#answer-email-with-a-per-member-sandbox)
+- [Share one line between two members](/sandbox/examples/products#share-one-line-between-two-members)
+- [Take calls on an iMessage line](/sandbox/examples/products#take-calls-on-an-imessage-line)
+
+### Fleets
+
+- [Run four agents under one budget](/sandbox/examples/fleets#run-four-agents-under-one-budget)
+- [Review five packages at once](/sandbox/examples/fleets#review-five-packages-at-once)
+- [Translate a README into five languages](/sandbox/examples/fleets#translate-a-readme-into-five-languages)
+- [Give each agent its own model](/sandbox/examples/fleets#give-each-agent-its-own-model)
+- [Shard a test suite across machines](/sandbox/examples/fleets#shard-a-test-suite-across-machines)
+- [Stop everyone at a soft spending cap](/sandbox/examples/fleets#stop-everyone-at-a-soft-spending-cap)
+- [Run a command across machines from Python](/sandbox/examples/fleets#run-a-command-across-machines-from-python)
+
+### Evaluation and other clouds
+
+- [Grade replies with a rubric](/sandbox/examples/evals-and-runtime#grade-replies-with-a-rubric)
+- [Score an agent's run](/sandbox/examples/evals-and-runtime#score-an-agents-run)
+- [Compare two models](/sandbox/examples/evals-and-runtime#compare-two-models)
+- [Compare two coding agents](/sandbox/examples/evals-and-runtime#compare-two-coding-agents)
+- [Gate a prompt change in CI](/sandbox/examples/evals-and-runtime#gate-a-prompt-change-in-ci)
+- [Ask what an agent did](/sandbox/examples/evals-and-runtime#ask-what-an-agent-did)
+- [Run an agent through agent-runtime](/sandbox/examples/evals-and-runtime#run-an-agent-through-agent-runtime)
+- [Time a cold start](/sandbox/examples/evals-and-runtime#time-a-cold-start)
+- [Run an agent graph from the CLI](/sandbox/examples/evals-and-runtime#run-an-agent-graph-from-the-cli)
+
+### Python
+
+- [Hello sandbox](/sandbox/examples/python#hello-sandbox)
+- [Run one command](/sandbox/examples/python#run-one-command)
+- [Analyse a CSV](/sandbox/examples/python#analyse-a-csv)
+- [Stop and resume](/sandbox/examples/python#stop-and-resume)
+- [Snapshot and restore files](/sandbox/examples/python#snapshot-and-restore-files)
+- [Find TODOs in a cloned repository](/sandbox/examples/python#find-todos-in-a-cloned-repository)
+- [Have a coding agent fix a test](/sandbox/examples/python#have-a-coding-agent-fix-a-test)
+- [Fix and commit](/sandbox/examples/python#fix-and-commit)
+- [Watch a coding agent work](/sandbox/examples/python#watch-a-coding-agent-work)
+- [Lock down the network](/sandbox/examples/python#lock-down-the-network)
+- [Run a batch across two coding agents](/sandbox/examples/python#run-a-batch-across-two-coding-agents)
+- [Run sandboxes concurrently with asyncio](/sandbox/examples/python#run-sandboxes-concurrently-with-asyncio)
+
+### CLI
+
+- [Fix a test and keep the patch](/sandbox/examples/cli#fix-a-test-and-keep-the-patch)
+- [Pair with a coding agent in its own terminal UI](/sandbox/examples/cli#pair-with-a-coding-agent-in-its-own-terminal-ui)
+- [Continue one conversation over several turns](/sandbox/examples/cli#continue-one-conversation-over-several-turns)
+- [Try a change and roll it back](/sandbox/examples/cli#try-a-change-and-roll-it-back)
+- [Triage a list of tickets in one batch](/sandbox/examples/cli#triage-a-list-of-tickets-in-one-batch)
+- [Run several agents under a budget](/sandbox/examples/cli#run-several-agents-under-a-budget)
+- [Supervise workers under one budget](/sandbox/examples/cli#supervise-workers-under-one-budget)
+- [Let an agent read your GitHub issues](/sandbox/examples/cli#let-an-agent-read-your-github-issues)
+- [Script with JSON output](/sandbox/examples/cli#script-with-json-output)
+
+## Quickstart examples in the SDK
+
+The TypeScript SDK ships eight short quickstart programs as data, so you can show them in your own app or tooling.
+Each entry has an `id`, a `title`, a one-sentence `summary`, its `language` and the complete `code`.
+
+```ts
+import { quickstartExamples } from "@tangle-network/sandbox/examples";
+
+for (const example of quickstartExamples) {
+  console.log(example.id, "-", example.title);
+}
+```
+
+```text
+run-code - Run code
+fix-failing-test - Fix a failing test
+your-claude-subscription - Use your Claude subscription
+race-two-agents - Race two agents
+stream-the-work - Stream the work
+lock-down-the-network - Lock down the network
+share-a-preview - Share a preview
+pause-and-resume - Pause and resume
+```
+
+Most of these programs, with their output, are also in [Sandboxes](/sandbox/examples/sandboxes) and [Coding agents](/sandbox/examples/coding-agents).
+
+## Next
+
+- [Quickstart](/sandbox/quickstart)
+- [Sandbox examples](/sandbox/examples/sandboxes)
+- [Python examples](/sandbox/examples/python)

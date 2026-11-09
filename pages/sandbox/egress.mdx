@@ -1,28 +1,37 @@
-# Network egress rules
+import { Tabs, Callout } from "nextra/components";
 
-Set the sandbox's egress policy at create or while it runs. The sandbox-side
-proxy enforces it, backed by the host firewall; activity reports what it reached.
+# Control network access
+
+Decide which hosts a sandbox can reach, change that while it runs, and see what it tried to reach. The proxy inside the sandbox enforces the policy, and the host firewall backs it.
 
 | Mode | The sandbox can reach |
 |---|---|
-| `open` | Any host. Ask for it with `egressPolicy: { mode: "open" }`. |
-| `strict` | The hosts in `allowDomains`, plus the model endpoint and providers the platform provisioned into the sandbox. Nothing else: no package registry, no source host, unless you list it. |
+| `open` | Any host. |
+| `strict` | The hosts in `allowDomains`, plus the model endpoint and providers the platform provisioned into the sandbox. |
 | `blocked` | No outbound internet. |
 
-Every mode, `blocked` included, reaches Tangle's control plane without listing
-it: the Sandbox API (`sandbox.tangle.tools`) and its exec origins, Router
-inference, and Platform's Hub and workflow routes. A box can create sibling
-sandboxes or publish a preview link under any policy.
+Every mode, `blocked` included, reaches the Tangle control plane without listing it: `sandbox.tangle.tools` and its exec origins, `router.tangle.tools` for model calls, and the Hub and workflow routes on `id.tangle.tools`. A sandbox can create sibling sandboxes or publish a preview link under any policy.
 
-A sandbox created without a policy reaches package registries (npm, Yarn, PyPI,
-crates.io, RubyGems, Go), GitHub, GitLab, Bitbucket, container registries and
-model endpoints, and nothing else. A team sandbox created without a policy
-inherits the team's default policy.
+## What a sandbox reaches by default
+
+A sandbox created without a policy runs `strict` plus a built-in list of developer hosts:
+
+- package registries: npm, Yarn, PyPI, crates.io, RubyGems and the Go proxy;
+- git hosts: GitHub (including `codeload.github.com` and `**.githubusercontent.com`), GitLab and Bitbucket;
+- container registries: GitHub Packages, `ghcr.io` and Docker Hub;
+- CDNs: `*.cloudflare.com` and `**.fastly.net`;
+- the model endpoints the platform provisioned.
+
+A team sandbox created without a policy inherits the team's default policy. `open` is honored only when you or your team set it on purpose; it is never the fallback.
+
+<Callout type="info">
+An explicit `strict` policy drops the built-in list. `npm install` then fails unless you list the registry, or add `includeImplicitDomains: true` to keep the list.
+</Callout>
 
 ## Lock a build to the hosts it needs
 
-This sandbox can install npm packages and clone from GitHub, and nothing else.
-
+<Tabs items={["TypeScript", "Python", "REST"]} storageKey="sandbox-lang">
+<Tabs.Tab>
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -37,63 +46,118 @@ const box = await client.create({
     mode: "strict",
     allowDomains: ["registry.npmjs.org", "github.com"],
   },
-  maxLifetimeSeconds: 3600,
 });
-
 try {
-  await box.waitFor("running");
-  await box.exec("git clone --depth 1 https://github.com/vercel/ms ms");
-  const build = await box.exec("cd ms && npm install && npm test", {
-    timeoutMs: 5 * 60_000,
-  });
+  await box.exec("git clone --depth 1 https://github.com/tangle-network/sandbox-demo demo");
+  const build = await box.exec("cd demo && npm install && npm test", { timeoutMs: 5 * 60_000 });
   console.log(build.exitCode, build.stdout.slice(-400));
 } finally {
   await box.delete();
 }
 ```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import os
+from tangle_sandbox import Sandbox, SandboxStatus, EgressPolicy
 
-For a host that resolves to a private or CGNAT address, declare its permitted
-CIDRs explicitly. String entries keep the resolved-IP deny guard. An exception
-applies only to its named domain and the exact authored ranges; it does not open
-other domains at the same address. Prefer the smallest range the service needs.
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+box = client.create(
+    name="locked-build",
+    egress_policy=EgressPolicy(mode="strict", allow_domains=["registry.npmjs.org", "github.com"]),
+)
+try:
+    box.wait_for(SandboxStatus.RUNNING)
+    box.exec("git clone --depth 1 https://github.com/tangle-network/sandbox-demo demo")
+    print(box.exec("cd demo && npm install && npm test").stdout[-400:])
+finally:
+    box.delete()
+    client.close()
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+SANDBOX_ID=$(curl -s -X POST "https://sandbox.tangle.tools/v1/sandboxes" \
+  -H "Authorization: Bearer $TANGLE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"locked-build","egressPolicy":{"mode":"strict","allowDomains":["registry.npmjs.org","github.com"]}}' \
+  | jq -r '.id')
+
+curl -X DELETE "https://sandbox.tangle.tools/v1/sandboxes/$SANDBOX_ID" \
+  -H "Authorization: Bearer $TANGLE_API_KEY"
+```
+</Tabs.Tab>
+</Tabs>
+
+The CLI has no egress flag or command. Use the SDK or the REST routes below.
+
+### Domain patterns
+
+| Pattern | Matches |
+|---|---|
+| `api.github.com` | That host only. |
+| `*.githubusercontent.com` | `githubusercontent.com` and every subdomain at any depth. |
+| `**.githubusercontent.com` | Subdomains only, not `githubusercontent.com` itself. |
+
+`includeImplicitDomains: true` merges the built-in list into a strict policy. That list includes `github.com`, `gist.github.com` and `gitlab.com`, which makes any public repository readable and a gist an allowed destination, so keep it to trusted development sandboxes.
+
+The number of `allowDomains` entries is capped; see [Limits](/sandbox/limits).
+
+### Private addresses
+
+A host that resolves to a private or CGNAT address is refused unless you name the ranges it may use. The exception applies only to that domain and those exact ranges, not to other domains at the same address.
 
 ```ts
-await box.egress.update({ mode: "strict", allowDomains: [
-  "api.github.com",
-  { domain: "build.internal", allowPrivateIps: ["10.203.1.0/24"] },
-] });
+await box.egress.update({
+  mode: "strict",
+  allowDomains: [
+    "api.github.com",
+    { domain: "build.internal", allowPrivateIps: ["10.203.1.0/24"] },
+  ],
+});
 ```
 
-## Discover the allowlist from denials
+## Change the policy while the sandbox runs
+
+```ts
+const { policy, source } = await box.egress.get();
+console.log(policy.mode, source); // source: "sandbox", "team" or "platform"
+
+await box.egress.update({ mode: "strict", allowDomains: ["registry.npmjs.org"] });
+```
+
+`update()` restarts the sandbox's proxy, which interrupts outbound connections for a few seconds and starts a new activity window. Read `denials()` and `activity()` before you change the policy.
+
+### Install, then cut the network
+
+Untrusted code should run without network access. Install under a strict policy, then switch to `blocked`:
+
+```ts
+await box.exec("cd app && npm ci");
+await box.egress.update({ mode: "blocked" });
+const result = await box.exec("cd app && npm test");
+```
+
+## Build an allowlist from what was refused
 
 A refused request gets a `403` whose JSON body names the cause:
 
 ```json
-{"code":"EGRESS_DOMAIN_NOT_ALLOWED","host":"github.com","policy":"allowlist","nextStep":"Add github.com to egressPolicy.allowDomains …"}
+{"code":"EGRESS_DOMAIN_NOT_ALLOWED","host":"github.com","policy":"allowlist","nextStep":"Add github.com to egressPolicy.allowDomains"}
 ```
 
-`policy` is the proxy rule that refused it (`allowlist`, or `secrets` for a
-credential the proxy would not redeem), and matches `rejectedBy` in
-`box.egress.denials()`, which lists every refused host and how often. Start
-strict with nothing allowed, run the build once, and read the refusals:
+`policy` is the proxy rule that refused it: `allowlist`, or `secrets` for a credential the proxy would not hand over. `box.egress.denials()` lists every refused host, newest first, with how often. Start strict with nothing allowed, run the build once, and read the refusals:
 
 ```ts
-const box = await client.create({
-  egressPolicy: { mode: "strict", allowDomains: [] },
-});
-await box.waitFor("running");
-await box.exec(
-  "git clone --depth 1 https://github.com/vercel/ms ms && cd ms && npm ci",
-);
+const box = await client.create({ egressPolicy: { mode: "strict", allowDomains: [] } });
+await box.exec("git clone --depth 1 https://github.com/tangle-network/sandbox-demo demo && cd demo && npm ci");
 
 for (const denial of await box.egress.denials({ limit: 50 })) {
   console.log(`${denial.host}  refused ${denial.count}x by ${denial.rejectedBy}`);
 }
-// github.com  refused 1x by allowlist
-// registry.npmjs.org  refused 3x by allowlist
 ```
 
-Add the hosts you trust and apply them to the running sandbox:
+Then allow the hosts you trust:
 
 ```ts
 await box.egress.update({
@@ -102,27 +166,9 @@ await box.egress.update({
 });
 ```
 
-`update()` restarts the sandbox's proxy to apply the policy, which interrupts
-outbound connections for a few seconds. The restart also starts a new activity
-window, so read `denials()` and `activity()` before you change the policy.
-
-## Install, then cut the network
-
-Untrusted code should not run with network access. Install dependencies under
-a strict policy, then switch to `blocked` before the code runs:
-
-```ts
-await box.exec("cd app && npm ci");
-await box.egress.update({ mode: "blocked" });
-const result = await box.exec("cd app && npm test");
-```
-
 ## Prove what a sandbox reached
 
-`denials()` is best effort: an empty list can mean nothing was refused or that
-the proxy log could not be read. When you need evidence, for an audit or a
-benchmark control arm, use `activity()`. It lists allowed and refused hosts and
-says whether the record is complete.
+`denials()` is best effort: an empty list can mean nothing was refused or that the proxy log could not be read. For an audit or a benchmark control arm, use `activity()`. It lists allowed and refused hosts and says whether the record is complete.
 
 ```ts
 const activity = await box.egress.activity({ limit: 500 });
@@ -134,70 +180,29 @@ for (const destination of activity.destinations) {
 }
 ```
 
-An empty `destinations` list with `complete: true` is evidence the sandbox
-reached nothing. With `complete: false` it proves nothing.
+An empty `destinations` list with `complete: true` is evidence the sandbox reached nothing. With `complete: false` it proves nothing. `activity()` answers `409` when egress control is not enabled for the sandbox.
 
-## Domain patterns
+`box.egress.usage({ month })` returns the sandbox's egress bytes and charge for a calendar month. Rates are on [Pricing](/sandbox/cost).
 
-| Pattern | Matches |
-|---|---|
-| `api.github.com` | That host only. |
-| `*.githubusercontent.com` | `githubusercontent.com` and every subdomain at any depth. |
-| `**.githubusercontent.com` | Subdomains only, not `githubusercontent.com` itself. |
+## Keep credentials out of the sandbox
 
-`includeImplicitDomains: true` merges the platform's default developer list
-into a strict policy, including `github.com`, `gist.github.com`, and
-`gitlab.com`. That makes any public repository readable and a gist an
-allowed destination, so use it only for trusted development sandboxes.
-
-## Keep a token out of the sandbox
-
-Bind the host when storing or selecting a secret. The sandbox receives a
-placeholder; the proxy holds the value and adds it only to that host's requests.
-Raw delivery requires the explicit `exposeInBox: true` option.
+A secret can stay with the egress proxy: the sandbox holds a placeholder, and the proxy puts the real value on requests to the hosts you name. Store it with its hosts and select it by name:
 
 ```ts
-await client.secrets.create("HF_TOKEN", process.env.HF_TOKEN!);
+await client.secrets.create("HF_TOKEN", process.env.HF_TOKEN!, { hosts: ["huggingface.co"] });
 
 const box = await client.create({
-  secrets: [{ name: "HF_TOKEN", host: "huggingface.co" }],
+  secrets: ["HF_TOKEN"],
+  egressPolicy: { mode: "strict", allowDomains: ["huggingface.co"] },
 });
-
-// HF_TOKEN contains a placeholder. Only a matching HTTPS request redeems it.
-await box.exec(
-  `curl -s -H "Authorization: Bearer $HF_TOKEN" https://huggingface.co/api/whoami-v2`,
-);
+await box.exec(`curl -s -H "Authorization: Bearer $HF_TOKEN" https://huggingface.co/api/whoami-v2`);
 ```
 
-From the CLI, `tangle sandbox create --secret HF_TOKEN@huggingface.co` does
-the same, and `NAME@host:Header` names a header other than `Authorization`.
+A strict policy does not reach the secret's host for you; list it in `allowDomains`. From the CLI, select a proxy-held secret at create with `--proxy-secret '<json>'`. How each custody mode works, the presentation types and what the proxy masks in responses are on [Secrets](/sandbox/secrets).
 
-- `host` is one public DNS name: no scheme, port, path, wildcard or IP address.
-  A Tangle host is refused.
-- `header` is where the sandbox puts the placeholder. The default,
-  `Authorization`, covers bearer, token and basic auth. Name another header,
-  for example `X-Api-Key`, for an API that takes the key there.
-- A strict policy does not reach the host for you. Add it to `allowDomains`
-  when the sandbox needs to call it.
-- Create refuses when the host cannot hold the value (`DECLARED_SECRET_HOST_UNSUPPORTED`).
-  It never falls back to exposing the value in the sandbox.
-- The proxy swaps the value into HTTPS requests only. A plaintext `http://`
-  request to the host carries the placeholder and does not authenticate.
-- The proxy masks reflected values in HTTP headers, trailers, bodies and supported
-  WebSocket message streams, including Basic credential base64. It requests plain
-  or gzip responses and refuses unsupported compression with 502. Arbitrary
-  encodings such as URL encoding or hex cannot be scrubbed; bind trusted hosts.
-- The sandbox holds a fixed-shape placeholder, so a tool that checks a token's
-  shape before it sends it (an `hf_` prefix) rejects it, and a credential that
-  signs the request, such as AWS SigV4, cannot be held this way.
-- `createReceipt.injectedSecrets` still lists the name, because the create
-  decrypted it. The sandbox reads only the placeholder.
+## Coding agents behind a strict policy
 
-## Cloud agents behind a strict policy
-
-A coding agent's model calls go to the endpoint provisioned into the sandbox,
-which strict mode allows. When the agent uses your own subscription or a coding
-plan endpoint, list that provider's host so the policy states it explicitly:
+A coding agent's model calls go to the endpoint provisioned into the sandbox, which strict mode allows. When the agent uses your own subscription or a coding plan endpoint, list that provider's host:
 
 ```ts
 egressPolicy: {
@@ -206,12 +211,9 @@ egressPolicy: {
 }
 ```
 
-See [Start a cloud agent](/sandbox/cloud-agents) for the agent side.
+See [Run a coding agent in a sandbox](/sandbox/cloud-agents) for the agent side.
 
-## From HTTP or the CLI
-
-The CLI has no egress flag yet. Use the HTTP API, which merges the body into
-the current policy:
+## REST routes
 
 ```bash
 curl -X PATCH "https://sandbox.tangle.tools/v1/sandboxes/$SANDBOX_ID/egress" \
@@ -222,12 +224,24 @@ curl -X PATCH "https://sandbox.tangle.tools/v1/sandboxes/$SANDBOX_ID/egress" \
 
 | Route | Purpose |
 |---|---|
-| `PATCH /v1/sandboxes/{id}/egress` | Change the policy on a running sandbox. |
+| `PATCH /v1/sandboxes/{id}/egress` | Change the policy on a running sandbox. The body merges into the current policy. |
 | `GET /v1/sandboxes/{id}/egress/denials` | Refused hosts, newest first. |
 | `GET /v1/sandboxes/{id}/egress/activity` | Allowed and refused hosts, with completeness. |
-| `GET /v1/sandboxes/{id}/egress/usage` | This month's egress bytes and charge. |
-| `PUT /v1/teams/{id}/egress` | Team default policy (team owners and admins). |
+| `GET /v1/sandboxes/{id}/egress/usage` | A month's egress bytes and charge. |
+| `PUT /v1/teams/{id}/egress` | The team's default policy (team owners and admins). |
 
-Egress pricing is published at
-[/v1/pricing/egress](https://sandbox.tangle.tools/v1/pricing/egress), and
-`box.egress.usage()` returns this sandbox's bytes and charge for the month.
+## Python
+
+Python has `egress_get()`, `egress_update(EgressPolicy(mode, allow_domains, include_implicit_domains))` and `egress_denials(limit)`. It has no `activity` or `usage`, and `EgressPolicy` has no private-address entries. Read them with `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+response = client.fetch("GET", f"/v1/sandboxes/{box.id}/egress/activity", params={"limit": 500})
+activity = response.json()["activity"]
+print(activity["complete"], activity["destinations"])
+```
+
+## Next
+
+- [Store secrets and give sandboxes credentials](/sandbox/secrets)
+- [Isolation, privacy and compliance](/sandbox/security)
+- [Run a coding agent in a sandbox](/sandbox/cloud-agents)

@@ -1,0 +1,193 @@
+---
+title: Types and errors
+description: Every option and result type in the Python SDK, and SandboxError with its codes, attributes and aliases.
+---
+
+import { Callout } from "nextra/components";
+
+# Types and errors
+
+Every type here is a dataclass or enum you import from `tangle_sandbox`.
+Errors are `SandboxError` with a platform `code`; [Error codes](/sandbox/errors) lists every code.
+
+```python
+from tangle_sandbox import SandboxError
+
+try:
+    box.exec("true")
+except SandboxError as error:
+    print(error.code, error.status, error.retryable, error.next_step)
+```
+
+## Status
+
+`SandboxStatus` is a string enum: `PENDING`, `PROVISIONING`, `RUNNING`, `STOPPED`, `FAILED`, `EXPIRED`, `DELETED`. Values are the lowercase strings the API returns (`box.status.value == "running"`).
+Pass members, not strings, to `wait_for` and `ListSandboxOptions`.
+
+## Create options
+
+| Type | Fields |
+| --- | --- |
+| `CreateSandboxOptions` | See [the field table](/sandbox/sdk-python/client#createsandboxoptions) |
+| `BackendConfig` | `type`, `profile: dict`, `model: dict`. An unknown `type` raises `ValueError` |
+| `BackendType` | `opencode`, `claude-code`, `kimi-code`, `codex`, `amp`, `factory-droids`, `pi`, `prime`, `hermes`, `openclaw`, `nanoclaw`, `acp`, `cursor`, `cli-base` |
+| `GitConfig` | `url`, `ref`, `depth`, `sparse`, `auth: GitAuth` |
+| `GitAuth` | `token` |
+| `SandboxResources` | `cpu_cores`, `memory_mb`, `disk_gb`, `accelerator: SandboxAccelerator` |
+| `SandboxAccelerator` | `kind` (for example `nvidia-l4`), `count`, `memory_mb` |
+| `StorageConfig` | `type` (`s3`, `gcs` or `r2`), `bucket`, `region`, `endpoint`, `credentials`, `prefix`. The API requires `credentials` |
+| `EgressPolicy` | `mode` (`open`, `strict` or `blocked`), `allow_domains`, `include_implicit_domains` |
+| `DriverConfig` | `type="tangle"`, `enable_criu` (accepted, no effect) |
+| `ConfidentialConfig` | `tee`, `attestation_nonce`; import from `tangle_sandbox.types`; only the `[tangle]` client reads it |
+| `ListSandboxOptions` | `status`, `limit`, `offset` |
+| `WaitForOptions` | `timeout_ms=120000`, `poll_interval_ms=2000` |
+
+`BackendType` lists what the SDK accepts. The coding agents the service runs today come from `GET /v1/backends`; the service refuses one it cannot run with `HARNESS_UNAVAILABLE`.
+
+## Sandbox details
+
+| Type | Fields |
+| --- | --- |
+| `SandboxInfo` | `id`, `status`, `name`, `connection`, `metadata`, `created_at`, `started_at`, `last_activity_at`, `expires_at`, `error`, `egress_policy`, `egress_policy_source` |
+| `SandboxConnection` | `runtime_url`, `host_url`, `auth_token`, `auth_token_expires_at`, `ssh`, `web_terminal_url` |
+| `SSHCredentials` | `host`, `port`, `username` |
+| `UsageInfo` | `compute_minutes`, `active_sandboxes`, `total_sandboxes`, `period_start`, `period_end` |
+| `SubscriptionInfo` | `plan`, `status`, `credits_available_usd`, `credits_used_usd`, `monthly_balance_usd`, `max_concurrent_sandboxes`, `overage_allowed`, `limits`, `current_period_end` |
+| `SecretInfo` | `name`, `created_at`, `updated_at`, `host`, `header`, `reason` |
+| `SandboxEnvironment` | An environment id and the `runtimes` a create with it may name |
+| `Team`, `TeamMember`, `TeamInvitation` | See [Teams](/sandbox/teams) |
+| `CreateTeamOptions`, `InviteTeamMemberOptions` | `name`, `org_id`; `email`, `role`, `ttl_hours` |
+
+## Commands and agents
+
+| Type | Fields |
+| --- | --- |
+| `ExecOptions` | `cwd`, `env`, `timeout_ms`, `session_id` (accepted, not sent) |
+| `ExecResult` | `exit_code`, `stdout`, `stderr` (empty; stderr is merged into stdout) |
+| `PromptOptions` | `session_id`, `backend`, `timeout_ms`, `context` |
+| `PromptResult` | `success`, `response`, `error`, `trace_id`, `duration_ms`, `usage` |
+| `TokenUsage` | `input_tokens`, `output_tokens` |
+| `SandboxEvent` | `type`, `data`, `id` |
+| `SearchOptions` | `glob`, `cwd`, `max_results`, `ignore_case`, `context` |
+| `SearchMatch` | `path`, `line`, `column`, `text`, `before`, `after` |
+
+## Git, snapshots and network
+
+| Type | Fields |
+| --- | --- |
+| `GitStatus` | `is_repo`, `branch`, `head`, `is_dirty`, `ahead`, `behind`, `staged`, `modified`, `untracked` |
+| `GitCommit` | `sha`, `short_sha`, `message`, `author`, `email`, `date` |
+| `GitBranch` | `name`, `current`, `upstream`, `commit` |
+| `GitDiff` | `files`, `additions`, `deletions`, `raw` |
+| `SnapshotOptions` | `tags`, `storage` |
+| `SnapshotResult` | `snapshot_id`, `created_at`, `size_bytes`, `tags` |
+| `SnapshotInfo` | `snapshot_id`, `sandbox_id`, `created_at`, `tags`, `paths`, `size_bytes` |
+| `EgressDenial` | `host`, `rejected_by`, `count`, `last_at` |
+| `MAX_EGRESS_DENIALS_LIMIT` | `50` |
+
+## Batches
+
+| Type | Fields |
+| --- | --- |
+| `BatchRunRequest` | `tasks`, `backends`, `timeout_ms=300000`, `execution_class="simulation"`, `persistent=False`, `reuse_key`, `lifecycle`, `grace_ms`, `git` |
+| `BatchTask` | `id`, `message`, `context`, `timeout_ms` |
+| `BatchBackend` | `id`, `type`, `profile`, `model`, `server` |
+| `BatchBackendModel`, `BatchBackendServer`, `BatchLifecycle` | Model, server and lifecycle settings for a backend or a persistent batch |
+| `BatchResult` | `total_tasks`, `total_backends`, `total_executions`, `total_success`, `total_failure`, `total_retries`, `success_rate`, `results`, `cleanup` |
+| `BatchTaskResult` | `task_id`, `backend_id`, `backend_type`, `success`, `duration_ms`, `retries`, `result_summary`, `error` |
+| `BatchCleanup` | `BatchReleaseCleanup`, `BatchPersistentCleanup` or `BatchGraceCleanup`; `mode` is `release`, `persistent` or `grace` |
+
+## Fleets
+
+`CreateSandboxFleetOptions`, `CreateSandboxFleetWithCoordinatorOptions`, `SandboxFleetMachineSpec`, `SandboxFleetPolicy`, `SandboxFleetWorkspace`, `ListSandboxFleetOptions`, `FleetExecDispatchOptions`, `FleetPromptDispatchOptions`, `FleetRetryPolicy`, `FleetDispatchResultBufferOptions`, `FleetDispatchResultBuffer`, `SandboxFleetDispatchResponse`, `SandboxFleetTraceBundle`, `SandboxFleetTraceExport`, `SandboxFleetIntelligenceEnvelope`, `CreateSandboxFleetTokenOptions` and `ReapExpiredSandboxFleetsOptions`.
+[Fleets and optional modules](/sandbox/sdk-python/fleets-and-extras#fleets) describes the fields you set.
+
+## Traces and reports
+
+These are `TypedDict`s with the API's camelCase keys.
+
+| Type | Keys |
+| --- | --- |
+| `SandboxTraceBundle` | `trace`, `intelligence` |
+| `SandboxTraceExport`, `SandboxIntelligenceEnvelope` | Export and analysis payloads |
+| `IntelligenceReport` | `jobId`, `subject`, `mode`, `status`, `billing`, `result`, `error`, `createdAt`, `updatedAt`, `completedAt` |
+
+## Exported types that nothing returns
+
+`ProvisionEvent`, `ProvisionResult`, `ProvisionStep`, `ProvisionStatus` and `BuildProgressEvent` are exported, but no method returns or yields them; Python has no provisioning progress stream.
+`ImageSpec`, `ImageBuildResult` and `ImageBuildOptions` belong to the image builder, whose `build()` the service refuses. `SandboxClientConfig` holds the client's settings.
+
+## `SandboxError`
+
+```python
+SandboxError(message, code=None, status=None, **details)
+```
+
+| Attribute | Description |
+| --- | --- |
+| `code` | Platform error code, such as `NOT_FOUND` or `CAPACITY_EXHAUSTED` |
+| `status` | HTTP status |
+| `retryable` | Whether sending the same request again can succeed |
+| `next_step` | What to do about it |
+| `message` | Human-readable message |
+| `details` | Code-specific fields, also readable as attributes: `timeout_ms`, `current_state`, `required_state`, `quota_type`, `failures`, `fields`, `resource_type`, `resource_id`, `capability`, `current`, `limit` |
+| `retry_after_ms`, `eta_seconds`, `capacity_hold` | Set when the service refuses for capacity |
+
+Handle errors by `code`:
+
+```python
+from tangle_sandbox import SandboxError
+
+try:
+    box = client.create()
+except SandboxError as error:
+    if error.code == "CAPACITY_EXHAUSTED" and error.retryable:
+        print("retry in", error.retry_after_ms, "ms")
+    else:
+        raise
+```
+
+### Aliases
+
+Each alias is a `SandboxError` subclass for a group of codes, so `isinstance` checks work.
+
+| Alias | Code | Raised for |
+| --- | --- | --- |
+| `ValidationError` | `VALIDATION_ERROR` | HTTP 400 |
+| `AuthError` | `UNAUTHORIZED` | HTTP 401 |
+| `NotFoundError` | `NOT_FOUND` | HTTP 404 |
+| `TimeoutError` | `TIMEOUT` | HTTP 408 and client timeouts |
+| `StateError` | `INVALID_STATE` | HTTP 409, and runtime calls on a sandbox that is not `RUNNING` |
+| `QuotaError` | `QUOTA_EXCEEDED` | HTTP 429 and quota codes |
+| `ServerError` | `INTERNAL_ERROR` | HTTP 500 and above |
+| `CapabilityError` | `UNSUPPORTED` | Capability codes |
+| `PartialFailureError` | `PARTIAL_FAILURE` | Partial-failure codes |
+| `NetworkError` | `NETWORK_ERROR` | Connection failures and malformed stream data |
+| `BatchFailedError` | `OPERATION_FAILED` | `run_batch` when the batch fails; a `ServerError` with a `cleanup` attribute |
+
+A bad key raises a `SandboxError` with an auth code; check `code` rather than expecting `AuthError` alone.
+`tangle_sandbox.TimeoutError` is not the built-in `TimeoutError`, and `except TimeoutError` with the built-in does not catch it.
+
+### Errors raised before a request
+
+- `Sandbox("", url)` raises `AuthError("API key is required")`.
+- `Sandbox(key, "")` raises `ValidationError("Base URL is required")`.
+- A runtime call on an instance whose cached status is not `RUNNING` raises `StateError`.
+
+### Errors that are not `SandboxError`
+
+| Call | Raises |
+| --- | --- |
+| `ImageBuilder.build()` | `ValueError` |
+| `export_trace`, `export_trace_bundle` | `RuntimeError` when your collector answers with an error |
+| `instance.intelligence()`, `fleet.intelligence()` | `RuntimeError` when there is no analysis |
+| `fleet.exec()`, `fleet.prompt()` | `RuntimeError` when the one machine fails |
+| `BackendConfig(type="unknown")` | `ValueError` |
+| `TangleSandboxClient` streaming | `NotImplementedError` |
+| `wait_for("running")` timing out | `AttributeError`; pass `SandboxStatus.RUNNING` |
+
+## Next
+
+- [Error codes](/sandbox/errors)
+- [Sandbox and AsyncSandbox](/sandbox/sdk-python/client)
+- [Python examples](/sandbox/examples/python)

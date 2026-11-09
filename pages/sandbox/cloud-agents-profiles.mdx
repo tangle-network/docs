@@ -1,13 +1,21 @@
-# Agent profiles
+---
+title: Define agents with AgentProfiles
+description: Describe a coding agent once in an AgentProfile (instructions, model, skills, tools, MCP servers and connections) and run it on any coding agent and any credential.
+---
 
-An AgentProfile describes what an agent is: its instructions, model, tools,
-permissions, skills, and MCP servers. Put it in a file in your repository, and
-every cloud agent you start from it behaves the same way, whichever credential
-pays for the model.
+import { Tabs } from 'nextra/components'
+
+# Define agents with AgentProfiles
+
+An AgentProfile says what an agent is: its instructions, model, skills, tools,
+MCP servers and connections. The backend says which coding agent runs it and
+how the model is paid for. Keep the profile in a file in your repository, and
+every agent you start from it behaves the same way on Claude Code, Codex,
+OpenCode or Pi.
 
 ## A profile in one file
 
-Save this as agents/reviewer.json in your project:
+Save this as `agents/reviewer.json`:
 
 ```json
 {
@@ -16,26 +24,40 @@ Save this as agents/reviewer.json in your project:
   "prompt": {
     "appendSystemPrompt": "You review code. Report bugs with file:line and a failing test for each. Do not edit files.",
     "instructions": ["Run the test suite before you report.", "Keep the report under 300 words."]
+  },
+  "resources": {
+    "skills": [
+      {
+        "kind": "inline",
+        "name": "review-checklist",
+        "content": "# Review checklist\n\n- Tests pass\n- No new warnings\n- Docs updated"
+      }
+    ]
   }
 }
 ```
 
 | Field | Purpose |
 |---|---|
-| `prompt.appendSystemPrompt` | Text added to the harness's own system prompt. Use this for a role. |
-| `prompt.systemPrompt` | Replaces the harness's system prompt entirely. Only harnesses with a real replacement control accept it; Claude Code does not. |
-| `prompt.instructions` | Lines placed in the agent's project instructions. |
-| `model` | Model hints: `default`, `small`, `provider`, `reasoningEffort`. |
-| `permissions` | `allow`, `ask`, or `deny` per tool, keyed by the harness's tool names. |
-| `tools` | Turn individual native tools on or off. |
-| `mcp` | MCP servers: a local `command`, or a remote `url`. |
+| `prompt.appendSystemPrompt` | Text added to the coding agent's own system prompt. Use it for a role. |
+| `prompt.systemPrompt` | Replaces the system prompt. |
+| `prompt.instructions` | Lines added to the agent's project instructions. |
+| `harness` | The coding agent the profile expects, such as `"claude-code"`. |
+| `model` | Model hints such as `default` and `provider`. |
+| `permissions`, `tools` | Allow, ask or deny per tool; turn native tools on or off. |
+| `mcp` | MCP servers: a local `command` or a remote `url`. |
+| `connections` | Hub connections the agent may use, each `{ connectionId, capabilities }`. See [Connections](/sandbox/connections). |
 | `resources.skills` | Skills to install, inline or from GitHub. |
+| `resources.files`, `resources.knowledge` | Files and knowledge to place in the sandbox. |
+| `subagents`, `hooks` | Subagents and lifecycle hooks for coding agents that support them. |
+
+A skill is either inline, `{ "kind": "inline", "name", "content" }`, or from
+GitHub, `{ "kind": "github", "repository", "path", "ref" }`.
 
 ## Start an agent from the profile
 
-The profile says what the agent is; the backend says which harness runs it and
-how it pays for the model. Combine them in `create`:
-
+<Tabs items={["TypeScript", "Python", "CLI"]}>
+<Tabs.Tab>
 ```ts
 import { readFileSync } from "node:fs";
 import { Sandbox } from "@tangle-network/sandbox";
@@ -47,203 +69,140 @@ const client = new Sandbox({
 
 const reviewer = JSON.parse(readFileSync("agents/reviewer.json", "utf8"));
 
-const agent = await client.create({
-  name: "pr-reviewer",
-  backend: {
-    type: "claude-code",
-    model: {
-      cliAuth: { account: "me", secretEnv: "CLAUDE_TOKEN", format: "token" },
-    },
-    profile: reviewer,
-  },
-  secrets: ["CLAUDE_TOKEN"],
-  git: { url: "https://github.com/your-org/your-repo", ref: "my-branch" },
+const box = await client.create({
+  backend: { type: "claude-code", profile: reviewer },
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
 });
-await agent.waitFor("running");
-const review = await agent.prompt("Review the last commit.", { sessionId: "review" });
-console.log(review.response);
+try {
+  const review = await box.prompt("Review the last commit.", { sessionId: "review" });
+  console.log(review.response);
+} finally {
+  await box.delete();
+}
 ```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import json
+import os
+
+from tangle_sandbox import BackendConfig, CreateSandboxOptions, GitConfig, PromptOptions, Sandbox
+
+reviewer = json.load(open("agents/reviewer.json"))
+
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+box = client.create(
+    CreateSandboxOptions(
+        backend=BackendConfig(type="claude-code", profile=reviewer),
+        git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"),
+    )
+)
+box.wait_for("running")
+try:
+    review = box.prompt("Review the last commit.", PromptOptions(session_id="review"))
+    print(review.response)
+finally:
+    box.delete()
+    client.close()
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+tangle sandbox create --name pr-reviewer --backend claude-code \
+  --profile agents/reviewer.json --git-url https://github.com/tangle-network/sandbox-demo
+tangle agent prompt <sandbox-id> "Review the last commit." --session review --stream
+```
+</Tabs.Tab>
+</Tabs>
 
 Swap the backend and keep the profile: the same `reviewer.json` runs on
 [Codex with your ChatGPT plan](/sandbox/cloud-agents-codex), on a
 [coding plan](/sandbox/cloud-agents-coding-plans) through OpenCode, or on the
-Tangle Router with no credential at all.
+Tangle Router with no credential.
 
-## From the CLI
+## Profiles from the CLI
+
+`tangle sandbox create --profile <value>` reads a file when the value starts
+with `.` or `/` or ends in `.json`. Any other value is a profile name from the
+platform catalog: built-in profiles plus the ones you stored.
 
 ```bash
-# Validate a profile file
-tangle agent profile validate agents/reviewer.json
+tangle sandbox create --backend claude-code --profile ./agents/reviewer.json
+tangle sandbox create --backend claude-code --profile <catalog-name>
+cat agents/reviewer.json | tangle sandbox create --backend claude-code --profile-stdin
+```
 
-# Show what's in a profile
-tangle agent profile show agents/reviewer.json
+`tangle agent prompt --profile <source>` applies a profile to one turn. It
+takes a local JSON file, an `https://` URL, or
+`github:<owner>/<repo>/<path>[@<ref>]`, so a team can share one profile from a
+repository:
 
-# Start a sandbox with a profile file
-tangle sandbox create --backend claude-code --profile agents/reviewer.json
-
-# Or pipe it
-cat agents/reviewer.json | tangle sandbox create --profile-stdin
-
-# Send a turn under the profile
+```bash
 tangle agent prompt <sandbox-id> "Review the last commit." \
-  --profile agents/reviewer.json --session review --stream
+  --profile github:<owner>/<repo>/agents/reviewer.json@main
 ```
 
-`--profile` also accepts an `https://` URL or a `github:owner/repo/path@ref`
-reference, so a team can share one profile from a repository.
+`--skills`, `--tools` and `--system-prompt` on the same command add to or
+override the profile for that turn.
 
-## From the platform profile catalog
-
-The platform hosts a profile catalog with built-in profiles (shared, trusted,
-versioned) and your own stored profiles. Reference one by name:
+## Create and check a profile
 
 ```bash
-# A built-in profile from the catalog
-tangle sandbox create --backend claude-code --profile code-reviewer
-
-# Your own stored profile
-tangle sandbox create --backend claude-code --profile my-custom-agent
+tangle agent profile create agents/reviewer.json
 ```
 
-The CLI resolves the name against `GET /v1/agent-profiles/:name` on the
-platform, fetches the full profile, and installs it as the sandbox's backend
-profile. You see built-ins plus your own profiles — never another user's.
+On a terminal, `create` asks for each field. With `--name` it skips the
+questions and uses the flags: `--description`, `--model`, `--system-prompt`,
+`--skills`, `--tools` and `--harness`. It writes the profile and prints the
+command that runs it.
 
-## How profiles materialize
+```bash
+tangle agent profile show agents/reviewer.json      # prints the profile as JSON
+tangle agent profile validate agents/reviewer.json  # prints Profile valid: "reviewer"
+```
 
-When a sandbox starts with a profile, the SDK:
+`validate` exits with code 65 when the profile is invalid, so it can gate a CI
+job.
 
-1. Splits inline skills from the create request (keeping the POST small)
-2. Primes the running sandbox with the full profile
-3. The harness materializes skills into its native directory:
-   - Claude Code → `~/.claude/skills/<name>/SKILL.md`
-   - Codex → `~/.codex/skills/<name>/SKILL.md`
-   - OpenCode → `~/.opencode/skills/<name>/SKILL.md`
-4. MCP servers are configured for the harness's runtime
+## Several profiles in one sandbox
 
-The agent doesn't read skill files from the prompt — the harness surfaces them
-natively through its own skill-loading mechanism. The system prompt carries only
-a lightweight index (name + description) so the model knows what exists.
-
-## Several profiles, one sandbox
-
-A sandbox can host many sessions, each with its own profile: a planner, a
-coder, and a reviewer working in one checkout.
+A sandbox can host several agents, each with its own profile, in one checkout.
+Import `@tangle-network/sandbox/agent` to add `box.agents`:
 
 ```ts
-const planner = await box.agents.create({
-  profile: plannerProfile,
-  sessionId: "plan",
-});
-const builder = await box.agents.create({
-  profile: builderProfile,
-  sessionId: "build",
+import { Sandbox } from "@tangle-network/sandbox/agent";
+
+const reviewerAgent = await box.agents.start({
+  id: "reviewer-v1",
+  backend: { type: "claude-code", profile: reviewer },
 });
 ```
 
-Each session materializes its own skills. When a session ends and a new one
-starts with a different profile, the new profile's skills replace the old
-ones in the harness's skill directory. The sandbox's filesystem (files the
-agents wrote) persists across sessions.
+[Several agents in one sandbox](/sandbox/agents-multiple) covers shared and
+isolated workspaces.
 
-## Snapshot provenance
+## Which profile produced this sandbox
 
-Every snapshot carries a provenance receipt: which profile was materialized,
-its content hash, and whether the profile changed mid-session.
-
-```bash
-# Snapshot includes provenance automatically
-tangle sandbox snapshot <id> --name my-experiment
-
-# Inspect the provenance
-tangle sandbox get <id> --profile
-# Agent profile provenance:
-#   Base profile: gtm (a1b2c3d4e5f6...)
-#   Effective:    gtm (a1b2c3d4e5f6...)
-#   Materialized: 2026-10-14T22:00:00Z
-```
-
-If the profile changed mid-session (the agent modified its own configuration):
-```
-  Base profile: gtm (a1b2c3d4e5f6...)
-  Effective:    gtm (f6e5d4c3b2a1...)
-  Profile changed since creation (base != effective)
-```
-
-This answers "what configuration produced this state?" - the reproducibility,
-auditing, and self-improvement primitive. The receipt enables:
-- **Fast resume**: hash match skips re-materialization
-- **Smart forking**: diff the effective profile against a desired one
-- **Self-improvement**: correlate profile states with outcomes across runs
-- **Auditing**: tamper-proof record of what ran
-
-## Snapshot provenance
-
-Every snapshot carries a provenance receipt: which profile was materialized,
-its content hash, and whether the profile changed mid-session.
-
-```bash
-# Snapshot includes provenance automatically
-tangle sandbox snapshot <id> --name my-experiment
-
-# Inspect the provenance
-tangle sandbox get <id> --profile
-# Agent profile provenance:
-#   Base profile: gtm (a1b2c3d4e5f6...)
-#   Effective:    gtm (a1b2c3d4e5f6...)
-#   Materialized: 2026-10-14T22:00:00Z
-```
-
-If the profile changed mid-session (the agent modified its own configuration):
-```
-  Base profile: gtm (a1b2c3d4e5f6...)
-  Effective:    gtm (f6e5d4c3b2a1...)
-  Profile changed since creation (base != effective)
-```
-
-This answers "what configuration produced this state?" - the reproducibility,
-auditing, and self-improvement primitive. The receipt enables:
-- **Fast resume**: hash match skips re-materialization
-- **Smart forking**: diff the effective profile against a desired one
-- **Self-improvement**: correlate profile states with outcomes across runs
-- **Auditing**: tamper-proof record of what ran
-
-## Profile lifecycle
-
-| Event | What happens |
-|---|---|
-| Profile published | Stored in the platform catalog with a revision number |
-| Sandbox created with a profile | Profile materializes into the sandbox; skills written to disk |
-| Snapshot taken | The materialized skills are baked into the snapshot (reproducible) |
-| Snapshot resumed | Skills are exactly as they were when snapshotted |
-| Snapshot resumed with `--profile` | Workspace state from the snapshot, skills from the fresh profile |
-| Profile updated | Existing sandboxes keep the old version; new sandboxes get the new one |
-
-## From the SDK
+The SDK handle that applied a profile records what it applied.
+`box.getProfileProvenance()` returns the base profile's name and SHA-256, the
+effective one, and when it was materialized. When the profile changes during a
+session, the base stays and the effective changes.
 
 ```ts
-// The profile rides the backend config
-const agent = await client.create({
-  backend: {
-    type: "claude-code",
-    profile: {
-      name: "reviewer",
-      prompt: { appendSystemPrompt: "You review code." },
-      resources: {
-        skills: [
-          {
-            kind: "inline",
-            name: "review-checklist",
-            content: "# Review Checklist\n\n- [ ] Tests pass\n- [ ] No new warnings\n- [ ] Docs updated",
-            sha256: "...",
-            byteLength: 72,
-          },
-        ],
-      },
-    },
-  },
-});
+const provenance = box.getProfileProvenance();
+// { base: { name, sha256 }, effective: { name, sha256 }, materializedAt }
 ```
 
-The SDK handles the wire-cap split (large skill corpora are deferred and primed
-after the sandbox starts), so a profile with 30+ skills works out of the box.
+The results of `box.revertToSnapshot()` and `box.restorePaths()` carry the same
+record. It is a record kept by your SDK process, not a signed attestation. To
+save the sandbox's files, take a snapshot:
+
+```bash
+tangle snapshot create <sandbox-id> --tags reviewer-v1
+```
+
+## Next
+
+- [Connections](/sandbox/connections): give the agent Gmail, GitHub or Slack tools.
+- [Several agents in one sandbox](/sandbox/agents-multiple)
+- [Snapshots and forks](/sandbox/snapshots)

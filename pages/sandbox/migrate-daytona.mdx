@@ -1,0 +1,116 @@
+---
+title: Move from Daytona to Tangle Sandbox
+description: Map Daytona sandboxes, process execution, file operations, preview links, auto-stop and auto-delete settings to the Tangle Sandbox SDKs and CLI.
+---
+
+import { Tabs } from "nextra/components";
+
+# Move from Daytona
+
+This guide maps Daytona calls and settings to Tangle Sandbox and shows a typical Daytona program on Tangle.
+
+## What maps to what
+
+| Daytona | Tangle Sandbox (TypeScript) | Python |
+|---|---|---|
+| `new Daytona()` with `DAYTONA_API_KEY` | `new Sandbox({ apiKey, baseUrl: "https://sandbox.tangle.tools" })` | `Sandbox(api_key=..., base_url=...)` |
+| `daytona.create()` | `client.create()` | `client.create()`, then `wait_for(SandboxStatus.RUNNING)` |
+| `sandbox.process.executeCommand(cmd)` | `box.exec(cmd)`; read `exitCode` and `stdout` | `box.exec(cmd)` |
+| `sandbox.process.codeRun(code)` | `box.runCode("python", code)` | `box.exec("python3 -c ...")` |
+| Process sessions and log streaming | `box.process.spawn(cmd)`, then `proc.logs()` | Not available; use the TypeScript SDK, or `tangle process spawn` and `tangle process logs` |
+| PTY sessions | `box.terminals`; see [Shells and terminals](/sandbox/terminals) | Not available |
+| `sandbox.fs.uploadFile`, `downloadFile` | `box.fs.upload(localPath, remotePath)`, `box.fs.download(remotePath, localPath)` | `box.write(path, text)`, `box.read(path)` |
+| `sandbox.git.clone(url)` | `git: { url }` on create, then `box.git` for status, commit and push | `git=GitConfig(url=...)` on create, then `box.git` |
+| `sandbox.getPreviewLink(port)` | `box.previewLinks.create(port)` | `client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/preview-links", json={"port": port})` |
+| `sandbox.stop()`, `sandbox.start()` | `box.stop()`, `box.resume()` | `box.stop()`, `box.resume()` |
+| `sandbox.delete()` | `box.delete()` | `box.delete()` |
+| Auto-stop interval | `idleTimeoutSeconds` | `idle_timeout_seconds` |
+| Auto-delete interval | `deleteAfterStoppedSeconds` | Not a Python option; create through `client.fetch` |
+| Auto-archive interval | `coldTimeoutSeconds`: when a stopped sandbox's compute is released. Resume still works and takes longer. | Not a Python option |
+| Snapshots (images) | Environments and templates; see [Templates and images](/sandbox/templates-gallery) | `environment=`, `template_id=` |
+| Fork | `box.fork(count)` or `box.branch(count)` | Not available; call `POST /v1/sandboxes/{id}/branch` |
+| Network limits | `egressPolicy` on create, or `box.egress.update()` | `egress_policy=` on create, or `box.egress_update()` |
+| Volumes | No equivalent. Keep data in a snapshot, a git remote or your own object storage. | |
+
+Timers are in seconds, not minutes. A stopped sandbox keeps its files until you delete it or `deleteAfterStoppedSeconds` passes.
+
+## The same program on Tangle
+
+Clone a repository, install and test it, and delete the sandbox:
+
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+
+```ts filename="from-daytona.mts"
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  idleTimeoutSeconds: 900,
+});
+try {
+  const install = await box.exec("npm ci", { timeoutMs: 300_000 });
+  if (install.exitCode !== 0) throw new Error(install.stderr);
+  const test = await box.exec("npm test", { timeoutMs: 300_000 });
+  console.log(test.exitCode, test.stdout);
+} finally {
+  await box.delete();
+}
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```python filename="from_daytona.py"
+import os
+
+from tangle_sandbox import ExecOptions, GitConfig, Sandbox, SandboxStatus
+
+client = Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+)
+
+box = client.create(
+    git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"),
+    idle_timeout_seconds=900,
+)
+try:
+    box.wait_for(SandboxStatus.RUNNING)
+    install = box.exec("npm ci", ExecOptions(timeout_ms=300_000))
+    if install.exit_code != 0:
+        raise RuntimeError(install.stdout)
+    test = box.exec("npm test", ExecOptions(timeout_ms=300_000))
+    print(test.exit_code, test.stdout)
+finally:
+    box.delete()
+    client.close()
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```bash
+tangle sandbox create --name demo --git-url https://github.com/tangle-network/sandbox-demo --idle-timeout 900
+tangle exec demo --timeout 300000 -- npm ci
+tangle exec demo --timeout 300000 -- npm test
+tangle sandbox delete demo --force
+```
+
+</Tabs.Tab>
+</Tabs>
+
+## Coding agents
+
+Daytona guides install a coding agent in the sandbox. A Tangle sandbox already has one; give it a task with `box.prompt()`, or pick Claude Code, Codex or another agent with `backend.type`. See [Run a coding agent](/sandbox/cloud-agents).
+
+## Next steps
+
+- [Quickstart](/sandbox/quickstart): the Tangle SDKs and CLI from the start.
+- [Create, stop and delete](/sandbox/lifecycle): every create option and timer.
+- [Compare sandboxes](/sandbox/comparison): features side by side.

@@ -1,0 +1,344 @@
+---
+title: Error codes and how to fix them
+description: Every Tangle Sandbox error code with its HTTP status, what it means, whether to retry, and the fix, for TypeScript, Python, CLI and REST callers.
+---
+
+import { Callout, Tabs } from "nextra/components";
+
+# Error codes and how to fix them
+
+Every failed call carries a code. Branch on the code, not on the message or an error class.
+This page shows where the code appears in each client, which errors to retry, and what every code means.
+
+## Read the code in your client
+
+<Tabs items={["TypeScript", "Python", "CLI", "REST"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+
+The SDK throws `SandboxError`.
+
+```ts
+import { SandboxError } from "@tangle-network/sandbox";
+
+try {
+  await box.exec("npm test");
+} catch (error) {
+  if (!(error instanceof SandboxError)) throw error;
+  if (error.catalogCode === "INVALID_STATE") {
+    await box.resume();
+  } else {
+    console.error(error.code, error.status, error.retryable, error.nextStep, error.requestId);
+    throw error;
+  }
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `code` | The code the server sent, such as `CHILDREN_EXIST`. |
+| `catalogCode` | The nearest code in the table below. Branch on this when `code` is not in the table. |
+| `status` | The HTTP status. |
+| `retryable` | Whether repeating the same request can succeed. |
+| `nextStep` | The fix, in one sentence. |
+| `requestId`, `traceId` | Ids to quote when you contact support. |
+| `retryAfterMs` | How long the server asked you to wait, when it did. |
+
+`AuthError`, `NotFoundError`, `StateError`, `ValidationError` and the other subclasses still work but are deprecated. Read `code` or `catalogCode` instead.
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+The SDK raises `SandboxError`.
+
+```python
+from tangle_sandbox import SandboxError
+
+try:
+    box.exec("npm test")
+except SandboxError as error:
+    print(error.code, error.status, error.retryable, error.next_step)
+    raise
+```
+
+`code`, `status`, `retryable` and `next_step` come from the table below.
+The SDK raises the older alias classes, such as `AuthError`, `StateError` and `TimeoutError`, which are all `SandboxError` subclasses; catch `SandboxError` and read `code`.
+A few argument checks raise a plain `ValueError` before any request is sent.
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+Without `--json`, the CLI prints one error to stderr with its cause, the next step and a command that fixes it:
+
+```text
+✗ <what failed> (HTTP 409) — <cause>
+  → next: <next step>
+  → run: <command>
+```
+
+With `--json`, it prints an error document on stdout:
+
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "INVALID_STATE",
+    "message": "...",
+    "nextStep": "...",
+    "retryable": false,
+    "fix": { "command": "..." },
+    "requestId": "...",
+    "status": 409
+  }
+}
+```
+
+The exit code tells a script what kind of failure it was; see [CLI exit codes](#cli-exit-codes).
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+Most routes answer an error with this body:
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid request",
+    "nextStep": "Fix the field the message names and send the request again.",
+    "details": { "issues": [{ "path": "resources.cpuCores", "message": "..." }] }
+  }
+}
+```
+
+Some routes answer `{ "error": "<message>", "code": "<CODE>" }` with extra fields beside `code`, such as `children` on `CHILDREN_EXIST`.
+Read `error.code` when `error` is an object, otherwise read `code`.
+
+</Tabs.Tab>
+</Tabs>
+
+## Retry the right errors
+
+Retry only when the code's **Retry** column says Yes, and wait for `Retry-After` when the response has one.
+
+| Client | What it retries for you |
+|---|---|
+| TypeScript SDK | Up to 4 attempts for `GET`, `HEAD`, `OPTIONS`, `PUT`, `DELETE` and any request with an `Idempotency-Key`, on 502, 503, 504, and 429 with `Retry-After`. It never retries a code the table marks No. A request that provably never reached the server is retried whatever its method. Waits between attempts are at most 4 seconds. |
+| Python SDK | `GET`, `HEAD`, `PUT`, `DELETE` and `OPTIONS` on 429, 502, 503 and 504 when the code is retryable, waiting `Retry-After` or backing off from 1 second. Connection failures are retried for any method. |
+| CLI | Uses the TypeScript SDK's retries. |
+
+Both SDKs send an `Idempotency-Key` with every create and reuse it when they send the create again.
+When no host has room (`CAPACITY_EXHAUSTED`, `HOST_PRESSURE`, `PLACEMENT_WARMING`), they send the same create again for up to 150 seconds, within your request timeout.
+The second request joins the first, so you never get two sandboxes.
+In TypeScript, `create({ retry: { capacity: false } })` returns `CAPACITY_EXHAUSTED` at once so you can decide when to try again.
+
+If you send creates yourself, set your own `Idempotency-Key` header and reuse it for every retry of the same create:
+
+```bash
+curl -s https://sandbox.tangle.tools/v1/sandboxes \
+  -H "Authorization: Bearer $TANGLE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: build-4821" \
+  -d '{"name":"build-4821"}'
+```
+
+## Errors you will see most
+
+<Callout>
+**`INVALID_STATE` (409) on a command or prompt.** The sandbox is stopped. Call `box.resume()` and try again. The CLI resumes a stopped sandbox for you before `exec`, `ssh`, `fs`, `git`, `process` and `agent prompt`.
+</Callout>
+
+- **`CAPACITY_EXHAUSTED`, `HOST_PRESSURE` (503) on create.** No host has room right now. The SDKs retry for you; see [Retry the right errors](#retry-the-right-errors).
+- **`QUOTA_EXCEEDED`, `CONCURRENT_LIMIT` (429) on create.** You reached your plan's limit of running sandboxes. Stop or delete one, or raise your plan. See [Limits and timeouts](/sandbox/limits).
+- **`RESOURCES_EXCEED_LIMIT` (400) on create.** The CPU, memory or disk you named is above your account's ceiling. The response names the field, the requested and the allowed value. Read your ceiling with `client.shapes()`.
+- **`COMPLIANCE_NOT_ENTITLED` (403).** The create asked for `compliance: { hipaa: true }` and the key has no HIPAA entitlement.
+- **`COMPLIANCE_CAPACITY_UNAVAILABLE`, `COMPLIANCE_CELL_UNAVAILABLE` (503).** No HIPAA capacity can take the sandbox now, and it is never placed anywhere else. Retry the first after `Retry-After`; retry the second later, and contact support if it persists.
+- **`CHILDREN_EXIST` (409) on delete.** The sandbox has live branches. Delete them first, or delete the whole family with `DELETE /v1/sandboxes/{id}?cascade=true` or `client.deleteMatching(filter, { cascade: true })`.
+- **`IMAGE_BUILDS_DISABLED` (403) on `POST /v1/images`.** The hosted service does not build images. Start from an environment or a pushed image reference; see [Templates and images](/sandbox/templates-gallery).
+- **`GPU_PROVIDER_NOT_CONFIGURED` (503).** No GPU provider is set up for the service you called. Create the sandbox without a GPU.
+- **`PROFILE_INVALID` (CLI exit 65).** `tangle agent profile validate` or a command that loads an AgentProfile found it invalid. The message names the field.
+
+## Every catalog code
+
+The SDKs, the CLI and the API share this catalog. **What to do** matches the `nextStep` your client receives. **Retry** says whether repeating the same request can succeed.
+
+| Status | Code | Retry | Meaning | What to do |
+|---|---|---|---|---|
+| 400 | `BACKEND_HARNESS_CONFLICT` | No | Running the turn would run a coding agent other than the one the caller named. | Name one coding agent for the session and its turns. |
+| 400 | `BASE_IMAGE_MISSING_BEFORE_CREATE` | No | The requested image does not exist; the host proved it before creating anything. | Check the image name and tag, then create again. |
+| 400 | `BASE_IMAGE_NOT_FOUND` | No | The requested image does not exist. | Check the image name and tag, then create again. |
+| 400 | `EXECUTION_TTL_EXCEEDS_LIMIT` | No | The requested execution time limit is above this deployment's ceiling. | Send a ttlMs at or below the ceiling the message names. |
+| 400 | `HARNESS_MODEL_UNSUPPORTED` | No | The named coding agent cannot run the named model. | Choose a model the coding agent supports, or another coding agent. |
+| 400 | `interaction_kind_unsupported` | No | The turn asks for an interaction kind this coding agent cannot originate. | Drop the interaction toggle or choose a coding agent that supports it. |
+| 400 | `invalid_attachment` | No | An attachment has no url or path, or content the coding agent cannot take. | Fix the attachment the message names, then send the turn again. |
+| 400 | `INVALID_REQUEST` | No | The request is malformed or a field is invalid. | Fix the field the message names and send the request again. |
+| 400 | `INVALID_TEXT_PART` | No | A text part is missing its text or is not base64-encoded UTF-8. | Base64-encode every text part, then send the request again. |
+| 400 | `MODEL_CALL_LIMIT_REACHED` | No | The bounded turn needed more model calls than it allowed. | Raise the turn's model-call limit or split the task. |
+| 400 | `MODEL_CALL_LIMIT_UNSUPPORTED` | No | This coding agent's model calls cannot be counted, so a call limit cannot hold. | Drop the limit or choose a coding agent that supports it. |
+| 400 | `PUBLIC_PROFILE_PIN_REFUSED` | No | The runtime refused the pinned public profile revision this turn named. | Send the turn with the revision and digest the profile has now. |
+| 400 | `TOOL_DISABLED_TURN_UNSUPPORTED` | No | This coding agent cannot run a turn with its tools disabled. | Allow tools, or choose a coding agent that supports tool-free turns. |
+| 400 | `UNSUPPORTED_EGRESS_POLICY` | No | This runtime cannot enforce the requested egress policy. | Choose a policy the runtime supports, or another runtime. |
+| 400 | `UNSUPPORTED_FOR_RUNTIME` | No | The requested runtime cannot honour a create input. | Remove the input the message names, or choose another runtime. |
+| 400 | `VALIDATION_ERROR` | No | The request is malformed or a field is invalid. | Fix the field the message names and send the request again. |
+| 401 | `UNAUTHORIZED` | No | The credential is missing, invalid or expired. | Sign in again or send a valid API key. |
+| 402 | `PAYMENT_REQUIRED` | No | The account has no balance, credit or plan for this request. | Add credit or a paid seat at https://id.tangle.tools/app/billing, then retry. |
+| 403 | `COMPLIANCE_NOT_ENTITLED` | No | The account is not entitled to the requested compliance placement. | Enable the compliance plan for the account, or create without it. |
+| 403 | `EGRESS_DOMAIN_NOT_ALLOWED` | No | The sandbox egress allowlist does not include this host. | Add the host to egressPolicy.allowDomains with box.egress.update. |
+| 403 | `EGRESS_REQUEST_REFUSED` | No | The sandbox egress policy refused this request. | Read box.egress.denials() for the rule that refused it. |
+| 403 | `FEATURE_DISABLED` | No | This capability is switched off for this deployment or account. | Ask the operator to enable it. |
+| 403 | `FORBIDDEN` | No | The caller is authenticated but not allowed to do this. | Use a credential with the role or scope the message names. |
+| 403 | `model_credential_refused` | No | The account owner refused the model credential for this seat. | Reconnect or replace that seat's credential, or choose another seat. |
+| 403 | `ROOT_USER_FORBIDDEN` | No | The sandbox may not run as root. | Run the workload as a non-root user. |
+| 404 | `NOT_FOUND` | No | The resource does not exist or this account cannot see it. | Check the id and the account or team that owns it. |
+| 404 | `NOT_MANAGED` | No | This host does not manage the named container. | Check the sandbox id; the platform resolves its host again on retry. |
+| 404 | `SIDECAR_NOT_FOUND` | No | The sandbox runtime does not exist or this account cannot see it. | Check the sandbox id, or create the sandbox again. |
+| 404 | `SNAPSHOT_NOT_FOUND` | No | The snapshot does not exist or this account cannot see it. | List the sandbox snapshots and use an id from that list. |
+| 409 | `BRANCH_NOT_MATERIALIZED` | No | The branch parent was removed before any child materialized. | Branch a live sandbox with a new idempotency key. |
+| 409 | `BRANCH_PARENT_NOT_RUNNING` | No | The branch parent is not running. | Resume the parent sandbox, then branch again. |
+| 409 | `CONFLICT` | No | The request conflicts with an existing resource or an earlier request. | Read the existing resource, or use a new name or idempotency key. |
+| 409 | `CONTAINER_NETWORK_MISSING` | No | The stopped sandbox lost its network, so it cannot start in place; its files remain. | Resume the sandbox so the platform recreates it. |
+| 409 | `CONTAINER_RESERVATION_CONFLICT` | Yes | Another lifecycle operation holds this sandbox. | Wait for that operation to finish, then retry. |
+| 409 | `EGRESS_DISABLED` | No | Egress is not enabled on this host. | Place the sandbox on a host with egress enabled. |
+| 409 | `EGRESS_IN_PLACE_RELOAD_UNAVAILABLE` | No | The egress proxy cannot be re-keyed without a restart. | Re-key once no agent turn is streaming, allowing a proxy restart. |
+| 409 | `EGRESS_PROXY_RECOVERY_REQUIRED` | No | The egress proxy lost the credentials it serves. | Recreate the sandbox to rematerialize its egress credentials. |
+| 409 | `EGRESS_PROXY_SECRETS_UNAVAILABLE` | No | The egress proxy rebuild found no value for secrets the box still references. | Send the missing secrets the response names in one retry, or recreate the sandbox. |
+| 409 | `IN_PROGRESS` | Yes | Another operation holds this resource. | Wait for that operation to finish, then retry. |
+| 409 | `INVALID_STATE` | No | The resource is in the wrong state for this operation. | Bring it to the state the message names, then retry. |
+| 409 | `KV_KEY_LIMIT` | No | The workflow has reached its KV key cap. | Delete keys the workflow no longer reads, then write again. |
+| 409 | `KV_VERSION_CONFLICT` | No | Another writer changed the KV key since it was read. | Read the key again and retry the compare-and-swap against its current version. |
+| 409 | `MESSAGE_ADMISSION_EXPIRED` | No | The message's admission deadline passed before the coding agent was invoked. | Dispatch the message again with a new deadline. |
+| 409 | `NATIVE_CAPTURE_UNAVAILABLE` | No | The host cannot prove the native capture image this create requires. | Retry on another host, or create without native capture. |
+| 409 | `NATIVE_CREDENTIAL_SEAT_SWITCH_UNSUPPORTED` | No | The sandbox was created with a different subscription seat; a live box cannot switch seats. | Grant the seat the box was created with, or create a new sandbox naming the new seat. |
+| 409 | `NETWORK_ISOLATION_REQUIRED` | No | The create requires its own network, and the host did not place one. | Retry on a host that supports network isolation. |
+| 409 | `PROFILE_NOT_CACHED` | No | The turn names a profile by hash that this runtime does not hold. | Send the full profile object instead of its hash. |
+| 409 | `SESSION_CLAIM_MISMATCH` | No | The request names a session other than the one bound to this container. | Use the session id the container was created for. |
+| 409 | `SESSION_CREDENTIAL_NOT_RETAINED` | No | A restored session's model credential is not kept in session storage. | Send the model credential with the turn. |
+| 409 | `session_rehydration_failed` | No | The session's stored transcript cannot be replayed into a new coding agent session. | Start a new session; this one cannot resume. |
+| 409 | `SNAPSHOT_NOT_SYNCED` | Yes | The snapshot has not finished uploading. | Retry after the upload completes. |
+| 409 | `STALE_STATE` | No | The caller's view of the resource is stale. | Read the resource again and repeat the request against its current state. |
+| 409 | `WARM_CLAIM_REMOVED` | No | Another lifecycle operation removed the claimed warm sandbox. | Create the sandbox again. |
+| 409 | `WORKSPACE_STORAGE_MISSING` | No | The stopped sandbox storage is gone or replaced, so the host refused to start it. | Restore the sandbox from a snapshot. |
+| 410 | `EXPIRED` | No | The token, decision or grant has expired. | Request a new one. |
+| 410 | `PROCESS_OUTPUT_GAP` | No | A process log reader fell behind the spool, so output was evicted before it was read. | Read faster or redirect output to a file; missedBytes says how much. |
+| 412 | `PRECONDITION_FAILED` | No | The stored version no longer matches the request's precondition. | Read the current version or etag and send it with the request. |
+| 413 | `KV_VALUE_TOO_LARGE` | No | A workflow KV value is over the per-value size cap. | Store a smaller value, or put the data in an artifact and keep its id in KV. |
+| 413 | `PAYLOAD_TOO_LARGE` | No | The body or artifact is over its size limit. | Send a smaller body, or split it. |
+| 413 | `RESTORE_QUOTA_EXCEEDED` | No | The snapshot is larger than the workspace quota. | Create with a larger disk, or restore a smaller snapshot. |
+| 422 | `GIT_CLONE_REFUSED` | No | The repository refused the clone credential, or the credential cannot see it. | Fix the git credential or repository URL, then create again. |
+| 422 | `PROFILE_UNSUPPORTED` | No | The profile asks for controls its coding agent cannot run, so the sandbox is not started. | Remove the controls the message names, or choose a coding agent that runs them. |
+| 422 | `UNPROCESSABLE` | No | The input has nothing usable for this operation. | Record the history the message names, then ask again. |
+| 424 | `NOT_CONNECTED` | No | A required integration connection is missing. | Connect the integration the message names, then retry. |
+| 429 | `provider_quota_exhausted` | No | The coding agent subscription quota is spent until its resetAt. | Wait until resetAt, or send the turn with another credential. |
+| 429 | `QUOTA_EXCEEDED` | No | A plan or concurrency quota is reached. | Stop or delete resources, or raise the quota. |
+| 429 | `rate_limit_error` | Yes | The model provider rate-limited this turn. | Wait for the provider's window, then send the turn again. |
+| 429 | `RATE_LIMIT_EXCEEDED` | Yes | Too many requests in the current window. | Wait for the Retry-After interval, then retry. |
+| 429 | `RATE_LIMITED` | Yes | Too many requests in the current window. | Wait for the Retry-After interval, then retry. |
+| 500 | `AGENT_EXECUTION_FAILED` | No | The agent run failed inside the sandbox. | Read the cause in the message; fix the prompt, model or credential it names. |
+| 500 | `BACKEND_START_FAILED` | No | The agent backend cannot start, and a retry fails the same way. | Fix the configuration, credential or session the cause names. |
+| 500 | `BRANCH_FAILED` | No | The live branch of a running sandbox failed. | Report the request id; branch from a snapshot instead. |
+| 500 | `CONFIGURATION_ERROR` | No | The deployment is missing configuration or has an invalid value. | The operator sets the configuration key the message names. |
+| 500 | `CONTAINER_START_FAILED` | Yes | The host started the sandbox and its runtime failed. | Retry; if it repeats, recreate the sandbox from a snapshot. |
+| 500 | `GIT_CLONE_FAILED` | Yes | Cloning the repository failed. | Retry; if it repeats, check that the repository URL is reachable. |
+| 500 | `GIT_CLONE_TIMEOUT` | Yes | Cloning the repository exceeded its deadline. | Retry, or clone a smaller repository. |
+| 500 | `HOST_CLEANUP_UNCONFIRMED` | Yes | The host cannot prove it removed what a failed create made. | Retry; the platform reconciles the earlier attempt first. |
+| 500 | `HOST_RESERVATION_COMMIT_FAILED` | Yes | The host could not record the create after cleaning it up. | Retry the create. |
+| 500 | `INTERNAL_ERROR` | No | The server failed for a reason it did not classify. | Report the request id; the request itself did not cause it. |
+| 500 | `MEMORY_LIMIT_KILLED` | No | The coding agent ran out of memory and was killed. | Give the sandbox more memory or split the work, then send the turn again. |
+| 500 | `MESSAGE_RETRIEVAL_FAILED` | No | Message storage cannot serve this read. | Report the request id; the stored session needs repair. |
+| 500 | `MISSING_SIDECAR_AUTH_TOKEN` | No | The sandbox has no runtime auth token, so its host cannot route to it. | Recreate the sandbox. |
+| 500 | `OPERATION_FAILED` | No | A server-side operation failed. | Report the request id with the operation the message names. |
+| 500 | `SESSION_DIED` | No | The coding agent session process died during the turn; the message says why. | Send the turn again in a new session. |
+| 500 | `SNAPSHOT_RESTORE_FAILED` | No | Restoring the snapshot into the sandbox failed; no empty workspace was served. | Report the request id, or restore another snapshot. |
+| 500 | `VM_START_FAILED` | Yes | The microVM failed to start. | Retry; if it repeats, recreate the sandbox. |
+| 501 | `UNSUPPORTED` | No | This operation is not supported for this runtime, coding agent or driver. | Choose a runtime or option that supports it. |
+| 502 | `empty_visible_output` | Yes | The turn ended without visible output from the model. | Send the turn again; if it repeats, change the model or the prompt. |
+| 502 | `native_api_error` | No | The coding agent's model API refused the turn; the message carries its answer. | Fix what the provider's answer names, then send the turn again. |
+| 502 | `SIDECAR_UPSTREAM_UNAVAILABLE` | Yes | The host could not reach the sandbox runtime. | Retry; the request may have reached the sandbox. |
+| 502 | `UPSTREAM_ERROR` | Yes | An upstream service failed or answered outside its contract. | Retry with backoff; report the request id if it persists. |
+| 503 | `BACKEND_UNAVAILABLE` | Yes | The agent backend did not answer. | Retry after the Retry-After interval. |
+| 503 | `BRANCH_UFFD_UNAVAILABLE` | Yes | The parent host cannot fork live memory now. | Retry, or branch from a snapshot. |
+| 503 | `CAPACITY_EXHAUSTED` | Yes | No host has room for this sandbox now. | Retry after the Retry-After interval. |
+| 503 | `COMPLIANCE_CAPACITY_UNAVAILABLE` | Yes | No verified compliance-scope host can take this sandbox now. | Retry after the Retry-After interval. |
+| 503 | `COMPLIANCE_CELL_UNAVAILABLE` | No | No capacity for the requested compliance placement can take the create, and the sandbox is not placed anywhere else. | Retry later; contact support if it persists, or create without `compliance`. |
+| 503 | `EXECUTION_INTERRUPTED` | Yes | The sandbox runtime restarted during the run, before the run produced a terminal event; the run cannot resume. | Run the turn again. |
+| 503 | `FIRECRACKER_IMAGE_UNAVAILABLE` | No | No host carries the requested Firecracker image. | Choose an image whose runtimes include firecracker in `environments list`, or set runtime: docker. |
+| 503 | `GPU_PROVIDER_NOT_CONFIGURED` | No | No GPU provider is configured for this deployment. | Create the sandbox without a GPU, or ask the operator to configure a provider. |
+| 503 | `HARNESS_RUNTIME_UNAVAILABLE` | Yes | The coding agent's local daemon exited before it could serve the session. | Retry after the Retry-After interval; the message carries the daemon's reason. |
+| 503 | `HOST_AGENT_RESTARTING` | Yes | The sandbox's host agent is inside a planned restart and this request reached nothing; the sandbox and its files remain. | Resend it, whatever its method, after the Retry-After interval until the body's retryUntil. |
+| 503 | `HOST_PRESSURE` | Yes | The host was too busy to create the sandbox and created nothing. | Retry after the Retry-After interval. |
+| 503 | `HOST_UNAVAILABLE` | Yes | The host did not answer; the sandbox and its files remain. | Retry after the Retry-After interval. |
+| 503 | `IN_BOX_DOCKER_UNAVAILABLE` | Yes | Docker inside the sandbox is not available. | Retry, or create the sandbox with in-box Docker enabled. |
+| 503 | `MESSAGE_RETRIEVAL_UNAVAILABLE` | Yes | Message storage did not answer. | Retry after the Retry-After interval. |
+| 503 | `NETWORK_ERROR` | Yes | The request did not reach the platform, or its answer was lost. | Check connectivity, then retry; a keyed create joins its earlier attempt. |
+| 503 | `NO_IP` | Yes | The sandbox has no network address. | Retry after the Retry-After interval. |
+| 503 | `NOT_READY` | Yes | The target is starting, restarting, recovering or draining. | Retry after the Retry-After interval. |
+| 503 | `PLACEMENT_WARMING` | Yes | Placement has just restarted and has not found a host. | Retry after the Retry-After interval. |
+| 503 | `ROUTE_LOOKUP_FAILED` | Yes | The host could not look up the sandbox route. | Retry after the Retry-After interval. |
+| 503 | `SNAPSHOT_STORAGE_UNAVAILABLE` | Yes | Snapshot storage did not answer. | Retry after the Retry-After interval. |
+| 503 | `STREAM_INTERRUPTED` | Yes | The execution's stream ended without its terminal event; its outcome is unknown. | Rejoin with its executionId and lastEventId, or read the session status. |
+| 503 | `THIN_POOL_HEADROOM` | No | The sandbox host cannot grow this workspace. | Recreate the sandbox from a snapshot so it lands on another host. |
+| 503 | `UNAVAILABLE` | Yes | A dependency or capacity is temporarily unavailable. | Retry after the Retry-After interval. |
+| 503 | `UPSTREAM_UNAVAILABLE` | Yes | The sandbox service did not answer, or answered without a code the catalog knows. | Retry after the Retry-After interval. |
+| 503 | `WARM_RECONNECT_MISS` | Yes | The warm restore path is unavailable. | Retry; the platform restores through the cold path. |
+| 503 | `WORKSPACE_IMAGE_BUILDER_BUSY` | Yes | The workspace image builder is busy. | Retry after the Retry-After interval. |
+| 503 | `WORKSPACE_IMAGE_BUILDER_UNAVAILABLE` | Yes | The workspace image builder is unavailable. | Retry after the Retry-After interval. |
+| 504 | `EXECUTION_TTL_EXPIRED` | No | The execution ran past its time limit and was stopped. | Raise ttlMs up to the deployment ceiling, or split the work. |
+| 504 | `SIDECAR_HEALTH_TIMEOUT` | Yes | The sandbox runtime did not become ready within its boot attempts. | Retry; if it repeats, recreate the sandbox. |
+| 504 | `TEMPLATE_PUBLICATION_WAIT_INTERRUPTED` | Yes | The SDK stopped waiting for a template publication; the job keeps running. | Resume the wait with resumeJobId instead of publishing again. |
+| 504 | `TIMEOUT` | Yes | The operation exceeded its deadline. | Retry; if it repeats, raise the timeout or split the work. |
+
+## Other codes the API sends
+
+These codes come from specific routes. The SDKs map each to the nearest catalog code in `catalogCode`.
+
+| Status | Code | Meaning | What to do |
+|---|---|---|---|
+| 400 | `ACCELERATOR_LIMIT_EXCEEDED` | The create asks for more GPU devices than your plan allows per sandbox. | Ask for fewer devices or change plan. |
+| 400 | `BACKEND_MODEL_REQUIRED` | OpenCode on your own credential needs a model name. | Set `backend.model.model` to a model your provider serves. |
+| 400 | `HARNESS_REQUIRES_CALLER_CREDENTIAL` | This coding agent calls its vendor's service and cannot run on the Tangle Router. | Send your own credential in `backend.model.apiKey`, `apiKeyEnv` or `cliAuth`. |
+| 400 | `HARNESS_UNAVAILABLE` | The coding agent you named is not available on this service. | Pick another `backend.type` from `GET /v1/backends`. |
+| 400 | `MANAGED_MODEL_UNAVAILABLE` | The Tangle Router cannot serve the model you named. | Pick a model from `GET /v1/router-models`, or send your own key. |
+| 400 | `NATIVE_AUTH_INVALID` | The subscription credential for Claude Code or Codex could not be read. | Check the stored secret named in `cliAuth`. |
+| 400 | `RESOURCES_EXCEED_LIMIT` | The size you named is above your account's ceiling. | Ask for less, or omit `resources` to get the clamped default. |
+| 400 | `SECRET_NOT_FOUND` | The create names a stored secret that does not exist. `missingSecrets` lists them. | Create the secret, or remove it from `secrets`. |
+| 402 | `ACCELERATOR_REQUIRES_PAID_PLAN` | GPU sandboxes need a paid plan with usage billing. | Change plan at [id.tangle.tools](https://id.tangle.tools/app/billing). |
+| 402 | `INSUFFICIENT_BALANCE` | The account owes money or has no balance. | Add credit at [id.tangle.tools](https://id.tangle.tools/app/billing). |
+| 402 | `SUBSCRIPTION_INACTIVE` | The account has no active subscription. | Choose a plan at [id.tangle.tools](https://id.tangle.tools/app/billing). |
+| 403 | `IMAGE_BUILDS_DISABLED` | The hosted service does not build images through the API. | Use an environment or a pushed image reference. |
+| 403 | `TIER_REQUIRED` | A startup script with `runAsRoot` needs a Pro or Enterprise plan. | Remove `runAsRoot` or change plan. |
+| 404 | `PUBLIC_TEMPLATE_NOT_FOUND` | The public template does not exist. | Check the id or slug with `GET /v1/public-templates`. |
+| 404 | `TEMPLATE_NOT_FOUND` | The template does not exist or belongs to another account. | Check the id with `GET /v1/templates`. |
+| 409 | `CHILDREN_EXIST` | The sandbox has live branches. `children` lists them. | Delete the branches first, or pass `cascade=true`. |
+| 409 | `FINAL_SUSPEND_UNCONFIRMED` | The delete needs a confirmed final save of the sandbox, and there is none. | Retry the delete. Contact support with the request id if it repeats. |
+| 409 | `IDEMPOTENCY_KEY_REUSED` | The `Idempotency-Key` already names a different delete of this sandbox. | Use a new key for a different request. |
+| 409 | `IDEMPOTENT_CREATE_CONFLICT` | An earlier create with this key still holds the sandbox. | Inspect that sandbox, or create with a new `Idempotency-Key`. |
+| 409 | `RETENTION_HOLD` | A retention hold blocks this delete. The response names the hold and its `expiresAt`, when it has one. | Delete after the hold expires, or contact support. |
+| 429 | `CONCURRENT_LIMIT` | Your plan's limit of running sandboxes is reached. | Stop or delete sandboxes, or raise your plan. |
+| 429 | `PLATFORM_RATE_LIMITED` | Account checks for this create were rate-limited. | Retry after `Retry-After`. |
+| 502 | `SANDBOX_CREATE_READINESS_FAILED` | TypeScript SDK: the sandbox was created but did not reach `running` in time. The error carries the sandbox id. | Read or delete that sandbox, or create again with the same `idempotencyKey`. |
+| 502 | `router_catalog_unavailable` | The Tangle Router refused or failed the model list. | Retry later. |
+| 503 | `IDEMPOTENT_CREATE_IN_PROGRESS` | An earlier create with this key is still running. | Retry after `Retry-After`; you get the same sandbox. |
+| 503 | `SANDBOX_BILLING_STATE_UNAVAILABLE` | The sandbox's billing state could not be read. | Retry the request. |
+| 503 | `SPARE_CAPACITY_UNAVAILABLE` | A create limited to spare capacity found none free. It is not placed elsewhere. | Retry later. |
+
+## CLI exit codes
+
+| Exit code | Meaning |
+|---|---|
+| 0 | Success. |
+| 1 | The command failed. `fleet` and `batch` exit 1 when any member failed. |
+| 2 | `tangle agent connect` was given an unknown framework. |
+| 64 | Usage error: an unknown command or option, or a missing parameter. |
+| 65 | An invalid definition, such as an AgentProfile (`PROFILE_INVALID`), a graph, a workflow input file or a request that failed validation. |
+| 69 | Something the command needs is unavailable: a coding agent that is not installed, an unreachable MCP server or no network. |
+| 75 | Temporary: a rate limit or a seat limit. Retry later. |
+| 77 | Sign in again: the credential expired, was refused (any HTTP 401) or belongs to another service. |
+| 78 | Configuration: a subscription is required, the model was not found or does not match its provider. |
+| 130 | Stopped with Ctrl-C. |
+| 143 | An interactive agent session ended with SIGTERM. |
+| Remote exit code | `tangle exec`, `tangle run`, `tangle sandbox gpu run` and `tangle process spawn --blocking` exit with the remote command's code. `tangle ssh` exits with ssh's code. |
+
+## Next steps
+
+- [Troubleshooting](/sandbox/troubleshooting): fixes for problems that are not a single error code.
+- [Limits and timeouts](/sandbox/limits): the sizes, rates and timeouts behind 413 and 429 answers.
+- [REST API](/sandbox/api-reference): the error body and headers on every route.

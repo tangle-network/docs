@@ -1,4 +1,9 @@
-# Run, inspect & trace a workflow
+---
+title: Run, inspect and trace workflows
+description: Create a workflow from YAML, run it, read each step and follow its events live, from the tangle CLI, TypeScript with hub-sdk, or HTTP.
+---
+
+# Run, inspect and trace a workflow
 
 The same loop works from three places: create a workflow from YAML, run it,
 read each step, and follow its events live. Pick the terminal, TypeScript, or
@@ -26,7 +31,7 @@ See the [YAML reference](/sandbox/workflows-yaml) for every trigger and action.
 ## From the terminal
 
 ```bash
-tangle workflows validate triage.yml          # compile check; exits 1 when invalid
+tangle workflows validate triage.yml          # exits 1 when the file is invalid
 tangle workflows apply triage.yml             # create, or update the workflow with this name
 tangle workflows run <workflow-id> --wait \
   --input text="Login button does nothing on Safari"
@@ -39,11 +44,11 @@ tangle workflows events <workflow-id> <run-id>       # follow a run live
 human `decision` step returns as `waiting`; resolve it with
 `tangle workflows decision-resolve <workflow-id> <run-id> --choice approve`.
 
-Every `workflows` command accepts `--json` for scripts.
+Every `workflows` command accepts `--json` for scripts. [Workflow commands](/sandbox/cli/workflows) lists every command and flag.
 
 ## From TypeScript
 
-Workflows live on the Tangle platform. `@tangle-network/hub-sdk` is its client:
+Workflows live on Tangle Platform, and `@tangle-network/hub-sdk` is its client. The Sandbox SDK has no workflow API.
 
 ```bash
 npm install @tangle-network/hub-sdk
@@ -130,17 +135,10 @@ curl -X POST "https://id.tangle.tools/v1/hooks/$WORKFLOW_ID" \
 
 ## Traces from sandboxes and fleets
 
-A sandbox or fleet you drive directly keeps its own trace:
+A workflow run keeps its steps as shown above. A sandbox or fleet you drive yourself keeps its own trace, which you can read or send to an OpenTelemetry collector; see [Traces and resource usage](/sandbox/observability).
 
-```ts
-const trace = await box.trace();                 // the sandbox's events and spans
-await box.exportTrace({                          // push the bundle to your collector
-  url: "https://otel.example.com/v1/traces",
-  format: "otel-json",
-  serviceName: "my-agents",
-});
-```
+## Next
 
-`fleet.trace()` and `fleet.exportTrace()` do the same for a [fleet](/sandbox/agents-fleet).
-`format: "otel-json"` sends OpenTelemetry JSON that any OTLP/HTTP collector
-accepts.
+- [Workflow YAML reference](/sandbox/workflows-yaml)
+- [Workflow commands](/sandbox/cli/workflows)
+- [Workflow templates](/sandbox/workflows-templates)

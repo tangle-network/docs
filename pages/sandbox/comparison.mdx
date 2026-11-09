@@ -1,61 +1,58 @@
-# Comparison: Tangle vs e2b, Daytona, Modal
+---
+title: Compare Tangle Sandbox with E2B, Daytona, Modal, Vercel, Cloudflare and Runloop
+description: A feature table comparing Tangle Sandbox with E2B, Daytona, Modal Sandboxes, Vercel Sandbox, Cloudflare Sandbox and Runloop, with a link to each provider's documentation.
+---
 
-Honest comparison. We use these tools too; we describe what each platform actually does today, not strawmen of last year's state.
+# Compare sandboxes
 
-## At a glance
+You are choosing where your code and coding agents run. This table compares Tangle Sandbox with six other sandbox services on the features most teams ask about first.
+Each competitor cell links to that provider's documentation as of November 2026. Check the link before you decide; providers add features often.
 
-| Capability | Tangle | e2b | Daytona | Modal |
-|---|---|---|---|---|
-| Code exec with structured results (image / dataframe / json / html) | ✓ | ✓ | partial | ✓ |
-| Persistent kernel per session (variables across calls) | ✓ | ✓ | ✓ | ✓ |
-| Multi-language (Python, JS, TS, Bash) | ✓ | ✓ | ✓ | Python-first |
-| Shell exec, fs.*, git.* on the same sandbox | ✓ | ✓ | ✓ | partial |
-| Snapshot + restore | ✓ | ✓ | ✓ | ✓ |
-| Public template gallery | ✓ | ✓ | ✓ | ✓ |
-| Fleets (coordinator + N workers, shared workspace) | ✓ |: |: | partial (Function fan-out) |
-| Durable session replay (`Last-Event-ID`, browser-reload-safe) | ✓ |: |: |: |
-| Browser-safe WebSocket gateway | ✓ | partial |: |: |
-| Hosted MCP endpoint (paste-into-Claude) | ✓ |: |: |: |
-| Local MCP server bridge (stdio for Cursor / Zed) | ✓ |: |: |: |
-| OAuth / API integration runtime (Activepieces-style catalog) | ✓ |: |: |: |
-| Per-call dedup on `runCode` via `idempotencyKey` (in-flight collapse + cached result within 15 min) | ✓ |: |: |: |
-| Exactly-once dedup on outer agent loop (`dispatchPrompt({sessionId, turnId})`) | ✓ |: |: |: |
-| TEE attestation, sealed-secret encryption | ✓ |: |: |: |
-| Framework tool packs (Anthropic / OpenAI / Vercel AI / Mastra) | ✓ | partial |: |: |
+## Feature table
 
-The above is maintained against what each platform's docs say today. If you find something inaccurate, open an issue: we'd rather correct the table than win a row dishonestly.
+| Feature | Tangle | E2B | Daytona | Modal | Vercel | Cloudflare | Runloop |
+|---|---|---|---|---|---|---|---|
+| Python SDK | Yes | [Yes](https://docs.e2b.dev/sdk-reference/python-sdk/v2.63.0/sandbox_sync.md) | [Yes](https://www.daytona.io/docs/en/python-sdk.md) | [Yes](https://modal.com/docs/sdk/py/latest/intro.md) | [Yes](https://vercel.com/docs/sandbox/python-sdk-reference) | [No](https://developers.cloudflare.com/sandbox/llms.txt) | [Yes](https://docs.runloop.ai/docs/tools/sdks) |
+| CLI | Yes | [Yes](https://docs.e2b.dev/cli.md) | [Yes](https://www.daytona.io/docs/en/authentication.md#authenticate-the-cli) | [Yes](https://modal.com/docs/cli/latest/intro.md) | [Yes](https://vercel.com/docs/sandbox/cli-reference) | [No](https://developers.cloudflare.com/sandbox/llms.txt) | [Yes](https://docs.runloop.ai/docs/tools/rl-cli) |
+| Interactive terminal | Yes | [Yes](https://docs.e2b.dev/sandbox/pty.md) | [Yes](https://www.daytona.io/docs/en/pty.md) | [Yes](https://modal.com/docs/cli/latest/shell), from the CLI | [Yes](https://vercel.com/docs/sandbox/working-with-sandbox) | [Yes](https://developers.cloudflare.com/sandbox/commands/open-a-terminal-in-the-browser/) | [Yes](https://docs.runloop.ai/docs/devboxes/pty) |
+| Public URL for a port | Yes | [Yes](https://docs.e2b.dev/network/public-url.md) | [Yes](https://www.daytona.io/docs/en/preview.md) | [Yes](https://modal.com/docs/guide/sandbox-networking) | [Yes](https://vercel.com/docs/sandbox/concepts) | [Yes](https://developers.cloudflare.com/sandbox/previews/) | [Yes](https://docs.runloop.ai/docs/devboxes/tunnels) |
+| Snapshots | Yes | [Yes](https://docs.e2b.dev/sandbox/snapshots.md) | [Yes](https://www.daytona.io/docs/en/snapshots.md) | [Yes](https://modal.com/docs/guide/sandbox-snapshots) | [Yes](https://vercel.com/docs/sandbox/concepts/snapshots) | [Yes](https://developers.cloudflare.com/sandbox/files/save-and-restore-a-workspace/) | [Yes](https://docs.runloop.ai/docs/devboxes/snapshots) |
+| Fork a running sandbox | Yes | [Yes](https://docs.e2b.dev/sandbox/fork.md) | [Yes](https://www.daytona.io/docs/en/sandboxes.md#fork-sandboxes) | [No](https://modal.com/llms.txt) | [Yes](https://vercel.com/changelog/vercel-sandbox-supports-forking) | [No](https://developers.cloudflare.com/sandbox/llms.txt) | [No](https://docs.runloop.ai/docs/devboxes/snapshots) |
+| Outbound network allowlist | Yes | [Yes](https://docs.e2b.dev/network/internet-access.md) | [Yes](https://www.daytona.io/docs/en/network-limits.md) | [Yes](https://modal.com/docs/guide/sandbox-networking) | [Yes](https://vercel.com/changelog/full-sandbox-egress-firewall-now-available-on-hobby-plan) | [Yes](https://developers.cloudflare.com/sandbox/network/) | [Yes](https://docs.runloop.ai/docs/network-policies) |
+| Volumes or mounted storage | No | [Yes](https://docs.e2b.dev/volumes.md) | [Yes](https://www.daytona.io/docs/en/volumes.md) | [Yes](https://modal.com/docs/guide/volumes.md) | [Yes](https://vercel.com/docs/sandbox/concepts/drives) | [Yes](https://developers.cloudflare.com/sandbox/files/mount-an-r2-bucket/) | [Yes](https://docs.runloop.ai/docs/devboxes/mounts/overview) |
+| Lifecycle webhooks | No | [Yes](https://docs.e2b.dev/sandbox/lifecycle-events-webhooks.md) | [Yes](https://www.daytona.io/docs/en/webhooks.md) | [No](https://modal.com/llms.txt) | [No](https://vercel.com/docs/sandbox) | [No](https://developers.cloudflare.com/sandbox/manage/run-code-when-a-sandbox-stops/) | [No](https://docs.runloop.ai/llms.txt) |
+| GPUs | Yes | [No](https://docs.e2b.dev/faq/gpu-support.md) | [Yes](https://www.daytona.io/docs/en/gpu-sandboxes.md) | [Yes](https://modal.com/docs/guide/gpu.md) | [No](https://vercel.com/docs/sandbox) | [No](https://developers.cloudflare.com/sandbox/llms.txt) | [Yes](https://docs.runloop.ai/docs/devboxes/overview) |
 
-## When to pick what
+The Tangle column links to its own guides below.
 
-- **You want the smallest surface, only Python data science:** any of the four work. e2b's Python notebook UX is the most polished.
-- **You're building an agent product across many models / frameworks:** Tangle's tool packs and MCP surfaces remove the per-framework glue code.
-- **You're running large parallel campaigns (hundreds of experiments):** Tangle's fleet primitive is built for this; Modal's Function fan-out is comparable for stateless workloads.
-- **You're deploying agents that need OAuth-bound external actions (GitHub, Slack, Stripe, etc.):** Tangle's integrations runtime is the only one of the four that ships this as a first-class primitive.
-- **You're deploying into TEE / confidential compute:** Tangle is the only one with platform-level attestation today.
-- **You're long-running and need browser reload to not lose progress:** Tangle's durable session gateway is the differentiator.
-
-## What we don't (yet) ship
-
-- **A polished notebook UI in the dashboard.** The web app has a terminal and an agent view; "click cells, see plots inline" is a v2 surface. `runCode` already returns the right structured results, so a notebook layer is purely client-side work.
-- **True Jupyter kernels.** Our custom kernel shim speaks the same display protocol (matplotlib base64 PNG, pandas frames, JSON via `display()`), so the result-type contract matches Jupyter. We'll swap to first-class IPyKernel under the hood when the operational complexity earns its keep.
-- **Per-call cost metering on `runCode`.** Costs are tracked per sandbox-second today. A breakdown per `runCode` call is on the roadmap once enough customers report needing it.
-
-## Migrating from e2b
-
-The mental model is the same: spawn a sandbox, run code in a kernel, get typed results. The headline mapping:
-
-| e2b | Tangle |
+| Tangle feature | Guide |
 |---|---|
-| `Sandbox.create(...)` | `client.create()` |
-| `sandbox.runCode(code)` | `box.runCode("python", code, { sessionId })` |
-| `result.results[0].png` | `result.results.find(r => r.type === "image").data` |
-| `sandbox.commands.run("...")` | `box.exec("...")` |
-| `sandbox.filesystem.write/read` | `box.write(path, content)` / `box.read(path)` |
+| Python SDK, CLI | [Python SDK](/sandbox/sdk-python), [CLI](/sandbox/cli) |
+| Interactive terminal | [Shells and terminals](/sandbox/terminals), [Interactive mode](/sandbox/interactive) |
+| Public URL for a port | [Ports and preview links](/sandbox/ports-previews) |
+| Snapshots and forks | [Snapshots and forks](/sandbox/snapshots) |
+| Outbound network allowlist | [Network access](/sandbox/egress) |
+| GPUs, attached for a fixed time and spend cap | [GPU leases](/sandbox/gpu-leases) |
 
-Tool packs and MCP bridges are additive on top of this surface; you don't have to use them to use the sandbox.
+## What Tangle Sandbox adds
 
-## Migrating from Modal
+- **A coding agent in every sandbox.** Prompt it with `box.prompt()` and continue the conversation with sessions. Pick Claude Code, Codex, OpenCode or another agent from `GET /v1/backends`. See [Run a coding agent](/sandbox/cloud-agents).
+- **Your own Claude or ChatGPT plan.** Run Claude Code or Codex in a sandbox on the subscription you already pay for. See [Claude Code on your Claude plan](/sandbox/cloud-agents-claude-code).
+- **The agent's own terminal UI.** Drive a coding agent's interactive mode inside the sandbox from your terminal or a browser. See [Interactive mode](/sandbox/interactive).
+- **Fleets with a spend cap.** Run the same work across many sandboxes under one budget. See [Fleets](/sandbox/agents-fleet).
+- **HIPAA placement.** `compliance: { hipaa: true }` keeps a sandbox on HIPAA-capable capacity. See [Isolation and compliance](/sandbox/security).
+- **E2B-compatible REST routes.** HTTP calls that create, list, read and kill sandboxes, read and write files and run commands in E2B's REST shape work against `https://sandbox.tangle.tools/e2b`. See [Move from E2B](/sandbox/migrate-e2b).
 
-Modal is excellent for stateless GPU functions and batch jobs. If your workload is "fire-and-forget a Python function, get a result" Modal is the right tool. If it's "an agent needs an interactive sandbox with files, git, browser, and persistent kernel state across many tool calls," that's where Tangle's surface shines.
+## Move to Tangle Sandbox
 
-For long-running parallel campaigns, both work: Tangle gives you a coordinator and shared workspace; Modal gives you per-call container reuse and very fast cold start. Pick by what you need most: shared state (Tangle) or function granularity (Modal).
+- [Move from E2B](/sandbox/migrate-e2b)
+- [Move from Daytona](/sandbox/migrate-daytona)
+- [Move from Modal](/sandbox/migrate-modal)
+
+To run the same agent code on several providers, see [Run on E2B, Daytona and more](/sandbox/other-providers).
+
+## Next steps
+
+- [Quickstart](/sandbox/quickstart): create a sandbox and prompt a coding agent.
+- [How sandboxes work](/sandbox/concepts): states, lifetimes and what survives a stop.
+- [Pricing and spend](/sandbox/cost): what you pay for and how to cap it.

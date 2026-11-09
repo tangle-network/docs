@@ -1,0 +1,213 @@
+import { Tabs, Callout } from "nextra/components";
+
+# Snapshot, fork and restore sandboxes
+
+Save a sandbox's workspace, roll it back after a bad change, start new sandboxes from it, or split a running sandbox into copies that each try something different.
+
+## Snapshot, break, revert
+
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+// A snapshot is the whole workspace. Revert to it and the damage is gone.
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+});
+try {
+  const clean = await box.snapshot({ tags: ["clean"] });
+
+  await box.exec("rm -rf packages test");
+  console.log("after", (await box.exec("ls")).stdout.trim().split("\n"));
+
+  await box.revertToSnapshot(clean.snapshotId);
+  console.log("reverted", (await box.exec("ls")).stdout.trim().split("\n"));
+} finally {
+  await box.delete();
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import os
+from tangle_sandbox import Sandbox, SandboxStatus, GitConfig, SnapshotOptions
+
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+box = client.create(git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"))
+try:
+    box.wait_for(SandboxStatus.RUNNING)
+    clean = box.snapshot(SnapshotOptions(tags=["clean"]))
+    box.exec("rm -rf test")
+    box.restore_paths(clean.snapshot_id, ["test"])
+    print(box.exec("ls test").stdout)
+finally:
+    box.delete()
+    client.close()
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+tangle snapshot create demo --tags clean
+tangle exec demo -- rm -rf packages test
+tangle snapshot revert demo <snapshot-id>
+```
+</Tabs.Tab>
+</Tabs>
+
+`snapshot()` captures the whole workspace and returns `{ snapshotId, createdAt, sizeBytes, tags }`. Snapshots of a single path are not supported; take a whole snapshot and restore the paths you need.
+
+## Restore all or part of a workspace
+
+```ts
+await box.revertToSnapshot(snapshotId);                    // the whole workspace, in place
+await box.restorePaths(snapshotId, ["src", "package.json"]); // only these paths
+```
+
+`restorePaths` replaces the listed workspace-relative paths and leaves every other file as it is.
+
+## Start a new sandbox from a snapshot
+
+```ts
+const copy = await client.create({
+  fromSnapshot: snapshotId,
+  fromSandboxId: box.id,
+});
+```
+
+`fromSandboxId` is required with `fromSnapshot`. The source sandbox is untouched. In the CLI, `tangle snapshot restore <sandbox-id> <snapshot-id>` creates the new sandbox and waits for it to run; the first argument must be a sandbox id, not a name.
+
+To publish a snapshot so others can start from it, see [Templates and images](/sandbox/templates-gallery).
+
+## List and delete snapshots
+
+```ts
+for (const s of await box.listSnapshots()) console.log(s.snapshotId, s.tags, s.sizeBytes);
+
+const { outcome } = await box.deleteSnapshot(snapshotId);
+console.log(outcome); // "deleted", "already_absent" or "unknown"
+```
+
+```bash
+tangle snapshot list demo
+tangle snapshot delete demo <snapshot-id>
+```
+
+### Snapshot without waiting
+
+`box.snapshot({ wait: false })` returns a `SandboxOperation` once the snapshot is accepted. `await op.wait()` resolves when it finishes. Pass `idempotencyKey` so a retried request answers with the same snapshot. In the CLI, `tangle snapshot create --no-wait` prints the operation id and status URL.
+
+## Keep data after delete or share it between sandboxes
+
+Write snapshots to your own S3, GCS or R2 bucket, and they stay there until you delete them, whatever happens to the sandbox.
+
+```ts
+const storage = {
+  type: "s3" as const,
+  bucket: "acme-sandbox-snapshots",
+  region: "us-east-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+  prefix: "checkout-service/",
+};
+
+const box = await client.create({ storage });
+await box.exec("npm ci");
+await box.snapshot({ storage, tags: ["deps-installed"] });
+await box.delete();
+
+// Later, in a new sandbox:
+const next = await client.create({ storage });
+await next.restoreFromStorage(storage); // the latest snapshot in the bucket, or null
+```
+
+| `storage` field | Meaning |
+|---|---|
+| `type` | `"s3"`, `"gcs"` or `"r2"`. |
+| `bucket` | Bucket name. |
+| `endpoint` | Required for R2, optional for S3 and GCS. |
+| `region` | Bucket region. |
+| `credentials` | `{ accessKeyId, secretAccessKey }`. Required. |
+| `prefix` | Path inside the bucket. |
+
+`listSnapshots(storage)` lists what is in your bucket. A snapshot to your own storage refuses `idempotencyKey` and `wait: false`. The CLI takes the same settings as `--storage-type`, `--storage-bucket`, `--storage-region`, `--storage-endpoint`, `--storage-prefix`, `--storage-access-key-id` and `--storage-secret-access-key-env` on `tangle sandbox create`.
+
+Within the platform, any sandbox you own can start from another sandbox's snapshot with `fromSnapshot` and `fromSandboxId`.
+
+## Branch a running sandbox
+
+`branch(count)` makes copy-on-write copies of a running sandbox. The parent keeps running, and each child starts with the parent's files.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const parent = await client.create();
+try {
+  await parent.exec("echo 'shared setup' > base.txt");
+  const [a, b] = await parent.branch(2);
+  try {
+    await a.exec("echo 'child a' >> base.txt");
+    await b.exec("echo 'child b' >> base.txt");
+    for (const child of [a, b]) {
+      const { stdout } = await child.exec("cat base.txt");
+      console.log(child.id, stdout.trim().split("\n"));
+    }
+  } finally {
+    await Promise.all([a.delete(), b.delete()]);
+  }
+} finally {
+  await parent.delete();
+}
+```
+
+What a child inherits depends on the [runtime](/sandbox/lifecycle#choose-the-image-isolation-and-size):
+
+| Runtime | The child gets |
+|---|---|
+| `firecracker` | The parent's disk and memory, so running processes carry over. |
+| `docker` | A copy-on-write fork of the disk. Processes start fresh. |
+
+`fork(count)` does the same and reports the whole fan-out: `{ children, requestedCount, materializedCount, complete }`. `complete: false` means fewer children started than you asked for. Pass `idempotencyKey` so a retry returns the same children instead of making more.
+
+```ts
+const forked = await parent.fork(5, { idempotencyKey: "run-42", metadata: { experiment: "a" } });
+if (!forked.complete) console.warn(`${forked.materializedCount} of ${forked.requestedCount}`);
+```
+
+A fan-out larger than the host can hold fails with `BRANCH_FANOUT_EXCEEDS_HOST`, and the error's `maxChildren` says how many fit. The allowed `count` is on [Limits](/sandbox/limits).
+
+<Callout type="warning">
+A parent with live children cannot be deleted: the delete answers `409 CHILDREN_EXIST`. Delete the children first, or delete the lineage with `cascade=true` through REST or `client.deleteMatching(filter, { cascade: true })`. See [Delete](/sandbox/lifecycle#delete).
+</Callout>
+
+```bash
+tangle branch create demo --count 2 --idempotency-key run-42
+```
+
+## Python and REST
+
+Python has `snapshot(SnapshotOptions(tags, storage))`, `list_snapshots()`, `restore_paths(snapshot_id, paths)`, and `from_snapshot` with `from_sandbox_id` on create. It has no revert, snapshot delete, restore from storage, branch or fork. Call those routes with `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+client.fetch("POST", f"/v1/sandboxes/{box.id}/snapshots/{snapshot_id}/restore", json={})
+client.fetch("DELETE", f"/v1/sandboxes/{box.id}/snapshots/{snapshot_id}")
+client.fetch("POST", f"/v1/sandboxes/{box.id}/branch", json={"count": 2}, headers={"Idempotency-Key": "run-42"})
+```
+
+## Next
+
+- [Start from templates and custom images](/sandbox/templates-gallery)
+- [Create, stop, resume and delete](/sandbox/lifecycle)
+- [Run fleets of sandboxes](/sandbox/agents-fleet)

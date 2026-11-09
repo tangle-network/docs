@@ -1,0 +1,82 @@
+---
+title: Troubleshooting
+description: Fixes for the problems developers hit most with Tangle Sandbox, by symptom, for the TypeScript and Python SDKs, the tangle CLI and coding agents.
+---
+
+# Troubleshooting
+
+Find your symptom, apply the fix, and follow the link for detail. For a single error code, see [Error codes](/sandbox/errors).
+
+## Creating a sandbox
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `ValidationError: Base URL is required` in TypeScript, or a `TypeError` about `base_url` in Python | The SDKs read no environment variables and have no default URL. | Pass `baseUrl: "https://sandbox.tangle.tools"` (`base_url` in Python). |
+| `RESOURCES_EXCEED_LIMIT` (400) | You asked for more CPU, memory or disk than your account allows. | Read your ceiling with `client.shapes()` or `tangle sandbox shapes`, or omit `resources`. See [Limits](/sandbox/limits). |
+| `QUOTA_EXCEEDED` or `CONCURRENT_LIMIT` (429) | Your plan's limit of running sandboxes is reached. | Stop or delete sandboxes. `tangle sandbox list` shows what is running. |
+| A 400 when a create names a startup script with `agent: false` | Sandboxes without a coding agent run no startup scripts. | Remove `startupScriptIds`, or create with the coding agent. |
+| `CAPACITY_EXHAUSTED` or `HOST_PRESSURE` keeps coming back | No host has room. The SDKs already retried the create. | Try again later. Reuse the same `idempotencyKey` so a retry never creates a second sandbox. |
+| `SANDBOX_CREATE_READINESS_FAILED` (TypeScript) | The sandbox was created but did not reach `running` in time. | The error carries the sandbox id. Read or delete that sandbox, or create again with the same `idempotencyKey`. |
+
+## Running commands
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `INVALID_STATE` (409) from `exec`, `read` or `prompt` | The sandbox stopped, from `idleTimeoutSeconds`, `maxLifetimeSeconds` or a `stop()`. | Call `box.resume()`, then retry. The CLI resumes a stopped sandbox for you. |
+| Python `StateError` right after `create()` | Python's `create()` returns before the sandbox is running. | Call `box.wait_for(SandboxStatus.RUNNING)` first. |
+| Python `AttributeError` from `wait_for("running")` when it times out | The string form breaks the timeout message. | Pass `SandboxStatus.RUNNING`, not `"running"`. |
+| Python `ExecResult.stderr` is always empty | The Python SDK merges stderr into `stdout`. | Read `stdout`. To separate them, redirect in the command: `cmd 2>/tmp/err; cat /tmp/err`. |
+| `exec` returned but the command failed | `exec` does not throw on a non-zero exit. | Check `exitCode` (`exit_code` in Python). |
+| A short command works but a long one times out | `exec` has a default `timeoutMs` and a maximum; see [Limits](/sandbox/limits#commands-and-code). | Pass a larger `timeoutMs`, or run it as a background process. See [Run commands and code](/sandbox/commands). |
+| `tangle exec` treats the remote command's flags as its own | The CLI reads flags until `--`. | Put `--` before the remote command: `tangle exec my-box -- ls -la`. |
+
+## Network and installs
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `npm install`, `pip install` or `git clone` fails in the sandbox | An explicit `strict` egress policy reaches only the domains you list. | Set `includeImplicitDomains: true` to add package registries, git hosts and CDNs, or add the hosts to `allowDomains`. |
+| A request to a host fails with `EGRESS_DOMAIN_NOT_ALLOWED` | The host is not on the sandbox's allowlist. | Read `box.egress.denials()` for the refused host, then `box.egress.update()`. See [Network access](/sandbox/egress). |
+| A preview link drops a long request | Preview links close a request that goes too long without a read; see [Limits](/sandbox/limits#preview-links). | Stream the response, or send progress. See [Ports and preview links](/sandbox/ports-previews). |
+
+## Coding agents
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `prompt()` returned but nothing changed | `prompt` does not throw when the agent fails. | Check `result.success`, then read `result.error` and `result.errorCode`. Check the work with a command. |
+| `result.status` is `"unknown"` | The stream ended before the run finished and could not rejoin (`STREAM_INTERRUPTED`). The run may still be going. | Rejoin with `streamPrompt(message, { executionId, lastEventId, sessionId })`, or read the session's status. See [Stream output](/sandbox/streaming). |
+| The run was cancelled when your loop stopped reading | Leaving a `streamPrompt` loop early, aborting it or reaching `timeoutMs` cancels the run. | Pass `detach: true`, or start the run with `box.dispatchPrompt()` and read its events later. |
+| `result.costUsd` is `undefined` | Another turn on the same sandbox overlapped this one, or the SDK could not read your account's ledger. | Run turns one at a time on a sandbox when you need per-turn cost. See [Pricing and spend](/sandbox/cost#model-spend-per-turn). |
+| `HARNESS_REQUIRES_CALLER_CREDENTIAL` (400) | That coding agent cannot run on the Tangle Router. | Give it your own key or plan. See [Run a coding agent](/sandbox/cloud-agents). |
+| The coding agent answers with the wrong model or credential after a resume | A resumed sandbox does not keep the model credentials its agent started with. | Send `backend` again with the first prompt after `resume()`. |
+
+## Deleting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `CHILDREN_EXIST` (409) on delete | The sandbox has live branches. | Delete the branches first. To delete the family at once, call `DELETE /v1/sandboxes/{id}?cascade=true` or `client.deleteMatching(filter, { cascade: true })`; `box.delete()` and `tangle sandbox delete` have no cascade option. |
+| Snapshots remain after a delete | Deleting a sandbox keeps the snapshots saved from it. | Delete snapshots you no longer need. See [Snapshots and forks](/sandbox/snapshots). |
+
+## The CLI
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `tangle auth login` waits forever on a server | It is waiting for a browser sign-in. | Run `tangle auth login --no-browser` and enter the device code elsewhere, or set `TANGLE_API_KEY`. |
+| A CI job hangs on a confirmation, or fails with "No answer on stdin" | Delete and revoke commands ask for confirmation. | Pass the command's skip flag: `tangle sandbox delete --force`, `tangle keys revoke --yes`, `tangle secret delete --force`. |
+| `tangle ssh` fails | The sandbox was created without SSH, or you have no SSH public key in `~/.ssh`. | Create the sandbox with `--ssh`, and create a key with `ssh-keygen`. See [Shells and terminals](/sandbox/terminals). |
+| Exit code 77 | The credential expired or was refused. | `tangle auth login` again. |
+| Exit code 75 | A rate limit or a seat limit. | Wait and retry. |
+| Exit code 78 | A configuration problem, such as a missing subscription or an unknown model. | Read the error's `→ next:` line. |
+| `npx tangle` runs something else | That npm name belongs to an unrelated package. | Use `npx @tangle-network/sandbox-cli`, or install it globally. |
+
+All exit codes are listed in [Error codes](/sandbox/errors#cli-exit-codes).
+
+## Contact support
+
+Email [support@tangle.tools](mailto:support@tangle.tools) with the sandbox id, the error code, and the error's `requestId` and `traceId`.
+In TypeScript they are `error.requestId` and `error.traceId`. With `--json`, the CLI prints `requestId` in its error document.
+
+## Next steps
+
+- [Error codes](/sandbox/errors): every code, its status and whether to retry.
+- [Limits and timeouts](/sandbox/limits): the limits behind 413 and 429 answers.
+- [How sandboxes work](/sandbox/concepts): states and what survives a stop.

@@ -1,0 +1,536 @@
+---
+title: Sessions, backends and intelligence routes
+description: REST reference for coding-agent sessions, durable plans, the coding agents and models you can run, and intelligence reports.
+---
+
+# Sessions, backends and intelligence routes
+
+Create and stream coding-agent sessions, approve plans, list the coding agents and models your key can use, and request intelligence reports.
+
+Every route is on `https://sandbox.tangle.tools` and takes your account API key as `Authorization: Bearer <key>` unless it says otherwise. Errors use the shape in [Error codes](/sandbox/errors).
+This page is generated from the [OpenAPI document](/sandbox-openapi.json), which also has every response schema.
+
+## Sessions
+
+| Route | Does |
+|---|---|
+| `POST /v1/session/{sessionId}/broadcast` | Broadcast an event to a session |
+| `PUT /v1/session/{sessionId}/mapping` | Map a session to its runtime session |
+| `DELETE /v1/session/{sessionId}/mapping` | Remove a session's runtime mapping |
+| `POST /v1/sessions` | Create a session |
+| `GET /v1/sessions/{id}` | Get session details |
+| `DELETE /v1/sessions/{id}` | End a session |
+| `GET /v1/sessions/{id}/events` | Subscribe to session events (SSE) |
+| `POST /v1/sessions/{id}/message` | Send a message to a session and stream events |
+| `GET /v1/sessions/{id}/messages` | List messages for a session |
+| `GET /v1/sessions/{id}/turns/{turnId}` | Look up a cached turn result by idempotency key |
+
+### Broadcast an event to a session
+
+`POST /v1/session/{sessionId}/broadcast`
+
+Sends an event to the caller's connected WebSocket session. If the session is not connected, the event is buffered for delivery on connect. success reports whether the event was delivered or buffered.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `sessionId` | path | Yes | string | Session ID |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `type` | string | Yes | Event type. |
+| `id` | string | No | Event ID the receiver can use to deduplicate. |
+| `data` | object | No | Event payload. |
+| `channel` | string | No | Deliver only to subscribers of this channel. |
+
+| Status | Meaning |
+|---|---|
+| 200 | The broadcast result |
+| 400 | The session ID or the body is invalid (VALIDATION_ERROR, INVALID_SESSION_ID) |
+| 401 | Missing or invalid credential |
+| 403 | The credential is restricted to its own sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN) |
+| 503 | The sandbox service did not answer; retry shortly |
+
+### Map a session to its runtime session
+
+`PUT /v1/session/{sessionId}/mapping`
+
+Registers which runtime session serves the session ID, so session events are filtered and delivered to the right subscribers.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `sessionId` | path | Yes | string | Session ID |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `sidecarSessionId` | string | Yes | The runtime's own session ID (a UUID). |
+| `sidecarId` | string | No | Container ID, for direct routing. |
+| `projectRef` | string | No | Project reference, for stale-runtime checks. |
+
+| Status | Meaning |
+|---|---|
+| 200 | The mapping was recorded |
+| 400 | The session ID or the body is invalid (VALIDATION_ERROR, INVALID_SESSION_ID) |
+| 401 | Missing or invalid credential |
+| 403 | The credential is restricted to its own sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN) |
+| 404 | The mapping was rejected |
+| 410 | The runtime is gone and must be reprovisioned |
+| 503 | The sandbox service did not answer; retry shortly |
+
+### Remove a session's runtime mapping
+
+`DELETE /v1/session/{sessionId}/mapping`
+
+Removes the mapping and stops event subscriptions for the session.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `sessionId` | path | Yes | string | Session ID |
+
+| Status | Meaning |
+|---|---|
+| 200 | The mapping was removed |
+| 400 | The session ID or the body is invalid (VALIDATION_ERROR, INVALID_SESSION_ID) |
+| 401 | Missing or invalid credential |
+| 403 | The credential is restricted to its own sandbox (SANDBOX_KEY_RESOURCE_FORBIDDEN) |
+| 404 | The session has no mapping |
+| 503 | The sandbox service did not answer; retry shortly |
+
+### Create a session
+
+`POST /v1/sessions`
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `projectId` | string | No |  |
+| `config` | object | No |  |
+| `interactions` | object | No |  |
+
+| Status | Meaning |
+|---|---|
+| 201 | Session created |
+| 400 | Invalid request |
+| 402 | KEY_BUDGET_EXHAUSTED: the Platform key funding the sandbox has no budget left |
+| 403 | Driver not allowed, or PROFILE_SECRET_ISOLATION_UNAVAILABLE: backend.metadata.profileSecretIsolation needs an existing sandbox whose runtime seals the secret launch |
+| 404 | Sandbox not found |
+| 413 | Request body exceeds the proxy wire limit |
+| 429 | Quota exceeded |
+| 500 | Internal error |
+| 502 | Upstream proxy error |
+| 503 | Runtime host unavailable, or PROFILE_SECRET_ISOLATION_UNAVAILABLE with reason sidecar_unreachable: the sandbox's runtime could not be asked; retry after Retry-After |
+
+### Get session details
+
+`GET /v1/sessions/{id}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Session ID |
+
+| Status | Meaning |
+|---|---|
+| 200 | Session details |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Session not found |
+| 500 | Upstream proxy error |
+| 502 | Upstream proxy error |
+
+### End a session
+
+`DELETE /v1/sessions/{id}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Session ID |
+
+| Status | Meaning |
+|---|---|
+| 200 | Session ended |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Session not found |
+| 500 | Upstream proxy error |
+| 502 | Upstream proxy error |
+| 503 | Sandbox billing state is temporarily unavailable |
+
+### Subscribe to session events (SSE)
+
+`GET /v1/sessions/{id}/events`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Session ID |
+
+| Status | Meaning |
+|---|---|
+| 200 | SSE stream |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Session not found |
+
+### Send a message to a session and stream events
+
+`POST /v1/sessions/{id}/message`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Session ID |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `message` | string | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Server-Sent Events stream |
+| 400 | Invalid request |
+| 403 | Driver not allowed |
+| 404 | Session not found |
+| 409 | The sandbox was created without an agent |
+| 413 | Message body exceeds the proxy wire limit |
+| 500 | Internal error |
+| 502 | Upstream proxy error |
+| 503 | Model credential is being updated; retry shortly |
+
+### List messages for a session
+
+`GET /v1/sessions/{id}/messages`
+
+Returns the session message log including in-flight assistant content. Each run's assistant message carries `metadata.status` (`streaming` / `completed` / `interrupted`).
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string | Session ID |
+| `limit` | query | No | integer |  |
+| `offset` | query | No | integer or null |  |
+| `since` | query | No | integer or null |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Message list |
+| 400 | Invalid request |
+| 403 | Driver not allowed or insufficient access |
+| 404 | Session not found |
+| 500 | Internal error |
+| 502 | Upstream proxy error |
+
+### Look up a cached turn result by idempotency key
+
+`GET /v1/sessions/{id}/turns/{turnId}`
+
+Returns the cached AgentExecutionResult for a previously-completed turn on this session, or 404 if no such completion exists. Callers use this to short-circuit retries whose original attempt already finished.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `id` | path | Yes | string |  |
+| `turnId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Cached turn result |
+| 400 | Invalid request |
+| 403 | Driver not allowed or insufficient access |
+| 404 | Session or turn not found |
+| 500 | Internal error |
+| 502 | Upstream proxy error |
+
+## Durable plans
+
+| Route | Does |
+|---|---|
+| `POST /v1/plan-followups/{planId}/admission` | Admit a plan follow-up turn |
+| `POST /v1/plan-submissions` | Submit a plan for approval |
+| `POST /v1/plan-submissions/{planId}/confirmation` | Confirm a submitted plan |
+| `POST /v1/plan-submissions/{planId}/withdrawal` | Withdraw a submitted plan |
+| `GET /v1/sandboxes/{projectRef}/agent-sessions/{agentSessionId}/plans/current` | Get the current plan of an agent session |
+| `GET /v1/sandboxes/{projectRef}/agent-sessions/{agentSessionId}/plans/{planId}` | Get a plan |
+| `POST /v1/sandboxes/{projectRef}/agent-sessions/{agentSessionId}/plans/{planId}/decision` | Approve or reject a plan |
+
+### Admit a plan follow-up turn
+
+`POST /v1/plan-followups/{planId}/admission`
+
+Authenticated by the x-tangle-plan-followup-credential header, not by a bearer token.
+
+Authentication: none.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `planId` | path | Yes | string | Plan ID |
+| `x-tangle-plan-followup-credential` | header | Yes | string | Follow-up credential from the plan decision's resume |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `turnId` | string | Yes |  |
+| `executionId` | string | Yes |  |
+| `continuation` | object | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Follow-up admitted |
+| 400 | Invalid admission (INVALID_REQUEST) |
+| 401 | The credential is missing or invalid (PLAN_FOLLOWUP_CREDENTIAL_INVALID) |
+| 404 | Plan not found (PLAN_NOT_FOUND) |
+| 409 | The follow-up cannot be admitted in its current state |
+| 413 | The request body is over the proxy limit |
+
+### Submit a plan for approval
+
+`POST /v1/plan-submissions`
+
+Authenticated by the x-tangle-plan-submission-credential header, not by a bearer token. A repeat with the same sourceTurnId and sourceToolCallId returns the same plan. Approvers cannot see the plan until it is confirmed. A session whose backend isolates profile secrets is refused.
+
+Authentication: none.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `x-tangle-plan-submission-credential` | header | Yes | string | Plan submission credential issued for the agent session |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `projectRef` | string | Yes |  |
+| `agentSessionId` | string | Yes |  |
+| `sourceTurnId` | string | Yes |  |
+| `sourceToolCallId` | string | Yes |  |
+| `title` | string | No |  |
+| `body` | string | Yes |  |
+| `providerState` | object | Yes |  |
+| `backendConfig` | object | No |  |
+
+| Status | Meaning |
+|---|---|
+| 201 | Plan submitted |
+| 400 | Invalid submission (INVALID_REQUEST, PLAN_BODY_REQUIRED, PLAN_SOURCE_ID_REQUIRED, PLAN_PROVIDER_STATE_INVALID) |
+| 401 | The credential is missing, invalid or expired (PLAN_SUBMISSION_CREDENTIAL_INVALID, PLAN_SUBMISSION_CREDENTIAL_EXPIRED) |
+| 403 | The backend isolates profile secrets (PROFILE_SECRET_ISOLATION_UNAVAILABLE) |
+| 409 | The plan cannot take this change in its current state (PLAN_SUBMISSION_CONFLICT, PLAN_NOT_READY, PLAN_SUPERSEDED, PLAN_WITHDRAWN, PLAN_ALREADY_DECIDED) |
+| 413 | The request body is over the proxy limit |
+
+### Confirm a submitted plan
+
+`POST /v1/plan-submissions/{planId}/confirmation`
+
+Authenticated by the x-tangle-plan-submission-credential header, not by a bearer token. Makes the plan visible to approvers and supersedes the session's earlier plans.
+
+Authentication: none.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `planId` | path | Yes | string | Plan ID |
+| `x-tangle-plan-submission-credential` | header | Yes | string | Plan submission credential issued for the agent session |
+
+| Status | Meaning |
+|---|---|
+| 200 | Plan confirmed |
+| 401 | The credential is missing, invalid or expired (PLAN_SUBMISSION_CREDENTIAL_INVALID, PLAN_SUBMISSION_CREDENTIAL_EXPIRED) |
+| 404 | Plan not found (PLAN_NOT_FOUND) |
+| 409 | The plan cannot take this change in its current state (PLAN_SUBMISSION_CONFLICT, PLAN_NOT_READY, PLAN_SUPERSEDED, PLAN_WITHDRAWN, PLAN_ALREADY_DECIDED) |
+| 413 | The request body is over the proxy limit |
+
+### Withdraw a submitted plan
+
+`POST /v1/plan-submissions/{planId}/withdrawal`
+
+Authenticated by the x-tangle-plan-submission-credential header, not by a bearer token.
+
+Authentication: none.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `planId` | path | Yes | string | Plan ID |
+| `x-tangle-plan-submission-credential` | header | Yes | string | Plan submission credential issued for the agent session |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `reason` | string | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Plan withdrawn |
+| 400 | Invalid request (INVALID_REQUEST, PLAN_WITHDRAWAL_REASON_REQUIRED) |
+| 401 | The credential is missing, invalid or expired (PLAN_SUBMISSION_CREDENTIAL_INVALID, PLAN_SUBMISSION_CREDENTIAL_EXPIRED) |
+| 404 | Plan not found (PLAN_NOT_FOUND) |
+| 409 | The plan cannot take this change in its current state (PLAN_SUBMISSION_CONFLICT, PLAN_NOT_READY, PLAN_SUPERSEDED, PLAN_WITHDRAWN, PLAN_ALREADY_DECIDED) |
+| 413 | The request body is over the proxy limit |
+
+### Get the current plan of an agent session
+
+`GET /v1/sandboxes/{projectRef}/agent-sessions/{agentSessionId}/plans/current`
+
+Needs read access to the sandbox. A plan not confirmed is not found.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `projectRef` | path | Yes | string | Sandbox ID |
+| `agentSessionId` | path | Yes | string | Agent session ID |
+
+| Status | Meaning |
+|---|---|
+| 200 | Current plan |
+| 403 | The credential or team role cannot use this sandbox |
+| 404 | Plan not found (PLAN_NOT_FOUND) |
+
+### Get a plan
+
+`GET /v1/sandboxes/{projectRef}/agent-sessions/{agentSessionId}/plans/{planId}`
+
+Needs read access to the sandbox. A plan not confirmed is not found.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `projectRef` | path | Yes | string | Sandbox ID |
+| `agentSessionId` | path | Yes | string | Agent session ID |
+| `planId` | path | Yes | string | Plan ID |
+
+| Status | Meaning |
+|---|---|
+| 200 | Plan |
+| 403 | The credential or team role cannot use this sandbox |
+| 404 | Plan not found (PLAN_NOT_FOUND) |
+
+### Approve or reject a plan
+
+`POST /v1/sandboxes/{projectRef}/agent-sessions/{agentSessionId}/plans/{planId}/decision`
+
+Needs write access to the sandbox; a team viewer is refused. Repeating the same decision answers idempotent: true. Send followUp \{ mode: "caller" \} to receive the follow-up turn's resume credential instead of having the service start the turn.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `projectRef` | path | Yes | string | Sandbox ID |
+| `agentSessionId` | path | Yes | string | Agent session ID |
+| `planId` | path | Yes | string | Plan ID |
+
+Request body (`application/json`): one of 2 shapes; see the [OpenAPI document](/sandbox-openapi.json).
+
+| Status | Meaning |
+|---|---|
+| 200 | Decision recorded |
+| 400 | Invalid decision (INVALID_REQUEST, PLAN_REJECTION_FEEDBACK_REQUIRED, PLAN_APPROVAL_FEEDBACK_FORBIDDEN) |
+| 403 | The credential or team role cannot decide this plan (INSUFFICIENT_ROLE, PLAN_DECISION_ACTOR_INVALID) |
+| 404 | Plan not found (PLAN_NOT_FOUND) |
+| 409 | The plan cannot be decided in its current state, or its caller follow-up is leased (PLAN_SUPERSEDED, PLAN_WITHDRAWN, PLAN_ALREADY_DECIDED, PLAN_OUTBOX_LEASE_LOST) |
+| 413 | The request body is over the proxy limit |
+| 503 | Caller follow-up admission is not configured (PLAN_FOLLOWUP_UNAVAILABLE) |
+
+## Backends
+
+| Route | Does |
+|---|---|
+| `GET /v1/backends` | List available agent backends |
+| `GET /v1/router-models` | List the Router model catalog |
+
+### List available agent backends
+
+`GET /v1/backends`
+
+Returns the per-backend capability registry (streaming, tool use, reasoning, multimodal, imageInput, MCP, sessions, interactions) and whether a backend runs only on the caller's own credential. Profiles are supplied inline on execution and provisioning requests.
+
+| Status | Meaning |
+|---|---|
+| 200 | Backends retrieved successfully |
+| 500 | Internal error |
+
+### List the Router model catalog
+
+`GET /v1/router-models`
+
+The Tangle Router's `GET /v1/models` rows, read with the caller's managed Router key, so the list is the models this caller can run.
+
+| Status | Meaning |
+|---|---|
+| 200 | Router model catalog |
+| 502 | The Router refused or failed |
+| 503 | No Router key can be minted |
+
+## Intelligence
+
+| Route | Does |
+|---|---|
+| `POST /v1/intelligence/reports` | Create an intelligence report |
+| `GET /v1/intelligence/reports` | List intelligence reports |
+| `POST /v1/intelligence/reports/estimate` | Estimate an intelligence report |
+| `GET /v1/intelligence/reports/{jobId}` | Get an intelligence report |
+
+### Create an intelligence report
+
+`POST /v1/intelligence/reports`
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `subject` | object | Yes |  |
+| `mode` | "deterministic" \| "agentic" | No |  |
+| `acknowledgeCost` | boolean | No |  |
+| `budget` | object | No |  |
+| `metadata` | object | No |  |
+
+| Status | Meaning |
+|---|---|
+| 201 | Created intelligence report |
+| 400 | Invalid request |
+| 402 | Payment required |
+
+### List intelligence reports
+
+`GET /v1/intelligence/reports`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `subjectType` | query | No | "sandbox" \| "fleet" |  |
+| `subjectId` | query | No | string |  |
+| `limit` | query | No | integer |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Intelligence reports |
+
+### Estimate an intelligence report
+
+`POST /v1/intelligence/reports/estimate`
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `subject` | object | Yes |  |
+| `mode` | "deterministic" \| "agentic" | No |  |
+| `metadata` | object | No |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Cost estimate for prospective intelligence report |
+| 404 | Subject not found or not owned by caller |
+
+### Get an intelligence report
+
+`GET /v1/intelligence/reports/{jobId}`
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `jobId` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Intelligence report |
+| 404 | Not found |
+
+## Next steps
+
+- [Fleets, templates and teams](/sandbox/api-reference/resources): fleets, templates, secrets and teams.
+- [Sessions](/sandbox/sessions): sessions from the SDKs and CLI.
+- [Run a coding agent](/sandbox/cloud-agents): pick the agent, model and credential.

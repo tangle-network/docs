@@ -28,3 +28,30 @@
 /staking            https://tangle.tools/blog/series/tangle-protocol/  302
 /staking/*          https://tangle.tools/blog/series/tangle-protocol/  302
 /restake            https://tangle.tools/blog/series/tangle-protocol/  302
+
+# Sandbox pages first published under /docs and /sandbox/sdk. The explicit /docs
+# rules come before the /docs/* rule.
+/docs                             /sandbox/overview                            301
+/docs/cloud-agents/claude-code    /sandbox/cloud-agents-claude-code            301
+/docs/cloud-agents/codex          /sandbox/cloud-agents-codex                  301
+/docs/cloud-agents/coding-plans   /sandbox/cloud-agents-coding-plans           301
+/docs/cloud-agents/profiles       /sandbox/cloud-agents-profiles               301
+/docs/agents/multiple             /sandbox/agents-multiple                     301
+/docs/agents/fleet                /sandbox/agents-fleet                        301
+/docs/agents/graphs               /sandbox/agents-graphs                       301
+/docs/agents/anthropic            /sandbox/agents-anthropic                    301
+/docs/agents/openai               /sandbox/agents-openai                       301
+/docs/agents/vercel-ai            /sandbox/agents-vercel-ai                    301
+/docs/agents/mastra               /sandbox/agents-mastra                       301
+/docs/agents/mcp                  /sandbox/agents-mcp                          301
+/docs/sdk/python                  /sandbox/sdk-python                          301
+/docs/sdk/typescript              /sandbox/sdk-typescript                      301
+/docs/workflows/run               /sandbox/workflows-run                       301
+/docs/workflows/yaml              /sandbox/workflows-yaml                      301
+/docs/workflows/templates         /sandbox/workflows-templates                 301
+/docs/*                           /sandbox/:splat                              301
+/dashboard                        https://sandbox.tangle.tools/dashboard       301
+/dashboard/*                      https://sandbox.tangle.tools/dashboard/:splat  301
+/sandbox/sdk/commands-files       /sandbox/commands                            301
+/sandbox/sdk/agents-sessions      /sandbox/sessions                            301
+/sandbox/sdk/parallel             /sandbox/agents-fleet                        301

@@ -1,0 +1,649 @@
+---
+title: File, git, process and preview commands
+description: "Reference for tangle fs, search, git, process, preview and run: move files, search code, use git, manage processes and share ports."
+---
+
+# File, git, process and preview commands
+
+Move files in and out of a sandbox, search its code, run git, start and watch long-running processes, share a port as a public link and run code in a kernel.
+
+```bash
+tangle fs upload my-box ./data.csv /home/agent/data.csv
+tangle process spawn my-box "npm run dev"
+tangle preview create my-box 3000
+tangle fs download my-box /home/agent/report.txt ./report.txt
+```
+
+Every command here resumes a stopped sandbox first and waits up to 120 s for it.
+`fs upload` and `fs download` move one file; to move a directory, use the TypeScript SDK's `uploadDirectory` or `fs.downloadDir`.
+
+## Commands on this page
+
+| Command | What it does |
+| --- | --- |
+| [`tangle fs upload`](#tangle-fs-upload) | Upload a file to a sandbox |
+| [`tangle fs download`](#tangle-fs-download) | Download a file from a sandbox |
+| [`tangle fs ls`](#tangle-fs-ls) | List directory contents |
+| [`tangle fs stat`](#tangle-fs-stat) | Get file or directory information |
+| [`tangle fs cat`](#tangle-fs-cat) | Print file contents |
+| [`tangle fs rm`](#tangle-fs-rm) | Delete a file or directory |
+| [`tangle fs mkdir`](#tangle-fs-mkdir) | Create a directory |
+| [`tangle fs exists`](#tangle-fs-exists) | Check if a path exists |
+| [`tangle search`](#tangle-search) | Search for text patterns in sandbox files (ripgrep) |
+| [`tangle git status`](#tangle-git-status) | Show git repository status |
+| [`tangle git log`](#tangle-git-log) | Show commit log |
+| [`tangle git diff`](#tangle-git-diff) | Show diff |
+| [`tangle git add`](#tangle-git-add) | Stage files |
+| [`tangle git commit`](#tangle-git-commit) | Create a commit |
+| [`tangle git push`](#tangle-git-push) | Push to remote |
+| [`tangle git pull`](#tangle-git-pull) | Pull from remote |
+| [`tangle git branches`](#tangle-git-branches) | List branches |
+| [`tangle git checkout`](#tangle-git-checkout) | Checkout a branch or ref |
+| [`tangle process spawn`](#tangle-process-spawn) | Spawn a process without blocking (returns PID) |
+| [`tangle process list`](#tangle-process-list) | List all processes in a sandbox |
+| [`tangle process get`](#tangle-process-get) | Get detailed info about a process |
+| [`tangle process kill`](#tangle-process-kill) | Kill a process |
+| [`tangle process logs`](#tangle-process-logs) | Stream buffered and live process logs until the process exits |
+| [`tangle preview start`](#tangle-preview-start) | Start/reuse a managed development server and publish its ready preview |
+| [`tangle preview list`](#tangle-preview-list) | List active preview links for a sandbox |
+| [`tangle preview publish`](#tangle-preview-publish) | Publish one existing HTTP service; never starts or replaces a process |
+| [`tangle preview create`](#tangle-preview-create) | Create a preview link for a port |
+| [`tangle preview remove`](#tangle-preview-remove) | Remove a preview link |
+| [`tangle run`](#tangle-run) | Run code in a persistent kernel inside a sandbox. Variables persist across calls in the same `--session`. |
+
+## Files
+
+### `tangle fs upload`
+
+Upload a file to a sandbox.
+
+Uploads one local file to a sandbox path.
+
+```bash
+tangle fs upload <sandbox-id-or-name> <local-path> <remote-path>
+```
+
+Request: `POST {runtimeUrl}/fs/upload-session`
+
+```bash
+tangle fs upload my-box ./data.csv /home/agent/data.csv
+```
+
+- Uses an upload session: POST upload-session, PUT parts/`{n}`, POST commit.
+- A missing local file fails before any upload.
+- `--json` prints `{success, remotePath, size, ...}`.
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle fs download`
+
+Download a file from a sandbox.
+
+Downloads one sandbox file to a local path.
+
+```bash
+tangle fs download <sandbox-id-or-name> <remote-path> <local-path>
+```
+
+Request: `GET {runtimeUrl}/fs/download/{path}`
+
+```bash
+tangle fs download my-box /home/agent/report.txt ./report.txt
+```
+
+- `--json` prints `{success, remotePath, size, ...}`.
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle fs ls`
+
+List directory contents.
+
+Lists a directory (default '.'); `-l` adds mode, owner, group, size and date; `-a` includes hidden files.
+
+```bash
+tangle fs ls <sandbox-id-or-name> [path] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-l, --long` |  | Show detailed information |
+| `-a, --all` |  | Include hidden files |
+
+Request: `GET {runtimeUrl}/fs/list/{path}`
+
+```bash
+tangle fs ls my-box /
+```
+
+- `--json` prints the entry array.
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle fs stat`
+
+Get file or directory information.
+
+Shows a path's size, type, permissions, owner and times.
+
+```bash
+tangle fs stat <sandbox-id-or-name> <path>
+```
+
+Request: `GET {runtimeUrl}/fs/stat/{path}`
+
+```bash
+tangle fs stat my-box /home/agent/f.ts
+```
+
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle fs cat`
+
+Print file contents.
+
+Prints a file's contents.
+
+```bash
+tangle fs cat <sandbox-id-or-name> <path>
+```
+
+Request: `POST {runtimeUrl}/files/read`
+
+```bash
+tangle fs cat my-box /home/agent/README.md
+```
+
+- `--json` prints `{path, content}`.
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle fs rm`
+
+Delete a file or directory.
+
+Deletes a file, or a directory with `-r`.
+
+```bash
+tangle fs rm <sandbox-id-or-name> <path> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-r, --recursive` |  | Delete directories recursively |
+
+Request: `DELETE {runtimeUrl}/fs/{path}`
+
+```bash
+tangle fs rm my-box /home/agent/old --recursive
+```
+
+- `--json` prints `{success, path, deleted:true}`.
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle fs mkdir`
+
+Create a directory.
+
+Creates a directory; `-p` creates parents.
+
+```bash
+tangle fs mkdir <sandbox-id-or-name> <path> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-p, --parents` |  | Create parent directories as needed |
+
+Request: `POST {runtimeUrl}/fs/mkdir/{path}`
+
+```bash
+tangle fs mkdir my-box /home/agent/new --parents
+```
+
+- `--json` prints `{success, path, created:true}`.
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle fs exists`
+
+Check if a path exists.
+
+Prints 'exists' or 'not found'.
+
+```bash
+tangle fs exists <sandbox-id-or-name> <path>
+```
+
+Request: `GET {runtimeUrl}/fs/exists/{path}`
+
+```bash
+tangle fs exists my-box /home/agent/present
+```
+
+- Exits 1 when the path is missing, but with `--json` it prints `{path, exists:false}` and exits 0.
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+## Search
+
+### `tangle search`
+
+Search for text patterns in sandbox files (ripgrep).
+
+Searches sandbox files with ripgrep and prints path:line:column: text per match.
+
+```bash
+tangle search <id-or-name> <pattern> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-g, --glob <pattern>` |  | File glob filter (e.g. '**/*.ts') |
+| `-n, --max-results <count>` |  | Max results to return |
+| `-i, --ignore-case` |  | Case-insensitive search |
+
+Request: `POST {runtimeUrl}/search`
+
+```bash
+tangle search my-box TODO
+```
+
+- `--json` prints one JSON match per line (NDJSON).
+- Does not resume a stopped sandbox, unlike fs and exec.
+
+## Git
+
+### `tangle git status`
+
+Show git repository status.
+
+Shows branch, HEAD, dirty state, ahead/behind and staged, modified and untracked files.
+
+```bash
+tangle git status <id-or-name>
+```
+
+Request: `GET {runtimeUrl}/git/status`
+
+```bash
+tangle git status my-box
+```
+
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle git log`
+
+Show commit log.
+
+Shows recent commits (default 10).
+
+```bash
+tangle git log <id-or-name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-n, --limit <count>` | `10` | Max commits to show |
+
+Request: `GET {runtimeUrl}/git/log`
+
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle git diff`
+
+Show diff.
+
+Shows the diff, optionally against `--ref`.
+
+```bash
+tangle git diff <id-or-name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--ref <ref>` |  | Ref to diff against |
+
+Request: `GET {runtimeUrl}/git/diff`
+
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle git add`
+
+Stage files.
+
+Stages paths.
+
+```bash
+tangle git add <id-or-name> <paths...>
+```
+
+Request: `POST {runtimeUrl}/git/add`
+
+```bash
+tangle git add my-box src/index.js
+```
+
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle git commit`
+
+Create a commit.
+
+Creates a commit; `-m` is required.
+
+```bash
+tangle git commit <id-or-name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-m, --message <msg>` |  | Commit message. Required. |
+| `--amend` |  | Amend the previous commit |
+
+Request: `POST {runtimeUrl}/git/commit`
+
+```bash
+tangle git commit my-box -m "msg"
+```
+
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle git push`
+
+Push to remote.
+
+Pushes to the remote; `--force` force-pushes.
+
+```bash
+tangle git push <id-or-name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--force` |  | Force push |
+
+Request: `POST {runtimeUrl}/git/push`
+
+```bash
+tangle git push my-box
+```
+
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle git pull`
+
+Pull from remote.
+
+Pulls from the remote; `--rebase` rebases.
+
+```bash
+tangle git pull <id-or-name> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--rebase` |  | Rebase instead of merge |
+
+Request: `POST {runtimeUrl}/git/pull`
+
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle git branches`
+
+List branches.
+
+Lists branches.
+
+```bash
+tangle git branches <id-or-name>
+```
+
+Request: `GET {runtimeUrl}/git/branches`
+
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle git checkout`
+
+Checkout a branch or ref.
+
+Checks out a ref; `-b` creates the branch.
+
+```bash
+tangle git checkout <id-or-name> <ref> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-b, --create` |  | Create a new branch |
+
+Request: `POST {runtimeUrl}/git/checkout`
+
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+## Processes
+
+### `tangle process spawn`
+
+Spawn a process without blocking (returns PID).
+
+Starts a command in the background and prints its PID; `--blocking` waits like `tangle exec`.
+
+```bash
+tangle process spawn <id-or-name> <command> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--cwd <dir>` |  | Working directory |
+| `--env <vars...>` |  | Environment variables (KEY=VALUE) |
+| `-t, --timeout <ms>` |  | Timeout in milliseconds |
+| `--blocking` |  | Wait for completion (default: false) |
+
+Request: `POST /v1/sandboxes/{id}/runtime/process/spawn`
+
+- `--json` prints `{pid, command}`; with `--blocking` it prints the exec result.
+- `<command>` is a single argument; quote it.
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle process list`
+
+List all processes in a sandbox.
+
+Lists processes with PID, command, status, exit code and start time.
+
+```bash
+tangle process list <id-or-name> [options]
+```
+
+Aliases: `ls`
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--running` |  | Show only running processes |
+
+Request: `GET {runtimeUrl}/process`
+
+```bash
+tangle process list my-box
+```
+
+- Alias: ls.
+- `--running` shows only running processes.
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle process get`
+
+Get detailed info about a process.
+
+Shows one process's command, working directory, status, exit code and times.
+
+```bash
+tangle process get <id-or-name> <pid>
+```
+
+Request: `GET {runtimeUrl}/process/{pid}`
+
+- Exits 1 with 'Process `<pid>` not found' when missing.
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle process kill`
+
+Kill a process.
+
+Sends a signal (default SIGTERM) to a process, or its whole tree with `--tree`.
+
+```bash
+tangle process kill <id-or-name> <pid> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-s, --signal <signal>` | `SIGTERM` | Signal to send (SIGTERM, SIGKILL, etc.) |
+| `--tree` |  | Also kill descendants of the tracked process |
+
+Request: `DELETE {runtimeUrl}/process/{pid}`
+
+- `--json` prints `{pid, signal, tree?, killed:true}`.
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+### `tangle process logs`
+
+Stream buffered and live process logs until the process exits.
+
+Prints buffered and live logs of a process until it exits.
+
+```bash
+tangle process logs <id-or-name> <pid> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--stdout-only` |  | Only show stdout |
+| `--stderr-only` |  | Only show stderr |
+
+Request: `GET {runtimeUrl}/process/{pid}/logs`
+
+- Remote stdout goes to local stdout and remote stderr to local stderr.
+- `--json` prints one JSON log entry per line (NDJSON), not one document.
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+## Previews
+
+### `tangle preview start`
+
+Start/reuse a managed development server and publish its ready preview.
+
+```bash
+tangle preview start [id-or-name] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--self` |  | Use only the sandbox bound to the runtime credential |
+| `--cwd <directory>` |  | Project directory in the selected workspace |
+| `--session <session-id>` |  | Select the agent's session workspace |
+| `--name <name>` |  | App/service label |
+
+- `--self` targets the sandbox bound to the injected runtime credential (inside a sandbox) and never reads saved owner credentials.
+
+### `tangle preview list`
+
+List active preview links for a sandbox.
+
+Lists a sandbox's preview links.
+
+```bash
+tangle preview list [id-or-name] [options]
+```
+
+Aliases: `ls`
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--self` |  | Use only the sandbox bound to the runtime credential |
+
+Request: `GET /v1/sandboxes/{id}/runtime/preview-links`
+
+```bash
+tangle preview list my-box
+```
+
+- Alias: ls.
+- The table shortens preview ids to 12 characters; use `--json` for the full id that `preview remove` needs.
+
+### `tangle preview publish`
+
+Publish one existing HTTP service; never starts or replaces a process.
+
+```bash
+tangle preview publish [id-or-name] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--self` |  | Use only the sandbox bound to the runtime credential |
+| `--port <port>` |  | Existing service port. Required. |
+| `--name <name>` |  | App/service label |
+
+### `tangle preview create`
+
+Create a preview link for a port.
+
+```bash
+tangle preview create <id-or-name> <port>
+```
+
+Request: `POST /v1/sandboxes/{id}/runtime/preview-links`
+
+```bash
+tangle preview create my-box 3000
+```
+
+### `tangle preview remove`
+
+Remove a preview link.
+
+Removes a preview link.
+
+```bash
+tangle preview remove <id-or-name> <preview-id>
+```
+
+Aliases: `rm`
+
+Request: `DELETE /v1/sandboxes/{id}/runtime/preview-links/{previewId}`
+
+```bash
+tangle preview rm my-box <preview-id>
+```
+
+- Alias: rm.
+
+## Run code
+
+### `tangle run`
+
+Run code in a persistent kernel inside a sandbox. Variables persist across calls in the same `--session`.
+
+Runs a source file, or stdin with '-', in a persistent language kernel (python, node, typescript, bash) inside a sandbox; variables persist across calls that share `--session`.
+
+```bash
+tangle run <id-or-name> [file] [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-l, --lang <lang>` |  | Force language: python \| node \| typescript \| bash. Required for stdin. |
+| `-s, --session <id>` |  | Session id for kernel scoping |
+| `-t, --timeout <ms>` | `60000` | Per-call timeout in ms (0 disables) |
+| `--save-images <dir>` |  | Write image results into this directory (default: $TMPDIR/tangle-run-images/`<sandbox>`/). |
+| `--no-save-images` |  | Don't write image results to disk; print summary only |
+
+Request: `POST /v1/sandboxes/{id}/runtime/code/exec`
+
+- Language comes from the file extension (.py, .js/.mjs/.cjs, .ts/.tsx, .sh/.bash) or `--lang`; stdin requires `--lang`.
+- Image results are written to $TMPDIR/tangle-run-images/`<sandbox>`/ unless `--save-images <dir>` or `--no-save-images`; dataframes, JSON, HTML and errors are summarized on stderr.
+- `--timeout` defaults to 60000 ms; 0 disables it.
+- Exits with the kernel's exit code; `--json` prints the result document.
+- Resumes a stopped sandbox first and waits up to 120000 ms for it to run.
+
+## Next
+
+- [Agent, fleet, batch and graph commands](/sandbox/cli/agents)
+- [Files](/sandbox/files)
+- [Ports and previews](/sandbox/ports-previews)

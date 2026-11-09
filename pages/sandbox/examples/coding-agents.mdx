@@ -1,0 +1,323 @@
+---
+title: Coding agent examples
+description: Complete TypeScript programs that run Claude Code, Codex and OpenCode in sandboxes to fix tests, commit, stream their work, race each other and run for hours.
+---
+
+# Coding agent examples
+
+Each program is complete. Set `TANGLE_API_KEY`, install
+`@tangle-network/sandbox`, and run it with `npx tsx <file>.mts`. Every program
+deletes its sandbox when it finishes, and each uses the public
+[sandbox-demo](https://github.com/tangle-network/sandbox-demo) repository,
+whose tests are tagged so a prompt can name one.
+
+## Fix a failing test and keep the patch
+
+The agent fixes the code; the program runs the tests itself and writes the
+diff to `fix.patch`.
+
+```ts
+import { writeFile } from "node:fs/promises";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  backend: { type: "claude-code" }, // or Codex ("codex"), OpenCode ("opencode"), Pi ("pi")
+});
+try {
+  const run = await box.prompt("`npm test` fails. Find the cause and fix it.");
+  if (!run.success) throw new Error(run.error);
+
+  // A finished turn is not a finished task.
+  const tests = await box.exec("npm test");
+  if (tests.exitCode !== 0) throw new Error("The tests still fail.");
+
+  await writeFile("fix.patch", (await box.exec("git diff")).stdout);
+  console.log(run.usage, run.costUsd);
+} finally {
+  await box.delete();
+}
+```
+
+Prints the turn's token usage and cost, and leaves `fix.patch` next to the
+program. Guide: [Run a coding agent](/sandbox/cloud-agents).
+
+## Fix a bug and commit it
+
+The agent edits; the program reads what changed, runs the one test, and
+commits.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  backend: { type: "codex" },
+});
+try {
+  const run = await box.prompt("The test tagged null-guard fails. Fix the cause.");
+  if (!run.success) throw new Error(run.error);
+
+  console.log((await box.exec("git status --short")).stdout.trim());
+  const tests = await box.exec("npm test -- --test-name-pattern=null-guard");
+  if (tests.exitCode !== 0) throw new Error("The test still fails.");
+
+  await box.exec('git -c user.name=Codex -c user.email=codex@example.com commit -am "fix: guard a null request body"');
+  console.log((await box.exec("git log --oneline -1")).stdout.trim());
+} finally {
+  await box.delete();
+}
+```
+
+Prints the changed files, then the new commit. To push, give the sandbox a
+GitHub token; see [Git](/sandbox/git).
+
+## Watch each tool call as it happens
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  backend: { type: "claude-code" },
+});
+try {
+  const seen = new Set<string>();
+  for await (const { type, data } of box.streamPrompt("The test tagged timezone fails. Fix the cause.")) {
+    const part = data.part as { id: string; type: string; tool?: string; state?: { input?: unknown } } | undefined;
+    // A tool part is updated several times; print it once.
+    if (type === "message.part.updated" && part?.type === "tool" && !seen.has(part.id)) {
+      seen.add(part.id);
+      console.log(`${seen.size}.`, part.tool, JSON.stringify(part.state?.input ?? "").slice(0, 70));
+    }
+    if (type === "result") console.log("\n" + data.finalText);
+  }
+} finally {
+  await box.delete();
+}
+```
+
+Prints a numbered line per tool call (the tool and the start of its input),
+then the agent's final answer. Guide: [Streaming](/sandbox/streaming).
+
+## Stream the agent's text
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  backend: { type: "opencode" }, // Claude Code and Codex stream through the same call
+});
+try {
+  for await (const event of box.streamPrompt("Add input validation to the CLI flags and a test for it.")) {
+    if (event.type === "token") process.stdout.write(String(event.data.value));
+  }
+} finally {
+  await box.delete();
+}
+```
+
+Writes the agent's reply to the terminal as it is generated.
+
+## Race two coding agents on one task
+
+Each agent gets its own sandbox with the same repository.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const task = "`npm test` fails. Find the cause, fix it, and make the suite pass.";
+const agents = ["claude-code", "codex"] as const;
+
+const results = await Promise.all(
+  agents.map(async (type) => {
+    const box = await client.create({
+      git: { url: "https://github.com/tangle-network/sandbox-demo" },
+      backend: { type },
+    });
+    try {
+      const run = await box.prompt(task);
+      const tests = await box.exec("npm test");
+      return {
+        agent: type,
+        passed: tests.exitCode === 0,
+        seconds: run.durationMs / 1000,
+        usd: run.costUsd,
+      };
+    } finally {
+      await box.delete();
+    }
+  }),
+);
+console.table(results);
+```
+
+Prints a table with one row per coding agent: whether the tests pass, seconds
+and cost. For more agents or a shared budget, use a
+[fleet](/sandbox/examples/fleets).
+
+## Start a long task and collect it later
+
+The first run starts the task and exits. The second, from any process, reads
+the result and deletes the sandbox.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const [sandboxId, executionId] = process.argv.slice(2);
+const sessionId = "upgrade-deps";
+
+if (!sandboxId) {
+  const box = await client.create({
+    git: { url: "https://github.com/tangle-network/sandbox-demo" },
+    backend: { type: "codex" },
+    maxLifetimeSeconds: 8 * 3600,
+  });
+  const run = await box.dispatchPrompt(
+    "Upgrade each dependency one at a time. Run the tests after each " +
+      "upgrade and revert any that breaks them.",
+    { sessionId },
+  );
+  console.log(`npx tsx worker.mts ${box.id} ${run.executionId}`);
+} else {
+  const box = await client.get(sandboxId);
+  if (!box) throw new Error(`Sandbox ${sandboxId} is gone.`);
+  const result = await box.session(sessionId).result({ executionId });
+  console.log(result.status, result.response);
+  await box.delete();
+}
+```
+
+The first run prints the command to collect the result. This program deletes
+the sandbox on the collect run, not in `finally`, because the sandbox must
+outlive the first process. Guide: [Sessions](/sandbox/sessions).
+
+## Run a planner and an implementer in one sandbox
+
+```ts
+import type { AgentProfile } from "@tangle-network/agent-interface";
+import { Sandbox } from "@tangle-network/sandbox/agent";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const plannerProfile = {
+  name: "planner",
+  harness: "codex",
+  prompt: { appendSystemPrompt: "Plan the work before changing files." },
+} satisfies AgentProfile;
+
+const implementerProfile = {
+  name: "implementer",
+  harness: "claude-code",
+  prompt: { appendSystemPrompt: "Implement the request and run the relevant tests." },
+} satisfies AgentProfile;
+
+const box = await client.create({
+  agent: false,
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+});
+try {
+  const [planner, implementer] = await box.agents.startMany([
+    { id: "planner-v1", name: "Planner", backend: { type: "codex", profile: plannerProfile } },
+    { id: "implementer-v1", name: "Implementer", backend: { type: "claude-code", profile: implementerProfile } },
+  ]);
+
+  const [plan, implementation] = await Promise.all([
+    planner.prompt("Inspect the repository and propose a precise plan to fix the failing test."),
+    implementer.prompt("Inspect the repository and fix the failing test."),
+  ]);
+  console.log("PLAN\n", plan.response);
+  console.log("IMPLEMENTATION\n", implementation.response);
+
+  // Any process can reattach to an agent by its id.
+  const reloaded = await client.get(box.id);
+  const plannerAgain = await reloaded?.agents.get("planner-v1");
+  console.log("planner status", await plannerAgain?.status());
+} finally {
+  await box.delete();
+}
+```
+
+Install `@tangle-network/agent-interface` as well for the profile type.
+Prints the plan, the implementation summary and the planner's status. Guide:
+[Several agents in one sandbox](/sandbox/agents-multiple).
+
+## Drive a browser
+
+The agent installs Playwright and Chromium in its own sandbox and drives them.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  backend: { type: "claude-code" },
+  resources: { cpuCores: 2, memoryMB: 4096 },
+  // The default allowlist, plus the browser download and the one site it reads.
+  egressPolicy: {
+    mode: "strict",
+    includeImplicitDomains: true,
+    allowDomains: ["cdn.playwright.dev", "playwright.download.prss.microsoft.com", "news.ycombinator.com"],
+  },
+});
+try {
+  const run = await box.prompt(
+    "Install Playwright with Chromium. Open https://news.ycombinator.com, " +
+      "save a full page screenshot to /home/agent/front.png, and write the five " +
+      "top story titles to /home/agent/top.json as a JSON array of strings.",
+  );
+  if (!run.success) throw new Error(run.error);
+
+  console.log(JSON.parse(await box.read("/home/agent/top.json")));
+  await box.fs.download("/home/agent/front.png", "front.png");
+} finally {
+  await box.delete();
+}
+```
+
+Prints five story titles and saves `front.png` next to the program. Guide:
+[Egress](/sandbox/egress).
+
+## Next
+
+- [Fleet examples](/sandbox/examples/fleets)
+- [Product examples](/sandbox/examples/products)
+- [CLI examples](/sandbox/examples/cli)

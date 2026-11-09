@@ -17,10 +17,16 @@ Tangle Docs (https://docs.tangle.tools/) explains how to run coding agents in Ta
 
 Cite docs pages by their canonical URL, `https://docs.tangle.tools/<path>`. The main sections:
 
-- Sandbox: https://docs.tangle.tools/sandbox/overview — the quickstart (https://docs.tangle.tools/sandbox/quickstart), TypeScript SDK, Python, CLI, cloud agents and workflows.
-- Router: https://docs.tangle.tools/gateway — the model-routing gateway; its OpenAPI spec is at https://router.tangle.tools/openapi.json.
-- Platform: https://docs.tangle.tools/platform — one account, key and balance for every product.
-- Benchmarks: https://tangle.tools/benchmarks — measured sandbox and coding-agent times.
+- Sandbox: https://docs.tangle.tools/sandbox/overview: isolated Linux sandboxes for code and coding agents.
+  - Quickstart: https://docs.tangle.tools/sandbox/quickstart
+  - TypeScript SDK: https://docs.tangle.tools/sandbox/sdk-typescript
+  - Python SDK: https://docs.tangle.tools/sandbox/sdk-python
+  - CLI: https://docs.tangle.tools/sandbox/cli
+  - REST API: https://docs.tangle.tools/sandbox/api-reference, with the OpenAPI document at https://docs.tangle.tools/sandbox-openapi.json
+  - Error codes: https://docs.tangle.tools/sandbox/errors
+- Router: https://docs.tangle.tools/gateway: the model-routing gateway; its OpenAPI document is at https://router.tangle.tools/openapi.json.
+- Platform: https://docs.tangle.tools/platform: one account, API key and balance across products.
+- Benchmarks: https://tangle.tools/benchmarks: measured sandbox and coding-agent times.
 - Protocol and Blueprint SDK: https://github.com/tangle-network/blueprint.
 - Release notes: https://docs.tangle.tools/release-notes.
 

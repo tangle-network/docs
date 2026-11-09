@@ -1,0 +1,201 @@
+---
+title: Fleets and optional modules
+description: Reference for Python fleets, the manageSandboxes agent tool, trace export, the session gateway, product tokens, the collaboration client, the Tangle Network client and the image builder.
+---
+
+import { Callout } from "nextra/components";
+
+# Fleets and optional modules
+
+This page covers the Python modules beyond a single sandbox: fleets, an agent tool that manages fleets, trace export, and the modules behind the `[gateway]` and `[tangle]` extras.
+
+## Fleets
+
+A fleet is a named group of sandboxes that run one workload. You send one command or prompt to every machine and collect the results.
+
+<Callout type="warning">
+Against `sandbox.tangle.tools`, `client.fleets.create` and `create_with_coordinator` start the machines and then fail with `VALIDATION_ERROR` when they record the fleet. With the default `cleanup_on_failure=True` the SDK deletes the machines it started.
+Create fleets with the TypeScript SDK or `tangle fleet create`; see [Fleets](/sandbox/agents-fleet).
+</Callout>
+
+### `client.fleets`
+
+| Method | Request |
+| --- | --- |
+| `create(CreateSandboxFleetOptions) -> SandboxFleet` | `POST /v1/sandboxes` per machine, then `POST /v1/fleets` |
+| `create_with_coordinator(CreateSandboxFleetWithCoordinatorOptions) -> SandboxFleet` | as above, plus a coordinator machine |
+| `list(ListSandboxFleetOptions(fleet_id, status=None)) -> SandboxFleet` | `GET /v1/fleets/{fleetId}`; returns one fleet |
+| `delete(fleet_id)` | `DELETE /v1/fleets/{fleetId}` |
+| `capabilities()` | `GET /v1/fleets/capabilities` |
+| `operations()` | `GET /v1/fleets/operations` |
+| `reconcile(dry_run=None)` | `POST /v1/fleets/reconcile` |
+| `estimate_cost(options)` | `POST /v1/fleets/estimate` |
+| `usage(fleet_id)`, `cost(fleet_id)`, `manifest(fleet_id)` | `GET /v1/fleets/{fleetId}/usage`, `/cost`, `/manifest` |
+| `trace(fleet_id, *, include_intelligence=False)`, `intelligence(fleet_id)` | `GET /v1/fleets/{fleetId}/trace` |
+| `create_token(fleet_id, options=None)` | `POST /v1/fleets/{fleetId}/token` |
+| `attach_machine(fleet_id, machine)`, `detach_machine(fleet_id, machine_id)` | `POST /v1/fleets/{fleetId}/machines`, `DELETE .../machines/{machineId}` |
+| `dispatch_results(fleet_id, dispatch_id, options=None)` | `GET /v1/fleets/{fleetId}/dispatch/{dispatchId}/results` |
+| `cancel_dispatch(fleet_id, dispatch_id, reason=None)` | `POST /v1/fleets/{fleetId}/dispatch/{dispatchId}/cancel` |
+| `create_workspace_snapshot(fleet_id)`, `restore_workspace_snapshot(fleet_id, snapshot_id)`, `reconcile_workspace(fleet_id)` | `/v1/fleets/{fleetId}/workspace/...` |
+| `dispatch_exec_stream(...)`, `dispatch_prompt_stream(...)` | `POST /v1/fleets/{fleetId}/dispatch/stream` |
+| `reap_expired(options=None)` | `POST /v1/fleets/reap-expired` |
+| `create_intelligence_report(...)`, `create_agentic_intelligence_report(...)`, `export_trace(...)` | report and trace routes |
+
+There is no Python call that lists every fleet; use `client.fetch("GET", "/v1/fleets")` or `tangle fleet list`.
+
+`create()` checks the policy caps on your machine first, creates each machine's sandbox (4 at a time by default) with a 1-hour lifetime unless you set one, then records the fleet.
+
+| `CreateSandboxFleetOptions` field | Description |
+| --- | --- |
+| `machines` | `list[SandboxFleetMachineSpec(machine_id, options=CreateSandboxOptions(), name=None, metadata=None, role=None)]` |
+| `fleet_id` | Up to 64 characters: letters, digits, `.`, `_` and `-`, starting with a letter or digit |
+| `defaults` | `CreateSandboxOptions` merged under each machine's options |
+| `metadata` | Your metadata; keys starting with `tangle.` are reserved |
+| `workspace` | `SandboxFleetWorkspace(mode="isolated")`; `mode="shared"` is refused |
+| `policy` | `SandboxFleetPolicy` caps, checked before anything is created |
+| `cleanup_on_failure` | Default `True`: delete the machines when any step fails |
+| `max_concurrent_creates`, `idempotency_key` | Create pacing and retry safety |
+
+`SandboxFleetPolicy` caps: `max_machines`, `max_concurrent_creates`, `max_total_cpu`, `max_total_memory_mb`, `max_total_storage_mb`, `max_total_accelerators`, `max_lifetime_seconds`, `max_spend_usd` (checked against `estimate_cost`), `allowed_drivers`, `allowed_environments`, `allowed_template_ids` and `allow_accelerators`.
+`create_with_coordinator` adds a `coordinator` machine; it is a full sandbox and is billed like one.
+
+### `SandboxFleet`
+
+| Member | Description |
+| --- | --- |
+| `fleet_id`, `ids`, `machines` | The fleet id, the machine ids, and a `dict` of machine id to `SandboxInstance` |
+| `get(machine_id)`, `sandbox(machine_id)` | One machine's `SandboxInstance` |
+| `exec(machine_id, command, options=None) -> ExecResult` | Run on one machine; raises `RuntimeError` when it fails |
+| `prompt(machine_id, message, options=None) -> PromptResult` | Prompt one machine; raises `RuntimeError` when it fails |
+| `dispatch_exec(command, FleetExecDispatchOptions=None) -> list[dict]` | Run on many machines |
+| `dispatch_prompt(message, FleetPromptDispatchOptions=None) -> list[dict]` | Prompt many machines |
+| `dispatch_exec_detailed`, `dispatch_prompt_detailed`, `..._with_insights` | Add `dispatchId`, `durationMs`, trace and intelligence |
+| `collect_artifacts(artifacts) -> list[dict]` | Read files from machines |
+| `usage()`, `cost()`, `trace()`, `intelligence()`, `manifest()`, `delete()` | Fleet-level reads and delete |
+| `attach_machine`, `detach_machine`, `create_token`, workspace snapshot methods, report methods | Same as the `client.fleets` calls, bound to this fleet |
+
+Each dispatch result is a `dict` with `machineId`, `ok`, and `result` (`exitCode`, `stdout`, `stderr`) or `error`.
+`FleetExecDispatchOptions` takes `machines`, `max_concurrent`, `retry=FleetRetryPolicy(attempts=...)`, `cwd`, `env`, `timeout_ms`, `dispatch_id` and `buffer_results`. `FleetPromptDispatchOptions` adds `session_id`, `backend` and `context`.
+A dispatch waits the larger of `timeout_ms` and 600 s, plus 15 s, whatever the client timeout.
+Every command a dispatch runs sees `TANGLE_FLEET_ID`, `TANGLE_FLEET_MACHINE_ID`, `TANGLE_FLEET_MACHINE_ROLE` and `TANGLE_SANDBOX_ID`.
+
+`collect_artifacts` takes `[{"machine_id": ..., "path": ...}]`. Paths must be under `/home/agent`, and each file is capped at 10 MiB unless the entry sets `max_bytes`.
+The sync fleet also accepts `machineId` as the key; `AsyncSandboxFleet` needs `machine_id`.
+
+```python
+from tangle_sandbox import FleetExecDispatchOptions
+
+results = fleet.dispatch_exec(
+    'echo "$TANGLE_FLEET_MACHINE_ID" > /home/agent/id.txt && nproc',
+    FleetExecDispatchOptions(max_concurrent=3, timeout_ms=30_000),
+)
+for result in results:
+    print(result["machineId"], result["ok"])
+
+files = fleet.collect_artifacts([{"machine_id": m, "path": "/home/agent/id.txt"} for m in fleet.ids])
+```
+
+## The `manageSandboxes` agent tool
+
+```python
+from tangle_sandbox import SandboxFleetPolicy, create_manage_sandboxes_tool
+
+tool = create_manage_sandboxes_tool(client, policy=SandboxFleetPolicy(max_machines=4, max_spend_usd=5))
+print(tool.name)
+```
+
+`create_manage_sandboxes_tool(client, policy=None)` returns a `ManageSandboxesTool` you can hand to an agent framework: `tool.name` is `manageSandboxes`, `tool.parameters` is its JSON schema, and `tool.execute(input)` runs one action.
+Actions: `capabilities`, `create`, `createWithCoordinator`, `list`, `delete`, `manifest`, `usage`, `trace`, `intelligence`, `cost`, `createWorkspaceSnapshot`, `reconcileWorkspace`, `attachMachine`, `detachMachine` and `restoreWorkspaceSnapshot`.
+Create actions use the policy you pass to the factory; the agent cannot supply its own. `execute` returns SDK objects, such as a `SandboxFleet`, not JSON.
+`create_async_manage_sandboxes_tool` builds the `AsyncSandbox` version.
+
+## Export traces to your collector
+
+```python
+from tangle_sandbox import export_trace_bundle, to_otel_json
+
+bundle = box.trace()
+spans = to_otel_json(bundle, service_name="my-agent")
+export_trace_bundle(bundle, "https://collector.example.com/v1/traces", format="otel-json", headers={"authorization": "Bearer ..."})
+```
+
+| Function | Description |
+| --- | --- |
+| `to_otel_json(bundle, service_name="tangle-sandbox") -> dict` | One root span plus one span per event; failure events get status code 2 |
+| `build_trace_export_payload(bundle, format="tangle", service_name=...)` | The body `export_trace_bundle` would send |
+| `export_trace_bundle(bundle, url, *, headers=None, format="tangle", service_name=..., timeout=30.0)` | Posts to your URL and returns `{"ok", "status", "body"}` |
+| `export_trace_bundle_async(...)` | The async version |
+| `otel_trace_id_for_tangle_trace(trace_id) -> str` | The 32-hex OpenTelemetry trace id for a Tangle trace id |
+
+The export uses its own HTTP request, so your collector's headers never reach the Sandbox API.
+
+## Session gateway (`[gateway]`)
+
+```bash
+pip install "tangle-sandbox[gateway]"
+```
+
+`tangle_sandbox.session_gateway` streams a session's live events over a WebSocket, with reconnects, ping tracking, de-duplication and replay from the last event id.
+
+```python
+from tangle_sandbox.session_gateway import SessionGatewayClient, SessionGatewayClientConfig
+
+gateway = SessionGatewayClient(SessionGatewayClientConfig(url=gateway_url, token=read_token, session_id=session_id))
+await gateway.connect()
+```
+
+`SessionGatewayClient` is async; `SyncSessionGatewayClient` runs it on a background thread. Methods: `connect`, `disconnect`, `subscribe`, `unsubscribe`, `ping`, `replay(since)`, `send_terminal_input(terminal_id, data)`, `update_token`, and stats and state readers.
+The token is a session read token minted on your backend with `tangle_sandbox.auth`. Without the extra, constructing a client raises `ImportError` naming the install command.
+
+## Product tokens (`tangle_sandbox.auth`)
+
+```python
+from tangle_sandbox.auth import ProductTokenIssuer
+
+issuer = ProductTokenIssuer(product_id="my-product", signing_secret=os.environ["SANDBOX_SIGNING_SECRET"])
+token = issuer.issue(user_id="user-1", session_id="sess-1", tier="pro")
+```
+
+Mints signed tokens on your backend for the session gateway and collaboration connections. Default lifetimes: `free` 15 minutes, `pro` 240 minutes, `enterprise` 480 minutes.
+Helpers: `issue_read_token`, `issue_session_scoped_token`, `issue_project_scoped_token`, `issue_batch_scoped_token`, `issue_collaboration_token`, `decode_token`, `get_token_ttl` and `is_token_expiring_soon`.
+Keep the signing secret on your server; never send it to a browser.
+
+## Collaboration client (`tangle_sandbox.collaboration`)
+
+`CollaborationClient(CollaborationClientConfig(base_url, timeout_ms=30000, headers=None))` calls `/api/collaboration/bootstrap`, `/token` and `/snapshot` on a collaboration backend you run at `base_url`; it does not call the Sandbox API.
+`CollaborationFileBridge`, `build_collaboration_document_id`, `parse_collaboration_document_id` and `normalize_collaboration_path` help build document ids for files.
+
+## Tangle Network operators (`[tangle]`)
+
+```bash
+pip install "tangle-sandbox[tangle]"
+```
+
+`tangle_sandbox.tangle.TangleSandboxClient` creates and deletes sandboxes through on-chain jobs on Tangle Network operators and returns a normal `SandboxInstance` whose runtime calls go to the operator.
+
+```python
+from tangle_sandbox import CreateSandboxOptions
+from tangle_sandbox.tangle import TangleSandboxClient, TangleSandboxClientConfig
+
+client = TangleSandboxClient(TangleSandboxClientConfig(service_id=1, private_key=os.environ["OPERATOR_KEY"], rpc_url=rpc_url))
+box = client.create(CreateSandboxOptions(name="on-chain"))
+```
+
+- `create()` blocks until the job completes and takes a `CreateSandboxOptions`.
+- `stop()` and `resume()` answer 501: operators have no stop or resume job.
+- `prompt()` and `stream_prompt()` raise `NotImplementedError`; call them on `box.direct()`.
+- `get()` answers from a cache of sandboxes this client created.
+- `env` values are public on-chain. Send secrets with `tangle_secrets`, which go to the operator off-chain and need `operator_api_url`.
+- Import names explicitly; `from tangle_sandbox.tangle import *` raises `AttributeError`.
+
+## Image builder
+
+`Image.create(base_image="ubuntu:22.04")` returns a chainable `ImageBuilder` (`python`, `add_packages`, `add_apt_packages`, `add_commands`, `with_env`, `workdir`, `user`, and more).
+`to_spec()`, `compute_id()` and `generate_dockerfile()` work on your machine. `build()` raises `ValueError`, because the Sandbox API refuses image builds.
+To start from your own image, name a container image reference in `CreateSandboxOptions(environment=...)`, or publish a template; see [Templates and images](/sandbox/templates-gallery).
+
+## Next
+
+- [Types and errors](/sandbox/sdk-python/types-and-errors)
+- [Fleets](/sandbox/agents-fleet)
+- [Python examples](/sandbox/examples/python)

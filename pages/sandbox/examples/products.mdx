@@ -1,0 +1,876 @@
+---
+title: Product examples
+description: Complete programs that put sandbox agents behind a product, with one sandbox per customer, chat routes that survive retries, batches, hosted runs, cost reporting and email or iMessage lines.
+---
+
+# Product examples
+
+Each program is complete TypeScript. Set `TANGLE_API_KEY`, install
+`@tangle-network/sandbox`, and run it with `npx tsx <file>.mts` unless the
+section says otherwise. Model ids come from `GET /v1/router-models` with your
+Sandbox key, or the [model list](/gateway/models).
+
+## Review contracts with one sandbox per customer
+
+Each customer key gets its own sandbox, which the platform keeps, resumes and
+replaces. Save a contract as `msa.md` next to the program.
+
+```ts
+import { readFile } from "node:fs/promises";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+export async function review(customerId: string, turnId: string, contract: string) {
+  const instance = await client.instances.ensure({
+    key: `customer:${customerId}`,
+    profile: {
+      version: "contracts-v1",
+      backend: {
+        type: "opencode", // Claude Code ("claude-code") and Codex ("codex") work the same way
+        profile: {
+          name: "contract-review",
+          prompt: { systemPrompt: "You review contracts. Cite the clause for every finding." },
+        },
+      },
+    },
+    create: { resources: { cpuCores: 1, memoryMB: 2048, diskGB: 10 } },
+  });
+  await instance.box.write("contracts/msa.md", contract);
+  const ask = "Review contracts/msa.md. List the indemnity, liability and termination risks.";
+  let turn = await instance.turn(ask, { thread: "main", turnId });
+  // The same turnId picks the turn back up instead of starting another.
+  while (turn.state === "running") {
+    await new Promise((wait) => setTimeout(wait, 3_000));
+    turn = await instance.turn(ask, { thread: "main", turnId });
+  }
+  return turn.state === "completed" ? turn.text : turn.state;
+}
+
+try {
+  console.log(await review("acme", "review-1", await readFile("msa.md", "utf8")));
+} finally {
+  // A product keeps this sandbox for the customer's next review; the demo removes it.
+  const record = await client.instances.get("customer:acme");
+  const box = record?.sandboxId ? await client.get(record.sandboxId) : null;
+  await box?.delete();
+  await client.instances.release("customer:acme");
+}
+```
+
+Prints the risks the agent found, each with its clause. In a product, skip the
+cleanup so the customer's next review reuses the sandbox. Guide:
+[One sandbox per user](/sandbox/instances).
+
+## Walk one customer's sandbox through its lifecycle
+
+This program creates a key's sandbox, finds it running, resumes it after a
+stop with the conversation intact, moves it to a new profile version, replaces
+it after a delete, then deletes the sandbox and releases the key.
+
+```ts
+import {
+  type BackendConfig,
+  type EnsureInstanceOptions,
+  type HostedInstance,
+  Sandbox,
+} from "@tangle-network/sandbox";
+
+function backend(systemPrompt: string): BackendConfig {
+  return {
+    type: "opencode", // Claude Code ("claude-code") and Codex ("codex") work the same way
+    profile: { name: "notes", prompt: { systemPrompt }, model: { default: "openai/gpt-5.6-luna" } },
+  };
+}
+
+function report(step: string, instance: HostedInstance): void {
+  console.log(
+    `${step}: ${instance.started} ${instance.sandboxId}, generation ${instance.generation}, ` +
+      `profile ${instance.profileVersion}, session for "main": ${instance.sessionId("main")}`,
+  );
+}
+
+async function ask(instance: HostedInstance, text: string): Promise<string> {
+  const turnId = `turn-${crypto.randomUUID()}`;
+  const deadline = Date.now() + 5 * 60_000;
+  while (Date.now() < deadline) {
+    const result = await instance.turn(text, { thread: "main", turnId });
+    if (result.state === "completed") return result.text;
+    if (result.state !== "running") throw new Error(`Turn ${turnId} ended in state ${result.state}`);
+    await new Promise((resolve) => setTimeout(resolve, 1_500));
+  }
+  throw new Error(`Turn ${turnId} still running after 5 minutes`);
+}
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+const key = `example-user:${process.env.USER_ID ?? "demo"}`;
+const options: EnsureInstanceOptions = {
+  key,
+  profile: { version: "v1", backend: backend("Answer in one sentence.") },
+  create: {
+    name: "instances-example",
+    resources: { cpuCores: 2, memoryMB: 2048, diskGB: 2 },
+    idleTimeoutSeconds: 600,
+  },
+};
+
+try {
+  let latest = await client.instances.ensure(options);
+  report("first ensure", latest);
+  console.log(await ask(latest, "Remember the code word 'heron'. Reply with OK."));
+
+  latest = await client.instances.ensure(options);
+  report("second ensure", latest);
+
+  await latest.box.stop();
+  latest = await client.instances.ensure(options);
+  report("after stop", latest);
+  console.log(await ask(latest, "What was the code word?"));
+
+  // A new version keeps the sandbox and its files; the next turn opens session main-v2.
+  latest = await client.instances.ensure({
+    ...options,
+    profile: { version: "v2", backend: backend("Answer in five words.") },
+  });
+  report("profile v2", latest);
+
+  await latest.box.delete();
+  latest = await client.instances.ensure(options);
+  report("after delete", latest);
+} finally {
+  // release() leaves the sandbox running, so delete it first.
+  const record = await client.instances.get(key);
+  const box = record?.sandboxId ? await client.get(record.sandboxId) : null;
+  await box?.delete();
+  await client.instances.release(key);
+}
+```
+
+Prints one line per step: `created`, `running`, `resumed` (and "heron"),
+the new profile version on the same sandbox, then `created` with the next
+generation.
+
+## Keep a support conversation per customer
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const instance = await client.instances.ensure({
+  key: "customer:4821",
+  profile: {
+    version: "support-v1",
+    backend: {
+      type: "opencode", // Claude Code ("claude-code") and Codex ("codex") work the same way
+      model: { model: "glm-5.3" },
+      profile: {
+        name: "support",
+        prompt: { systemPrompt: "You are the support agent for a bike shop. Answer in one sentence." },
+      },
+    },
+  },
+  create: { resources: { cpuCores: 1, memoryMB: 2048, diskGB: 10 } },
+});
+
+async function ask(turnId: string, text: string) {
+  let turn = await instance.turn(text, { thread: "orders", turnId });
+  while (turn.state === "running") {
+    await new Promise((wait) => setTimeout(wait, 3_000));
+    turn = await instance.turn(text, { thread: "orders", turnId });
+  }
+  return turn.state === "completed" ? turn.text : turn.state;
+}
+
+try {
+  console.log(await ask("turn-1", "Order 4821, the red Marin bike, arrived without pedals."));
+  console.log(await ask("turn-2", "Remind me: which order was that and what was missing?"));
+} finally {
+  await instance.box.delete();
+  await client.instances.release("customer:4821");
+}
+```
+
+The second answer names the order and the missing pedals, because both turns
+run in the `orders` thread. In a product, keep the sandbox for the customer's
+next conversation.
+
+## Triage a queue of tickets in one call
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const tickets = [
+  "Customer says the export button does nothing in Safari.",
+  "Invoice PDF shows the wrong currency symbol for CHF.",
+  "Password reset email arrives twice.",
+  "Dashboard is slow with more than 500 projects.",
+];
+const batch = await client.runBatch({
+  tasks: tickets.map((ticket, i) => ({
+    id: `ticket-${i + 1}`,
+    message: `Classify this bug report as frontend, backend or email, and name its severity 1-3: ${ticket}`,
+  })),
+  // Add backends of type "claude-code" or "codex" to compare Claude Code and Codex.
+  backends: [{ id: "glm", type: "opencode", model: { model: "glm-5.3" } }],
+});
+for (const r of batch.results) console.log(r.taskId, r.success ? r.resultSummary : r.error);
+console.log(`${batch.totalSuccess}/${batch.totalTasks} done, ${batch.totalRetries} retries`);
+```
+
+Prints each ticket's class and severity, then the totals. The platform creates
+and cleans up the sandboxes. Guide: [Batches and hosted runs](/sandbox/runs-and-batch).
+
+## Research a company with a hosted run
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+// npx tsx gtm-agent.mts stripe.com
+const company = process.argv[2] ?? "tangle.tools";
+
+const run = await client.run({
+  profile: {
+    name: "gtm-research",
+    prompt: { systemPrompt: "Research a company before outreach. Quote a page for each claim." },
+  },
+  prompt: `Read ${company}. Give three facts a seller should know and one opener.`,
+  http: { hosts: [company, `www.${company}`] },
+  model: "glm-5.3",
+});
+console.log(run.placement?.chosen, run.placement?.reason);
+console.log(run.text);
+console.log(run.costUsd);
+```
+
+Prints where the platform ran it and why, the research with a quoted page per
+fact, and the model spend. There is no sandbox to delete.
+
+## Report what each turn cost
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  // Claude Code and Codex report usage and costUsd on the same result.
+  backend: { type: "opencode", model: { model: "glm-5.3" } },
+});
+try {
+  const run = await box.prompt("What does packages/worker/src/queue.js do? Two sentences.");
+  console.log(run.response);
+  // costUsd covers the turn's model calls; sandbox time is billed separately.
+  console.log(run.usage, run.costUsd);
+  const margin = 1.25;
+  if (run.costUsd !== undefined) console.log(`invoice $${(run.costUsd * margin).toFixed(4)}`);
+} finally {
+  await box.delete();
+}
+```
+
+Prints the answer, the turn's token usage and model cost, and the price with
+your margin. See [Pricing and spend](/sandbox/cost) for sandbox time.
+
+## Run your own tool loop on a Router model
+
+Your loop calls the Tangle Router; the sandbox is its tools. One key pays for
+both.
+
+```ts
+import { Sandbox, openaiTools } from "@tangle-network/sandbox/agent";
+
+const apiKey = process.env.TANGLE_API_KEY!;
+const client = new Sandbox({ apiKey, baseUrl: "https://sandbox.tangle.tools" });
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+});
+const { tools, handleAssistantMessage } = openaiTools(box);
+const messages: unknown[] = [
+  { role: "user", content: "Find the slowest test. Make it faster without changing what it checks." },
+];
+try {
+  for (let step = 0; step < 40; step++) {
+    const reply = await fetch("https://router.tangle.tools/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "glm-5.3", messages, tools }),
+    });
+    const { message } = (await reply.json()).choices[0];
+    messages.push(message);
+    if (!message.tool_calls?.length) {
+      console.log(message.content);
+      break;
+    }
+    messages.push(...(await handleAssistantMessage(message)));
+  }
+} finally {
+  await box.delete();
+}
+```
+
+Prints the model's final answer after it has run the tests and edited the
+code through the sandbox tools. Guide: [OpenAI](/sandbox/agents-openai).
+
+## Chat from a Cloudflare Worker
+
+A `/chat` route that survives retries and reconnects. The browser sends a
+stable `x-conversation-id` and `x-turn-id` with its own bearer token; the
+Worker keeps the account key.
+
+- `findCompletedTurn(turnId)` returns a finished turn without running it again.
+- `dispatchPrompt(prompt, { sessionId, turnId })` starts the turn once. A
+  retry with the same `turnId` joins it.
+- `box.session(id).events({ since })` replays the turn's events after the
+  browser's `Last-Event-ID`, so a dropped connection loses nothing.
+
+`chat.ts`, the Worker:
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox/core";
+import { authorizeWorkerChat, type WorkerChatAuthEnv } from "./worker-chat-auth.js";
+
+interface Env extends WorkerChatAuthEnv {
+  TANGLE_API_KEY: string;
+  SANDBOX_ID: string;
+}
+
+export default {
+  async fetch(req: Request, env: Env): Promise<Response> {
+    const url = new URL(req.url);
+    if (req.method !== "POST" || url.pathname !== "/chat") {
+      return new Response("Not found", { status: 404 });
+    }
+
+    const authorization = await authorizeWorkerChat(req, env);
+    if (!authorization.succeeded) return authorization.response;
+    const { sessionId, turnId } = authorization;
+
+    const client = new Sandbox({ apiKey: env.TANGLE_API_KEY, baseUrl: "https://sandbox.tangle.tools" });
+    const box = await client.get(env.SANDBOX_ID);
+    if (!box) return new Response("Sandbox not found", { status: 404 });
+
+    const cached = await box.findCompletedTurn(turnId, { sessionId });
+    if (cached) return Response.json({ cached: true, ...cached });
+
+    const prompt = await req.text();
+    await box.dispatchPrompt(prompt, { sessionId, turnId });
+
+    // The turn keeps running if this response ends; reconnect with the same ids.
+    const lastEventId = req.headers.get("last-event-id") ?? undefined;
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const event of box.session(sessionId).events({ since: lastEventId, signal: req.signal })) {
+            controller.enqueue(
+              new TextEncoder().encode(
+                `id: ${event.id ?? ""}\nevent: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`,
+              ),
+            );
+          }
+          controller.close();
+        } catch (err) {
+          if ((err as Error).name === "AbortError") return controller.close();
+          controller.error(err);
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "content-type": "text/event-stream",
+        "cache-control": "no-cache",
+        "x-turn-id": turnId,
+        "x-session-id": sessionId,
+      },
+    });
+  },
+};
+```
+
+`worker-chat-auth.ts`, the helper module. It checks the browser's token with
+your auth server and derives the session id from the user, conversation and
+turn, so one user can never reach another user's session.
+
+```ts
+export interface WorkerChatAuthEnv {
+  AUTH_INTROSPECTION_TOKEN: string;
+  AUTH_INTROSPECTION_URL: string;
+  AUTH_SESSION_SECRET: string;
+}
+
+type WorkerChatAuthorization =
+  | { succeeded: true; sessionId: string; turnId: string }
+  | { succeeded: false; response: Response };
+
+interface IntrospectionResponse {
+  active?: unknown;
+  scope?: unknown;
+  sub?: unknown;
+}
+
+const STABLE_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
+
+export async function authorizeWorkerChat(
+  request: Request,
+  env: WorkerChatAuthEnv,
+): Promise<WorkerChatAuthorization> {
+  const authorization = request.headers.get("authorization");
+  const browserToken = authorization?.startsWith("Bearer ") ? authorization.slice(7).trim() : "";
+  const conversationId = request.headers.get("x-conversation-id");
+  const turnId = request.headers.get("x-turn-id");
+  if (!browserToken) return denied("Bearer authentication is required", 401);
+  if (!conversationId || !STABLE_ID_PATTERN.test(conversationId)) {
+    return denied("A stable x-conversation-id is required", 400);
+  }
+  if (!turnId || !STABLE_ID_PATTERN.test(turnId)) {
+    return denied("A stable x-turn-id is required", 400);
+  }
+
+  const response = await fetch(env.AUTH_INTROSPECTION_URL, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${env.AUTH_INTROSPECTION_TOKEN}`,
+      "content-type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({ token: browserToken }),
+  });
+  if (!response.ok) {
+    return denied(
+      response.status >= 500 ? "Authentication service unavailable" : "Invalid credentials",
+      response.status >= 500 ? 503 : 401,
+    );
+  }
+
+  const identity = (await response.json()) as IntrospectionResponse;
+  const scopes = typeof identity.scope === "string" ? identity.scope.split(/\s+/) : [];
+  if (identity.active !== true || typeof identity.sub !== "string" || !identity.sub || !scopes.includes("sandbox:chat")) {
+    return denied("Not authorized for Sandbox chat", 403);
+  }
+
+  return {
+    succeeded: true,
+    sessionId: await deriveOwnedTurnSessionId(identity.sub, conversationId, turnId, env.AUTH_SESSION_SECRET),
+    turnId,
+  };
+}
+
+export async function deriveOwnedTurnSessionId(
+  userId: string,
+  conversationId: string,
+  turnId: string,
+  secret: string,
+): Promise<string> {
+  const encoder = new TextEncoder();
+  if (encoder.encode(secret).byteLength < 32) {
+    throw new Error("AUTH_SESSION_SECRET must contain at least 32 bytes");
+  }
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(JSON.stringify([userId, conversationId, turnId])),
+  );
+  let binary = "";
+  for (const byte of new Uint8Array(signature)) binary += String.fromCharCode(byte);
+  return `chat_${btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")}`;
+}
+
+function denied(message: string, status: number): WorkerChatAuthorization {
+  return { succeeded: false, response: new Response(message, { status }) };
+}
+```
+
+Deploy with `wrangler`. Set `TANGLE_API_KEY`, `AUTH_INTROSPECTION_TOKEN` and
+`AUTH_SESSION_SECRET` as secrets, and `SANDBOX_ID` and
+`AUTH_INTROSPECTION_URL` as variables. Never send the account key to the
+browser. Guide: [Sessions](/sandbox/sessions).
+
+## Stream to a browser that survives reloads
+
+The browser reads its session's events with a short-lived token your backend
+mints. A dropped connection resumes after the last event the browser received;
+a reload replays the running turn from its first event.
+
+```ts
+import { SessionGatewayClient } from "@tangle-network/sandbox/session-gateway";
+
+interface BrowserSession {
+  sessionId: string;
+  runtimeSessionId: string;
+}
+
+interface ScopedTokenResult {
+  token: string;
+  expiresAt: number;
+  url: string;
+}
+
+export async function fetchScopedTokenWithSessionCookie(
+  endpoint: string,
+  sessionId: string,
+): Promise<ScopedTokenResult> {
+  const response = await fetch(endpoint, {
+    method: "POST",
+    credentials: "include",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ sessionId }),
+  });
+  if (!response.ok) throw new Error(`Scoped-token request failed with ${response.status}`);
+  const result = (await response.json()) as Partial<ScopedTokenResult>;
+  if (!result.token || typeof result.expiresAt !== "number" || !result.url) {
+    throw new Error("Scoped-token response is invalid");
+  }
+  return { token: result.token, expiresAt: result.expiresAt, url: result.url };
+}
+
+export async function connect(
+  opts: BrowserSession & {
+    fetchScopedToken: (sessionId: string) => Promise<ScopedTokenResult>;
+    onEvent: (event: { channel: string; data: unknown; seq?: number }) => void;
+  },
+): Promise<SessionGatewayClient> {
+  const initial = await opts.fetchScopedToken(opts.sessionId);
+  const client = new SessionGatewayClient({
+    url: initial.url,
+    token: initial.token,
+    sessionId: opts.sessionId,
+    runtimeSessionId: opts.runtimeSessionId,
+    onTokenRefresh: () => opts.fetchScopedToken(opts.sessionId),
+    handlers: {
+      onAgentEvent: (channel, data, seq) => opts.onEvent({ channel, data, seq }),
+      onReplayStart: () => console.info("[replay] backfilling the running turn"),
+      onReplayComplete: (received) => console.info(`[replay] caught up after ${received} events, live now`),
+      onStreamGap: ({ droppedCount }) => {
+        console.warn(`[stream] the runtime dropped ${droppedCount ?? "some"} events`);
+        void client.replay();
+      },
+      onRuntimeNotFound: (_sessionId, sandboxId, reason) => {
+        console.warn(`[stream] ${sandboxId} is not running (${reason})`);
+      },
+      onError: (message, code) => console.error(`[stream] ${code ?? "error"}: ${message}`),
+    },
+  });
+  client.connect();
+  return client;
+}
+```
+
+Your backend's token endpoint authenticates the browser, looks up the runtime
+session id it stored for that user, checks the user owns it, and mints a
+read-only token for that one session:
+
+```ts
+const scoped = await box.mintScopedToken({
+  scope: "session-runtime",
+  sessionId: runtimeSessionId,
+  access: "read-only",
+});
+return { token: scoped.token, expiresAt: scoped.expiresAt.getTime() / 1000, url: scoped.sidecarProxyUrl };
+```
+
+The browser keeps its own `sessionId` across reloads, for example in
+`localStorage`, calls `connect({ sessionId, runtimeSessionId, fetchScopedToken, onEvent })`,
+and disconnects the returned client on teardown. Never send an account key or
+`box.connection.authToken` to the browser. Guide: [Streaming](/sandbox/streaming).
+
+## Answer email with a per-member sandbox
+
+The member mails the line; Hub runs the mail as a turn in the member's own
+sandbox and replies in the same email thread. Connect an Inkbox identity in
+Hub first ([Connections](/sandbox/connections)), then set `LINE_CONNECTION_ID`
+and `MEMBER_EMAIL`.
+
+```ts
+import { type BackendConfig, type LineMessage, type LinesClient, lineInstanceKey, Sandbox } from "@tangle-network/sandbox";
+
+const KEY_PREFIX = "example-email:";
+const CLIENT_REFERENCE = "example-lines-email";
+const POLL_MS = 3_000;
+
+const backend: BackendConfig = {
+  type: "opencode", // Claude Code ("claude-code") and Codex ("codex") work the same way
+  profile: {
+    name: "email-assistant",
+    prompt: { systemPrompt: "You answer email. Reply in two sentences or fewer." },
+    model: { default: "openai/gpt-5.6-luna" },
+  },
+};
+
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`Set ${name}`);
+  return value;
+}
+
+async function readMessages(lines: LinesClient, lineId: string): Promise<LineMessage[]> {
+  const threads = await lines.threads(lineId).list();
+  const messages = await Promise.all(threads.map((thread) => lines.threads(lineId).messages(thread.id)));
+  return messages.flat().sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+async function waitForAnswer(lines: LinesClient, lineId: string, earlier: Set<string>, waitMs: number) {
+  const printed = new Set<string>();
+  const deadline = Date.now() + waitMs;
+  while (Date.now() < deadline) {
+    for (const message of await readMessages(lines, lineId)) {
+      if (earlier.has(message.id)) continue;
+      const seen = `${message.id}:${message.status}`;
+      if (!printed.has(seen)) {
+        printed.add(seen);
+        console.log(`[${message.direction} ${message.kind} ${message.status}] ${message.text ?? ""}`);
+      }
+      if (message.direction === "in" && message.status === "failed") {
+        throw new Error(`Turn failed: ${message.errorCode}`);
+      }
+      if (message.direction === "out" && message.kind === "agent") {
+        if (message.status === "replied") return message;
+        if (message.status === "dropped" || message.status === "failed") {
+          throw new Error(`Answer not sent: ${message.errorCode}`);
+        }
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, POLL_MS));
+  }
+  throw new Error("No answer before WAIT_MINUTES ran out");
+}
+
+const client = new Sandbox({
+  apiKey: requireEnv("TANGLE_API_KEY"),
+  baseUrl: "https://sandbox.tangle.tools",
+});
+const member = requireEnv("MEMBER_EMAIL").trim().toLowerCase();
+const waitMs = Number(process.env.WAIT_MINUTES ?? 15) * 60_000;
+
+const line = await client.lines.fromConnection({
+  connectionId: requireEnv("LINE_CONNECTION_ID"),
+  transport: "email",
+});
+console.log(`Line ${line.id}: ${line.address}`);
+if (line.attachment && line.attachment.clientReference !== CLIENT_REFERENCE) {
+  throw new Error(`Line ${line.id} is attached (${line.attachment.id}); detach it first`);
+}
+
+const earlier = new Set((await readMessages(client.lines, line.id)).map((m) => m.id));
+
+const attachment = await client.lines.attach({
+  number: line.id,
+  mode: "personal",
+  members: [{ address: member, role: "owner" }],
+  unknownSenders: "reject",
+  respond: { kind: "agent", backend },
+  instance: {
+    keyPrefix: KEY_PREFIX,
+    create: { name: "lines-email-example", resources: { cpuCores: 2, memoryMB: 2048, diskGB: 2 }, idleTimeoutSeconds: 600 },
+  },
+  clientReference: CLIENT_REFERENCE,
+});
+const key = await lineInstanceKey(KEY_PREFIX, member);
+console.log(`Attached ${attachment.id}; ${member} runs in instance ${key}`);
+console.log(`Mail ${line.address} from ${member}, then reply YES to the confirmation.`);
+
+try {
+  const answer = await waitForAnswer(client.lines, line.id, earlier, waitMs);
+  console.log(`\nAnswered: ${answer.text}`);
+  const request = (await readMessages(client.lines, line.id)).find((m) => m.id === answer.replyToId);
+  console.log(`Timeline: ${JSON.stringify(request?.timeline ?? null)}`);
+} finally {
+  // Detaching leaves the member's sandbox under its key, so delete it and release the key.
+  await client.lines.detach(line.id);
+  const record = await client.instances.get(key);
+  const box = record?.sandboxId ? await client.get(record.sandboxId) : null;
+  await box?.delete();
+  await client.instances.release(key);
+}
+```
+
+Prints the line's address. Mail it from `MEMBER_EMAIL` and reply YES to the
+confirmation; the program then prints each message as its status changes, the
+agent's answer, and the request's timeline. Guide: [Lines](/sandbox/lines).
+
+## Share one line between two members
+
+Two members write to one sandbox, each in their own thread and agent session.
+Staff see each other's recent exchanges; the supplier sees only its own. Set
+`LINE` to a line id or address you own, and `MEMBER_A` and `MEMBER_B` to E.164
+numbers (or email addresses on an email line).
+
+```ts
+import { type BackendConfig, type LinesClient, type LineThread, Sandbox } from "@tangle-network/sandbox";
+
+const POLL_MS = 3_000;
+
+const backend: BackendConfig = {
+  type: "opencode", // Claude Code ("claude-code") and Codex ("codex") work the same way
+  profile: {
+    name: "front-desk",
+    prompt: { systemPrompt: "You coordinate a small hotel. Answer in two sentences or fewer." },
+    model: { default: "openai/gpt-5.6-luna" },
+  },
+};
+
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`Set ${name}`);
+  return value;
+}
+
+async function waitForBothAnswers(lines: LinesClient, lineId: string, sandboxId: string, waitMs: number) {
+  const answered = new Map<string, LineThread>();
+  const deadline = Date.now() + waitMs;
+  while (Date.now() < deadline) {
+    const threads = (await lines.threads(lineId).list()).filter(
+      (thread) => thread.sandboxId === sandboxId && !answered.has(thread.memberId),
+    );
+    for (const thread of threads) {
+      const messages = await lines.threads(lineId).messages(thread.id);
+      const failed = messages.find((m) => m.direction === "in" && m.status === "failed");
+      if (failed) throw new Error(`Turn for ${thread.memberId} failed: ${failed.errorCode}`);
+      const answer = messages.find((m) => m.direction === "out" && m.kind === "agent");
+      if (answer?.status === "dropped" || answer?.status === "failed") {
+        throw new Error(`Answer to ${thread.memberId} not sent: ${answer.errorCode}`);
+      }
+      if (answer?.status === "replied") {
+        console.log(`Answer to ${thread.memberId}: ${answer.text}`);
+        answered.set(thread.memberId, thread);
+      }
+    }
+    if (answered.size >= 2) return [...answered.values()];
+    await new Promise((resolve) => setTimeout(resolve, POLL_MS));
+  }
+  throw new Error("Both members were not answered before WAIT_MINUTES ran out");
+}
+
+const client = new Sandbox({
+  apiKey: requireEnv("TANGLE_API_KEY"),
+  baseUrl: "https://sandbox.tangle.tools",
+});
+const waitMs = Number(process.env.WAIT_MINUTES ?? 10) * 60_000;
+const line = await client.lines.get(await client.lines.resolve(requireEnv("LINE")));
+if (line.attachment) throw new Error(`Line ${line.id} is attached (${line.attachment.id}); detach it first`);
+
+const box = await client.create({
+  name: "lines-shared-example",
+  backend,
+  resources: { cpuCores: 2, memoryMB: 2048, diskGB: 2 },
+  idleTimeoutSeconds: 600,
+});
+let attached = false;
+try {
+  await box.waitFor("running");
+  // Both roles are chat-only because they share one sandbox.
+  const attachment = await box.lines.attach({
+    number: line.id,
+    mode: "shared",
+    unknownSenders: "reject",
+    roles: {
+      staff: { context: "shared", tools: "chat" },
+      supplier: { context: "own", tools: "chat" },
+    },
+    members: [
+      { address: requireEnv("MEMBER_A"), role: "staff", label: "Front desk" },
+      { address: requireEnv("MEMBER_B"), role: "supplier", label: "Linen" },
+    ],
+    respond: { kind: "agent", backend },
+    clientReference: "example-lines-shared",
+  });
+  attached = true;
+  for (const member of attachment.members ?? []) {
+    console.log(`Member ${member.id}: ${member.label} (${member.role}, ${member.status})`);
+  }
+  console.log(`Write to ${line.address} from both members.`);
+
+  const answered = await waitForBothAnswers(client.lines, line.id, box.id, waitMs);
+  const sessions = new Set(answered.map((thread) => thread.sessionId));
+  console.log(sessions.size === 2 ? "Each member ran in their own session." : "Both members ran in one session.");
+} finally {
+  if (attached) await box.lines.detach(line.id);
+  await box.delete();
+}
+```
+
+Prints both members, then each answer, then "Each member ran in their own
+session." On an email line, each member's first mail waits for their YES.
+
+## Take calls on an iMessage line
+
+Members of an attached iMessage line can call it. A ph0ny agent answers, and
+each question it asks the workspace runs in the caller's own thread session.
+Connect your ph0ny key in Hub and create the ph0ny agent first, then set
+`LINE`, `PH0NY_CONNECTION_ID` and `PH0NY_AGENT_ID`. Set `DISABLE=1` to turn
+voice off.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`Set ${name}`);
+  return value;
+}
+
+const client = new Sandbox({
+  apiKey: requireEnv("TANGLE_API_KEY"),
+  baseUrl: "https://sandbox.tangle.tools",
+});
+const lineId = await client.lines.resolve(requireEnv("LINE"));
+
+if (process.env.DISABLE === "1") {
+  const line = await client.lines.disableVoice(lineId);
+  console.log(`Voice on ${line.address}: ${line.voice?.state ?? "off"}`);
+} else {
+  const current = await client.lines.get(lineId);
+  if (current.transport !== "imessage") {
+    throw new Error(`Voice needs an iMessage line; ${lineId} is ${current.transport}`);
+  }
+  if (!current.attachment) throw new Error(`Attach ${lineId} first: voice answers its members only`);
+
+  // A line left in "enabling" answers no call; enable it again.
+  const line = await client.lines.enableVoice(lineId, {
+    ph0nyConnectionId: requireEnv("PH0NY_CONNECTION_ID"),
+    ph0nyAgentId: requireEnv("PH0NY_AGENT_ID"),
+  });
+  console.log(`Voice on ${line.address}: ${line.voice?.state}`);
+  const members = await client.lines.members(lineId).list();
+  console.log(`Members who can call: ${members.map((m) => m.label ?? m.address).join(", ")}`);
+}
+```
+
+Prints the voice state and the members who can call. This program creates no
+sandbox; the line's attachment owns it.
+
+## Next
+
+- [One sandbox per user](/sandbox/instances)
+- [Email, iMessage and voice lines](/sandbox/lines)
+- [CLI examples](/sandbox/examples/cli)

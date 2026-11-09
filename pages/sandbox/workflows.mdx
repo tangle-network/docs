@@ -1,34 +1,47 @@
+---
+title: Workflows
+description: Run an automation every time something happens, such as a pull request or a schedule, as a YAML graph of agents, code, provider calls, approvals and waits on Tangle Platform.
+---
+
+import { Callout } from "nextra/components";
+
 # Workflows
 
-Tangle Workflows is a durable graph workflow engine: you describe an automation as a small YAML file — one trigger plus a graph of nodes — and the platform runs it every time the trigger fires. A node is an agent, a piece of code, a call into a connected SaaS provider, a human approval gate, or a pause. The engine provisions the sandboxes, drives the agents, and remembers where every run is, so a run can wait hours for a human or an event and resume exactly where it parked.
+A workflow runs an automation every time its trigger fires: review each opened pull request, triage each support email, send a daily digest, or draft and revise a change until a human merges it.
+You describe it as a small YAML file with one trigger and a graph of steps. Tangle starts the sandboxes, drives the agents and remembers where every run is, so a run can wait hours for a person or an event and continue where it stopped.
 
-A workflow is for anything that should happen *every time* something happens: review each opened pull request, triage each inbound support email, generate a daily digest, develop a feature in a draft/review loop until a human merges it.
+<Callout type="info">
+Workflows run on Tangle Platform at [id.tangle.tools](https://id.tangle.tools/app/workflows). You author and run them with the `tangle workflows` commands or in the Platform app.
+The Sandbox SDKs have no workflow API; a workflow's `agent.run` and `script.run` steps start sandboxes for you.
+</Callout>
 
-## Core concepts
+## How a workflow is built
 
-- **Trigger (`on`)** — what starts a run: a provider event (a GitHub PR, a Slack message), a cron schedule, or the workflow's own inbound webhook. Exactly one per workflow.
-- **Actions (`do`)** — the nodes of the graph. The main kinds: `agent.run` (an AI agent in a sandbox, or a cheap no-sandbox model call), `script.run` (your TypeScript in a fresh sandbox), `integration.invoke` (call a connected provider like GitHub or Gmail), `notify` (a signed webhook POST), `decision` (pause for a human), `wait.timer` / `wait.event` (pause for time or an event), `workflow.run` (a child workflow), plus `parallel` / `foreach` fan-out.
-- **Graph (`id` / `needs` / `join`)** — a plain list runs top to bottom; add `id` and `needs` to fan out in parallel, join back together, route errors, or loop with guarded back-edges (`maxNodeVisits` bounds the loop).
-- **Mapping expressions (`${…}`)** — string values can pull data from the trigger and earlier steps: `"${trigger.payload.pull_request.number}"`, `"${steps.draft.text}"`.
-- **Durable runs** — a run that hits a `decision`, `wait`, or `workflow.run` parks (status `waiting`) and releases its worker; it resumes when the wait settles. Runs survive restarts, and every step's output is recorded for inspection.
-- **Revisions** — every update to a workflow appends a revision; the history stays available and you can roll back.
+- **Trigger (`on`)**: what starts a run. A provider event such as a GitHub pull request or a Slack message, a cron schedule, or the workflow's own webhook. One per workflow.
+- **Steps (`do`)**: the nodes of the graph. `agent.run` runs an agent in a sandbox, or makes a single model call with no sandbox. `script.run` runs your TypeScript in a new sandbox. `integration.invoke` calls a connected provider such as GitHub or Gmail. `notify` posts a signed webhook. `decision` waits for a person. `wait.timer` and `wait.event` wait for a time or an event. `workflow.run` starts a child workflow. `parallel` and `foreach` fan out.
+- **Graph (`id`, `needs`, `join`)**: a plain list runs top to bottom. Add `id` and `needs` to run steps in parallel, join them, route errors, or loop with guarded back-edges. `maxNodeVisits` bounds a loop.
+- **Expressions (`${...}`)**: string values can read the trigger and earlier steps, such as `"${trigger.payload.pull_request.number}"` or `"${steps.draft.text}"`.
+- **Durable runs**: a run that reaches a `decision`, a `wait` or a `workflow.run` parks with status `waiting` and frees its worker. It resumes when the wait ends. Every step's output is kept for you to inspect.
+- **Revisions**: every update adds a revision. You can read old revisions and roll back to one.
 
-Workflows are owned by the platform hub. The [dashboard](https://sandbox.tangle.tools/dashboard/workflows) lists your workflows and lets you enable, disable, or delete them; authoring, the full run history, decision approvals, and revision history live on the [platform app](https://id.tangle.tools/app/workflows) — and the fastest way to author one is the CLI, below.
+The [Sandbox dashboard](https://sandbox.tangle.tools/dashboard/workflows) lists your workflows and lets you enable, disable or delete them.
+The [Platform app](https://id.tangle.tools/app/workflows) adds authoring, the full run history, decision approvals and revision history.
 
-## Quickstart: your first workflow in five minutes
+## Your first workflow
 
-### 1. Authenticate the CLI
+### 1. Log in with the CLI
 
 ```bash
 curl -fsSL https://sandbox.tangle.tools/install.sh | sh
 tangle auth login --api-key "$TANGLE_API_KEY"
 ```
 
-Use the same `sk-tan-*` API key as every other surface ([id.tangle.tools/app/keys](https://id.tangle.tools/app/keys)).
+Use the same `sk-tan-` key as for sandboxes, from [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys).
+`tangle workflows` talks to Tangle Platform; `--base-url` on these commands, or `TANGLE_PLATFORM_URL`, names that host.
 
 ### 2. Write a definition
 
-Save this as `hello.yml` — a weekday-morning greeting generated by a stateless model call (no sandbox, so it is fast and cheap):
+Save this as `hello.yml`. It writes a greeting every weekday morning with one model call and no sandbox:
 
 ```yaml
 name: hello-workflow
@@ -49,44 +62,48 @@ do:
 ### 3. Validate and create
 
 ```bash
-tangle workflows validate hello.yml   # compile dry-run; fix every error it reports
-tangle workflows create hello.yml     # prints the new workflow id
+tangle workflows validate hello.yml
+tangle workflows create hello.yml
 ```
+
+`validate` compiles the file without saving it and reports every error with its path. `create` prints the new workflow id.
 
 ### 4. Run it and watch
 
-A manual run works with any trigger type — you don't have to wait for the schedule:
+A manual run works with any trigger, so you do not have to wait for the schedule:
 
 ```bash
-tangle workflows run <id> --wait            # trigger a run, print the result
-tangle workflows runs <id>                  # run history
-tangle workflows events <id> <runId>        # tail live progress
-tangle workflows run-detail <id> <runId>    # a single run, step by step
+tangle workflows run <id> --wait
+tangle workflows runs <id>
+tangle workflows events <id> <run-id>
+tangle workflows run-detail <id> <run-id>
 ```
 
-Other lifecycle commands: `tangle workflows list`, `get`, `update <id> file.yml`, `enable` / `disable`, `delete`, and `tangle workflows schema` for the machine-readable JSON Schema.
+`run --wait` starts a run and prints its result. `runs` lists the history, `events` follows a run's progress and `run-detail` shows one run step by step.
+The other commands are `list`, `get`, `update <id> file.yml`, `enable`, `disable`, `delete` and `schema`, which prints the JSON Schema. [Workflow commands](/sandbox/cli/workflows) lists them all.
 
-### 5. Start from a template instead
+### 5. Or start from a template
 
-Real workflows — PR review, issue triage, daily digests, draft/review loops — are one click away. Browse the catalog in the [workflow templates gallery](/sandbox/workflows-templates), instantiate one from the [platform app's Workflows page](https://id.tangle.tools/app/workflows), fill in its parameters, and it is live.
+`tangle workflows templates` lists the shipped templates, such as pull request review, issue triage and a daily digest, and `tangle workflows init <template-id>` writes one to a file you can edit.
+See [Workflow templates](/sandbox/workflows-templates).
 
-## Connecting providers
+## Connect a provider
 
-Workflows that touch a SaaS account — a `provider_event` trigger, an `integration.invoke` action, a provider `wait.event` source, or a `connections: [...]` grant on `agent.run` / `script.run` — all draw on the same thing: a **hub connection**. A connection is an authorization (OAuth or API key) between your Tangle account and one provider account — GitHub, Slack, Gmail, Stripe, ph0ny, and the rest of the catalog. It is created once, stored server-side on the hub, and referenced by provider name (`connection: github`); neither the workflow YAML nor a sandbox ever holds the provider's tokens.
+A workflow that touches a SaaS account uses a connection: a `provider_event` trigger, an `integration.invoke` step, a provider `wait.event`, or a `connections: [...]` grant on `agent.run` or `script.run`.
+A connection is an authorization, by OAuth or API key, between your Tangle account and one provider account such as GitHub, Slack, Gmail or Stripe. It is created once, stored on Tangle Platform and named by provider (`connection: github`). Neither the YAML nor a sandbox ever holds the provider's tokens.
 
-Connect a provider on the [platform app's Integrations page](https://id.tangle.tools/app/integrations): pick the provider, complete the authorization, done. One connection serves every workflow you own.
+Connect a provider on the [Integrations page](https://id.tangle.tools/app/integrations), or with `tangle hub connect github`. One connection serves every workflow you own.
 
-A workflow that names a provider with no active connection **fails validation at save time** (`tangle workflows validate` and `create` both report it), so you find out before the trigger ever fires — connect the provider and retry the same command.
+A workflow that names a provider with no active connection fails validation when you save it: `validate` and `create` both report it, so you find out before the trigger fires.
 
-## Worked example: a PR-review loop
+## Example: a pull request review loop
 
-This is the shape that makes graph workflows worth it: a review is drafted, critiqued, and revised in a **guarded loop** until the critic approves — then, and only then, the review is posted back to GitHub.
+A review is drafted, critiqued and revised in a guarded loop until the critic approves. Only then is it posted to GitHub.
 
 ```yaml
 name: pr-review-loop
 description: Draft a PR review, critique it, revise until the critic approves, then post it
-# Each (re)entry of any node counts as one visit; 12 covers ~3 full
-# draft/critique/steer rounds before the run fails CYCLE_BUDGET_EXCEEDED.
+# 12 visits cover about three draft, critique and steer rounds.
 maxNodeVisits: 12
 on:
   provider_event:
@@ -98,8 +115,7 @@ on:
       op: eq
       value: false
 do:
-  # draft's ONLY dependency is the guarded back-edge from steer, so it runs
-  # FIRST; on later turns it re-runs only while the critic asks for revisions.
+  # The guarded back-edge from steer is draft's only dependency, so draft runs first.
   - id: draft
     needs:
       - id: steer
@@ -119,8 +135,7 @@ do:
         prompt:
           systemPrompt: "You check a draft PR review for accuracy and tone. End your response with exactly one line: VERDICT: approve or VERDICT: revise."
       prompt: "Check this draft review: ${steps.draft.text}"
-  # steer runs every round but is SKIPPED by its step-level `if` unless the
-  # verdict was revise — so on approve the back-edge never fires and the loop ends.
+  # steer is skipped unless the verdict was revise, which ends the loop on approve.
   - id: steer
     if: { path: "steps.critique.text", op: contains, value: "VERDICT: revise" }
     agent.run:
@@ -132,16 +147,13 @@ do:
       prompt: |
         The critic asked for changes: ${steps.critique.text}
         Write steering notes for the next draft.
-  # publish re-arms EVERY round (unguarded needs) and its `if` lets it fire only
-  # on the approving round. A guarded edge would work here too — a guard is
-  # re-judged on every completion of its source — but an `if` keeps the
-  # decision on the action it gates, where it reads.
+  # publish re-arms every round; its if lets it fire only on the approving round.
   - id: publish
     needs: [critique]
     if: { path: "steps.critique.text", op: contains, value: "VERDICT: approve" }
     integration.invoke:
       path: github.pulls.reviews.create
-      identity: app          # post as the bot, not as the person who connected GitHub
+      identity: app  # post as the bot, not as the person who connected GitHub
       input:
         owner: "${trigger.payload.repository.owner.login}"
         repo: "${trigger.payload.repository.name}"
@@ -152,18 +164,21 @@ do:
 
 How the loop works:
 
-1. **The back-edge is the only cycle control.** `draft` declares `needs: [{ id: steer, when: … }]`. Because every cycle must carry at least one guarded edge, the compiler accepts this loop; the guard (`VERDICT: revise`) is what re-fires `draft`.
-2. **Every guard is re-judged on each completion of the step it watches.** A guard that is false on one round does not close that route for the run — inside a loop it gets a fresh verdict every turn, so a guarded edge can fire on the round its condition finally holds. `publish` here uses an unguarded `needs: [critique]` plus a step-level `if`; a guarded edge would work too, but the `if` keeps the decision on the action it gates, where it reads.
-3. **The budget is the safety net.** `maxNodeVisits: 12` fails the run loud if the loop never converges, so a stubborn critic can't burn unbounded agent spend.
-4. **Steps address each other by id or index, everywhere.** `${steps.draft.text}`, an edge `when`, and a step-level `if` all take `steps.<id>.field` or `steps[N].field`; a hyphenated id needs the quoted form (`${steps["my-id"].text}`). Prefer the id form — it survives reordering the `do:` list.
-5. **An `if` guard may read any step the action depends on.** Not "any earlier step in the list": what a guard may read is decided by the graph, so a dependency declared *later* in `do:` is readable, while an earlier-listed action this one does not depend on is rejected at author time (it would resolve to nothing and silently skip the action).
+1. **The back-edge controls the cycle.** `draft` declares `needs: [{ id: steer, when: ... }]`. Every cycle must carry at least one guarded edge, so the compiler accepts this loop, and the guard (`VERDICT: revise`) is what runs `draft` again.
+2. **A guard is judged on each successful completion of the step it watches.** When a guard is false, its edge is closed for that completion only and is judged again the next time its source completes successfully. Inside a loop, a guarded edge fires on the round its condition first holds. A failed step never reopens a closed edge, because it produced no output to judge.
+3. **The budget stops a loop that never converges.** `maxNodeVisits: 12` fails the run with `CYCLE_BUDGET_EXCEEDED`, so a critic that never approves cannot spend without limit.
+4. **Steps are addressed by id or by index.** `${steps.draft.text}`, an edge `when` and a step-level `if` all accept `steps.<id>.field` or `steps[N].field`. A hyphenated id needs the quoted form, `${steps["my-id"].text}`. The id form survives reordering the `do` list.
+5. **An `if` reads only steps that are certain to have run.** That is every step the action depends on through `needs`, directly or further back. With `join: any` or `any_failed`, only the steps common to every branch count, because which branch ran is unknown. The compiler rejects an `if` that reads any other step, since it would resolve to nothing and skip the action without saying so.
 
-`identity: app` is what makes this a review BOT. Without it the review is written with the credential of the person who connected GitHub, so it carries their authority — and GitHub refuses a `REQUEST_CHANGES` on a pull request that person opened themselves, which is exactly the work an always-on reviewer exists to cover. `event: APPROVE` is not available under `identity: app`; see the [YAML reference](/sandbox/workflows-yaml#integrationinvoke) for why, for the actions it applies to, and for what it requires.
+`identity: app` posts the review as the Tangle Hub GitHub App, so it does not carry the authority of the person who connected GitHub. GitHub refuses a `REQUEST_CHANGES` review from that person on a pull request they opened, which is the case an always-on reviewer exists to cover.
+`event: APPROVE` is not available under `identity: app`; [the YAML reference](/sandbox/workflows-yaml#integrationinvoke) explains why and lists the actions it applies to.
 
-This example needs a [connected GitHub account](#connecting-providers) (`connection: github`). The `identity: app` step needs three more things, and fails loud when any is missing: the deployment has the Tangle Hub GitHub App configured, your App installation covers the repository, and you personally reach that repository with write access. Try the no-connection variant first — the [Ralph loop](/sandbox/workflows-templates) template runs the same draft/review/steer/publish skeleton on a schedule.
+This example needs a connected GitHub account (`connection: github`). The `identity: app` step also needs the Tangle Hub GitHub App installed on the repository and write access for you, and fails with a clear error when either is missing.
+To try the same draft, review, steer and publish loop without a connection, start from the `ralph-loop` template in [Workflow templates](/sandbox/workflows-templates).
 
-## Where to go next
+## Next
 
-- [YAML reference](/sandbox/workflows-yaml) — every trigger, action kind, expression, and condition, with the exact limits.
-- [Workflow templates](/sandbox/workflows-templates) — the curated catalog you can instantiate in one click.
-- [CLI](/sandbox/cli) — the full `tangle` command surface.
+- [Workflow YAML reference](/sandbox/workflows-yaml): every trigger, step, expression and limit.
+- [Run, inspect and trace workflows](/sandbox/workflows-run): runs, decisions, artifacts and revisions.
+- [Workflow templates](/sandbox/workflows-templates): the shipped templates.
+- [Workflow commands](/sandbox/cli/workflows): every `tangle workflows` command.

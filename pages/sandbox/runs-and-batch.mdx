@@ -1,0 +1,172 @@
+---
+title: Run batches and hosted runs
+description: Run a queue of tasks against one or more coding agents in one call, or run an AgentProfile and let the platform choose where it executes.
+---
+
+import { Tabs } from 'nextra/components'
+
+# Run batches and hosted runs
+
+Two calls run agent work without managing sandboxes yourself:
+
+- A **batch** runs every task against every backend you list. The platform
+  creates the sandboxes, runs the tasks, retries failures and cleans up.
+- A **hosted run** runs one AgentProfile on one prompt. The platform picks the
+  cheapest place that can do the work and tells you why.
+
+## Run a batch
+
+<Tabs items={["TypeScript", "Python", "CLI"]}>
+<Tabs.Tab>
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const tickets = [
+  "Customer says the export button does nothing in Safari.",
+  "Invoice PDF shows the wrong currency symbol for CHF.",
+  "Password reset email arrives twice.",
+];
+const batch = await client.runBatch(
+  {
+    tasks: tickets.map((ticket, i) => ({
+      id: `ticket-${i + 1}`,
+      message: `Classify this bug report as frontend, backend or email: ${ticket}`,
+    })),
+    backends: [{ id: "classifier", type: "claude-code" }],
+  },
+  { idempotencyKey: "triage-2026-11-09" },
+);
+for (const r of batch.results) console.log(r.taskId, r.success ? r.resultSummary : r.error);
+console.log(`${batch.totalSuccess}/${batch.totalTasks} done, ${batch.totalRetries} retries`);
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import os
+
+from tangle_sandbox import BatchBackend, BatchRunRequest, BatchTask, Sandbox
+
+request = BatchRunRequest(
+    tasks=[
+        BatchTask(id="review", message="Review the repository and report the highest-risk bug"),
+        BatchTask(id="fix", message="Fix the failing tests"),
+    ],
+    backends=[
+        BatchBackend(id="builder", type="codex"),
+        BatchBackend(id="reviewer", type="claude-code"),
+    ],
+)
+
+with Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools") as client:
+    result = client.run_batch(request, idempotency_key="review-and-fix-001")
+    print(result.total_success, result.total_executions, result.success_rate)
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+tangle batch run --backend classifier=claude-code \
+  --task t1="Classify: export button does nothing in Safari" \
+  --task t2="Classify: invoice shows the wrong currency symbol" \
+  --stream
+```
+</Tabs.Tab>
+</Tabs>
+
+Each task runs once against each backend. Backend ids tell configurations
+apart even when they use the same coding agent, so one batch can compare
+Claude Code, Codex and OpenCode on the same tasks.
+
+| Field | Meaning |
+|---|---|
+| `tasks` | `{ id, message, timeoutMs? }` per task. |
+| `backends` | `{ id, type, model?, profile? }` per backend. `model` takes `provider`, `model` and other model settings. |
+| `timeoutMs` | Per-task timeout for the batch. |
+| `persistent`, `reuseKey` | Keep the sandboxes after the batch. `persistent` needs a `reuseKey`, which selects the same workspace across batches. |
+| `git` | A repository to check out; needs `persistent`. |
+
+The result reports `totalTasks`, `totalExecutions`, `totalSuccess`,
+`totalFailure`, `totalRetries`, `successRate`, per-backend totals in
+`byBackend`, and one entry per task and backend in `results`.
+
+### Retry or rejoin a batch
+
+Pass an `idempotencyKey` (Python: `idempotency_key`) to make a batch
+retryable. With a key, the run continues on the server after your connection
+drops, and a second call with the same key and the same body joins or replays
+it. Without a key, disconnecting cancels the run. Use a key only for retries of
+one unchanged request.
+
+`streamBatch()` (Python: `stream_batch()`) yields every event as the batch
+runs, including `task.completed` and `task.failed`:
+
+```ts
+for await (const event of client.streamBatch(request, { idempotencyKey })) {
+  if (event.type === "task.completed" || event.type === "task.failed") {
+    console.log(event.type, event.data.taskId, event.data.backendId);
+  }
+}
+```
+
+On the CLI, `--tasks <file>` reads a JSON array of tasks and
+`--request <file>` reads a whole request. `--backend id=type` is required and repeatable
+without `--request`. `--model provider/model` overrides the model when there is
+one backend. Ctrl-C stops the stream.
+
+## Run a profile and let the platform place it
+
+`client.run()` runs an AgentProfile on a prompt and waits for the result. The
+platform reads the profile and the grants and picks where it runs:
+
+| Placement | Chosen when |
+|---|---|
+| `inference` | One model call is enough: no tools, files or session. |
+| `worker` | The only tools are Hub connections, stored objects and public HTTPS reads. |
+| `sandbox` | The profile needs files, a shell, a coding agent or MCP servers. |
+
+```ts
+const run = await client.run({
+  profile: {
+    name: "company-research",
+    prompt: { systemPrompt: "Research a company before outreach. Quote a page for each claim." },
+  },
+  prompt: "Read tangle.tools. Give three facts a seller should know and one opener.",
+  http: { hosts: ["tangle.tools", "www.tangle.tools"] },
+});
+console.log(run.placement?.chosen, run.placement?.reason);
+console.log(run.text, run.costUsd);
+```
+
+| Option | Meaning |
+|---|---|
+| `profile` | An inline AgentProfile, or a built-in or catalog profile id. |
+| `placement` | `"auto"` (default), or name one. A run the named placement cannot do is refused before anything is spent. |
+| `model` | A Router model id, when the profile names none. |
+| `connections` | Hub providers the run may use, by name, such as `["github"]`. |
+| `http.hosts` | Public HTTPS hosts the run may read (worker runs). |
+| `objects` | Stored-object prefixes and `"read"` or `"readwrite"` (worker runs). |
+| `timeout` | The run's own time budget, such as `"5m"`. |
+
+The result has `status`, `placement` (`chosen`, `policy`, `reason` and the
+`rejected` placements with their reasons), `text`, `model`, `usage`,
+`costUsd` and `error`. `costUsd` is model spend only; sandbox time is billed
+separately.
+
+`client.runs` gives the steps separately: `create(options)` returns an id,
+then `get(id)`, `wait(id)` and `cancel(id)`.
+
+Hosted runs are served by Tangle Platform at `https://id.tangle.tools`. The
+client sets that address for you when `baseUrl` is
+`https://sandbox.tangle.tools`; any other `baseUrl` needs `platformUrl` set
+explicitly. Hosted runs are TypeScript only; Python and CLI users call Platform's
+`POST /v1/runs`.
+
+## Next
+
+- [Fleets](/sandbox/agents-fleet): many agents with per-agent tasks and a budget.
+- [Connections](/sandbox/connections)
+- [Product examples](/sandbox/examples/products)

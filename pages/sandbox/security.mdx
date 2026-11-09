@@ -1,0 +1,153 @@
+import { Tabs, Callout } from "nextra/components";
+
+# Isolation, privacy and compliance
+
+What separates your sandbox from other workloads, what data leaves it, and how to run under HIPAA or on confidential hardware with attestation you can check.
+
+## Pick the isolation
+
+| `runtime` | Isolation |
+|---|---|
+| `docker` | A container on the host's kernel. |
+| `firecracker` | A microVM with its own kernel. Choose it for untrusted code. |
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  runtime: "firecracker",
+  egressPolicy: { mode: "blocked" },
+});
+try {
+  console.log((await box.exec("uname -r")).stdout);
+} finally {
+  await box.delete();
+}
+```
+
+Omit `runtime` for the platform default. `environments.list()` shows which runtimes each image supports. Combine the runtime with an [egress policy](/sandbox/egress): `blocked` for code that should reach nothing, `strict` with a short allowlist for code that needs a registry.
+
+## Isolated sandboxes
+
+A normal sandbox runs with your account's context: your startup scripts run in it, and it can receive your secrets and act on your Hub connections. An isolated sandbox gets none of that.
+
+```ts
+const box = await client.createIsolated({ name: "untrusted-pr-1234" });
+```
+
+`createIsolated` is `create` with `ownerContext: "isolated"`. It selects no secrets, turns SSH off, runs none of your startup scripts and carries no Hub authority. Use it to run code you did not write, such as a pull request from outside your team.
+
+An isolated create must be a fresh personal workspace. It is refused if it also names a team, a template, a snapshot, startup scripts, SSH keys, stored secrets, profile connections or a git [read grant](/sandbox/git#with-a-connected-github-account).
+
+## Keep personal data out of model requests and logs
+
+```ts
+const box = await client.create({
+  backend: { type: "claude-code" },
+  privacy: { egress: "redact", logs: "on" },
+});
+```
+
+| Setting | Effect |
+|---|---|
+| `privacy.egress: "redact"` | Masks recognized personal data before a request reaches a model vendor. |
+| `privacy.egress: "block"` | Refuses a model request that contains it. |
+| `privacy.egress: "off"` | Sends content unchanged. |
+| `privacy.logs: "on"` | Redacts infrastructure telemetry and error reports. This is the default. |
+| `privacy.logs: "off"` | Turns that redaction off. |
+
+These settings act at the sandbox's boundary. Files in the workspace and snapshots keep your content unchanged.
+
+## Run under HIPAA
+
+```ts
+const box = await client.create({ compliance: { hipaa: true } });
+```
+
+`compliance` also takes `["hipaa"]`. The sandbox is placed only where your HIPAA entitlement allows, or the create is refused:
+
+| Code | Cause |
+|---|---|
+| `COMPLIANCE_NOT_ENTITLED` | Your account is not enabled for HIPAA workloads. |
+| `COMPLIANCE_CELL_UNAVAILABLE` | No HIPAA-eligible placement can take the sandbox now. |
+
+`GET /v1/sandboxes/{id}/placement-attestation` returns the verified evidence, minted by the platform's controller, of where a HIPAA sandbox was placed. How to enable HIPAA and pin model traffic: [Enable HIPAA](/gateway/hipaa/enable) and [Sandbox compliance pinning](/gateway/hipaa/sandbox-pinning).
+
+## Confidential sandboxes on trusted hardware
+
+A confidential sandbox runs on a Tangle network operator inside a trusted execution environment (TEE), and returns hardware attestation that binds the sandbox to that environment.
+
+<Tabs items={["TypeScript", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+```ts
+import { createConfidentialSandbox } from "@tangle-network/sandbox";
+
+const { sandbox, attestation, attestationNonce } = await createConfidentialSandbox(client, {
+  driver: { type: "tangle" },
+  confidential: { tee: "tdx" },
+  attestationNonce: "auto",
+  requireAttestation: true,
+});
+try {
+  console.log(attestation?.tee_type, attestationNonce);
+
+  const fresh = await sandbox.getTeeAttestation({ attestationNonce: crypto.randomUUID().replaceAll("-", "") });
+  const key = await sandbox.getTeePublicKey();
+  console.log(fresh.attestation.timestamp, key.algorithm);
+} finally {
+  await sandbox.delete();
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+tangle sandbox create --driver tangle --tee tdx --attestation-nonce auto --require-attestation
+tangle sandbox attestation <sandbox-id> --nonce auto
+tangle sandbox delete <sandbox-id> --force
+```
+</Tabs.Tab>
+</Tabs>
+
+| CLI flag | Effect |
+|---|---|
+| `--tee <type>` | Require a TEE: `any`, `tdx`, `nitro`, `sev-snp` or `phala-dstack`. Needs `--driver tangle`. |
+| `--sealed` | Request sealed-secret support in the TEE. |
+| `--attestation-nonce <hex\|auto>` | Bind your nonce into the deploy-time attestation; `auto` generates one. |
+| `--attestation-refresh` | Generate a fresh deploy-time nonce. |
+| `--require-attestation` | Fail the create unless attestation evidence comes back. |
+
+`getTeeAttestation({ attestationNonce })` returns a fresh report bound to your nonce: the TEE type, the raw vendor evidence, the runtime measurement and a timestamp. `getTeePublicKey()` returns a key whose attestation binds it to the enclave, so you can encrypt data only that sandbox can read. Both throw `TEE_UNSUPPORTED` where no confidential operator serves the sandbox.
+
+<Callout type="info">
+The SDK returns the evidence; it does not check it against the hardware vendor's roots. Verify the report with an attestation verifier before you trust it.
+</Callout>
+
+## Credentials that can leak
+
+| Credential | Where it can end up | What to do |
+|---|---|---|
+| Your API key | Browser bundles, logs | Keep it on your server. Give browsers a [scoped token](/sandbox/authentication). |
+| `sshCommand()` output | Terminal history, logs | Its `env` holds your API key. Treat the output as a secret. |
+| Preview link URLs | Chat messages, issue trackers | Anyone with the URL can open it. Remove links you no longer need. See [Preview links](/sandbox/ports-previews). |
+| Secrets the sandbox can read | Agent transcripts, command output | Use [proxy custody](/sandbox/secrets#choose-who-holds-the-value) so the sandbox holds only a placeholder. |
+
+## Python and REST
+
+Python can set `runtime`, `egress_policy` and `privacy` at create. It cannot send `compliance`, drops `confidential`, and has no `create_isolated` or TEE attestation methods. Send those through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+client.fetch("POST", "/v1/sandboxes", json={"ownerContext": "isolated", "secrets": [], "sshEnabled": False})
+client.fetch("POST", "/v1/sandboxes", json={"compliance": {"hipaa": True}})
+client.fetch("GET", f"/v1/sandboxes/{sandbox_id}/placement-attestation")
+```
+
+## Next
+
+- [Control network access](/sandbox/egress)
+- [Store secrets and give sandboxes credentials](/sandbox/secrets)
+- [Authenticate with API keys, CLI login and browser tokens](/sandbox/authentication)

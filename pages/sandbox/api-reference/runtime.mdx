@@ -1,0 +1,237 @@
+---
+title: In-sandbox runtime routes
+description: REST reference for the routes that run inside one sandbox, covering commands, background processes, code kernels, files, git, terminals, ports, preview links and coding-agent runs.
+---
+
+import { Tabs } from "nextra/components";
+
+# In-sandbox runtime routes
+
+These routes act inside one running sandbox: run commands, read and write files, use git, open terminals and run the coding agent.
+The SDKs call them for `exec`, `read`, `write`, `process`, `git`, `terminals`, `previewLinks` and `prompt`.
+
+## Address and authentication
+
+Every route on this page is under the sandbox's runtime prefix:
+
+```text
+https://sandbox.tangle.tools/v1/sandboxes/{id}/runtime{path}
+```
+
+Send your account API key as `Authorization: Bearer <key>`, or a scoped sandbox token from `POST /v1/sandboxes/{id}/scoped-token`; see [Authentication](/sandbox/authentication).
+Reads need read access to the sandbox, and every other method needs write access.
+A request that starts paid work, such as a command or an agent run, resumes a stopped sandbox first.
+Errors use the shape in [Error codes](/sandbox/errors).
+
+## Run a command
+
+<Tabs items={["curl", "Python"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+
+```bash
+curl -s -X POST "https://sandbox.tangle.tools/v1/sandboxes/$SANDBOX_ID/runtime/process/spawn" \
+  -H "Authorization: Bearer $TANGLE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"executable": "bash", "args": ["-c", "ls -la"], "blocking": true, "timeoutMs": 30000}'
+```
+
+</Tabs.Tab>
+<Tabs.Tab>
+
+```python
+# client.fetch returns the raw httpx.Response; check status_code yourself.
+response = client.fetch(
+    "POST",
+    f"/v1/sandboxes/{box.id}/runtime/process/spawn",
+    json={"executable": "bash", "args": ["-c", "ls -la"], "blocking": True, "timeoutMs": 30000},
+)
+print(response.status_code, response.json()["data"]["stdout"])
+```
+
+</Tabs.Tab>
+</Tabs>
+
+A blocking spawn answers 201 when the command exits:
+
+```json
+{
+  "success": true,
+  "data": { "pid": 412, "command": "bash", "exitCode": 0, "stdout": "...", "stderr": "", "durationMs": 38 }
+}
+```
+
+A non-zero exit is still a 201; read `exitCode`. A command that runs past `timeoutMs` answers 408 with the output so far.
+
+## Commands and processes
+
+| Route | Does |
+|---|---|
+| `POST /process/spawn` | Starts a process. With `blocking: true` it answers when the process exits, with `exitCode`, `stdout` and `stderr`. Otherwise it answers at once with the `pid` and a `logsUrl`. |
+| `GET /process` | Lists the processes the sandbox tracks, with their status. |
+| `GET /process/{pid}` | Reads one process. |
+| `GET /process/{pid}/logs` | Streams the process's stdout and stderr as server-sent events, starting with what it has already printed. |
+| `DELETE /process/{pid}` | Sends a signal to the process. The body may name `signal`, such as `SIGTERM` or `SIGKILL`. |
+| `POST /process/ensure-dev-server` | Starts the workspace's dev server, installing dependencies first if they are missing, or returns the one already running. It detects Node, Rust, Go and Python projects. |
+| `POST /terminals/commands` | Runs a shell command and answers with its output. Takes `command`, and optionally `cwd`, `env` and `timeout`. |
+
+`POST /process/spawn` takes:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `executable` | string | Yes | The program to run, such as `bash` or `python3`. |
+| `args` | array of string | No | Arguments, passed without a shell. |
+| `cwd` | string | No | Working directory. |
+| `env` | object | No | Extra environment variables. |
+| `inheritEnv` | boolean | No | Start from the sandbox's environment. Default `true`. |
+| `blocking` | boolean | No | Wait for the process to exit. Default `false`. |
+| `timeoutMs` | integer | No | How long a blocking process may run. |
+| `stdin` | string | No | Text written to the process's standard input. |
+| `idempotencyKey` | string | No | Makes a repeated spawn with the same key return the first process. Needs `inheritEnv: false`. |
+| `retentionMs` | integer | No | How long the result of a keyed process is kept. Needs `idempotencyKey`. |
+
+Range limits for these fields are on [Limits and timeouts](/sandbox/limits).
+
+### Managed jobs
+
+A managed job is a process the sandbox records durably, so you can read, resume or cancel it by ID.
+
+| Route | Does |
+|---|---|
+| `POST /process/jobs` | Starts a managed job. |
+| `GET /process/jobs/{id}` | Reads a managed job. |
+| `POST /process/jobs/{id}/resume` | Resumes a failed attempt within its retained budget. |
+| `DELETE /process/jobs/{id}` | Requests cancellation. |
+
+## Code kernels
+
+A kernel keeps variables between calls, like a notebook.
+
+| Route | Does |
+|---|---|
+| `POST /code/exec` | Runs `source` in a kernel for `language` (`python`, `node`, `typescript` or `bash`). Answers with `exitCode`, `stdout`, `stderr`, `durationMs` and typed `results`: text, JSON, images, HTML or data frames. Takes optional `timeoutMs`, `env` and `cwd`. |
+| `GET /code/kernels` | Lists running kernels. |
+| `POST /code/kernels/{key}/restart` | Restarts a kernel and clears its variables. |
+| `DELETE /code/kernels/{key}` | Shuts a kernel down. |
+
+## Files
+
+These routes take the path in a JSON body. A relative path is inside the workspace. Add `?sessionId=<id>` to use a session's own workspace.
+
+| Route | Does |
+|---|---|
+| `POST /files/write` | Writes `content` to `path`. Optional `encoding`, `mode`, and `expectedHash`, which refuses the write with 409 if the file changed. |
+| `POST /files/read` | Reads `path`. Optional `encoding`. |
+| `POST /files/info` | Reads a file's metadata. |
+| `POST /files/read-batch` | Reads several files; one failure does not fail the rest. |
+| `POST /files/write-batch` | Writes several files in order; one failure does not stop later writes. |
+| `GET /files/tree` | Returns the workspace's directory tree with sizes and modification times. |
+| `POST /files/delete` | Deletes a file. |
+| `POST /files/rename` | Renames a file or directory. |
+
+### Upload, download and directories
+
+These routes take the path in the URL; `{path}` is the path inside the sandbox.
+
+| Route | Does |
+|---|---|
+| `POST /fs/upload` | Uploads a file as `multipart/form-data`. |
+| `GET /fs/download/{path}` | Downloads a file as a binary stream. |
+| `POST /fs/upload-dir` | Uploads a tar archive and extracts it to the target path. |
+| `GET /fs/download-dir/{path}` | Downloads a directory as a gzipped tar archive. |
+| `GET /fs/list/{path}` | Lists a directory with file metadata. |
+| `GET /fs/stat/{path}` | Reads a file's or directory's metadata. |
+| `GET /fs/exists/{path}` | Checks whether a path exists. |
+| `POST /fs/mkdir/{path}` | Creates a directory; `?recursive=true` creates its parents. |
+| `DELETE /fs/{path}` | Deletes a file or directory; `?recursive=true` deletes a non-empty directory. |
+
+### Chunked uploads
+
+For a file larger than one request can carry, upload it in parts:
+
+| Route | Does |
+|---|---|
+| `POST /fs/upload-session` | Starts an upload with the destination `path`, and optionally `totalBytes` and `sha256`. |
+| `PUT /fs/upload-session/{id}/parts/{index}` | Uploads one part as `application/octet-stream`. Sending the same index again replaces it. |
+| `GET /fs/upload-session/{id}` | Shows which parts have arrived, so an interrupted upload can send only the rest. |
+| `POST /fs/upload-session/{id}/commit` | Joins the parts, checks the SHA-256 and writes the file. |
+| `DELETE /fs/upload-session/{id}` | Abandons the upload. |
+
+The TypeScript SDK's `box.fs.upload(localPath, remotePath)` does this for you.
+
+## Git
+
+These routes act on the repository in the workspace.
+
+| Route | Does |
+|---|---|
+| `GET /git/status` | Reads the working tree status. |
+| `GET /git/log` | Reads recent commits; `?limit=` sets how many. |
+| `GET /git/diff` | Reads the diff; `?ref=` compares with a ref. |
+| `GET /git/branches` | Lists branches. |
+| `POST /git/add` | Stages `paths`. |
+| `POST /git/commit` | Commits with `message`; optional `amend` and `author`. |
+| `POST /git/push` | Pushes; optional `force`. |
+| `POST /git/pull` | Pulls; optional `rebase`. |
+| `POST /git/checkout` | Checks out `ref`; `create: true` creates the branch. |
+
+## Terminals
+
+| Route | Does |
+|---|---|
+| `POST /terminals` | Opens a terminal. Optional `name`, `shell`, `cwd`, `cols` and `rows`. |
+| `GET /terminals` | Lists open terminals. |
+| `GET /terminals/{terminalId}` | Reads a terminal and its buffered output. |
+| `POST /terminals/{terminalId}/input` | Writes `data` to the terminal. |
+| `PATCH /terminals/{terminalId}` | Resizes the terminal to `cols` and `rows`. |
+| `DELETE /terminals/{terminalId}` | Closes the terminal. |
+| `GET /terminals/{connectionId}/ws` | Opens the terminal as a WebSocket when sent with `Upgrade: websocket`. A scoped token can open this socket. |
+
+See [Shells and terminals](/sandbox/terminals) for the SDK and CLI.
+
+## Ports and preview links
+
+| Route | Does |
+|---|---|
+| `GET /ports` | Lists processes listening on ports in the sandbox. |
+| `POST /preview-links` | Creates a public URL for `port`. Optional `protocol` (`tcp` or `udp`) and `metadata`. Answers 201 when it creates a link and 200 when the port already has one, with `previewLink.url`. |
+| `GET /preview-links` | Lists the sandbox's preview links. |
+| `GET /preview-links/{previewId}` | Reads one preview link. |
+| `DELETE /preview-links/{previewId}` | Removes a preview link. |
+
+See [Ports and preview links](/sandbox/ports-previews).
+
+## Coding-agent runs
+
+| Route | Does |
+|---|---|
+| `POST /agents/run/stream` | Starts a coding-agent turn and answers with a server-sent event stream. |
+| `POST /agents/run` | Starts a turn and answers when it finishes, with `{ success: true, data }` or `{ success: false, error }`. |
+| `POST /agents/run/cancel` | Cancels a running turn. |
+
+The body names the turn and carries the prompt as parts. Text parts are base64-encoded UTF-8:
+
+```json
+{
+  "id": "default",
+  "parts": [{ "type": "text", "text": "TGlzdCB0aGUgZmlsZXMgaW4gdGhpcyByZXBvc2l0b3J5Lg==" }],
+  "sessionId": "optional-session-id",
+  "backend": { "type": "<type from GET /v1/backends>" }
+}
+```
+
+The SDKs build this body for you; see [Run a coding agent](/sandbox/cloud-agents) and [Stream output](/sandbox/streaming).
+
+## Health
+
+| Route | Does |
+|---|---|
+| `GET /health` | Answers 200 when the sandbox runtime is up. |
+| `GET /health/detailed` | Adds memory, process and coding-agent status; answers 503 when unhealthy. |
+
+The [OpenAPI document](/sandbox-openapi.json) describes this prefix as one route, `/v1/sandboxes/{id}/runtime/{path}`.
+
+## Next steps
+
+- [Sandboxes and GPU routes](/sandbox/api-reference/sandboxes): create, stop and delete the sandbox these routes run in.
+- [Run commands and code](/sandbox/commands): the same operations from the SDKs and CLI.
+- [Files](/sandbox/files): reading, writing and uploading from the SDKs.

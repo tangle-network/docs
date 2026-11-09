@@ -1,0 +1,157 @@
+---
+title: CLI examples
+description: Command sequences for the tangle CLI that run coding agents, drive one interactively, continue a session, run batches and fleets, supervise workers, use Hub connections and roll back with snapshots.
+---
+
+# CLI examples
+
+Each sequence runs as written after `npm install -g @tangle-network/sandbox-cli`
+and `tangle auth login` (or `TANGLE_API_KEY` in the environment). Commands take
+a sandbox id or its name. Each sequence that creates a sandbox ends by deleting
+it. Every flag is listed in the [CLI reference](/sandbox/cli).
+
+## Fix a test and keep the patch
+
+```bash
+tangle sandbox create --name fixer --backend claude-code \
+  --git-url https://github.com/tangle-network/sandbox-demo
+tangle agent prompt fixer "The test tagged null-guard fails. Fix the cause." --stream
+tangle exec fixer -- npm test
+tangle exec fixer -- git diff > fix.patch
+tangle sandbox delete fixer --force
+```
+
+`--stream` prints the agent's work as it happens. `tangle exec` exits with the
+command's exit code, so a script can stop when the tests still fail. Guide:
+[Run a coding agent](/sandbox/cloud-agents).
+
+## Pair with a coding agent in its own terminal UI
+
+```bash
+tangle sandbox create --name pair --backend claude-code \
+  --git-url https://github.com/tangle-network/sandbox-demo
+tangle agent prompt pair "Find the failing test and fix it." --interactive
+tangle agent prompt pair "Review the last change." --interactive --harness codex
+tangle sandbox delete pair --force
+```
+
+Your keys go to the agent; Ctrl-] detaches and leaves the session running.
+The CLI prints a dashboard link where you can watch and drive the same session
+in a browser. Guide: [Interactive mode](/sandbox/interactive).
+
+## Continue one conversation over several turns
+
+```bash
+tangle sandbox create --name planner --backend codex \
+  --git-url https://github.com/tangle-network/sandbox-demo
+tangle agent prompt planner "Read the codebase and plan input validation for the CLI." --session plan
+tangle agent prompt planner "Implement step 1 of your plan." --session plan --stream
+tangle sandbox stop planner
+tangle agent prompt planner "Implement step 2." --session plan --stream
+tangle sandbox delete planner --force
+```
+
+The same `--session` keeps the conversation. `agent prompt` resumes the
+stopped sandbox before the next turn, and the files and the conversation are
+still there. Guide: [Sessions](/sandbox/sessions).
+
+## Try a change and roll it back
+
+```bash
+tangle sandbox create --name trial --backend codex \
+  --git-url https://github.com/tangle-network/sandbox-demo
+tangle snapshot create trial --tags clean
+tangle agent prompt trial "Replace the date library with the built-in Intl API." --stream
+tangle exec trial -- npm test
+tangle snapshot list trial
+tangle snapshot revert trial <snapshot-id>
+tangle sandbox delete trial --force
+```
+
+`snapshot create` prints the snapshot id. `snapshot revert` puts the whole
+disk back as it was. Guide: [Snapshots](/sandbox/snapshots).
+
+## Triage a list of tickets in one batch
+
+```bash
+tangle batch run --backend triage=claude-code \
+  --task t1="Classify as frontend, backend or email: export button does nothing in Safari" \
+  --task t2="Classify as frontend, backend or email: invoice shows the wrong currency" \
+  --task t3="Classify as frontend, backend or email: password reset email arrives twice" \
+  --stream
+```
+
+The platform creates the sandboxes, runs every task, retries failures and
+cleans up. Add `--idempotency-key <key>` to rejoin the run after a disconnect.
+Guide: [Batches and hosted runs](/sandbox/runs-and-batch).
+
+## Run several agents under a budget
+
+```bash
+tangle fleet run "Write a prime checker in Python with tests, run the tests and report the result." \
+  --agents 3 --placement dedicated --max-spend-usd 1
+```
+
+To give each agent its own task and coding agent, such as Claude Code, Codex or
+OpenCode, write the agents to a file:
+
+```json
+[
+  { "agentId": "py", "harness": "claude-code", "task": "Write a prime checker in Python with tests and run them." },
+  { "agentId": "js", "harness": "codex", "task": "Write a prime checker in Node with node:test and run it." },
+  { "agentId": "go", "harness": "opencode", "task": "Write a prime checker in Go with tests and run them." }
+]
+```
+
+```bash
+tangle fleet run --agents agents.json --placement dedicated --max-spend-usd 1
+```
+
+Prints one line per agent with its coding agent, model, status, time, cost and
+answer, then deletes the fleet. Guide: [Fleets](/sandbox/agents-fleet).
+
+## Supervise workers under one budget
+
+```bash
+tangle supervise "Write a small URL shortener in Node with tests, and make the tests pass" \
+  --harness claude-code --max-tokens 200000 --max-iterations 50 --max-workers 3
+```
+
+The supervisor spawns workers, each in its own sandbox, and stops when the
+token or iteration budget runs out. It prints the result, tokens and cost.
+Guide: [agent-runtime](/sandbox/agent-runtime).
+
+## Let an agent read your GitHub issues
+
+```bash
+tangle hub connect github
+tangle hub connections
+tangle sandbox create --name triager --backend claude-code \
+  --git-url https://github.com/tangle-network/sandbox-demo
+tangle agent prompt triager "List my open GitHub issues and say which one this repository could fix." \
+  --connection github:* --stream
+tangle sandbox delete triager --force
+```
+
+`hub connect` opens a browser to sign in to the provider. `--connection
+github:*` grants the turn every action of that connection. Read actions run;
+every other action follows its permission (`allow`, `ask` or `deny`). Guide:
+[Connections](/sandbox/connections).
+
+## Script with JSON output
+
+```bash
+id=$(tangle sandbox create --backend claude-code --json | jq -r .id)
+tangle agent prompt "$id" "Say hello in one word." --json | jq .
+tangle sandbox delete "$id" --force
+```
+
+With `--json`, stdout carries only the JSON document, and an error prints a
+JSON envelope with its `code`. See [the CLI reference](/sandbox/cli) for the
+commands that always print text, and [Errors](/sandbox/errors) for every code.
+
+## Next
+
+- [CLI reference](/sandbox/cli)
+- [Coding agent examples](/sandbox/examples/coding-agents)
+- [Interactive mode](/sandbox/interactive)

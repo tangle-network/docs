@@ -1,0 +1,266 @@
+import { Tabs, Callout } from "nextra/components";
+
+# Create, stop, resume and delete sandboxes
+
+A sandbox is a Linux machine you create, pause, wake and delete from code or the terminal. This page covers every step of that life: the create options, waiting, the timers that stop a sandbox for you, and cleanup.
+
+## Create a sandbox and delete it
+
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+// create() resolves once the sandbox is running.
+const box = await client.create({ name: "my-project" });
+try {
+  const { stdout } = await box.exec("uname -a");
+  console.log(box.id, box.status, stdout);
+} finally {
+  await box.delete();
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+box = client.create(name="my-project")
+try:
+    # Python's create() returns before the sandbox runs.
+    box.wait_for(SandboxStatus.RUNNING)
+    print(box.id, box.exec("uname -a").stdout)
+finally:
+    box.delete()
+    client.close()
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+tangle sandbox create --name my-project
+tangle exec my-project -- uname -a
+tangle sandbox delete my-project --force
+```
+</Tabs.Tab>
+</Tabs>
+
+`tangle sandbox create` waits until the sandbox runs and prints its id, SSH line and URLs. It has no `--no-wait` flag. Its `--timeout` flag is the HTTP request timeout in milliseconds, not the sandbox lifetime.
+
+## Choose the image, isolation and size
+
+| Option | What it sets |
+|---|---|
+| `name` | A label you can use in place of the id in the CLI. |
+| `metadata` | Your own key-value tags. Filter and bulk-delete by them. |
+| `environment` | The image: a catalog environment, a template, or an image reference. See [Templates and images](/sandbox/templates-gallery). |
+| `runtime` | `"docker"` runs a container on a shared kernel; `"firecracker"` runs a microVM with its own kernel. Omit it for the platform default. |
+| `resources` | `{ cpuCores, memoryMB, diskGB }`. Omit it for the default shape. |
+| `bare` | `true` gives command execution and lifecycle only, without the agent runtime. |
+| `agent` | `false` keeps files, terminals and processes but provisions no coding agent, model credentials or [startup scripts](/sandbox/startup-scripts). An enabled startup script that applies to the create makes it fail. |
+
+```ts
+const { presets, ceiling } = await client.shapes();
+console.log(presets.map((p) => p.name), ceiling);
+
+const box = await client.create({
+  name: "build-runner",
+  runtime: "firecracker",
+  resources: { cpuCores: 4, memoryMB: 8192, diskGB: 20 },
+  metadata: { project: "checkout", ci: "true" },
+});
+```
+
+The CLI takes the same choices as flags: `--environment`, `--runtime`, `--cpu`, `--memory` (MB), `--disk` (GB) and `--metadata KEY=VALUE`. `tangle sandbox shapes` lists the presets your account can use. The size ceiling for your plan is on [Limits](/sandbox/limits).
+
+## Retry a create safely
+
+Pass an `idempotencyKey` when your code may retry. A second create with the same key joins the first provision instead of starting another sandbox.
+
+```ts
+const box = await client.create({
+  name: "nightly-eval",
+  idempotencyKey: "nightly-eval-2026-11-09",
+});
+```
+
+Both SDKs retry capacity and rate-limit refusals inside the create's time budget. When the budget runs out, the timeout error names the key to retry with: `retry create() with idempotencyKey="..." to join it` in TypeScript, `idempotency_key="..."` in Python. Pass `retry: { capacity: false }` in TypeScript to get `CAPACITY_EXHAUSTED` at once and schedule the retry yourself.
+
+## Timers that stop or delete a sandbox
+
+| Option | What happens |
+|---|---|
+| `maxLifetimeSeconds` | The sandbox stops when the interval ends. Create and each resume start a new interval; activity does not extend it. The workspace is kept. |
+| `idleTimeoutSeconds` | The sandbox stops after this much inactivity. The workspace is kept. |
+| `deleteAfterStoppedSeconds` | A stopped sandbox is deleted after this long. Omit it for the platform default. |
+
+```ts
+const box = await client.create({
+  maxLifetimeSeconds: 3600,
+  idleTimeoutSeconds: 600,
+  deleteAfterStoppedSeconds: 86_400,
+});
+```
+
+The CLI flags are `--lifetime` and `--idle-timeout`, both in seconds. Defaults and allowed ranges are on [Limits](/sandbox/limits).
+
+<Callout type="info">
+A stopped sandbox keeps its disk and does not bill compute until you resume it. See [Pricing](/sandbox/cost).
+</Callout>
+
+## Stop and resume
+
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+// Stopped: the disk stays. Resumed: every file is there.
+const box = await client.create();
+try {
+  await box.exec("echo 'first draft' > notes.md");
+  await box.stop();
+  await box.resume();
+  const { stdout } = await box.exec("cat notes.md");
+  console.log(stdout.trim());
+} finally {
+  await box.delete();
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+box = client.create()
+try:
+    box.wait_for(SandboxStatus.RUNNING)
+    box.exec("echo 'first draft' > notes.md")
+    box.stop()
+    box.resume()
+    box.wait_for(SandboxStatus.RUNNING)
+    print(box.exec("cat notes.md").stdout.strip())
+finally:
+    box.delete()
+    client.close()
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+tangle sandbox stop my-project
+tangle sandbox resume my-project
+```
+</Tabs.Tab>
+</Tabs>
+
+In TypeScript, `stop()` waits until the sandbox has stopped. `stop({ wait: false })` returns a `SandboxOperation` once the stop is accepted; call `await op.wait()` or read it later with `box.getOperation(op.id)`. `stop({ retain: { paths: ["reports"] } })` seals the coding agent's sessions and the listed workspace paths before it answers, and needs the default `wait: true`.
+
+The SDK does not resume for you: a command on a stopped sandbox throws `INVALID_STATE`, so call `resume()` first. The CLI does: `tangle exec`, `ssh`, `fs`, `git`, `process`, `run` and `agent prompt` resume a stopped sandbox before they run. `tangle sandbox stop --no-wait` prints the operation id and its status URL.
+
+### After a resume
+
+A coding agent's credential does not survive a stop. Pass `backend` again on the first prompt after `resume()`:
+
+```ts
+const again = await client.get(boxId);
+if (!again) throw new Error("sandbox not found");
+await again.resume();
+const run = await again.prompt("Implement step 1 of your plan.", {
+  sessionId: "oauth",
+  backend,
+});
+```
+
+A resume can also be refused because the platform did not keep some environment values. Branch on the error code and pass the values back:
+
+```ts
+import { SandboxError } from "@tangle-network/sandbox";
+
+try {
+  await box.resume();
+} catch (error) {
+  if (error instanceof SandboxError && error.code === "RESUME_ENV_REQUIRED") {
+    const env = Object.fromEntries(
+      (error.missingEnvKeys ?? []).map((key) => [key, process.env[key] ?? ""]),
+    );
+    await box.resume({ env });
+  } else {
+    throw error;
+  }
+}
+```
+
+`box.rebuild()` takes the same options as `resume()` and provisions the sandbox again from its stored config.
+
+## Find sandboxes
+
+```ts
+const box = await client.get("sbx_123"); // null when it does not exist
+const running = await client.list({ status: "running", limit: 20 });
+const team = await client.list({ scope: "team" });
+```
+
+`list()` filters by `status` (one or several), `scope` (`"personal"`, `"team"`, `"all"` or `` `team:${id}` ``), `limit`, `offset` and `run`. In the CLI, `tangle sandbox list` and `tangle sandbox get <id-or-name>`.
+
+## Delete
+
+```ts
+const ack = await box.delete();
+console.log(ack.outcome); // "destroyed", "already_absent" or "unknown"
+
+await box.delete({ until: "removed" }); // also waits until storage is reclaimed
+```
+
+`delete()` resolves when the sandbox is gone and billing has stopped; `removal` reads `"pending"` until its storage is reclaimed. `until: "removed"` waits for that too.
+
+A sandbox with live [branch children](/sandbox/snapshots#branch-a-running-sandbox) is refused with `409 CHILDREN_EXIST`. Delete the children first, or delete the whole lineage with `cascade`. `box.delete()` and `tangle sandbox delete` have no cascade option; use `deleteMatching` or the REST route:
+
+```ts
+const result = await client.deleteMatching(
+  { metadataPrefix: { project: "checkout" } },
+  { cascade: true },
+);
+```
+
+```bash
+curl -X DELETE "https://sandbox.tangle.tools/v1/sandboxes/$SANDBOX_ID?cascade=true" \
+  -H "Authorization: Bearer $TANGLE_API_KEY"
+```
+
+`tangle sandbox delete` asks for confirmation; pass `--force` in scripts. Deleting a sandbox does not delete snapshots in your own storage. See [Keep data after delete](/sandbox/snapshots#keep-data-after-delete-or-share-it-between-sandboxes).
+
+## Python and REST
+
+The Python SDK covers create, `wait_for`, `get`, `list(ListSandboxOptions(status=...))`, `stop`, `resume` and `delete`. It has no `rebuild`, lifecycle operations, env recovery or `delete_matching`, and its `list` has no `scope` or `run` filter. Its create options do not include `delete_after_stopped_seconds`, `cold_timeout_seconds`, `retain` or `cwd`. Send those through the REST API with `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+response = client.fetch(
+    "POST",
+    "/v1/sandboxes",
+    json={"name": "nightly", "deleteAfterStoppedSeconds": 86400},
+)
+print(response.status_code, response.json())
+
+response = client.fetch("DELETE", f"/v1/sandboxes/{box.id}", params={"cascade": "true"})
+```
+
+The states a sandbox moves through are drawn in [How sandboxes work](/sandbox/concepts).
+
+## Next
+
+- [Run commands and code](/sandbox/commands)
+- [Snapshot, fork and restore](/sandbox/snapshots)
+- [Limits, quotas and timeouts](/sandbox/limits)

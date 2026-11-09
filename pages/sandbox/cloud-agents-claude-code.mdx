@@ -1,7 +1,16 @@
-# Claude Code on your Claude subscription
+---
+title: Run Claude Code on your Claude plan
+description: Run Claude Code in a sandbox on your Claude Pro or Max subscription, so model usage counts against your Claude plan and Tangle bills only compute.
+---
 
-Run Claude Code in a cloud sandbox on your Claude Pro or Max plan. Model usage
-counts against your Claude plan; Tangle bills only the sandbox's compute.
+import { Tabs } from 'nextra/components'
+
+# Run Claude Code on your Claude plan
+
+Claude Code in a sandbox can sign in with your Claude Pro or Max subscription.
+Model usage then counts against your Claude plan, and Tangle bills only the
+sandbox's compute. For Codex on a ChatGPT plan, see
+[Codex on your ChatGPT plan](/sandbox/cloud-agents-codex).
 
 ## 1. Create a token
 
@@ -11,27 +20,35 @@ On your machine, with Claude Code installed:
 claude setup-token
 ```
 
-It opens a browser to sign in to your Claude account and prints a long-lived
-OAuth token that starts with `sk-ant-oat`. Treat it like a password.
+It signs you in to your Claude account in a browser and prints a long-lived
+token. Anyone holding the token can use your plan.
 
 ## 2. Store it as a secret
 
-Store the token once as an account secret. Secrets are encrypted at rest, and
-no API returns their values.
-
-```bash
-export CLAUDE_CODE_OAUTH_TOKEN="sk-ant-oat01-..."
-tangle secret create CLAUDE_TOKEN --value-stdin <<< "$CLAUDE_CODE_OAUTH_TOKEN"
-```
-
-Or from TypeScript:
-
+<Tabs items={["TypeScript", "Python", "CLI"]}>
+<Tabs.Tab>
 ```ts
 await client.secrets.create("CLAUDE_TOKEN", process.env.CLAUDE_CODE_OAUTH_TOKEN!);
 ```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+client.secrets.create("CLAUDE_TOKEN", os.environ["CLAUDE_CODE_OAUTH_TOKEN"])
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+tangle secret create CLAUDE_TOKEN --value-stdin <<< "$CLAUDE_CODE_OAUTH_TOKEN"
+```
+</Tabs.Tab>
+</Tabs>
 
-## 3. Start the agent
+[Secrets](/sandbox/secrets) covers how stored values are kept and delivered.
 
+## 3. Start Claude Code
+
+<Tabs items={["TypeScript", "Python", "CLI"]}>
+<Tabs.Tab>
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -40,8 +57,7 @@ const client = new Sandbox({
   baseUrl: "https://sandbox.tangle.tools",
 });
 
-const agent = await client.create({
-  name: "claude-on-my-plan",
+const box = await client.create({
   backend: {
     type: "claude-code",
     model: {
@@ -49,43 +65,117 @@ const agent = await client.create({
     },
   },
   secrets: ["CLAUDE_TOKEN"],
-  git: { url: "https://github.com/your-org/your-repo" },
-  idleTimeoutSeconds: 900,
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
 });
-await agent.waitFor("running");
-
-const result = await agent.prompt("Summarize this repository in five bullets.", {
-  sessionId: "main",
-});
-if (!result.success) throw new Error(result.error);
-console.log(result.response);
+try {
+  const run = await box.prompt("Summarize this repository in five bullets.", {
+    sessionId: "main",
+  });
+  console.log(run.success ? run.response : run.error);
+} finally {
+  await box.delete();
+}
 ```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import os
 
-From a terminal, the same agent is one command:
+from tangle_sandbox import BackendConfig, CreateSandboxOptions, GitConfig, PromptOptions, Sandbox
 
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+box = client.create(
+    CreateSandboxOptions(
+        backend=BackendConfig(
+            type="claude-code",
+            model={"cliAuth": {"account": "me", "secretEnv": "CLAUDE_TOKEN", "format": "token"}},
+        ),
+        secrets=["CLAUDE_TOKEN"],
+        git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"),
+    )
+)
+box.wait_for("running")
+try:
+    run = box.prompt("Summarize this repository in five bullets.", PromptOptions(session_id="main"))
+    print(run.response if run.success else run.error)
+finally:
+    box.delete()
+    client.close()
+```
+</Tabs.Tab>
+<Tabs.Tab>
 ```bash
 tangle sandbox create --name claude-on-my-plan --backend claude-code \
-  --cli-auth CLAUDE_TOKEN --git-url https://github.com/your-org/your-repo
+  --cli-auth CLAUDE_TOKEN --git-url https://github.com/tangle-network/sandbox-demo
 tangle agent prompt <sandbox-id> "Summarize this repository in five bullets." \
   --session main --stream
 ```
-
-Three fields do the work:
+</Tabs.Tab>
+</Tabs>
 
 | Field | Meaning |
 |---|---|
-| `backend.type: "claude-code"` | Run the Claude Code harness. Always set it; the default harness is OpenCode, which does not take a Claude token. |
-| `backend.cliAuth` | Which secret holds the credential. `format: "token"` means the secret is the raw `setup-token` value. `account` is your own label for it. |
-| `secrets: ["CLAUDE_TOKEN"]` | Grants this sandbox that secret. The create request is refused if `cliAuth` names a secret you did not grant. |
+| `backend.type: "claude-code"` | Run Claude Code. |
+| `backend.model.cliAuth` | Names the secret that holds the token. `format: "token"` means the secret is the `claude setup-token` value. `account` is your own label: letters, digits and `@._+-`. |
+| `secrets: ["CLAUDE_TOKEN"]` | Grants this sandbox the secret. |
 
-Do not inject the token as a plain environment variable such as
-`CLAUDE_CODE_OAUTH_TOKEN`. Without `cliAuth`, the platform configures Claude
-Code to use a Tangle model key and the harness ignores the variable.
+The create request is refused when `cliAuth` names a secret that is not in
+`secrets`. The CLI's `--cli-auth <secret>` adds the secret to `secrets` for you.
+
+`cliAuth` is the whole credential. It cannot be combined with `apiKey`,
+`apiKeyEnv`, `baseUrl` or `authFiles` on the same backend.
+
+## Grant the token to a running sandbox
+
+`box.grantNativeCredential()` installs a stored token in a sandbox that is
+already running. The call names the secret; the value never crosses it.
+
+```ts
+await box.grantNativeCredential({
+  harness: "claude-code",
+  cliAuth: { account: "me", secretEnv: "CLAUDE_TOKEN", format: "token" },
+});
+```
+
+A sandbox already signed in to a different account refuses the switch:
+create a new sandbox for the other account. The Python SDK has no
+`grantNativeCredential`; call `POST /v1/sandboxes/{id}/native-credentials`
+with `client.fetch()` and the same body.
+
+## Rotate the token
+
+After `claude setup-token` prints a new token, replace the stored value.
+`client.secrets.update()` replaces it and re-keys running sandboxes that use
+it:
+
+<Tabs items={["TypeScript", "Python", "CLI"]}>
+<Tabs.Tab>
+```ts
+await client.secrets.update("CLAUDE_TOKEN", process.env.CLAUDE_CODE_OAUTH_TOKEN!);
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+client.secrets.update("CLAUDE_TOKEN", os.environ["CLAUDE_CODE_OAUTH_TOKEN"])
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+# The CLI has no update command; sandboxes created after this use the new token.
+tangle secret delete CLAUDE_TOKEN --force
+tangle secret create CLAUDE_TOKEN --value-stdin <<< "$CLAUDE_CODE_OAUTH_TOKEN"
+```
+</Tabs.Tab>
+</Tabs>
+
+An update that answers 503 stored the new value, but not every running sandbox
+confirmed the re-key. To cut access everywhere at once, revoke the token in
+your Claude account settings.
 
 ## In a workflow
 
-A workflow's `agent.run` runs on the same secret when its profile declares
-the source. Store the token under the name `CLAUDE_TOKEN` as above, then set
+A workflow's `agent.run` step uses the same token when its profile declares the
+source. Store the token as `CLAUDE_TOKEN`, then set
 `model.metadata.credentialSource: subscription` on a `claude-code` profile:
 
 ```yaml
@@ -94,44 +184,26 @@ the source. Store the token under the name `CLAUDE_TOKEN` as above, then set
     profile:
       harness: claude-code
       model:
-        default: anthropic/claude-sonnet-5-5
         metadata: { credentialSource: subscription }
       prompt: { instructions: ["Review the change."] }
     prompt: "Review the last commit."
 ```
 
-The run creates its sandbox with `backend.cliAuth` and `CLAUDE_TOKEN` in
-`secrets`, and mints no Router key, so the Router bills nothing for it. A run
-whose account stored no `CLAUDE_TOKEN` fails with `No stored secret named
-CLAUDE_TOKEN`. The profile cannot run in a worker or as `topology: inference`,
-which only the Router serves.
-
-## Rotate or revoke
-
-A secret name cannot be overwritten. To rotate, delete it and store the new
-token under the same name; sandboxes created afterwards use the new value.
-
-```bash
-claude setup-token
-tangle secret delete CLAUDE_TOKEN --force
-tangle secret create CLAUDE_TOKEN --value-stdin <<< "$CLAUDE_CODE_OAUTH_TOKEN"
-```
-
-To cut access everywhere at once, revoke the token in your Claude account
-settings.
+The run creates its sandbox with `cliAuth` and `CLAUDE_TOKEN` in `secrets`.
+An account with no `CLAUDE_TOKEN` fails with `No stored secret named
+CLAUDE_TOKEN`. A subscription profile runs only in a sandbox, never as a
+worker or inference step. See [Workflows](/sandbox/workflows).
 
 ## From HTTP
 
-Any language can start the same agent. On the wire, credential fields sit
-under `backend.model`. The body names the secret; the token never appears in
-it.
+Credential fields sit under `backend.model`. The body names the secret; the
+token never appears in it.
 
 ```bash
 curl -X POST https://sandbox.tangle.tools/v1/sandboxes \
   -H "Authorization: Bearer $TANGLE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "claude-on-my-plan",
     "backend": {
       "type": "claude-code",
       "model": {
@@ -144,19 +216,14 @@ curl -X POST https://sandbox.tangle.tools/v1/sandboxes \
 
 ## Troubleshooting
 
-| Result | Cause | Fix |
-|---|---|---|
-| `401 OAuth access token is invalid` | The token expired, was revoked, or was pasted with extra characters. | Run `claude setup-token` again and rotate the secret. |
-| `400 Native authentication secret CLAUDE_TOKEN must be listed in secrets` | `cliAuth.secretEnv` is not in `secrets`. | Add the secret name to `secrets`. |
-| `cliAuth cannot be combined with API credentials, baseUrl, or inline authFiles` | `cliAuth` was set together with `apiKey`, `apiKeyEnv`, `baseUrl`, or `authFiles`. | Use one credential per backend. |
+| Message | Fix |
+|---|---|
+| `Native authentication secret CLAUDE_TOKEN must be listed in secrets` | Add the secret name to `secrets`. |
+| `No stored secret named CLAUDE_TOKEN` | Store the token first, under exactly that name. |
+| `cliAuth cannot be combined with API credentials, baseUrl, or inline authFiles` | Use `cliAuth` alone on the backend. |
 
-A `401` from Anthropic proves the token reached Claude Code inside the
-sandbox: the remaining problem is the token itself.
+## Next
 
-## Related
-
-- [Start a cloud agent](/sandbox/cloud-agents): streaming, sessions, and
-  spin-down.
-- [Agent profiles](/sandbox/cloud-agents-profiles): instructions and tools for
-  the agent.
-- [Network egress rules](/sandbox/egress): keep the agent to the hosts it needs.
+- [Codex on your ChatGPT plan](/sandbox/cloud-agents-codex)
+- [AgentProfiles](/sandbox/cloud-agents-profiles): give the agent a role, skills and tools.
+- [Network access](/sandbox/egress): keep the agent to the hosts it needs.

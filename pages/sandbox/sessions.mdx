@@ -1,0 +1,251 @@
+---
+title: Keep conversations across turns and processes
+description: Continue a coding agent's conversation across calls, processes and restarts with a session id, and retry a turn without running it twice.
+---
+
+import { Tabs } from 'nextra/components'
+
+# Keep conversations across turns and processes
+
+A session is one conversation with the coding agent in a sandbox. Every turn
+you send with the same `sessionId` continues it, from this process or any
+other, for as long as the sandbox exists. The sandbox keeps the conversation
+and its files across stops and resumes.
+
+Derive the session id from your own conversation id, for example
+`support-<ticketId>`. Never derive it from a turn id, or each turn starts a new
+conversation.
+
+## Continue a conversation
+
+<Tabs items={["TypeScript", "Python", "CLI"]}>
+<Tabs.Tab>
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+  backend: { type: "claude-code" },
+});
+try {
+  await box.prompt("Read the codebase and plan OAuth login.", { sessionId: "oauth" });
+  const run = await box.session("oauth").prompt("Implement step 1 of your plan.");
+  console.log(run.success ? run.response : run.error);
+} finally {
+  await box.delete();
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import os
+
+from tangle_sandbox import BackendConfig, CreateSandboxOptions, GitConfig, PromptOptions, Sandbox
+
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+box = client.create(
+    CreateSandboxOptions(
+        git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"),
+        backend=BackendConfig(type="claude-code"),
+    )
+)
+box.wait_for("running")
+try:
+    box.prompt("Read the codebase and plan OAuth login.", PromptOptions(session_id="oauth"))
+    run = box.prompt("Implement step 1 of your plan.", PromptOptions(session_id="oauth"))
+    print(run.response if run.success else run.error)
+finally:
+    box.delete()
+    client.close()
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+tangle agent prompt <sandbox-id> "Read the codebase and plan OAuth login." --session oauth
+tangle agent prompt <sandbox-id> "Implement step 1 of your plan." --session oauth --stream
+```
+</Tabs.Tab>
+</Tabs>
+
+Turns in one session run one at a time. Different sessions in one sandbox run
+side by side.
+
+## Continue after a stop
+
+`box.prompt()` needs a running sandbox; it does not resume one. Resume a
+stopped sandbox first, then send the backend again with the turn so the
+resumed session has its credential:
+
+```ts
+const backend = { type: "claude-code" } as const;
+
+const again = await client.get(sandboxId);
+if (!again) throw new Error("The sandbox was deleted.");
+await again.resume();
+const run = await again.prompt("Implement step 2 of your plan.", {
+  sessionId: "oauth",
+  backend,
+});
+```
+
+`tangle agent prompt` resumes a stopped sandbox for you.
+
+## Start a turn and collect it later
+
+`dispatchPrompt()` starts a turn and returns at once. The coding agent keeps
+working in the sandbox after your process exits. Any process can collect the
+result or replay the events.
+
+```ts
+const run = await box.dispatchPrompt("Upgrade each dependency and run the tests.", {
+  sessionId: "upgrade-deps",
+});
+console.log(run.executionId, run.status, run.dispatched);
+
+// Later, in any process.
+const box2 = await client.get(sandboxId);
+const result = await box2!.session("upgrade-deps").result({ executionId: run.executionId });
+console.log(result.status, result.response);
+```
+
+`session(id).events({ since })` yields the session's events from the event id
+you pass, then follows live ones. Pass the last event id your client saw to
+pick up exactly where it stopped:
+
+```ts
+for await (const event of box.session("upgrade-deps").events({ since: lastEventId })) {
+  console.log(event.id, event.type);
+}
+```
+
+The Python SDK has no `dispatchPrompt`. From Python, use `box.prompt()` with a
+`session_id`, or call the REST routes listed in the
+[REST reference](/sandbox/api-reference/sessions) with `client.fetch()`.
+
+## Retry a turn without running it twice
+
+A `sessionId` stops a second run only while the first is in flight. Once the
+turn finishes, the same call starts a new turn. To make a retry safe after the
+turn finishes, pass a `turnId`: the platform caches each completed turn under
+its `turnId`.
+
+```ts
+const turnId = request.headers.get("x-turn-id")!;
+
+const cached = await box.findCompletedTurn(turnId, { sessionId });
+if (cached) return cached.result;
+
+const run = await box.dispatchPrompt(message, { sessionId, turnId });
+if (!run.dispatched) {
+  // A run is already in flight on this session, or the turn already completed.
+}
+```
+
+`dispatchPrompt()` returns
+`{ sessionId, executionId, status, alreadyExisted, dispatched }`. Read `dispatched`: it is `false` when the call found the turn
+already completed or a run already in flight on the session.
+
+## Drive a turn from a step function
+
+Callers that run in short steps, such as a Worker request, a queue consumer or
+a workflow step, call `driveTurn()` once per step. Each call settles, checks or
+starts the turn and returns without waiting:
+
+```ts
+const tick = await box.driveTurn("Write the release notes.", {
+  sessionId: "release-notes",
+  turnId: "release-notes-v2",
+});
+if (tick.state === "completed") console.log(tick.text);
+// "running": call again on your next step with the same ids.
+```
+
+A `failed` result is final: calling again with the same ids returns the same
+outcome, never a second run.
+
+## When the agent waits for a person
+
+A coding agent can stop mid-turn to ask a question, request a permission or
+submit a plan. The turn then reports a status such as `awaiting_question` or
+`awaiting_plan_decision`.
+
+| Need | Method on `box.session(id)` |
+|---|---|
+| See what is waiting | `interactions()` |
+| Answer a question | `answer(interactionId, answers)` |
+| Allow or deny a permission | `respondToPermission(permissionId, { response: "allow" })` |
+| Read the plan | `plan()` |
+| Approve or reject the plan | `approvePlan()` or `rejectPlan(feedback)` |
+| Stop the current run | `interrupt({ executionId })`, which returns `{ cancelled }` |
+
+To answer in the agent's own UI instead, open the session in
+[interactive mode](/sandbox/interactive).
+
+## List, fork and delete sessions
+
+```ts
+const sessions = await box.sessions();
+const status = await box.session("oauth").status(); // null when the id is unknown
+
+const { session } = await box.session("oauth").fork({ messageId });
+await session.prompt("Try the other approach.");
+
+await box.session("oauth").delete();
+```
+
+A fork copies the conversation up to `messageId` into a new session that
+shares the sandbox's files. To copy the files too, take a
+[snapshot](/sandbox/snapshots).
+
+## Serve chat from a Worker
+
+The pattern for a chat route on Cloudflare Workers or any server:
+
+1. Authenticate the user and derive the session id from the user and the
+   conversation.
+2. Return the cached turn if `findCompletedTurn()` has it.
+3. Otherwise `dispatchPrompt()` with the `sessionId` and `turnId`.
+4. Stream `session(id).events({ since })` as server-sent events, with
+   `Last-Event-ID` from the browser as `since`.
+
+The account key stays on the server. The browser sends its own user token.
+
+```ts
+const cached = await box.findCompletedTurn(turnId, { sessionId });
+if (cached) return Response.json({ cached: true, ...cached });
+
+await box.dispatchPrompt(await req.text(), { sessionId, turnId });
+
+const since = req.headers.get("last-event-id") ?? undefined;
+const stream = new ReadableStream({
+  async start(controller) {
+    for await (const event of box.session(sessionId).events({ since, signal: req.signal })) {
+      const frame = `id: ${event.id ?? ""}\nevent: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`;
+      controller.enqueue(new TextEncoder().encode(frame));
+    }
+    controller.close();
+  },
+});
+return new Response(stream, { headers: { "content-type": "text/event-stream" } });
+```
+
+If the browser disconnects, the run continues in the sandbox. The browser
+reconnects with the same ids and its `Last-Event-ID`. The complete Worker and
+its authentication module are in
+[product examples](/sandbox/examples/products#chat-from-a-cloudflare-worker).
+
+The example derives a new session for each turn, so a new turn never collides
+with a run in flight. To keep the agent's context across turns, derive the
+session from the user and the conversation only, and send each turn after the
+previous one finishes.
+
+## Next
+
+- [Interactive mode](/sandbox/interactive): drive the agent's own terminal UI.
+- [One sandbox per user](/sandbox/instances): sessions per thread, kept by the platform.
+- [Stream output](/sandbox/streaming): every event type a turn emits.

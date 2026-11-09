@@ -1,0 +1,218 @@
+---
+title: Drive a coding agent interactively
+description: Run a coding agent's own terminal UI in a sandbox, attach your terminal to it, and open the same session in a browser to watch and type.
+---
+
+# Drive a coding agent interactively
+
+Interactive mode runs a coding agent's own full-screen terminal UI inside a
+sandbox: Claude Code, Codex, Pi, OpenCode or another coding agent the sandbox
+ships. Your terminal attaches to it, and a link opens the same live session in
+the browser, where you can watch and type.
+
+Use it to pair with an agent or take over mid-task. For scripted turns that
+return a result, use [`prompt()`](/sandbox/cloud-agents) instead.
+
+## Start an interactive session
+
+```bash
+tangle sandbox create --name pair --backend claude-code \
+  --git-url https://github.com/tangle-network/sandbox-demo
+tangle agent prompt <sandbox-id> "Find the failing test and fix it." --interactive
+```
+
+`--interactive` starts the coding agent's terminal UI in the sandbox, types
+your first prompt into it, and attaches your terminal. A stopped sandbox is
+resumed first.
+
+The session runs the sandbox's configured coding agent. Every sandbox ships the
+full set, so `--harness` picks another one for this session only:
+
+```bash
+tangle agent prompt <sandbox-id> "Review the last commit." --interactive --harness codex
+```
+
+The accepted `--harness` values are listed in the
+[agent command reference](/sandbox/cli/agents). From code,
+`client.listBackends()` returns the same list.
+
+With one argument, the argument is the prompt and the sandbox comes from
+`--box`, the `TANGLE_SANDBOX` variable, or the active sandbox:
+
+```bash
+tangle use <sandbox-id>
+tangle agent prompt "Add a test for the date parser." --interactive
+```
+
+| Flag | Effect |
+|---|---|
+| `--session <id>` | Session id. Defaults to `int-<uuid>`. |
+| `--harness <name>` | Coding agent for this session. |
+| `--model <model>` | Model for this session. |
+| `--profile <source>` | An [AgentProfile](/sandbox/cloud-agents-profiles): a local JSON file, an `https://` URL, or `github:<owner>/<repo>/<path>[@<ref>]`. |
+| `--connection <spec>` | Grant a Hub connection as tools. See [Connections](/sandbox/connections). |
+
+## What you see
+
+```text
+Interactive claude-code session running.
+
+Watch & drive: https://sandbox.tangle.tools/dashboard/sandbox/<sandbox-id>?interactive=int-...
+Session: int-...
+
+Open the link to watch the agent and type to take over.
+```
+
+Then the agent's own UI fills your terminal.
+
+If the agent finishes the first prompt before your terminal attaches, the CLI
+prints `Interactive claude-code session exited.` and
+`The initial prompt completed with reason: <reason>.`, where the reason is
+`exited`, `stopped` or `lost`.
+
+## Keys and exit codes
+
+| Input | Effect |
+|---|---|
+| Everything you type, Ctrl-C included | Goes to the coding agent. |
+| Ctrl-] | Detaches your terminal. The session keeps running and its link keeps working. |
+| Agent exits | The CLI prints `[interactive session exited (code N)]` and `Interactive session ended.` |
+| SIGINT or SIGTERM sent to the CLI process | The CLI restores your terminal, then exits 130 or 143. |
+
+To rejoin a session after you detach, open its Watch & drive link.
+
+## Watch and drive from a browser
+
+The Watch & drive link opens the session in the
+[dashboard](https://sandbox.tangle.tools/dashboard). The browser shows the
+same terminal, and typing there drives the agent.
+
+## Run it from a script
+
+Your terminal attaches only when stdin and stdout are both terminals. In CI or
+a pipe, add `--json`: the CLI starts the session, prints one JSON object, and
+returns.
+
+```bash
+tangle agent prompt <sandbox-id> "Upgrade the test runner." --interactive --json
+```
+
+```json
+{
+  "state": "running",
+  "sessionId": "int-...",
+  "harness": "claude-code",
+  "streamUrl": "...",
+  "webUrl": "https://sandbox.tangle.tools/dashboard/sandbox/<sandbox-id>?interactive=int-..."
+}
+```
+
+`streamUrl` is present only while the session runs. Send `webUrl` to whoever
+should drive the session.
+
+## When a headless run waits for you
+
+Without `--interactive`, `tangle agent prompt` runs the turn headless. When the
+agent stops to wait for a person, the command exits with code 1 and names what
+it waits for:
+
+| Status | What to do |
+|---|---|
+| `awaiting_question` | Re-run with `--interactive` and answer in the agent's UI, or answer from TypeScript with `box.session(id).answer(questionId, answers)`. |
+| `awaiting_plan_decision` | Approve or reject the plan: `box.session(id).approvePlan()` or `box.session(id).rejectPlan(feedback)`. |
+| `awaiting_interaction` | Open an interactive session, or answer the interaction from the SDK. |
+| `blocked_on_approval` | Approve the Hub request with `tangle hub approvals approve <approval-id>`. See [Connections](/sandbox/connections). |
+
+[Sessions](/sandbox/sessions) covers answering from code.
+
+## From TypeScript
+
+`box.session(id).interactive()` returns an `InteractiveSessionHandle`. Start
+it with the exact profile and first prompt, then attach a terminal stream. The
+start request is built with two helpers from `@tangle-network/agent-interface`,
+the same way the CLI builds it.
+
+```ts
+import {
+  agentInteractiveSessionRunRef,
+  canonicalAgentProfileDigest,
+  type AgentProfile,
+} from "@tangle-network/agent-interface";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  backend: { type: "claude-code" },
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+});
+try {
+  const sessionId = `int-${crypto.randomUUID()}`;
+  const profile: AgentProfile = { harness: "claude-code" };
+  const input = {
+    profile,
+    requestedProfileDigest: canonicalAgentProfileDigest(profile),
+    initialPrompt: "Find the failing test and fix it.",
+  };
+  const run = agentInteractiveSessionRunRef(
+    {
+      provider: "tangle-sandbox",
+      environmentId: box.id,
+      sessionId,
+      executionId: `interactive-execution-${sessionId}`,
+    },
+    input,
+  );
+
+  const handle = box.session(sessionId).interactive();
+  const started = await handle.start({ ...input, run });
+  if (started.state !== "running") throw new Error(`Session ${started.reason}`);
+
+  let ended!: () => void;
+  const exited = new Promise<void>((resolve) => (ended = resolve));
+  const terminal = await handle.attach({
+    cols: 120,
+    rows: 40,
+    handlers: {
+      onData: (bytes) => process.stdout.write(bytes),
+      onExit: () => ended(),
+    },
+  });
+  process.stdin.on("data", (chunk) => terminal.write(chunk));
+  await exited;
+  process.stdin.pause();
+} finally {
+  await box.delete();
+}
+```
+
+| Method | What it does |
+|---|---|
+| `start(options)` | Starts the agent's terminal UI. Returns `{ state: "running", streamUrl, ... }`, or `{ state: "exited", reason, exitCode?, ... }` when the first prompt already finished. |
+| `attach({ cols, rows, handlers })` | Claims the keyboard and returns a terminal stream with `write()`, `resize()` and `close()`. |
+| `observe({ handlers })` | A read-only stream. Input on it is refused with `OBSERVER_READ_ONLY`. |
+| `sendPrompt(command)` | Types a prompt into the running session. |
+| `status()` | Reads the session state. |
+| `claimControl()` | Takes the keyboard from its current holder. |
+| `stop()` | Stops the session. |
+
+A browser page that only shows status and moves the keyboard between people
+imports `BrowserInteractiveSessionControlController` from
+`@tangle-network/sandbox/interactive-control`, an entry without the terminal
+code.
+
+Over HTTP, `POST /v1/sandboxes/{id}/runtime/agents/sessions/{sessionId}/interactive`
+starts a session. The [REST reference](/sandbox/api-reference/runtime) lists the
+prompt, control and lifecycle routes beside it.
+
+The Python SDK has no interactive sessions. From Python, run the CLI with
+`--json` or call the REST route with `client.fetch()`.
+
+## Next
+
+- [Sessions](/sandbox/sessions): continue a conversation across processes.
+- [Shells and terminals](/sandbox/terminals): a plain shell in the sandbox.
+- [Run a coding agent](/sandbox/cloud-agents): headless turns from code.

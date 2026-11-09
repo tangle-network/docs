@@ -1,72 +1,213 @@
-# Python
+---
+title: Python SDK
+description: Install tangle-sandbox, create a sandbox from Python, run commands, read and write files, prompt a coding agent and clean up, with the sync and async clients.
+---
 
-Use HTTPX to call the Sandbox API from Python.
-The Python SDK is published on PyPI as [`tangle-sandbox`](https://pypi.org/project/tangle-sandbox/). This page calls the API directly with HTTPX.
+import { Callout } from "nextra/components";
+
+# Python SDK
+
+`tangle-sandbox` drives sandboxes from Python: create one, run commands, read and write text files, give a coding agent a task, snapshot the workspace and delete it.
+`Sandbox` is the synchronous client and `AsyncSandbox` is its `asyncio` twin with the same methods.
 
 ## Install
 
+The SDK needs Python 3.10 or newer.
+
 ```bash
-pip install httpx
+pip install tangle-sandbox
 ```
 
-Set `TANGLE_API_KEY` to your [account API key](/sandbox/authentication).
-Keep it in your server or local environment.
+| Extra | Adds | Unlocks |
+| --- | --- | --- |
+| `tangle-sandbox[gateway]` | `websockets` | `tangle_sandbox.session_gateway`, a WebSocket client for a session's live events |
+| `tangle-sandbox[tangle]` | `web3`, `eth-account` | `tangle_sandbox.tangle`, which creates sandboxes on Tangle Network operators |
+| `tangle-sandbox[all]` | both | both |
 
-## Run a command
+Everything else, including fleets, batches, secrets, teams and trace export, is in the base install.
 
-This program creates a sandbox, waits for it to start, runs a command, and deletes it when the block exits.
+## Create a client
 
 ```python
 import os
-import time
-from contextlib import ExitStack
-import httpx
 
-with httpx.Client(
-    base_url="https://sandbox.tangle.tools", timeout=180,
-    headers={"Authorization": f"Bearer {os.environ['TANGLE_API_KEY']}"},
-) as tangle, ExitStack() as cleanup:
-    box = tangle.post("/v1/sandboxes", json={
-        "maxLifetimeSeconds": 900,
-    }).raise_for_status().json()
-    path = f"/v1/sandboxes/{box['id']}"
-    cleanup.callback(lambda: tangle.delete(path).raise_for_status())
-    for _ in range(60):
-        if box["status"] == "running":
-            break
-        if box["status"] not in ("pending", "provisioning"):
-            raise RuntimeError(box.get("error") or box["status"])
-        time.sleep(2)
-        box = tangle.get(path).raise_for_status().json()
-    else:
-        raise TimeoutError("Sandbox did not start")
+from tangle_sandbox import Sandbox
 
-    result = tangle.post(f"{path}/runtime/process/spawn", json={
-        "executable": "/bin/sh", "args": ["-c", "node --version"],
-        "blocking": True, "timeoutMs": 30000,
-    }).raise_for_status().json()
-    print(result["data"]["stdout"])
-```
-
-## List sandboxes
-
-```python
-import os
-import httpx
-
-with httpx.Client(
+client = Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
     base_url="https://sandbox.tangle.tools",
-    headers={"Authorization": f"Bearer {os.environ['TANGLE_API_KEY']}"},
-    timeout=30,
-) as client:
-    response = client.get("/v1/sandboxes").raise_for_status().json()
-    for sandbox in response["sandboxes"]:
-        print(sandbox["id"], sandbox["status"])
+)
 ```
 
-## More examples
+Pass both arguments. The SDK reads no environment variables and has no default host.
+Keys start with `sk-tan-`; create one at [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys). [API keys and tokens](/sandbox/authentication) covers scopes and budgets.
 
-- [Read and write files](https://sandbox.tangle.tools/docs/sdk/commands-files#read-and-write-files)
-- [Run an agent](https://sandbox.tangle.tools/docs/sdk/agents-sessions#run-an-agent)
-- [Parallel agents](https://sandbox.tangle.tools/docs/sdk/parallel#run-parallel-agents)
-- [API reference](/sandbox/api-reference)
+`timeout_ms` (default 30000) bounds each request. Use the client as a context manager, or call `client.close()`, to close its connection pool.
+
+## Run your first sandbox
+
+```python
+import os
+
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    box = client.create(name="hello-python")
+    try:
+        # create() returns before the sandbox runs; runtime calls need RUNNING.
+        box.wait_for(SandboxStatus.RUNNING)
+
+        result = box.exec("python3 -c 'print(sum(range(1_000_000)))'")
+        print(result.exit_code, result.stdout.strip())
+
+        box.write("notes.md", "first draft\n")
+        print(box.read("notes.md").strip())
+
+        turn = box.prompt("Reply with exactly the word OK")
+        print(turn.response if turn.success else turn.error)
+    finally:
+        box.delete()
+```
+
+```text
+0 499999500000
+first draft
+OK
+```
+
+A sandbox created without a `backend` runs the `opencode` coding agent. [Run a coding agent](/sandbox/cloud-agents) shows how to pick Claude Code, Codex or another one.
+
+## Stop and resume
+
+`stop()` keeps the disk and stops billing for compute. `resume()` starts it again; wait for `RUNNING` before the next runtime call.
+
+```python
+box.write("notes.md", "first draft\n")
+box.stop()
+print(box.status.value)
+
+box.resume()
+box.wait_for(SandboxStatus.RUNNING)
+print(box.read("notes.md").strip())
+```
+
+```text
+stopped
+first draft
+```
+
+## Async client
+
+```python
+import asyncio
+import os
+
+from tangle_sandbox import AsyncSandbox, SandboxStatus
+
+
+async def word_count(client: AsyncSandbox, text: str) -> str:
+    box = await client.create()
+    try:
+        await box.wait_for(SandboxStatus.RUNNING)
+        await box.write("input.txt", text)
+        return (await box.exec("wc -w < input.txt")).stdout.strip()
+    finally:
+        await box.delete()
+
+
+async def main() -> None:
+    async with AsyncSandbox(
+        api_key=os.environ["TANGLE_API_KEY"],
+        base_url="https://sandbox.tangle.tools",
+    ) as client:
+        texts = ["one two three", "four five", "six"]
+        print(await asyncio.gather(*(word_count(client, t) for t in texts)))
+
+
+asyncio.run(main())
+```
+
+```text
+['3', '2', '1']
+```
+
+## Things that catch Python users
+
+- `create()` returns while the sandbox is still `pending` or `provisioning`. `exec`, `read`, `write`, `search`, `prompt`, `git` and `snapshot` raise `StateError` until you call `wait_for(SandboxStatus.RUNNING)`.
+- Pass `SandboxStatus` members, not strings. `wait_for("running")` raises `AttributeError` instead of `TimeoutError` when it times out, and `ListSandboxOptions(status="running")` raises at once.
+- `exec` runs the command with bash and merges stderr into stdout, so `ExecResult.stderr` is empty. A non-zero exit code is returned, not raised.
+- A `cwd` that does not exist is ignored: the command runs in the default directory, `/home/agent`, or the cloned repository when the sandbox was created with `git`.
+- `prompt()` returns `success=False` with `error` set when the turn fails. Check `success`.
+- `read` and `write` handle UTF-8 text only.
+- `health()` returns `True` for any key, because `/health` needs no key. Make a real call, such as `client.list(limit=1)`, to check a key.
+- `tangle_sandbox.TimeoutError` is not the built-in `TimeoutError`. Catch the SDK's class, or catch `SandboxError` and read `code`.
+- `confidential` and `tangle_secrets` on `CreateSandboxOptions` are ignored by `Sandbox` and `AsyncSandbox`. Only the `[tangle]` client sends them.
+
+## Timeouts and retries
+
+| What | Limit |
+| --- | --- |
+| Each request | `timeout_ms` on the client, default 30000 ms |
+| `exec` | `ExecOptions.timeout_ms` (default 30000 ms) plus 15 s for the response |
+| `prompt`, `stream_prompt`, `stream_batch` | 300 s without an event, or `PromptOptions.timeout_ms` |
+| `wait_for` | `WaitForOptions.timeout_ms`, default 120000 ms, polling every 2000 ms |
+| `snapshot`, `restore_paths` | up to 600 s for the operation |
+| Fleet dispatch | the larger of `timeout_ms` and 600 s, plus 15 s |
+
+`GET`, `PUT`, `DELETE`, `HEAD` and `OPTIONS` requests are retried up to 3 times on a 429, 502, 503 or 504 whose error code is retryable, waiting for `Retry-After`.
+`create()` sends an `Idempotency-Key` with every attempt. When the service is out of capacity it sends the same request again for up to 150 s or the client timeout, whichever comes first, so a retry joins the first create instead of making a second sandbox.
+If `create()` times out, the `TimeoutError` message names the key. Call `create()` again with `CreateSandboxOptions(idempotency_key=...)` set to that key to pick up the same sandbox.
+
+## What Python can do, and what to use for the rest
+
+The Python SDK covers the core lifecycle, commands, text files, git, snapshots, network rules, coding agent prompts, batches, secrets, teams and traces.
+For anything below, use the TypeScript SDK or the CLI, or call the REST route with `client.fetch(method, path, json=..., params=...)`.
+`client.fetch` sends your key, returns the raw `httpx.Response` and does not raise on a 4xx or 5xx status.
+
+| Task | TypeScript | CLI | REST |
+| --- | --- | --- | --- |
+| Interactive terminal | `box.terminals` | `tangle ssh`, `tangle agent prompt --interactive` | WebSocket; see [Shells and terminals](/sandbox/terminals) |
+| List, move, upload and download files; binary files | `box.fs.*`, `box.uploadDirectory` | `tangle fs` | see [Files](/sandbox/files) |
+| Run code with structured output | `box.runCode` | `tangle run` | see [Run commands and code](/sandbox/commands) |
+| Background processes and logs | `box.process.*` | `tangle process` | see [Run commands and code](/sandbox/commands) |
+| Separate stderr | `box.exec` | `tangle exec` | |
+| Expose a port or share a preview link | `box.network.exposePort`, `box.previewLinks` | `tangle sandbox expose`, `tangle preview` | see [Ports and preview links](/sandbox/ports-previews) |
+| Named agent sessions, answers and history | `box.createSession`, `box.sessions` | `tangle agent prompt --session` | see [Sessions](/sandbox/sessions) |
+| Branch or fork a running sandbox | `box.branch`, `box.fork` | `tangle branch create` | see [Snapshots and forks](/sandbox/snapshots) |
+| Revert to or delete a snapshot | `box.revertToSnapshot`, `box.deleteSnapshot` | `tangle snapshot revert`, `tangle snapshot delete` | see [Snapshots and forks](/sandbox/snapshots) |
+| Rebuild a sandbox, poll an operation | `box.rebuild`, `box.getOperation` | | |
+| Resource usage and runtime health | `box.resourceUsage`, `box.runtimeHealth` | | |
+| MCP endpoint and computer use | `box.getMcpEndpoint` | | `GET /v1/sandboxes/{id}/mcp` |
+| TEE sandboxes and attestation | `confidential` on create, `box.getTeeAttestation` | `tangle sandbox create --tee`, `tangle sandbox attestation` | |
+| Egress usage and activity | `box.egress.usage`, `box.egress.activity` | | `GET /v1/sandboxes/{id}/egress/usage`, `GET /v1/sandboxes/{id}/egress/activity` |
+| GPU leases | `box.gpu.*` | `tangle sandbox gpu` | see [GPU leases](/sandbox/gpu-leases) |
+| SSH keys, public templates, lines, runs | `client.sshKeys`, `client.publicTemplates`, `client.lines`, `client.runs` | `tangle ssh-keys`, `tangle template`, `tangle lines` | |
+| Sizes and coding agents on offer | `client.shapes()`, `client.listBackends()` | `tangle sandbox shapes` | `GET /v1/shapes`, `GET /v1/backends` |
+| List team or all sandboxes | `client.list({ scope })` | `tangle sandbox list --team`, `--all-scopes` | `GET /v1/sandboxes?scope=team` |
+| Team secrets and templates, ownership transfer | `client.teams.upsertSecret`, `createTemplate`, `transferOwnership` | `tangle team secret`, `tangle team templates`, `tangle team transfer` | see [Teams](/sandbox/teams) |
+| Create fields Python lacks: `cwd`, `ephemeral`, `retain`, `startupScriptIds`, `gpuLease`, `compliance` | `client.create` | some as `tangle sandbox create` flags | `POST /v1/sandboxes` |
+| List every fleet | `client.fleets` | `tangle fleet list` | `GET /v1/fleets` |
+
+For example, list the coding agents the service offers:
+
+```python
+response = client.fetch("GET", "/v1/backends")
+print(response.status_code, [b["type"] for b in response.json()["backends"]][:3])
+```
+
+## Reference
+
+- [Sandbox and AsyncSandbox](/sandbox/sdk-python/client): the client and its sub-clients.
+- [SandboxInstance](/sandbox/sdk-python/instance): everything you do to one sandbox.
+- [Fleets and optional modules](/sandbox/sdk-python/fleets-and-extras): fleets, the agent tool, trace export and the extras.
+- [Types and errors](/sandbox/sdk-python/types-and-errors): every option and result type, and `SandboxError`.
+- [Python examples](/sandbox/examples/python): complete programs with their output.
+
+## Next
+
+- [Python examples](/sandbox/examples/python)
+- [Sandbox and AsyncSandbox](/sandbox/sdk-python/client)
+- [Error codes](/sandbox/errors)

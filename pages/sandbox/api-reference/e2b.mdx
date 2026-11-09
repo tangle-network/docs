@@ -1,0 +1,323 @@
+---
+title: E2B-compatible routes
+description: REST reference for the E2B-compatible routes under /e2b, which accept a Tangle API key in X-API-Key.
+---
+
+# E2B-compatible routes
+
+These routes accept E2B's REST request and response shapes. Send your Tangle API key in `X-API-Key`, as E2B's API expects, or as a bearer token.
+
+Every route is on `https://sandbox.tangle.tools` and takes your account API key as `Authorization: Bearer <key>` unless it says otherwise. Errors use the shape in [Error codes](/sandbox/errors).
+This page is generated from the [OpenAPI document](/sandbox-openapi.json), which also has every response schema.
+
+## E2B compatibility
+
+| Route | Does |
+|---|---|
+| `POST /e2b/sandboxes` | Create a sandbox |
+| `GET /e2b/sandboxes` | List sandboxes |
+| `GET /e2b/sandboxes/{sandboxID}` | Get a sandbox |
+| `DELETE /e2b/sandboxes/{sandboxID}` | Kill a sandbox |
+| `GET /e2b/sandboxes/{sandboxID}/files` | Read a file |
+| `POST /e2b/sandboxes/{sandboxID}/files` | Write a file |
+| `DELETE /e2b/sandboxes/{sandboxID}/files` | Delete a file |
+| `GET /e2b/sandboxes/{sandboxID}/files/list` | List a directory |
+| `POST /e2b/sandboxes/{sandboxID}/processes` | Run a command |
+| `GET /e2b/sandboxes/{sandboxID}/processes/{pid}` | Get a process |
+| `DELETE /e2b/sandboxes/{sandboxID}/processes/{pid}` | Kill a process |
+| `POST /e2b/sandboxes/{sandboxID}/timeout` | Set a sandbox timeout |
+| `GET /e2b/templates` | List templates |
+
+### Create a sandbox
+
+`POST /e2b/sandboxes`
+
+E2B's `POST /sandboxes`. `templateID` is an id from `GET /e2b/templates`; `timeout` is the lifetime in seconds (default 15). Answers once the sandbox runs.
+
+Authentication: an API key in `X-API-Key` or an API key as a bearer token.
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `templateID` | string | Yes |  |
+| `metadata` | object | No |  |
+| `envVars` | object | No |  |
+| `timeout` | number | No |  |
+| `secure` | boolean | No |  |
+| `allow_internet_access` | boolean | No |  |
+| `autoPause` | boolean | No |  |
+| `autoResume` | object | No |  |
+
+| Status | Meaning |
+|---|---|
+| 201 | Running sandbox |
+| 400 | Invalid request |
+| 401 | Missing or invalid API key |
+| default | Any other Sandbox API refusal, with its status and Retry-After header |
+
+### List sandboxes
+
+`GET /e2b/sandboxes`
+
+E2B's `GET /sandboxes`.
+
+Authentication: an API key in `X-API-Key` or an API key as a bearer token.
+
+| Status | Meaning |
+|---|---|
+| 200 | Sandboxes |
+| 400 | Invalid request |
+| 401 | Missing or invalid API key |
+| default | Any other Sandbox API refusal, with its status and Retry-After header |
+
+### Get a sandbox
+
+`GET /e2b/sandboxes/{sandboxID}`
+
+E2B's `GET /sandboxes/{sandboxID}`.
+
+Authentication: an API key in `X-API-Key` or an API key as a bearer token.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `sandboxID` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Sandbox |
+| 400 | Invalid request |
+| 401 | Missing or invalid API key |
+| 403 | The key may not use this sandbox |
+| 404 | Sandbox or path not found |
+| default | Any other Sandbox API refusal, with its status and Retry-After header |
+
+### Kill a sandbox
+
+`DELETE /e2b/sandboxes/{sandboxID}`
+
+E2B's `DELETE /sandboxes/{sandboxID}`. Answers after the sandbox is removed.
+
+Authentication: an API key in `X-API-Key` or an API key as a bearer token.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `sandboxID` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 204 | Removed |
+| 400 | Invalid request |
+| 401 | Missing or invalid API key |
+| 403 | The key may not use this sandbox |
+| 404 | Sandbox or path not found |
+| default | Any other Sandbox API refusal, with its status and Retry-After header |
+
+### Read a file
+
+`GET /e2b/sandboxes/{sandboxID}/files`
+
+Authentication: an API key in `X-API-Key` or an API key as a bearer token.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `sandboxID` | path | Yes | string |  |
+| `path` | query | Yes | string | Absolute path in the sandbox. |
+
+| Status | Meaning |
+|---|---|
+| 200 | File content |
+| 400 | Invalid request |
+| 401 | Missing or invalid API key |
+| 403 | The key may not use this sandbox |
+| 404 | Sandbox or path not found |
+| default | Any other Sandbox API refusal, with its status and Retry-After header |
+
+### Write a file
+
+`POST /e2b/sandboxes/{sandboxID}/files`
+
+Send multipart fields `path` and `file`, or the raw bytes with `?path=`. Files above 5242880 bytes answer 413.
+
+Authentication: an API key in `X-API-Key` or an API key as a bearer token.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `sandboxID` | path | Yes | string |  |
+| `path` | query | No | string | Absolute path in the sandbox. |
+
+Request body (`multipart/form-data`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `path` | string | Yes |  |
+| `file` | string | Yes |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | File written |
+| 400 | Invalid request |
+| 401 | Missing or invalid API key |
+| 403 | The key may not use this sandbox |
+| 404 | Sandbox or path not found |
+| 413 | File too large |
+| default | Any other Sandbox API refusal, with its status and Retry-After header |
+
+### Delete a file
+
+`DELETE /e2b/sandboxes/{sandboxID}/files`
+
+Authentication: an API key in `X-API-Key` or an API key as a bearer token.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `sandboxID` | path | Yes | string |  |
+| `path` | query | Yes | string | Absolute path in the sandbox. |
+
+| Status | Meaning |
+|---|---|
+| 204 | Deleted |
+| 400 | Invalid request |
+| 401 | Missing or invalid API key |
+| 403 | The key may not use this sandbox |
+| 404 | Sandbox or path not found |
+| default | Any other Sandbox API refusal, with its status and Retry-After header |
+
+### List a directory
+
+`GET /e2b/sandboxes/{sandboxID}/files/list`
+
+Authentication: an API key in `X-API-Key` or an API key as a bearer token.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `sandboxID` | path | Yes | string |  |
+| `path` | query | Yes | string | Absolute path in the sandbox. |
+
+| Status | Meaning |
+|---|---|
+| 200 | Directory entries |
+| 400 | Invalid request |
+| 401 | Missing or invalid API key |
+| 403 | The key may not use this sandbox |
+| 404 | Sandbox or path not found |
+| default | Any other Sandbox API refusal, with its status and Retry-After header |
+
+### Run a command
+
+`POST /e2b/sandboxes/{sandboxID}/processes`
+
+Runs the command to completion and answers with its exit code and output. The E2B SDK's `commands.run` talks to the sandbox directly instead; this route is for plain HTTP callers.
+
+Authentication: an API key in `X-API-Key` or an API key as a bearer token.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `sandboxID` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `cmd` | string | Yes | Runs as `/bin/sh -c <cmd>`. |
+| `cwd` | string | No |  |
+| `envs` | object | No |  |
+| `timeout` | number | No | Milliseconds. |
+
+| Status | Meaning |
+|---|---|
+| 200 | Finished process |
+| 400 | Invalid request |
+| 401 | Missing or invalid API key |
+| 403 | The key may not use this sandbox |
+| 404 | Sandbox or path not found |
+| default | Any other Sandbox API refusal, with its status and Retry-After header |
+
+### Get a process
+
+`GET /e2b/sandboxes/{sandboxID}/processes/{pid}`
+
+Authentication: an API key in `X-API-Key` or an API key as a bearer token.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `sandboxID` | path | Yes | string |  |
+| `pid` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 200 | Process |
+| 400 | Invalid request |
+| 401 | Missing or invalid API key |
+| 403 | The key may not use this sandbox |
+| 404 | Sandbox or path not found |
+| default | Any other Sandbox API refusal, with its status and Retry-After header |
+
+### Kill a process
+
+`DELETE /e2b/sandboxes/{sandboxID}/processes/{pid}`
+
+Authentication: an API key in `X-API-Key` or an API key as a bearer token.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `sandboxID` | path | Yes | string |  |
+| `pid` | path | Yes | string |  |
+
+| Status | Meaning |
+|---|---|
+| 204 | Killed |
+| 400 | Invalid request |
+| 401 | Missing or invalid API key |
+| 403 | The key may not use this sandbox |
+| 404 | Sandbox or path not found |
+| default | Any other Sandbox API refusal, with its status and Retry-After header |
+
+### Set a sandbox timeout
+
+`POST /e2b/sandboxes/{sandboxID}/timeout`
+
+E2B's `POST /sandboxes/{sandboxID}/timeout`. Timeout updates are not supported: a valid request answers 501.
+
+Authentication: an API key in `X-API-Key` or an API key as a bearer token.
+
+| Parameter | In | Required | Type | Description |
+|---|---|---|---|---|
+| `sandboxID` | path | Yes | string |  |
+
+Request body (`application/json`):
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `timeout` | number | Yes | Seconds. |
+
+| Status | Meaning |
+|---|---|
+| 204 | Timeout set |
+| 400 | Invalid request |
+| 401 | Missing or invalid API key |
+| 403 | The key may not use this sandbox |
+| 404 | Sandbox or path not found |
+| 501 | Timeout updates are not supported |
+| default | Any other Sandbox API refusal, with its status and Retry-After header |
+
+### List templates
+
+`GET /e2b/templates`
+
+One template per coding agent backend; pass its `templateID` to `POST /e2b/sandboxes`.
+
+Authentication: an API key in `X-API-Key` or an API key as a bearer token.
+
+| Status | Meaning |
+|---|---|
+| 200 | Templates |
+| 400 | Invalid request |
+| 401 | Missing or invalid API key |
+| default | Any other Sandbox API refusal, with its status and Retry-After header |
+
+## Next steps
+
+- [Move from E2B](/sandbox/migrate-e2b): map E2B calls to Tangle.
+- [Sandboxes and GPU routes](/sandbox/api-reference/sandboxes): the native sandbox routes.
+- [Error codes](/sandbox/errors): every error code and its fix.

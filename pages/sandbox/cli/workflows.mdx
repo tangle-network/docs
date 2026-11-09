@@ -1,0 +1,592 @@
+---
+title: Workflow commands
+description: "Reference for every tangle workflows command: validate, deploy, run, inspect, retry, roll back and read the state of workflows on Tangle Platform."
+---
+
+# Workflow commands
+
+Validate and deploy workflow files, start and watch runs, retry or cancel them, roll a definition back, and read and write a workflow's stored state.
+
+Workflows run on Tangle Platform, so `--base-url` on these commands points at the Platform host. `TANGLE_PLATFORM_URL` sets it for every command, and `TANGLE_HUB_URL` does inside a sandbox.
+
+```bash
+tangle workflows validate hello.yml
+tangle workflows apply hello.yml
+tangle workflows run wf_abc --wait
+tangle workflows get wf_abc --yaml > hello.yml
+```
+
+`workflows get <id> --yaml` prints the definition in a form `apply` and `update` accept, so you can export, edit and re-apply it.
+[Workflows](/sandbox/workflows) introduces workflows; [Workflow YAML reference](/sandbox/workflows-yaml) documents every field.
+
+## Commands on this page
+
+| Command | What it does |
+| --- | --- |
+| [`tangle workflows list`](#tangle-workflows-list) | List your workflows |
+| [`tangle workflows fleet`](#tangle-workflows-fleet) | Fleet overview: every workflow's run tallies over a trailing window, failing-first |
+| [`tangle workflows get`](#tangle-workflows-get) | Show a workflow's definition and compiled triggers |
+| [`tangle workflows create`](#tangle-workflows-create) | Create a workflow from a YAML file |
+| [`tangle workflows apply`](#tangle-workflows-apply) | Create or update a workflow idempotently, matched by the definition's name |
+| [`tangle workflows update`](#tangle-workflows-update) | Replace a workflow's definition from a YAML file |
+| [`tangle workflows delete`](#tangle-workflows-delete) | Delete a workflow and its triggers |
+| [`tangle workflows validate`](#tangle-workflows-validate) | Validate a workflow YAML file without saving it |
+| [`tangle workflows schema`](#tangle-workflows-schema) | Print the JSON Schema for the workflow YAML |
+| [`tangle workflows run`](#tangle-workflows-run) | Trigger an immediate run of a workflow |
+| [`tangle workflows runs`](#tangle-workflows-runs) | List a workflow's run history (newest first) |
+| [`tangle workflows run-detail`](#tangle-workflows-run-detail) | Show a single run's detail (per-action output and errors) |
+| [`tangle workflows cancel`](#tangle-workflows-cancel) | Cancel a queued or in-progress run |
+| [`tangle workflows retry`](#tangle-workflows-retry) | Re-run a failed or cancelled run (a fresh run with the same trigger context) |
+| [`tangle workflows events`](#tangle-workflows-events) | Tail a run's live progress events until it finishes |
+| [`tangle workflows enable`](#tangle-workflows-enable) | Enable a workflow so its triggers and manual runs fire |
+| [`tangle workflows disable`](#tangle-workflows-disable) | Disable a workflow (pause its triggers and manual runs) |
+| [`tangle workflows templates`](#tangle-workflows-templates) | List the curated starter workflow templates |
+| [`tangle workflows init`](#tangle-workflows-init) | Create a workflow from a gallery template and print (or save) its YAML |
+| [`tangle workflows revisions`](#tangle-workflows-revisions) | List a workflow's definition revision history (newest first) |
+| [`tangle workflows revision`](#tangle-workflows-revision) | Show one revision's metadata and definition YAML |
+| [`tangle workflows rollback`](#tangle-workflows-rollback) | Restore a prior revision's definition as a NEW head revision (re-validated) |
+| [`tangle workflows kv list`](#tangle-workflows-kv-list) | List every KV entry of a workflow |
+| [`tangle workflows kv get`](#tangle-workflows-kv-get) | Show one KV entry (value and version) |
+| [`tangle workflows kv set`](#tangle-workflows-kv-set) | Write a KV entry from a JSON value |
+| [`tangle workflows kv delete`](#tangle-workflows-kv-delete) | Delete a KV entry (idempotent) |
+| [`tangle workflows artifacts`](#tangle-workflows-artifacts) | List a run's artifact metadata (never the bytes) |
+| [`tangle workflows artifact-download`](#tangle-workflows-artifact-download) | Download one run artifact's bytes to a file |
+| [`tangle workflows decisions`](#tangle-workflows-decisions) | List a workflow's pending human decisions |
+| [`tangle workflows decision-resolve`](#tangle-workflows-decision-resolve) | Answer the decision a run is parked on and resume it |
+
+## Definitions
+
+### `tangle workflows list`
+
+List your workflows.
+
+Lists your workflows.
+
+```bash
+tangle workflows list
+```
+
+Request: `GET /v1/workflows`
+
+```bash
+tangle workflows list
+```
+
+### `tangle workflows fleet`
+
+Fleet overview: every workflow's run tallies over a trailing window, failing-first.
+
+```bash
+tangle workflows fleet [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--window <window>` | `7d` | Trailing window: 24h, 7d, or 30d |
+
+Request: `GET /v1/workflows/insights/fleet`
+
+```bash
+tangle workflows fleet
+```
+
+### `tangle workflows get`
+
+Show a workflow's definition and compiled triggers.
+
+Shows a workflow's definition and compiled triggers; `--yaml` prints only the definition.
+
+```bash
+tangle workflows get <id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--yaml` |  | Print only the raw definition YAML (the export path, pipe to a file) |
+
+Request: `GET /v1/workflows/{id}`
+
+```bash
+tangle workflows get wf_abc --yaml
+```
+
+### `tangle workflows create`
+
+Create a workflow from a YAML file.
+
+```bash
+tangle workflows create <file>
+```
+
+Request: `POST /v1/workflows`
+
+```bash
+tangle workflows create hello.yml
+```
+
+### `tangle workflows apply`
+
+Create or update a workflow idempotently, matched by the definition's name.
+
+```bash
+tangle workflows apply <file>
+```
+
+Request: `POST /v1/workflows`
+
+```bash
+tangle workflows apply ~/flow.yaml --json
+```
+
+### `tangle workflows update`
+
+Replace a workflow's definition from a YAML file.
+
+```bash
+tangle workflows update <id> <file> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--note <note>` |  | Revision note recorded on the appended revision (why this change) |
+
+Request: `PUT /v1/workflows/{id}`
+
+```bash
+tangle workflows update wf_abc ~/flow.yaml --json
+```
+
+### `tangle workflows delete`
+
+Delete a workflow and its triggers.
+
+```bash
+tangle workflows delete <id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--force` |  | Skip confirmation prompt |
+
+Request: `DELETE /v1/workflows/{id}`
+
+```bash
+tangle workflows delete wf_abc
+```
+
+### `tangle workflows validate`
+
+Validate a workflow YAML file without saving it.
+
+```bash
+tangle workflows validate <file> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--structural` |  | CI mode: compile + capability checks only, no connection resolution, the verdict is the same regardless of connected providers |
+
+Request: `POST /v1/workflows/validate`
+
+```bash
+tangle workflows validate ~/flow.yaml
+```
+
+### `tangle workflows schema`
+
+Print the JSON Schema for the workflow YAML.
+
+Prints the workflow YAML JSON Schema.
+
+```bash
+tangle workflows schema
+```
+
+Request: `GET /v1/workflows/schema`
+
+```bash
+tangle workflows schema
+```
+
+## Runs
+
+### `tangle workflows run`
+
+Trigger an immediate run of a workflow.
+
+Triggers a run; `--wait` polls until it finishes and prints the result.
+
+```bash
+tangle workflows run <id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--input-file <file>` |  | Trigger inputs from a flat JSON string map; `--input` overrides its keys |
+| `--input <key=value>` |  | Trigger input as key=value (e.g. pull_request.number=123). Repeatable. |
+| `--wait` |  | Wait for the run to finish and print its result |
+| `--timeout <ms>` |  | With `--wait`, fail if the run has not finished after this many milliseconds |
+| `--poll-interval <ms>` |  | With `--wait`, how often to poll for completion (default 2000) |
+
+Request: `POST /v1/workflows/{id}/run`
+
+```bash
+tangle workflows run wf_abc --json
+```
+
+### `tangle workflows runs`
+
+List a workflow's run history (newest first).
+
+Lists a workflow's runs, newest first.
+
+```bash
+tangle workflows runs <id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--limit <n>` |  | Runs per page (1-100) |
+| `--cursor <cursor>` |  | Pagination cursor from a previous page |
+| `--all` |  | Fetch every page, not just the first |
+
+Request: `GET /v1/workflows/{id}/runs`
+
+```bash
+tangle workflows runs wf_abc
+```
+
+### `tangle workflows run-detail`
+
+Show a single run's detail (per-action output and errors).
+
+Shows one run's per-action output and errors.
+
+```bash
+tangle workflows run-detail <id> <runId>
+```
+
+Request: `GET /v1/workflows/{id}/runs/{runId}`
+
+```bash
+tangle workflows run-detail wf_abc run_1
+```
+
+### `tangle workflows cancel`
+
+Cancel a queued or in-progress run.
+
+Cancels a queued or running run.
+
+```bash
+tangle workflows cancel <id> <runId>
+```
+
+Request: `POST /v1/workflows/{id}/runs/{runId}/cancel`
+
+```bash
+tangle workflows cancel wf_abc run_1
+```
+
+### `tangle workflows retry`
+
+Re-run a failed or cancelled run (a fresh run with the same trigger context).
+
+```bash
+tangle workflows retry <id> <runId> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--wait` |  | Wait for the new run to finish and print its result |
+| `--timeout <ms>` |  | With `--wait`, fail if the run has not finished after this many milliseconds |
+| `--poll-interval <ms>` |  | With `--wait`, how often to poll for completion (default 2000) |
+
+Request: `POST /v1/workflows/{id}/runs/{runId}/retry`
+
+```bash
+tangle workflows retry wf_abc run_1
+```
+
+### `tangle workflows events`
+
+Tail a run's live progress events until it finishes.
+
+```bash
+tangle workflows events <id> <runId>
+```
+
+Request: `GET /v1/workflows/{id}/runs/{runId}/events`
+
+```bash
+tangle workflows events wf_abc run_1
+```
+
+### `tangle workflows enable`
+
+Enable a workflow so its triggers and manual runs fire.
+
+Enables a workflow's triggers and manual runs.
+
+```bash
+tangle workflows enable <id>
+```
+
+Request: `PATCH /v1/workflows/{id}`
+
+```bash
+tangle workflows enable wf_abc --json
+```
+
+### `tangle workflows disable`
+
+Disable a workflow (pause its triggers and manual runs).
+
+Pauses a workflow's triggers and manual runs.
+
+```bash
+tangle workflows disable <id>
+```
+
+Request: `PATCH /v1/workflows/{id}`
+
+```bash
+tangle workflows disable wf_abc
+```
+
+## Templates
+
+### `tangle workflows templates`
+
+List the curated starter workflow templates.
+
+Lists the starter workflow templates.
+
+```bash
+tangle workflows templates
+```
+
+Request: `GET /v1/workflows/templates`
+
+```bash
+tangle workflows templates
+```
+
+### `tangle workflows init`
+
+Create a workflow from a gallery template and print (or save) its YAML.
+
+Creates a workflow from a gallery template and prints or saves its YAML.
+
+```bash
+tangle workflows init <template-id> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--param <key=value>` |  | Template parameter value. Repeatable. |
+| `--file <out>` |  | Write the instantiated workflow YAML to this file instead of stdout |
+
+Request: `POST /v1/workflows/templates/{templateId}/instantiate`
+
+```bash
+tangle workflows init pr-review --file ~/out.yml
+```
+
+## Revisions
+
+### `tangle workflows revisions`
+
+List a workflow's definition revision history (newest first).
+
+Lists a workflow's definition revisions.
+
+```bash
+tangle workflows revisions <id>
+```
+
+Request: `GET /v1/workflows/{id}/revisions`
+
+```bash
+tangle workflows revisions wf_abc
+```
+
+### `tangle workflows revision`
+
+Show one revision's metadata and definition YAML.
+
+Shows one revision's metadata and YAML.
+
+```bash
+tangle workflows revision <id> <rev>
+```
+
+Request: `GET /v1/workflows/{id}/revisions/{rev}`
+
+```bash
+tangle workflows revision wf_abc 3
+```
+
+### `tangle workflows rollback`
+
+Restore a prior revision's definition as a NEW head revision (re-validated).
+
+```bash
+tangle workflows rollback <id> <rev>
+```
+
+Request: `POST /v1/workflows/{id}/rollback`
+
+```bash
+tangle workflows rollback wf_abc 2 --json
+```
+
+## Key-value state
+
+### `tangle workflows kv list`
+
+List every KV entry of a workflow.
+
+Lists every KV entry.
+
+```bash
+tangle workflows kv list <id>
+```
+
+Request: `GET /v1/workflows/{id}/kv`
+
+```bash
+tangle workflows kv list wf_abc
+```
+
+### `tangle workflows kv get`
+
+Show one KV entry (value and version).
+
+Shows one KV entry's value and version.
+
+```bash
+tangle workflows kv get <id> <key>
+```
+
+Request: `GET /v1/workflows/{id}/kv/{key}`
+
+```bash
+tangle workflows kv get wf_abc cursor --json
+```
+
+### `tangle workflows kv set`
+
+Write a KV entry from a JSON value.
+
+Writes a KV entry from a JSON value; `--cas` writes only if the version still matches.
+
+```bash
+tangle workflows kv set <id> <key> <json> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--cas <version>` |  | Compare-and-swap: write only if the stored version still equals this |
+
+Request: `PUT /v1/workflows/{id}/kv/{key}`
+
+```bash
+tangle workflows kv set wf_abc cursor '{"cursor":123}'
+```
+
+- With `--cas` the request is POST /v1/workflows/`{id}`/kv/`{key}`/cas.
+
+### `tangle workflows kv delete`
+
+Delete a KV entry (idempotent).
+
+Deletes a KV entry; idempotent.
+
+```bash
+tangle workflows kv delete <id> <key>
+```
+
+Request: `DELETE /v1/workflows/{id}/kv/{key}`
+
+```bash
+tangle workflows kv delete wf_abc cursor --json
+```
+
+## Artifacts
+
+### `tangle workflows artifacts`
+
+List a run's artifact metadata (never the bytes).
+
+Lists a run's artifact metadata.
+
+```bash
+tangle workflows artifacts <id> <runId>
+```
+
+Request: `GET /v1/workflows/{id}/runs/{runId}/artifacts`
+
+```bash
+tangle workflows artifacts wf_abc run_1
+```
+
+### `tangle workflows artifact-download`
+
+Download one run artifact's bytes to a file.
+
+```bash
+tangle workflows artifact-download <id> <runId> <artifactId> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--out <file>` |  | Destination file (defaults to the artifact ID) |
+
+Request: `GET /v1/workflows/{id}/runs/{runId}/artifacts/{artifactId}`
+
+```bash
+tangle workflows artifact-download wf_abc run_1 art_1 --out ~/out.bin
+```
+
+## Human decisions
+
+### `tangle workflows decisions`
+
+List a workflow's pending human decisions.
+
+Lists pending human decisions.
+
+```bash
+tangle workflows decisions <id>
+```
+
+Request: `GET /v1/workflows/decisions/pending`
+
+```bash
+tangle workflows decisions wf_abc
+```
+
+### `tangle workflows decision-resolve`
+
+Answer the decision a run is parked on and resume it.
+
+```bash
+tangle workflows decision-resolve <id> <runId> [options]
+```
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--choice <choice>` |  | The option to resolve with (one of the decision's options). Required. |
+
+Request: `POST /v1/workflows/{id}/runs/{runId}/decision/resolve`
+
+```bash
+tangle workflows decision-resolve wf_abc run_1 --choice deploy --json
+```
+
+## Next
+
+- [Workflows](/sandbox/workflows)
+- [Run, inspect and trace workflows](/sandbox/workflows-run)
+- [Workflow YAML reference](/sandbox/workflows-yaml)

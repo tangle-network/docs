@@ -1,0 +1,192 @@
+import { Tabs, Callout } from "nextra/components";
+
+# Read, write and move files
+
+Put files into a sandbox, read results back, move whole directories in and out, and search the workspace with ripgrep.
+
+## Write a file and read it back
+
+<Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create();
+try {
+  await box.write("/home/agent/notes/todo.md", "- ship the docs\n");
+  console.log(await box.read("/home/agent/notes/todo.md"));
+} finally {
+  await box.delete();
+}
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+box = client.create()
+try:
+    box.wait_for(SandboxStatus.RUNNING)
+    box.write("/home/agent/notes/todo.md", "- ship the docs\n")
+    print(box.read("/home/agent/notes/todo.md"))
+finally:
+    box.delete()
+    client.close()
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```bash
+tangle fs upload my-project ./todo.md /home/agent/notes/todo.md
+tangle fs cat my-project /home/agent/notes/todo.md
+```
+</Tabs.Tab>
+</Tabs>
+
+`write` creates missing parent directories. `read` and `write` are for UTF-8 text; use `upload`, `uploadData` and `download` for binary files. A relative path resolves from the workspace root.
+
+### Write only when nothing changed underneath you
+
+When an agent and your code may edit the same file, pass a precondition. `ifHash` takes the SHA-256 from your last read or write and refuses the write if the file changed since. `ifAbsent: true` refuses if the file exists.
+
+```ts
+await box.write("config.json", '{"enabled":true}\n', { ifAbsent: true });
+await box.write("deploy.sh", "#!/bin/sh\necho deploy\n", { mode: 0o755 });
+```
+
+### Write many files at once
+
+```ts
+await box.fs.writeMany([
+  { path: "skills/review.md", content: reviewSkill },
+  { path: ".claude/skills/audit.md", content: auditSkill },
+]);
+```
+
+A batch is not atomic: some files may be written before one fails.
+
+## Move binary files and directories
+
+```ts
+await box.fs.upload("./model.bin", "/home/agent/models/model.bin", {
+  onProgress: (p) => console.log(`${p.percentage.toFixed(1)}%`),
+});
+await box.fs.uploadDir("./project", "/home/agent/project");
+
+await box.fs.download("/home/agent/front.png", "front.png");
+await box.fs.downloadDir("/home/agent/output", "./local-output");
+await box.fs.downloadArchive("/home/agent/output", "./output.tar.gz");
+```
+
+| Method | Use it for |
+|---|---|
+| `upload(local, remote, options)` | One local file, checksum-verified, in chunks. `overwrite` and `mode` are options. |
+| `uploadData(remote, data, options)` | A `Blob`, `ArrayBuffer`, typed array or string, from a browser or a Worker with no local disk. |
+| `uploadDir(localDir, remoteDir)` | A local directory as a tar, keeping structure and permissions. |
+| `download(remote, local, options)` | One file, binary-safe. `maxBytes`, `expectedSize` and `expectedSha256` bound and verify it. |
+| `downloadDir(remoteDir, localDir)` | A directory, extracted locally. |
+| `downloadArchive(remoteDir, localPath)` | A directory as `tar.gz`, including hidden files, with a SHA-256 receipt. |
+| `openArchive(remoteDir)` | The same archive as a `ReadableStream`, to pipe to object storage from a Worker. |
+
+```ts
+const archive = await box.fs.openArchive("/home/agent");
+await bucket.put("exports/workspace.tar.gz", archive);
+```
+
+The size caps for single requests, uploads and downloads are on [Limits](/sandbox/limits).
+
+## List, inspect, rename and delete
+
+```ts
+for (const entry of await box.fs.list("/home/agent", { all: true })) {
+  console.log(entry.isDir ? "DIR " : "FILE", entry.name, entry.size);
+}
+
+const info = await box.fs.stat("/home/agent/models/model.bin");
+console.log(info.size, info.modTime);
+
+if (!(await box.fs.exists("/home/agent/cache"))) {
+  await box.fs.mkdir("/home/agent/cache", { recursive: true });
+}
+await box.fs.rename("/home/agent/report.tmp", "/home/agent/report.md");
+await box.fs.delete("/home/agent/cache", { recursive: true });
+```
+
+`list`, `stat`, `delete` and `rename` throw `NOT_FOUND` for a missing path. `delete` needs `recursive: true` for a non-empty directory. `rename` replaces a regular file atomically and fails across filesystems.
+
+| Method | Returns |
+|---|---|
+| `readBatch(paths)` | Several files at once, with per-file errors. |
+| `tree(path)` | File metadata for a whole directory tree. |
+| `usage(path)` | Disk usage including hidden files, dependencies and caches. Check `complete` before you rely on the total. |
+
+## Search the workspace
+
+`search` runs ripgrep and yields matches as they are found. Read it with `for await`.
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+});
+try {
+  for await (const hit of box.search("TODO", { glob: "**/*.js" })) {
+    console.log(`${hit.path}:${hit.line}  ${hit.text.trim()}`);
+  }
+} finally {
+  await box.delete();
+}
+```
+
+Options: `glob`, `cwd`, `maxResults`, `ignoreCase` and `context` (lines before and after). Each match has `path`, `line`, `column` and `text`.
+
+## From the CLI
+
+```bash
+tangle fs ls my-project /home/agent --all --long
+tangle fs stat my-project /home/agent/report.md
+tangle fs exists my-project /home/agent/report.md
+tangle fs mkdir my-project /home/agent/cache/tmp --parents
+tangle fs rm my-project /home/agent/cache --recursive
+tangle fs download my-project /home/agent/report.md ./report.md
+tangle search my-project TODO --glob '**/*.js'
+tangle search my-project TODO --json   # one match per line
+```
+
+`upload` and `download` move one file each. `tangle fs exists` exits `1` for a missing path; with `--json` it prints `{ "exists": false }` and exits `0`. The `fs` commands resume a stopped sandbox first; `tangle search` does not.
+
+## Python and REST
+
+Python has `read`, `write` and `search`. `read` and `write` handle UTF-8 text only, and `search` returns a list:
+
+```python
+from tangle_sandbox import SearchOptions
+
+for hit in box.search("TODO", SearchOptions(glob="**/*.js")):
+    print(hit.path, hit.line, hit.text.strip())
+```
+
+Python has no file manager for binary files, directories, listing or deletion. Use `box.exec` for listing and moving files inside the sandbox, or call the runtime routes with `client.fetch`, which returns the raw response and does not raise on an error status:
+
+```python
+response = client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/files/read", json={"path": "/home/agent/report.md"})
+print(response.json())
+```
+
+## Next
+
+- [Clone repositories and use git](/sandbox/git)
+- [Snapshot, fork and restore](/sandbox/snapshots)
+- [Run commands and code](/sandbox/commands)

@@ -1,0 +1,132 @@
+---
+title: Give each user their own sandbox
+description: Keep one sandbox per customer or user key that the platform creates, resumes or replaces on demand, with conversations kept per thread.
+---
+
+# Give each user their own sandbox
+
+`client.instances.ensure({ key })` returns the sandbox for a key, such as
+`customer:4821`, running. The platform records which sandbox serves each key,
+so your app stores no mapping, and concurrent callers for one key get the same
+sandbox.
+
+## Ensure a sandbox for a key
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const instance = await client.instances.ensure({
+  key: "customer:4821",
+  profile: {
+    version: "support-v1",
+    backend: {
+      type: "opencode", // Claude Code ("claude-code") and Codex ("codex") work the same way
+      profile: {
+        name: "support",
+        prompt: { systemPrompt: "You are the support agent for a bike shop. Answer in one sentence." },
+      },
+    },
+  },
+  create: { resources: { cpuCores: 1, memoryMB: 2048, diskGB: 10 }, idleTimeoutSeconds: 600 },
+});
+console.log(instance.started, instance.sandboxId, instance.generation);
+```
+
+`instance.started` says what `ensure` did:
+
+| Value | Meaning |
+|---|---|
+| `created` | The key had no sandbox, or its sandbox was deleted, so a new one was created. |
+| `resumed` | The sandbox was stopped, and `ensure` resumed it. |
+| `running` | The sandbox was already running. |
+
+A key is 1 to 200 characters of letters, digits and `. _ : @ -`. `create`
+takes the usual [create options](/sandbox/lifecycle) except `backend`; the
+backend comes from `profile`.
+
+## Send a turn
+
+`instance.turn(text, { thread, turnId })` runs one turn in the thread's
+session. It returns while the agent is still working; calling it again with
+the same `turnId` picks up that turn, never a second one.
+
+```ts
+async function ask(turnId: string, text: string) {
+  let turn = await instance.turn(text, { thread: "orders", turnId });
+  while (turn.state === "running") {
+    await new Promise((wait) => setTimeout(wait, 3_000));
+    turn = await instance.turn(text, { thread: "orders", turnId });
+  }
+  return turn.state === "completed" ? turn.text : turn.state;
+}
+
+console.log(await ask("turn-1", "Order 4821 arrived without pedals."));
+console.log(await ask("turn-2", "Which order was that, and what was missing?"));
+```
+
+Each thread is its own conversation. `instance.sessionId(thread)` returns the
+session id a thread uses, `<thread>-<version>`. Use your message id as the
+`turnId`, so a retried request settles the same turn.
+
+## What survives
+
+| Event | Result |
+|---|---|
+| The sandbox stops (idle timeout or `box.stop()`) | The next `ensure` resumes it. Files and every thread's conversation are kept. |
+| You call `ensure` with a new `profile.version` | The sandbox and its files are kept. Each thread's next turn opens a new session for the new version. |
+| The sandbox is deleted | The next `ensure` creates the key's next `generation`: a new sandbox with none of the old files. |
+| The sandbox keeps failing to start | `ensure` throws a `SandboxError` with code `INSTANCE_RESTARTING` and `retryAfterMs`. After `restartAfterMs` (default 60 seconds) of failures, it replaces the sandbox. |
+
+`instance.box` is the sandbox itself, for files, commands and everything else
+on a [sandbox](/sandbox/commands):
+
+```ts
+await instance.box.write("contracts/msa.md", contract);
+```
+
+## Release a key
+
+`client.instances.get(key)` reads a key's record. `client.instances.release(key)`
+forgets the key and leaves its sandbox running, so delete the sandbox first:
+
+```ts
+const record = await client.instances.get("customer:4821");
+const box = record?.sandboxId ? await client.get(record.sandboxId) : null;
+await box?.delete();
+await client.instances.release("customer:4821");
+```
+
+## Adopt an existing sandbox
+
+`adopt: "<sandbox-id>"` binds a sandbox you created before you used instances to
+a key that has none. `expectSandboxId` pins a call to one sandbox: when the
+key's sandbox is another one or gone, `ensure` refuses instead of creating one.
+
+## Manage instances over HTTP
+
+| Route | Does |
+|---|---|
+| `PUT /v1/instances/{key}/binding` | Binds a sandbox to a key. |
+| `GET /v1/instances/{key}` | Reads a key's instance. |
+| `PATCH /v1/instances/{key}` | Updates it. |
+| `DELETE /v1/instances/{key}` | Releases the key. |
+| `POST /v1/instances/{key}/replace` | Replaces the key's sandbox. |
+
+The SDK's `ensure` combines these with sandbox create and resume.
+
+Instances are TypeScript only. From Python, call the REST routes with
+`client.fetch()`.
+
+The complete programs, including a contract reviewer with one sandbox per
+customer, are in [product examples](/sandbox/examples/products).
+
+## Next
+
+- [Sessions](/sandbox/sessions)
+- [Email, iMessage and voice lines](/sandbox/lines): give each member their own instance.
+- [Product examples](/sandbox/examples/products)

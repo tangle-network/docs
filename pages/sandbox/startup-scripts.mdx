@@ -1,0 +1,134 @@
+import { Tabs, Callout } from "nextra/components";
+
+# Run setup scripts when a sandbox starts
+
+Save a script once, and it runs in every matching sandbox you create: install a tool, write a config file, log in to a registry with a stored secret. You manage scripts through the REST API; they apply to sandboxes created from any SDK, the CLI or the dashboard.
+
+## Save a script
+
+<Tabs items={["curl", "Python", "TypeScript"]} storageKey="sandbox-lang">
+<Tabs.Tab>
+```bash
+curl -X POST "https://sandbox.tangle.tools/v1/startup-scripts" \
+  -H "Authorization: Bearer $TANGLE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "install-ripgrep-config",
+    "description": "Default ripgrep config for coding agents",
+    "scriptType": "bash",
+    "content": "mkdir -p ~/.config && printf -- \"--smart-case\\n\" > ~/.config/ripgreprc"
+  }'
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```python
+import os
+from tangle_sandbox import Sandbox
+
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+response = client.fetch(
+    "POST",
+    "/v1/startup-scripts",
+    json={
+        "name": "install-ripgrep-config",
+        "scriptType": "bash",
+        "content": 'mkdir -p ~/.config && printf -- "--smart-case\\n" > ~/.config/ripgreprc',
+    },
+)
+print(response.status_code, response.json())
+client.close()
+```
+</Tabs.Tab>
+<Tabs.Tab>
+```ts
+const response = await fetch("https://sandbox.tangle.tools/v1/startup-scripts", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${process.env.TANGLE_API_KEY}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    name: "install-ripgrep-config",
+    scriptType: "bash",
+    content: 'mkdir -p ~/.config && printf -- "--smart-case\\n" > ~/.config/ripgreprc',
+  }),
+});
+const { script } = await response.json();
+console.log(script.id, script.enabled);
+```
+</Tabs.Tab>
+</Tabs>
+
+The next sandbox you create runs the script while it starts. The Python SDK's `client.fetch` returns the raw response and does not raise on an error status.
+
+## Script fields
+
+| Field | Effect |
+|---|---|
+| `name`, `description` | Labels. |
+| `scriptType` | `bash` (the default), `python`, `node`, `ruby` or `custom`. |
+| `content` | The script. |
+| `environments` | Run only in sandboxes created from these environments. Empty runs in all of them. |
+| `minCpuCores`, `minRamGB` | Run only in sandboxes at least this large. |
+| `runOrder` | Scripts run in ascending order. |
+| `timeoutSeconds` | The script fails if it runs longer. |
+| `continueOnFailure` | `false` (the default) fails the create when the script fails; `true` logs the failure and continues. |
+| `runAsRoot` | Run as root. Needs a paid plan; a free account gets `403 TIER_REQUIRED`. |
+| `injectSecrets` | Names of your stored [secrets](/sandbox/secrets) to give the script. |
+| `enabled` | Disabled scripts never run. |
+
+Size caps, defaults and the allowed ranges are on [Limits](/sandbox/limits). Scripts run in the workspace directory.
+
+## Which scripts run
+
+At create, every enabled script whose `environments`, `minCpuCores` and `minRamGB` match the new sandbox runs, in `runOrder`. To run an enabled script that does not match those filters, name it in the create body's `startupScriptIds`:
+
+```bash
+SANDBOX_ID=$(curl -s -X POST "https://sandbox.tangle.tools/v1/sandboxes" \
+  -H "Authorization: Bearer $TANGLE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "with-setup", "startupScriptIds": ["<script-id>"]}' | jq -r '.id')
+
+curl -X DELETE "https://sandbox.tangle.tools/v1/sandboxes/$SANDBOX_ID" \
+  -H "Authorization: Bearer $TANGLE_API_KEY"
+```
+
+Naming a script never turns on a disabled one.
+
+No startup scripts run in [isolated sandboxes](/sandbox/security#isolated-sandboxes), and an isolated create that names `startupScriptIds` is refused.
+
+A create with `agent: false` provisions no startup scripts. It is refused with `400` when it names `startupScriptIds` or when one of your enabled scripts applies to it, so disable or narrow those scripts before you create sandboxes with `agent: false`.
+
+<Callout type="info">
+A script with `injectSecrets` reads those secrets even when the create did not select them. A secret stored with proxy custody still reaches the script as a placeholder.
+</Callout>
+
+## Manage scripts
+
+| Route | Purpose |
+|---|---|
+| `GET /v1/startup-scripts` | List your scripts: `{ scripts }`. |
+| `POST /v1/startup-scripts` | Create one: `{ script }`. |
+| `GET /v1/startup-scripts/{id}` | Read one. |
+| `PUT /v1/startup-scripts/{id}` | Update any field. |
+| `PATCH /v1/startup-scripts/{id}/toggle` | Turn a script on or off. |
+| `DELETE /v1/startup-scripts/{id}` | Delete it. |
+
+```bash
+curl "https://sandbox.tangle.tools/v1/startup-scripts" -H "Authorization: Bearer $TANGLE_API_KEY"
+
+curl -X PUT "https://sandbox.tangle.tools/v1/startup-scripts/$SCRIPT_ID" \
+  -H "Authorization: Bearer $TANGLE_API_KEY" -H "Content-Type: application/json" \
+  -d '{"environments": ["universal"], "runOrder": 10}'
+
+curl -X PATCH "https://sandbox.tangle.tools/v1/startup-scripts/$SCRIPT_ID/toggle" \
+  -H "Authorization: Bearer $TANGLE_API_KEY"
+```
+
+The TypeScript SDK, the Python SDK and the CLI have no startup script commands, and the TypeScript create options have no `startupScriptIds`; use these routes.
+
+## Next
+
+- [Store secrets and give sandboxes credentials](/sandbox/secrets)
+- [Start from templates and custom images](/sandbox/templates-gallery)
+- [Create, stop, resume and delete](/sandbox/lifecycle)
