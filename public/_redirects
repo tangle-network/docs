@@ -30,7 +30,7 @@
 /restake            https://tangle.tools/blog/series/tangle-protocol/  302
 
 # Sandbox pages first published under /docs and /sandbox/sdk. The explicit /docs
-# rules come before the one-segment /docs/:page rule.
+# rules come before the /docs/* rule.
 /docs                             /sandbox/overview                            301
 /docs/cloud-agents/claude-code    /sandbox/cloud-agents-claude-code            301
 /docs/cloud-agents/codex          /sandbox/cloud-agents-codex                  301
@@ -49,7 +49,7 @@
 /docs/workflows/run               /sandbox/workflows-run                       301
 /docs/workflows/yaml              /sandbox/workflows-yaml                      301
 /docs/workflows/templates         /sandbox/workflows-templates                 301
-/docs/:page                       /sandbox/:page                               301
+/docs/*                           /sandbox/:splat                              301
 /dashboard                        https://sandbox.tangle.tools/dashboard       301
 /dashboard/*                      https://sandbox.tangle.tools/dashboard/:splat  301
 /sandbox/sdk/commands-files       /sandbox/commands                            301
