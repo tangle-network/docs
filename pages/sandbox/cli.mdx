@@ -12,18 +12,15 @@ Every command prints JSON with `--json`, so the same commands work in scripts an
 
 ## Install
 
-The CLI needs Node.js 22.19 or newer.
-
-```bash
-npm install -g @tangle-network/sandbox-cli
-tangle --version
-```
-
-The one-line installer does the same:
+The installer brings its own Node.js runtime, so it needs no Node, npm or sudo:
 
 ```bash
 curl -fsSL https://sandbox.tangle.tools/install.sh | sh
+export PATH="$HOME/.local/share/tangle-cli/bin:$PATH"
+tangle --version
 ```
+
+With Node.js 22.19 or newer, `npm install -g @tangle-network/sandbox-cli` installs the same CLI.
 
 To run it once without installing, use `npx @tangle-network/sandbox-cli` or `npx tangle-sandbox`.
 
@@ -43,7 +40,7 @@ On a machine without a browser, `tangle auth login --no-browser` prints a URL an
 To use an API key instead, run `tangle auth login --api-key sk-tan-...`, or skip login and set `TANGLE_API_KEY`.
 
 Login stores the credential in your OS keychain: the macOS keychain, or `secret-tool` on Linux.
-On a Linux server or container with no keychain, set `TANGLE_API_KEY` or `TANGLE_API_KEY_FILE`, or set `TANGLE_ALLOW_PLAINTEXT_CREDENTIALS=1` to let login write `~/.tangle/credentials.json`.
+On a Linux server or container with no keychain, login writes `~/.tangle/credentials.json` (mode 0600) instead; `TANGLE_API_KEY` or `TANGLE_API_KEY_FILE` skip the login.
 
 Each command picks its credential in this order:
 
@@ -224,7 +221,6 @@ tangle exec my-box -- ls -la /home/agent
 | `TANGLE_BASE_URL`, `SANDBOX_BASE_URL` | Sandbox API host |
 | `TANGLE_PROFILE`, `SANDBOX_PROFILE` | Credential profile |
 | `TANGLE_SANDBOX` | Default sandbox for the one-argument `agent prompt` |
-| `TANGLE_ALLOW_PLAINTEXT_CREDENTIALS` | `1`, `true` or `yes` lets login write `~/.tangle/credentials.json` when there is no keychain |
 | `TANGLE_PLATFORM_URL` | Tangle Platform host for `keys`, `hub` and `workflows` |
 | `TANGLE_HUB_URL` | Hub host |
 | `TANGLE_SKIP_HUB_KEY` | Do not exchange a browser login for a short-lived Platform key |

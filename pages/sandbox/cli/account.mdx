@@ -91,7 +91,7 @@ tangle auth login
 - Device flow: POST /auth/cli/device/start, then polls POST /auth/cli/device/poll at the server interval (default 5 s) for up to 15 minutes.
 - `--app` solve always uses the device flow against the fixed platform host and also opens the prefilled URL unless `--no-browser`.
 - API keys must start with sk_ or sk-tan-; anything else exits 1 before any request.
-- Before any interactive login it proves the credential store can write, read and delete a probe value; without an OS keychain it fails unless TANGLE_ALLOW_PLAINTEXT_CREDENTIALS=1.
+- Before any interactive login it proves the credential store can write, read and delete a probe value; without an OS keychain it uses ~/.tangle/credentials.json (mode 0600).
 - A sandbox login makes the profile active; a solve login does not.
 - No JSON document is printed; success lines go to stdout (stderr under `--json`).
 

@@ -45,18 +45,19 @@ pip install tangle-sandbox
 </Tabs.Tab>
 <Tabs.Tab>
 
-The CLI is `@tangle-network/sandbox-cli` and needs Node.js 22.19 or newer. It installs the `tangle` command.
+The installer brings its own Node.js runtime, so it needs no Node, npm or sudo, on macOS or Linux.
 
 ```bash
-npm install -g @tangle-network/sandbox-cli
-tangle auth login
+curl -fsSL https://sandbox.tangle.tools/install.sh | sh
+export PATH="$HOME/.local/share/tangle-cli/bin:$PATH"
+tangle auth login --api-key "$TANGLE_API_KEY"
 ```
 
-`tangle auth login` opens your browser and waits up to 2 minutes for you to sign in.
-On a machine without a browser, run `tangle auth login --no-browser` and enter the device code it prints within 15 minutes.
-In CI, set `TANGLE_API_KEY` and skip the login.
+The installer adds `tangle` to your shell profile; the `export` puts it on this terminal's PATH.
+`tangle auth login --api-key` checks the key and saves it in the OS keychain, or in `~/.tangle/credentials.json` (mode 0600) on a machine without one, so a new terminal needs no export.
+Without `--api-key`, `tangle auth login` signs in through your browser; `--no-browser` prints a device code instead.
 
-Run the CLI without installing it with `npx @tangle-network/sandbox-cli`. Never run bare `npx tangle`: that npm name belongs to an unrelated package.
+With Node.js 22.19 or newer you can install the same CLI with `npm install -g @tangle-network/sandbox-cli`. Never run bare `npx tangle`: that npm name belongs to an unrelated package.
 
 </Tabs.Tab>
 </Tabs>
@@ -204,13 +205,14 @@ finally:
 <Tabs.Tab>
 
 ```bash
-tangle agent prompt --box hello "Write fizzbuzz.py for 1 to 15, run it, and reply with its output."
+tangle agent prompt --box hello --stream "Write fizzbuzz.py for 1 to 15, run it, and reply with its output."
 tangle exec hello -- cat fizzbuzz.py
 tangle sandbox delete hello --force
 ```
 
-`tangle agent prompt` waits for the agent and prints its reply with the duration and token counts.
-`--stream` prints the reply as it arrives; `--interactive` opens the coding agent's own terminal UI. See [Interactive mode](/sandbox/interactive).
+`--stream` prints the reply as it arrives, then the duration and token counts; without it the CLI waits and prints the whole reply.
+The agent is the sandbox's default, OpenCode, on the Router's default model (`zai/glm-5.3` on 2026-11-10). `--model <id>` picks another model.
+`--interactive` opens the coding agent's own terminal UI. See [Interactive mode](/sandbox/interactive).
 `tangle sandbox delete` asks for confirmation unless you pass `--force`.
 
 </Tabs.Tab>

@@ -102,10 +102,8 @@ tangle keys create ci-agents --product sandbox --budget-usd 25 --rpm-limit 120 -
 | `tangle auth logout` | Removes the stored credential. |
 
 The CLI stores its credential in the operating system keychain: the macOS keychain, or the Secret Service on Linux.
-A Linux server or container without a keychain cannot store a login. Use one of these instead:
-
-- Set `TANGLE_API_KEY`, or `TANGLE_API_KEY_FILE` with the path of a file that holds the key.
-- Set `TANGLE_ALLOW_PLAINTEXT_CREDENTIALS=1` to let the CLI write `~/.tangle/credentials.json`.
+A Linux server or container without a keychain stores it in `~/.tangle/credentials.json` (mode 0600) instead.
+To skip the login, set `TANGLE_API_KEY`, or `TANGLE_API_KEY_FILE` with the path of a file that holds the key.
 
 ### How the CLI finds a credential
 
@@ -115,7 +113,7 @@ Each command takes the first credential it finds, in this order:
 2. `TANGLE_API_KEY_FILE`, read on every use
 3. `TANGLE_API_KEY`
 4. The keychain entry for the active profile
-5. `~/.tangle/credentials.json`, only with `TANGLE_ALLOW_PLAINTEXT_CREDENTIALS=1`
+5. `~/.tangle/credentials.json`
 
 The CLI loads a `.env` file from the current directory before it reads the environment, so a `TANGLE_API_KEY` there applies.
 
