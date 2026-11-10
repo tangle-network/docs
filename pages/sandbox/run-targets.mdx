@@ -1,0 +1,199 @@
+---
+title: "Where a Tangle agent runs: sandbox, worker, or inference"
+description: "An AgentProfile is the whole agent as data. Run the same profile three ways: as a coding agent in a sandbox, as a worker under a supervisor, or as model calls through the Router with no sandbox."
+---
+
+import { Tabs, Callout } from "nextra/components";
+import Head from "next/head";
+
+<Head>
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "TechArticle",
+            headline: "Where a Tangle agent runs: sandbox, worker, or inference",
+            description:
+              "One AgentProfile defines a Tangle agent as data. The same profile runs as a coding agent in a sandbox, as a worker under a supervisor, or as model calls through the Router with no sandbox.",
+            about: ["AgentProfile", "AI agent runtime", "coding agent sandbox"],
+            url: "https://docs.tangle.tools/sandbox/run-targets",
+          },
+          {
+            "@type": "FAQPage",
+            mainEntity: [
+              {
+                "@type": "Question",
+                name: "What is an AgentProfile on Tangle?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "An AgentProfile is the whole agent written as data: its instructions, model, skills, tools, MCP servers, permissions and connections. The profile says what the agent is; the run target says where it runs and how the model is paid for.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Can one agent definition run both in a sandbox and as plain inference?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Yes. The same AgentProfile runs as a coding agent in a sandbox, as a worker under a supervisor, or as model calls through the Tangle Router with no sandbox. You change the run target, not the profile.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "What is the difference between a sandbox agent and a worker?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "A sandbox agent is one coding agent in its own Linux workspace that you prompt directly. A worker is that same kind of agent spawned and steered by a supervisor agent under one shared budget, so a task can be split across several workers.",
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    }}
+  />
+</Head>
+
+# Where does a Tangle agent run?
+
+A Tangle agent is an [AgentProfile](/sandbox/cloud-agents-profiles): the whole agent written as
+data, with its instructions, model, skills, tools, MCP servers, permissions and connections. The
+same profile runs three ways, and you choose the one that fits the job: as a coding agent **in a
+sandbox**, as a **worker** under a supervisor, or through **inference routing** alone, as model
+calls with no sandbox.
+
+The profile says what the agent is. The run target says where it runs and how the model is paid
+for. Nothing in the profile changes when you move it between targets.
+
+| Run target | What runs | Reach for it when |
+|---|---|---|
+| In a sandbox | One coding agent in its own Linux workspace, with files, a shell and a network policy. | The agent edits code, runs commands, clones a repository or needs tools and a filesystem. |
+| As a worker | The same coding agent, spawned and steered by a supervisor agent under one shared budget. | One task should be split across several agents, or a supervisor should refine an artifact over rounds. |
+| Through inference routing | The profile's model and instructions, answering through the Tangle Router. No sandbox, no coding-agent process. | You need a model answer, not a workspace: classify, extract, summarize, or draft a reply. |
+
+## The profile is the agent
+
+Write the agent once as a JSON file. This profile reads a repository and explains it in two
+sentences:
+
+```json filename="repo-explainer.json"
+{
+  "name": "repo-explainer",
+  "description": "Reads a repository and explains what it does.",
+  "harness": "claude-code",
+  "prompt": {
+    "appendSystemPrompt": "You explain code. Answer in two sentences. Do not edit files."
+  },
+  "resources": {
+    "skills": [
+      {
+        "kind": "inline",
+        "name": "explain-checklist",
+        "content": "# Explain\n- Name the entry point\n- Say what it produces"
+      }
+    ]
+  }
+}
+```
+
+Check it before you run it. `validate` exits non-zero on an invalid profile, so it can gate a CI
+job:
+
+```bash
+tangle agent profile validate repo-explainer.json
+# → Profile valid: "repo-explainer"
+```
+
+The full field list, the CLI and the SDK forms are on [AgentProfiles](/sandbox/cloud-agents-profiles).
+
+## Run target 1: in a sandbox
+
+The profile runs as a coding agent in its own workspace. Create the sandbox with the profile, then
+prompt it:
+
+```ts filename="run-in-sandbox.mjs"
+import { readFileSync } from "node:fs";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+const profile = JSON.parse(readFileSync("repo-explainer.json", "utf8"));
+
+const box = await client.create({
+  backend: { type: "claude-code", profile },
+  git: { url: "https://github.com/tangle-network/sandbox-demo" },
+});
+try {
+  const r = await box.prompt("What does this repository do?", { sessionId: "explain" });
+  console.log("RESULT:", r.response);
+} finally {
+  await box.delete();
+}
+```
+
+```text
+RESULT: It's the demo repository that tangle.tools examples clone — a small Node.js monorepo
+used as a sandbox playground. src/index.js boots an API server, a background worker queue and a
+CLI, with shared utilities and a web client, and it ships tests and a benchmark.
+```
+
+The coding agent followed the profile's instructions and answered in two sentences from inside the
+checkout. The CLI form is `tangle sandbox create --backend claude-code --profile repo-explainer.json
+--git-url ...` then `tangle agent prompt <id> "..."`. See
+[AgentProfiles](/sandbox/cloud-agents-profiles) and [Run a coding agent](/sandbox/cloud-agents).
+
+## Run target 2: as a worker under a supervisor
+
+The same profile runs as a worker that a supervisor agent spawns and steers. The supervisor splits
+a task across workers, each in its own sandbox, under one token and iteration budget. Start it from
+the CLI:
+
+```bash
+tangle graph run --task "Fix the failing tests, one worker per package" \
+  --harness claude-code --max-tokens 200000 --max-iterations 50 --max-workers 4
+```
+
+The supervisor runs on the Router with your key; each worker is a fresh sandbox running the profile.
+The TypeScript form, the budget split and the coordination tools are on
+[Run agents with agent-runtime](/sandbox/agent-runtime) and
+[Agent graphs](/sandbox/agents-graphs). Workers and supervisors are also how
+[agents create and talk to other agents](/sandbox/agents-multiple).
+
+## Run target 3: through inference routing
+
+When the agent needs a model answer and not a workspace, run the profile's `model` and instructions
+through the [Tangle Router](/gateway) with no sandbox and no coding-agent process. The profile's
+`model` block and system prompt carry over; the Router bills the model call on your key. The
+[Router quickstart](/gateway/getting-started) has the first call, and
+[agent-runtime](/sandbox/agent-runtime) runs a profile against the Router with no box.
+
+<Callout type="info">
+Inference routing is the cheapest target because it starts no sandbox. It cannot run a command,
+read a file or use a filesystem tool. Reach for a sandbox or a worker when the agent must act, not
+only answer.
+</Callout>
+
+## Why one definition for all three
+
+One profile across three targets means the agent you evaluated is the agent you ship. The model
+hint, the skills and the permissions that passed a benchmark in a sandbox are the same bytes that
+run as a worker or as inference, so a change to the agent is a change to one file, not three code
+paths. An [improvement loop](/sandbox/evaluation) can then search the profile itself and keep the
+winner, because the profile is the single thing that defines the agent.
+
+The honest tradeoff is that not every field means something on every target. Inference routing uses
+the model and the prompt but not the filesystem tools; a provider on another cloud may not honor
+snapshots or secrets. Each page names what its target supports, and
+[running on another cloud](/sandbox/other-providers) lists what each provider refuses, by field.
+
+## Next
+
+- [AgentProfiles](/sandbox/cloud-agents-profiles): every profile field, and the CLI and SDK forms.
+- [How Tangle keeps credentials out of the agent](/sandbox/credentials-and-egress): custody and the egress proxy.
+- [Run agents with agent-runtime](/sandbox/agent-runtime): supervisors, workers and budgets.
+- [Run the same agent on E2B, Daytona and more](/sandbox/other-providers).
+- [Glossary](/sandbox/glossary): the terms on this page, defined.

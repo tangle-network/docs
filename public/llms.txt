@@ -40,6 +40,7 @@
 
 - [Network access](https://docs.tangle.tools/sandbox/egress): open, strict and blocked outbound network policies.
 - [Secrets](https://docs.tangle.tools/sandbox/secrets): store secrets once and inject them into sandboxes.
+- [Credentials and the egress proxy](https://docs.tangle.tools/sandbox/credentials-and-egress): proxy custody keeps a credential out of the agent; a threat model and a measured boundary test.
 - [Isolation and compliance](https://docs.tangle.tools/sandbox/security): the sandbox security boundary and HIPAA placement.
 - [Sandbox compliance pinning](https://docs.tangle.tools/gateway/hipaa/sandbox-pinning): how HIPAA-pinned sandboxes are placed and which calls refuse them.
 
@@ -52,6 +53,7 @@
 - [Codex on your ChatGPT plan](https://docs.tangle.tools/sandbox/cloud-agents-codex): run Codex signed in with your ChatGPT plan or OpenAI key.
 - [GLM, Kimi and MiniMax plans](https://docs.tangle.tools/sandbox/cloud-agents-coding-plans): run OpenCode against a coding plan you already pay for.
 - [AgentProfiles](https://docs.tangle.tools/sandbox/cloud-agents-profiles): describe an agent once and run it on any coding agent.
+- [Where an agent runs](https://docs.tangle.tools/sandbox/run-targets): run one profile in a sandbox, as a worker under a supervisor, or through inference routing alone.
 - [Connections](https://docs.tangle.tools/sandbox/connections): grant a coding agent actions on accounts such as GitHub or Gmail.
 - [Several agents in one sandbox](https://docs.tangle.tools/sandbox/agents-multiple): run a planner, an implementer and a reviewer side by side.
 - [One sandbox per user](https://docs.tangle.tools/sandbox/instances): keep one sandbox per customer that is created or resumed on demand.
@@ -98,6 +100,7 @@
 
 ## Sandbox: reference
 
+- [Glossary](https://docs.tangle.tools/sandbox/glossary): the Tangle agent terms defined, each linking to the page that owns it.
 - [TypeScript SDK](https://docs.tangle.tools/sandbox/sdk-typescript): install @tangle-network/sandbox and use the client.
 - [TypeScript client](https://docs.tangle.tools/sandbox/sdk-typescript/client): the Sandbox client class and its options.
 - [TypeScript sandbox instance](https://docs.tangle.tools/sandbox/sdk-typescript/sandbox): lifecycle methods on a sandbox.
