@@ -1,0 +1,193 @@
+---
+title: "Tangle agent glossary"
+description: "Short definitions of the Tangle agent terms: AgentProfile, materialization, box and proxy custody, the egress proxy, placeholders, grants, scope, run targets and more, each linking to the page that owns it."
+---
+
+import Head from "next/head";
+
+<Head>
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "DefinedTermSet",
+        name: "Tangle agent glossary",
+        url: "https://docs.tangle.tools/sandbox/glossary",
+        hasDefinedTerm: [
+          {
+            "@type": "DefinedTerm",
+            name: "AgentProfile",
+            description:
+              "The whole agent written as data: instructions, model, skills, tools, MCP servers, permissions and connections. The profile says what the agent is, independent of where it runs.",
+            url: "https://docs.tangle.tools/sandbox/cloud-agents-profiles",
+          },
+          {
+            "@type": "DefinedTerm",
+            name: "Materialization",
+            description:
+              "The step where Tangle turns a portable AgentProfile into the concrete configuration a coding agent runs: skills mounted in the agent's skill directory, tools and permissions applied, credentials resolved at the execution boundary.",
+            url: "https://docs.tangle.tools/sandbox/cloud-agents-profiles",
+          },
+          {
+            "@type": "DefinedTerm",
+            name: "Run target",
+            description:
+              "Where an AgentProfile runs: as a coding agent in a sandbox, as a worker under a supervisor, or through inference routing as model calls with no sandbox.",
+            url: "https://docs.tangle.tools/sandbox/run-targets",
+          },
+          {
+            "@type": "DefinedTerm",
+            name: "Box custody",
+            description:
+              "A secret delivered into the sandbox as an environment variable, where the agent process can read its real value.",
+            url: "https://docs.tangle.tools/sandbox/secrets",
+          },
+          {
+            "@type": "DefinedTerm",
+            name: "Proxy custody",
+            description:
+              "A secret that stays with the egress proxy. The sandbox holds a placeholder; the proxy adds the real value only on requests to the hosts, methods and paths the binding names.",
+            url: "https://docs.tangle.tools/sandbox/credentials-and-egress",
+          },
+          {
+            "@type": "DefinedTerm",
+            name: "Egress proxy",
+            description:
+              "The proxy that runs beside each sandbox and carries its outbound traffic. It enforces the egress policy and performs credential substitution and masking. The agent's user cannot read or reconfigure it.",
+            url: "https://docs.tangle.tools/sandbox/egress",
+          },
+          {
+            "@type": "DefinedTerm",
+            name: "Placeholder",
+            description:
+              "The fake, per-sandbox stand-in a proxy-custody secret puts in the agent's environment. It is not derived from the real value and authenticates nothing on its own.",
+            url: "https://docs.tangle.tools/sandbox/credentials-and-egress",
+          },
+          {
+            "@type": "DefinedTerm",
+            name: "Scope",
+            description:
+              "The hosts, methods and paths a proxy-custody credential may be sent to. A request outside the scope is refused before the value is added.",
+            url: "https://docs.tangle.tools/sandbox/secrets",
+          },
+          {
+            "@type": "DefinedTerm",
+            name: "Egress policy",
+            description:
+              "The rule that decides which hosts a sandbox may reach: open, a strict allowlist, or blocked. It is enforced by the egress proxy and backed by the host firewall.",
+            url: "https://docs.tangle.tools/sandbox/egress",
+          },
+        ],
+      }),
+    }}
+  />
+</Head>
+
+# Tangle agent glossary
+
+Short definitions of the terms used across the Tangle agent docs. Each links to the page that owns
+the detail.
+
+### AgentProfile
+
+The whole agent written as data: instructions, model, skills, tools, MCP servers, permissions and
+connections. The profile says what the agent is, independent of where it runs.
+[AgentProfiles](/sandbox/cloud-agents-profiles).
+
+### Materialization
+
+The step where Tangle turns a portable profile into the concrete configuration a coding agent runs:
+inline skills mounted in the agent's skill directory, tools and permissions applied, files placed,
+credentials resolved at the execution boundary. You author the profile; the platform materializes
+it. [AgentProfiles](/sandbox/cloud-agents-profiles).
+
+### Coding agent
+
+The command-line coding agent that runs a profile, such as Claude Code, Codex, OpenCode or Pi,
+selected by the `backend` type. [Run a coding agent](/sandbox/cloud-agents).
+
+### Run target
+
+Where a profile runs: in a sandbox, as a worker under a supervisor, or through inference routing
+alone. [Where a Tangle agent runs](/sandbox/run-targets).
+
+### Sandbox
+
+An isolated Linux workspace with its own filesystem, processes, network policy, size and lifetime.
+[Create, stop and delete](/sandbox/lifecycle).
+
+### Worker
+
+A coding agent that a supervisor agent spawns and steers, in its own sandbox, under one shared token
+and iteration budget. [agent-runtime](/sandbox/agent-runtime).
+
+### Inference routing
+
+Running a profile's model and instructions through the [Tangle Router](/gateway) with no sandbox and
+no coding-agent process. [Where a Tangle agent runs](/sandbox/run-targets).
+
+### Box custody
+
+A secret delivered into the sandbox as an environment variable, where the agent process reads its
+real value. [Secrets](/sandbox/secrets).
+
+### Proxy custody
+
+A secret that stays with the egress proxy. The sandbox holds a placeholder; the proxy adds the real
+value only on requests the binding allows.
+[How Tangle keeps credentials out of the agent](/sandbox/credentials-and-egress).
+
+### Egress proxy
+
+The proxy that runs beside each sandbox and carries its outbound traffic. It enforces the egress
+policy and performs credential substitution and masking. The agent's user cannot read or
+reconfigure it. [Network access](/sandbox/egress).
+
+### Egress policy
+
+The rule that decides which hosts a sandbox may reach: `open`, a `strict` allowlist, or `blocked`.
+[Network access](/sandbox/egress).
+
+### Placeholder
+
+The fake, per-sandbox stand-in a proxy-custody secret puts in the agent's environment. It is not
+derived from the real value and authenticates nothing on its own.
+[How Tangle keeps credentials out of the agent](/sandbox/credentials-and-egress).
+
+### Grant
+
+The issued, time-bounded authority that lets the proxy present a secret's value on a request. It
+pins the secret's identity and scope and expires on its own; you do not handle it directly.
+[Secrets](/sandbox/secrets).
+
+### Scope
+
+The hosts, methods and paths a proxy-custody credential may be sent to. A request outside the scope
+is refused before the value is added. [Secrets](/sandbox/secrets).
+
+### Presentation
+
+How the proxy sends a proxy-custody value: `bearer`, `basic` auth with a username, a named `header`,
+or a `query` parameter. [Secrets](/sandbox/secrets).
+
+### Connection
+
+A Hub integration an agent may use, such as a connected Gmail, GitHub or Slack account, granted to a
+profile by connection id and capability. [Connections](/sandbox/connections).
+
+### Snapshot
+
+A saved copy of a sandbox's workspace that new sandboxes can start from.
+[Snapshots and forks](/sandbox/snapshots).
+
+### Provider
+
+A package that runs an AgentProfile on one sandbox cloud, such as Tangle, E2B or Daytona, behind one
+contract. [Run the same agent on E2B, Daytona and more](/sandbox/other-providers).
+
+## Next
+
+- [Where a Tangle agent runs](/sandbox/run-targets)
+- [AgentProfiles](/sandbox/cloud-agents-profiles)
+- [How Tangle keeps credentials out of the agent](/sandbox/credentials-and-egress)
