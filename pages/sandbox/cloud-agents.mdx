@@ -90,7 +90,7 @@ such as a sandbox that is not running.
 ## Choose the coding agent
 
 `backend.type` picks the coding agent: Claude Code (`"claude-code"`), Codex
-(`"codex"`), OpenCode (`"opencode"`), Pi (`"pi"`) and others. Ask the platform which ones your account can
+(`"codex"`), OpenCode (`"opencode"`), [nanocode](https://nanocode.xyz) (`"nanocode"`), Pi (`"pi"`) and others. Ask the platform which ones your account can
 run:
 
 <Tabs items={["TypeScript", "Python", "CLI"]}>
@@ -139,6 +139,17 @@ can run are listed by `GET /v1/router-models` with your Sandbox key, and on the
 const box = await client.create({
   backend: { type: "opencode", model: { model: "<model-id>" } },
 });
+```
+
+nanocode takes the model as a provider and a model id. With no credential its
+model calls go through Tangle Router on your Tangle balance, and a second
+`prompt()` with the same `sessionId` resumes the same nanocode session:
+
+```ts
+const nc = await client.create({
+  backend: { type: "nanocode", model: { provider: "zai", model: "glm-5.3" } },
+});
+await nc.prompt("Create hello.txt containing nanocode-ok.", { sessionId: "hello" });
 ```
 
 A credential can also stay outside the sandbox entirely: with proxy custody the
