@@ -11,7 +11,7 @@ const SITE_ROOT = "https://docs.tangle.tools";
 // These are the committed, inspected 1200 x 630 PNG cards. Keep an added
 // front-matter image's facts here before advertising it in a social preview.
 const posterAlt: Record<string, string> = {
-  "/images/og/default.png": "Tangle Docs: AI agent infrastructure, documented",
+  "/og-tangle-v1.png": "Tangle logo beside an indigo knot",
   "/images/og/integrations-hub.png": "Integration Hub: Connect the tools your business uses",
   "/images/og/cloudbeds.png": "Connect Cloudbeds: Property data, housekeeping, and folios",
   "/images/og/pricelabs.png": "Connect PriceLabs: Pricing data, costs, and setup requirements",
@@ -21,24 +21,23 @@ const posterAlt: Record<string, string> = {
 
 function Head() {
   const router = useRouter();
-  const fullUrl =
-    router.asPath === "/" ? SITE_ROOT : `${SITE_ROOT}${router.asPath}`;
+  const pathname = router.asPath.split(/[?#]/)[0];
+  const fullUrl = `${SITE_ROOT}${pathname}`;
 
   // `title` is the page's front-matter title, else its first heading.
   const { frontMatter, title: pageTitle } = useConfig();
 
   // Set default values for title and description
   const defaultTitle = "Tangle Docs";
-  const tabTitle = "Tangle Docs - AI Agent Infrastructure";
   const defaultDescription =
-    "Build and run AI agents with Tangle Sandbox, Runtime, Router, Integrations, and Intelligence.";
+    "Build agents with Tangle Sandbox, Router, and Intelligence using SDK guides and API references.";
 
   // Get the title and description from the front matter, or use the default values
   const heading = frontMatter.title || pageTitle;
   const title =
-    heading && router.asPath !== "/"
+    heading && pathname !== "/"
       ? `${heading} | ${defaultTitle}`
-      : tabTitle;
+      : defaultTitle;
 
   const description = frontMatter.description || defaultDescription;
 
@@ -48,7 +47,7 @@ function Head() {
   // rebrand and break every link preview at once.
   const imagePath = typeof frontMatter.image === "string"
     ? frontMatter.image
-    : "/images/og/default.png";
+    : "/og-tangle-v1.png";
   if (!Object.hasOwn(posterAlt, imagePath)) {
     throw new Error(`Add verified social poster facts for ${imagePath}`);
   }
@@ -56,7 +55,7 @@ function Head() {
     url: fullUrl,
     title,
     description,
-    siteName: "Tangle Network",
+    siteName: "Tangle",
     image: {
       url: `${SITE_ROOT}${imagePath}`,
       type: "image/png",
@@ -94,9 +93,6 @@ function Head() {
       <link rel="shortcut icon" href={`/images/favicon/favicon.ico`} />
       <meta name="msapplication-TileColor" content="#000000" />
       <meta name="theme-color" content="#1F1D2B" />
-      <meta name="twitter:creator" content="@tanglenetwork" />
-      {/* One title per page: search results and browser tabs name the page,
-          not the site. Every page used to share `tabTitle`. */}
       <title>{title}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={social.canonicalUrl} />

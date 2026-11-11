@@ -13,7 +13,6 @@ const width = 1200;
 const height = 630;
 const check = process.argv.includes("--check");
 const cards = [
-  ["default", "Tangle Docs", "AI agent infrastructure, documented"],
   [
     "integrations-hub",
     "Integration Hub",
