@@ -41,7 +41,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="anthropic/claude-sonnet-4-6",
+    model="openai/gpt-4o-mini",
     messages=[{"role": "user", "content": "What is Tangle?"}]
 )
 print(response.choices[0].message.content)
@@ -59,7 +59,7 @@ const tangle = createOpenAI({
 })
 
 const { text } = await generateText({
-  model: tangle('anthropic/claude-sonnet-4-6'),
+  model: tangle('openai/gpt-4o-mini'),
   prompt: 'What is Tangle?',
 })
 ```
@@ -80,17 +80,7 @@ Use the generation ID to look up request details later via [`GET /v1/generation`
 
 ## 4. Try different models
 
-The model ID format is `provider/model-name`:
-
-```
-openai/gpt-4o-mini
-anthropic/claude-sonnet-4-6
-google/gemini-2.0-flash-lite
-groq/llama-3.1-8b-instant
-deepseek/deepseek-chat
-```
-
-You can also use bare model names (`gpt-4o-mini`, `claude-sonnet-4-6`) - the gateway resolves the provider automatically.
+The model ID format is `provider/model-name`. [`GET /v1/models`](/gateway/models) with your key lists the models it can call.
 
 ## What's next
 
