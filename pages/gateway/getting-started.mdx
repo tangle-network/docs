@@ -5,9 +5,15 @@ description: Make your first inference request through Tangle Inference in 2 min
 
 # Your first inference request
 
-## 1. Get an API key
+## 1. Add credit and get an API key
 
-Sign up at [router.tangle.tools](https://router.tangle.tools) and create an API key from the dashboard. Keys start with `sk-tan-`.
+There is no free tier: a request with your key is paid from your account's credit.
+
+1. Sign up at [id.tangle.tools](https://id.tangle.tools) and verify your email.
+2. Add a card and credit at [id.tangle.tools/app/billing](https://id.tangle.tools/app/billing). Per-model rates are in [`GET /v1/models`](/gateway/models); see [Credits & Pricing](/gateway/pricing).
+3. Create an API key at [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys). Keys start with `sk-tan-`.
+
+A key on an account without credit gets 402 `payment_required`.
 
 ## 2. Make a request
 

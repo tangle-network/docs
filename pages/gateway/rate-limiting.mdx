@@ -18,16 +18,6 @@ Set by how the request authenticates. Your credit balance does not change them.
 | SpendAuth   | 120 req/min |
 | Anonymous   | 10 req/min  |
 
-## Daily caps
-
-Set by credit balance, independent of the per-minute limit above.
-
-| Caller                      | Daily limit |
-| --------------------------- | ----------- |
-| Anonymous (no auth)         | 5 req/day   |
-| Authenticated, zero credits | 20 req/day  |
-| Any credits                 | Unlimited   |
-
 ## Response headers
 
 Every response includes rate limit headers:
