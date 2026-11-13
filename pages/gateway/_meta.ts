@@ -34,7 +34,6 @@ const meta: Meta = {
     title: "Billing",
   },
   pricing: "Credits & Pricing",
-  "free-tier": "Free Tier",
   "spend-auth": "SpendAuth (On-Chain)",
   "-- observability": {
     type: "separator",

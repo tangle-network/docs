@@ -56,3 +56,4 @@
 /sandbox/sdk/commands-files       /sandbox/commands                            301
 /sandbox/sdk/agents-sessions      /sandbox/sessions                            301
 /sandbox/sdk/parallel             /sandbox/agents-fleet                        301
+/gateway/free-tier  /gateway/pricing  301
