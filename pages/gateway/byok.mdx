@@ -13,12 +13,12 @@ Pass credentials in `providerOptions.gateway.byok`:
 
 ```json
 {
-  "model": "anthropic/claude-sonnet-4-6",
+  "model": "openai/gpt-4o-mini",
   "messages": [{"role": "user", "content": "Hello"}],
   "providerOptions": {
     "gateway": {
       "byok": {
-        "anthropic": [{"apiKey": "sk-ant-your-key"}]
+        "openai": [{"apiKey": "sk-your-key"}]
       }
     }
   }
@@ -27,7 +27,7 @@ Pass credentials in `providerOptions.gateway.byok`:
 
 ### Multiple credentials
 
-The array shape is accepted for Vercel AI Gateway compatibility, but only the first credential is used. If it fails, the gateway falls back to platform credentials (compliance filters preserved), not to a second BYOK key.
+The array shape is accepted for Vercel AI Gateway compatibility, but only the first credential is used. If it fails, the request fails; the gateway does not try a second BYOK key or platform credentials.
 
 ### Multiple providers
 
@@ -44,9 +44,13 @@ The array shape is accepted for Vercel AI Gateway compatibility, but only the fi
 }
 ```
 
-## Automatic fallback
+## When your key fails
 
-If your BYOK credentials fail (401, 403, rate limit), the gateway automatically falls back to platform credentials. This fallback preserves all compliance filters - if you requested [ZDR](/gateway/zdr), the fallback will only use ZDR-compliant system credentials.
+If the provider rejects your credential (401, 403, rate limit), the gateway returns the provider's status and message with code `byok_provider_error`. It does not retry with platform credentials, so a BYOK request is never billed to your Tangle balance by surprise:
+
+```json
+{"error": {"message": "Incorrect API key provided: sk-your-key. ...", "type": "invalid_request_error", "code": "byok_provider_error"}}
+```
 
 The `X-Tangle-BYOK` response header indicates whether the request used your credentials:
 
@@ -54,7 +58,7 @@ The `X-Tangle-BYOK` response header indicates whether the request used your cred
 X-Tangle-BYOK: true    # Your key was used
 ```
 
-If the header is absent, platform credentials were used (possibly via fallback).
+If the header is absent, platform credentials were used.
 
 ## Pricing
 

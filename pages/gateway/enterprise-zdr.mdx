@@ -13,7 +13,7 @@ Read the [ZDR trust model](/gateway/zdr#trust-model) first. Key points:
 
 - ZDR is enforced at the **direct provider** level only.
 - **Operators are skipped** when ZDR is enabled (their backing provider is unverifiable).
-- BYOK fallback to platform credentials preserves ZDR filtering.
+- A failing BYOK credential returns the provider's error; it does not fall back to platform credentials.
 
 ## Step 2: Choose your approach
 
@@ -29,7 +29,7 @@ Add `zeroDataRetention: true` to individual requests. Useful for mixed workloads
 
 ```python
 response = client.chat.completions.create(
-    model="anthropic/claude-sonnet-4-6",
+    model="mistral/codestral-2508",
     messages=[...],
     extra_body={
         "providerOptions": {
@@ -57,7 +57,6 @@ Use [BYOK](/gateway/byok) with your own provider keys. This gives you:
 
 - Zero platform markup
 - Direct contractual relationship with the provider
-- ZDR enforcement still applies on the fallback path
 
 ## Step 5: Monitor compliance
 
