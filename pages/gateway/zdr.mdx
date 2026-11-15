@@ -33,7 +33,7 @@ When ZDR is enabled:
 
 2. **Direct provider only.** The gateway calls the provider API directly, selecting only from verified ZDR providers.
 
-3. **BYOK fallback preserves ZDR.** If your [BYOK](/gateway/byok) credentials fail, the fallback to platform credentials still enforces ZDR filtering.
+3. **No BYOK fallback.** If your [BYOK](/gateway/byok) credentials fail, the request returns the provider's error instead of falling back to platform credentials.
 
 ## ZDR-verified providers
 
@@ -60,7 +60,7 @@ Compliance data is managed via the admin API (`PUT /api/admin/compliance`) and c
 | ----------------------- | ---------------------------------------------------------- |
 | **Operators**           | Skipped. Self-reported backing provider is unverifiable.   |
 | **Direct provider**     | Routed only to verified ZDR providers.                     |
-| **BYOK fallback**       | ZDR filters preserved on fallback to platform credentials. |
+| **BYOK failure**        | Provider error returned; no fallback to platform credentials. |
 | **Operator-only + ZDR** | 400 error. Conflicting requirements.                       |
 
 The Tangle chain verifies operator **identity and stake**, not **behavior**. When compliance matters, the gateway routes direct.
