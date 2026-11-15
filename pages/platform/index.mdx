@@ -14,6 +14,8 @@ One account behind everything. Platform (at [id.tangle.tools](https://id.tangle.
 - **One balance.** A single USD credit balance funds every product, so you are not topping up four separate accounts.
 - **The integration hub.** Your agents reach external services through one broker at `/v1/hub/*`: OAuth connections, capability-scoped execution, approvals, and an audit trail, without hand-rolling OAuth per product.
 
+![The Add credits panel on the id.tangle.tools Billing page, with $5 to $100 amounts and a custom amount](/images/docs/add-credits.png)
+
 ## Why it works this way
 
 An agent that runs code, calls models, and reads traces touches three or four products in one task. Splitting identity, keys, and billing across them would mean four logins and four bills for one workflow. Platform keeps that as one account so the products compose instead of fragmenting.
