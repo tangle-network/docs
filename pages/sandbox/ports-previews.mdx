@@ -41,6 +41,8 @@ tangle preview list my-project --json
 
 The URL has the form `https://<sandbox>-<port>.tangle.sh`. `waitUntilReady` resolves once the public route reaches your server, so the first visitor never sees a startup error.
 
+Port 8080 belongs to the sandbox runtime, so a server started there fails with `Address already in use`. Serve on another port, such as 3000.
+
 <Callout type="warning">
 A preview link is public. Anyone with the URL can open it, with no login. Treat the URL as a credential, put your own authentication in the app if it serves private data, and remove the link when you are done.
 </Callout>
