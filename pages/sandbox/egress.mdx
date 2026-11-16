@@ -2,7 +2,7 @@ import { Tabs, Callout } from "nextra/components";
 
 # Control network access
 
-Decide which hosts a sandbox can reach, change that while it runs, and see what it tried to reach. The proxy inside the sandbox enforces the policy, and the host firewall backs it.
+Decide which hosts a sandbox can reach, change that while it runs, and see what it tried to reach. A per-sandbox egress proxy, which runs beside the sandbox rather than inside it, enforces the policy, and the host firewall backs it.
 
 | Mode | The sandbox can reach |
 |---|---|
