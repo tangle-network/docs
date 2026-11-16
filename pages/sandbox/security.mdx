@@ -135,6 +135,7 @@ The SDK returns the evidence; it does not check it against the hardware vendor's
 | `sshCommand()` output | Terminal history, logs | Its `env` holds your API key. Treat the output as a secret. |
 | Preview link URLs | Chat messages, issue trackers | Anyone with the URL can open it. Remove links you no longer need. See [Preview links](/sandbox/ports-previews). |
 | Secrets the sandbox can read | Agent transcripts, command output | Use [proxy custody](/sandbox/secrets#choose-who-holds-the-value) so the sandbox holds only a placeholder. |
+| A credential a tool wrote to a file in the box | Snapshots of the sandbox | A snapshot copies the home folder, and a deleted sandbox's snapshots are kept ~30 days. Use [proxy custody](/sandbox/secrets#choose-who-holds-the-value) so no real value is on disk. See [What a delete keeps](/sandbox/snapshots#what-a-delete-keeps). |
 
 ## Python and REST
 

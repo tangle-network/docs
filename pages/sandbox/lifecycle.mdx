@@ -240,7 +240,7 @@ curl -X DELETE "https://sandbox.tangle.tools/v1/sandboxes/$SANDBOX_ID?cascade=tr
   -H "Authorization: Bearer $TANGLE_API_KEY"
 ```
 
-`tangle sandbox delete` asks for confirmation; pass `--force` in scripts. Deleting a sandbox does not delete snapshots in your own storage. See [Keep data after delete](/sandbox/snapshots#keep-data-after-delete-or-share-it-between-sandboxes).
+`tangle sandbox delete` asks for confirmation; pass `--force` in scripts. Deleting a sandbox does not remove its snapshots: ones in your own storage stay until you delete them, and ones the platform keeps for you stay for about 30 days and can be restored by the account owner. See [What a delete keeps](/sandbox/snapshots#what-a-delete-keeps).
 
 ## Python and REST
 
