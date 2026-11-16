@@ -143,11 +143,17 @@ Within the platform, any sandbox you own can start from another sandbox's snapsh
 
 ## What a delete keeps
 
-Deleting a sandbox does not remove its snapshots right away. A snapshot the platform keeps for you stays for about 30 days after the sandbox is deleted, then is removed automatically. During that window only the account's owner can use it: `tangle snapshot list <id>` still lists the deleted sandbox's kept snapshots, and `tangle snapshot restore <id> <snapshot-id>` starts a new sandbox from one. The deleted sandbox's own credential cannot; it is dropped when the sandbox is deleted.
+Deleting a sandbox keeps its snapshots. Ones the platform keeps for you stay for about 30 days after the sandbox is deleted, then are removed automatically; there is no command to remove them sooner once the sandbox is gone. You can still create a new sandbox from a kept snapshot during that window, by its snapshot id:
+
+```bash
+tangle snapshot restore <old-sandbox-id> <snapshot-id>
+```
+
+Note the snapshot id before you delete the sandbox: after the sandbox is gone, `tangle snapshot list <old-sandbox-id>` and `tangle snapshot delete` answer `Sandbox not found`, so the id is how you reach a kept snapshot.
 
 A snapshot copies the whole home folder of the sandbox. If a tool in the box wrote a credential to a file there (for example a model or CLI token on disk), that file is in the snapshot. Keep real credentials out of the box so they cannot be captured: with proxy custody the box holds only a placeholder and the real value stays at the proxy, so it is never in a snapshot.
 
-To not keep a sandbox's snapshots, delete each one by id while the sandbox still exists, before you delete the sandbox:
+To not keep a sandbox's snapshots at all, delete each one while the sandbox still exists, before you delete the sandbox:
 
 ```bash
 tangle snapshot list <id>
