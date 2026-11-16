@@ -12,6 +12,8 @@ Decide which hosts a sandbox can reach, change that while it runs, and see what 
 
 Every mode, `blocked` included, reaches the Tangle control plane without listing it: `sandbox.tangle.tools` and its exec origins, `router.tangle.tools` for model calls, and the Hub and workflow routes on `id.tangle.tools`. A sandbox can create sibling sandboxes or publish a preview link under any policy.
 
+From inside a sandbox, the control plane accepts only its owner's credentials: the sandbox's own key, any key of the owner's account, and for a team sandbox the team's keys. A key of any other account gets a `403` with code `EGRESS_REQUEST_REFUSED` and policy `sandbox-owner`, in every mode.
+
 ## What a sandbox reaches by default
 
 A sandbox created without a policy runs `strict` plus a built-in list of developer hosts:
@@ -130,7 +132,7 @@ await box.egress.update({ mode: "strict", allowDomains: ["registry.npmjs.org"] }
 
 ### Install, then cut the network
 
-Untrusted code should run without network access. Install under a strict policy, then switch to `blocked`:
+Untrusted code should run without network access. Install under a strict policy, then switch to `blocked`, which leaves only the Tangle control plane reachable:
 
 ```ts
 await box.exec("cd app && npm ci");
@@ -146,7 +148,7 @@ A refused request gets a `403` whose JSON body names the cause:
 {"code":"EGRESS_DOMAIN_NOT_ALLOWED","host":"github.com","policy":"allowlist","nextStep":"Add github.com to egressPolicy.allowDomains"}
 ```
 
-`policy` is the proxy rule that refused it: `allowlist`, or `secrets` for a credential the proxy would not hand over. `box.egress.denials()` lists every refused host, newest first, with how often. Start strict with nothing allowed, run the build once, and read the refusals:
+`policy` is the rule that refused it: `allowlist`, `secrets` for a credential the proxy would not hand over, or `sandbox-owner` for a Tangle key of an account other than the sandbox's owner. `box.egress.denials()` lists every refused host, newest first, with how often. Start strict with nothing allowed, run the build once, and read the refusals:
 
 ```ts
 const box = await client.create({ egressPolicy: { mode: "strict", allowDomains: [] } });
