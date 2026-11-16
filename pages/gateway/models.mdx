@@ -17,6 +17,7 @@ Every catalog row carries an `availability` object:
 | `reason`, `message`       | Why a row is unavailable, for example `provider_quota_exhausted`                                                |
 | `observed_at`             | When the state was observed; for an unavailable row, when the refusal began                                    |
 | `last_served_at`, `served_by` | When the model last answered, and through which provider                                                    |
+| `credit_input_modalities`   | The input kinds a credit-paid key can send to this model: `text`, plus `image` where its provider documents a per-image token bound. Set an agent's input kinds from this, not from `architecture.input_modalities` |
 
 By default the catalog lists `available` and `unknown` rows. Add `?availability=all` to see every row with its reason, or `?availability=available` for only the models that answered recently.
 
