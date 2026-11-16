@@ -89,7 +89,7 @@ curl -X DELETE "https://sandbox.tangle.tools/v1/sandboxes/$SANDBOX_ID" \
 </Tabs.Tab>
 </Tabs>
 
-The CLI has no egress flag or command. Use the SDK or the REST routes below.
+From the CLI, `tangle sandbox create --allow-domain <hosts...>` sets `strict` with those hosts and always adds the built-in list above, so GitHub and `gist.github.com` stay reachable. To change a running sandbox's policy, use the SDK or the REST routes below.
 
 ### Domain patterns
 
@@ -198,7 +198,7 @@ const box = await client.create({
 await box.exec(`curl -s -H "Authorization: Bearer $HF_TOKEN" https://huggingface.co/api/whoami-v2`);
 ```
 
-A strict policy does not reach the secret's host for you; list it in `allowDomains`. From the CLI, select a proxy-held secret at create with `--proxy-secret '<json>'`. How each custody mode works, the presentation types and what the proxy masks in responses are on [Secrets](/sandbox/secrets).
+A strict policy does not reach the secret's host for you; list it in `allowDomains`. From the CLI, select a proxy-held secret at create with `--proxy-secret '<json>'`. Only a `proxySecrets` binding, which `--proxy-secret` sends, can limit the methods and paths that carry the value; the `hosts` form above sends it on any method and path to those hosts. How each custody mode works, the presentation types and what the proxy masks in responses are on [Secrets](/sandbox/secrets).
 
 ## Coding agents behind a strict policy
 
