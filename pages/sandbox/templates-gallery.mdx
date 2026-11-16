@@ -6,7 +6,7 @@ Start sandboxes with your tools already installed: pick an environment, start fr
 
 ![The Templates page at sandbox.tangle.tools, Public tab, with the Universal starter environment and its Create sandbox button](/images/docs/templates-public.png)
 
-The default image already carries Python 3.12 with numpy, pandas, matplotlib and scikit-learn, and Node 22 with pnpm and TypeScript. Reach for a template or an image when your coding agent needs more than that.
+The default image already carries Python with numpy, pandas, matplotlib and scikit-learn, and Node.js with pnpm and TypeScript. Reach for a template or an image when your coding agent needs more than that.
 
 ## Pick an environment
 
@@ -80,13 +80,58 @@ tangle template versions <slug>
 tangle sandbox create --public-template <slug> --public-template-version <version-id>
 ```
 
+## Install packages and save a personal template
+
+On the default image, `python` and `pip` run from a venv at `~/.local/venv` that also sees the image's preinstalled packages, so `pip install` and `uv pip install` need no root. `npm install -g` installs under `~/.local`. Snapshots and templates keep both. A venv you create for a project stays isolated from the default one. Wheels that load the C++ runtime, such as duckdb, install but do not import yet.
+
+`exec` returns an `exitCode` for a failed command. Check it before taking a snapshot: a successful snapshot can preserve an environment where the install failed.
+
+```ts
+const box = await client.create();
+let copy;
+let snapshot;
+let template;
+try {
+  const installed = await box.exec("pip install tabulate");
+  if (installed.exitCode !== 0) throw new Error(installed.stderr);
+  snapshot = await box.snapshot();
+  template = await client.createTemplate({
+    name: "tabulate-personal",
+    snapshotId: snapshot.snapshotId,
+    sourceSandboxId: box.id,
+  });
+  // Use the same runtime as the source, or another supported runtime.
+  copy = await client.create({ templateId: template.id });
+  const imported = await copy.exec('python -c "import tabulate"');
+  if (imported.exitCode !== 0) throw new Error(imported.stderr);
+} finally {
+  const errors = [];
+  for (const cleanup of [
+    async () => { if (copy) await copy.delete(); },
+    async () => {
+      if (!template) return;
+      const response = await client.fetch(`/v1/templates/${template.id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error(`Template delete: HTTP ${response.status}`);
+    },
+    async () => { if (snapshot) await box.deleteSnapshot(snapshot.snapshotId); },
+    async () => { await box.delete(); },
+  ]) {
+    try { await cleanup(); } catch (error) { errors.push(error); }
+  }
+  if (errors.length) throw new AggregateError(errors, "Cleanup incomplete");
+}
+```
+
+A personal template is private to your account. To keep it, retain the template and its source snapshot instead of deleting them in the cleanup above. Create and delete remain separate operations.
+
 ## Publish your own template
 
 Set up a sandbox the way you want it, snapshot it, and publish the snapshot. Publication runs as a job: the SDK waits until the template is published and visible.
 
 ```ts
 const box = await client.create({ name: "duckdb-agent-base" });
-await box.exec("pip install duckdb polars");
+const installed = await box.exec("pip install duckdb polars");
+if (installed.exitCode !== 0) throw new Error(installed.stderr);
 const snap = await box.snapshot({ tags: ["duckdb"] });
 
 const template = await client.publicTemplates.publish(
@@ -152,7 +197,7 @@ tangle team templates list
 tangle team templates delete <template-id>
 ```
 
-Personal templates have no SDK or CLI command. Create them with `POST /v1/templates` (`name`, `snapshotId`, `sourceSandboxId`, optional `description`, `environment` and `config`), list with `GET /v1/templates`, and delete with `DELETE /v1/templates/{id}`. They appear in `environments.list()` as `template:<id>`.
+TypeScript creates a personal template with `client.createTemplate({ name, snapshotId, sourceSandboxId })`. The CLI has no personal-template command. Over REST, create with `POST /v1/templates` (`name`, `snapshotId`, `sourceSandboxId`, optional `description`, `environment` and `config`), list with `GET /v1/templates`, and delete with `DELETE /v1/templates/{id}`. They appear in `environments.list()` as `template:<id>`.
 
 ## Bring a container image
 
