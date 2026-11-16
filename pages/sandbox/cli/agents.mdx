@@ -26,10 +26,9 @@ tangle fleet create --count 4
 | [`tangle agent profile show`](#tangle-agent-profile-show) | Load and print a profile (local path, https URL, or github:owner/repo/path[@ref]) |
 | [`tangle agent profile validate`](#tangle-agent-profile-validate) | Validate a profile against the canonical AgentProfile schema |
 | [`tangle agent connect`](#tangle-agent-connect) | Print a copy-paste SDK integration snippet for one of: anthropic, openai, vercel-ai, mastra, mcp-local, claude-desktop, cursor, zed (to stream a local agent's telemetry to Intelligence, see 'tangle connect') |
-| [`tangle backend status`](#tangle-backend-status) | Get backend agent status |
+| [`tangle backend status`](#tangle-backend-status) | Get the harness type the sandbox runs |
 | [`tangle backend configure`](#tangle-backend-configure) | Update backend configuration |
 | [`tangle backend mcp-status`](#tangle-backend-mcp-status) | Get status of MCP servers |
-| [`tangle backend restart`](#tangle-backend-restart) | Restart the backend agent |
 | [`tangle batch run`](#tangle-batch-run) | Execute a batch of tasks. Provide tasks via `--tasks <file.json>` and/or repeated `--task` id=message flags. |
 | [`tangle fleet create`](#tangle-fleet-create) | Create a sandbox fleet |
 | [`tangle fleet list`](#tangle-fleet-list) | List the machines of one fleet (fleet id is required) |
@@ -187,9 +186,9 @@ tangle agent connect <framework> [options]
 
 ### `tangle backend status`
 
-Get backend agent status.
+Get the harness type the sandbox runs.
 
-Shows the backend agent's status.
+Shows the harness the sandbox runs, for example `opencode`. Each prompt starts a fresh agent process, so there is no long-lived backend to restart.
 
 ```bash
 tangle backend status <sandboxId-or-name>
@@ -235,24 +234,6 @@ tangle backend mcp-status <sandboxId-or-name>
 ```
 
 Request: `GET /v1/sandboxes/{id}/runtime/backend/mcp`
-
-### `tangle backend restart`
-
-Restart the backend agent.
-
-Restarts the backend agent.
-
-```bash
-tangle backend restart <sandboxId-or-name>
-```
-
-Request: `POST /v1/sandboxes/{id}/runtime/backend/restart`
-
-```bash
-tangle backend restart my-box
-```
-
-- Prints no JSON document.
 
 ## Batches
 
