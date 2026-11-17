@@ -1,0 +1,68 @@
+---
+title: Run a LangGraph node in a sandbox
+description: Use LangGraph to send work to a Tangle sandbox, collect command output and verify the result in the next node.
+---
+
+# Run a LangGraph node in a sandbox
+
+Keep orchestration in LangGraph and run commands in an isolated machine. This graph
+computes a total inside a sandbox, then checks it in a second node. It uses no model calls.
+
+## Run the graph
+
+Set `TANGLE_API_KEY` from [your API keys](https://id.tangle.tools/app/keys).
+Save the program below as `sandbox-graph.mts` and install its dependencies:
+
+{/* sandbox-proof: skip Installs the local dependencies and runs the complete graph below. */}
+```bash
+npm install @tangle-network/sandbox @langchain/langgraph @langchain/core
+npm install --save-dev tsx
+npx tsx sandbox-graph.mts
+```
+
+{/* sandbox-proof: run */}
+```ts
+import assert from "node:assert/strict";
+import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+const State = Annotation.Root({
+  total: Annotation<number>(),
+  verified: Annotation<boolean>(),
+});
+const box = await client.create({ agent: false, maxLifetimeSeconds: 180 });
+try {
+  const graph = new StateGraph(State)
+    .addNode("calculate", async () => {
+      const result = await box.exec("python3 -c 'print(sum([120, 80, 45, 15]))'");
+      assert.equal(result.exitCode, 0, result.stderr);
+      const total = Number(result.stdout.trim());
+      assert(Number.isFinite(total));
+      return { total };
+    })
+    .addNode("verify", (state) => {
+      assert.equal(state.total, 260);
+      return { verified: true };
+    })
+    .addEdge(START, "calculate")
+    .addEdge("calculate", "verify")
+    .addEdge("verify", END)
+    .compile();
+
+  const result = await graph.invoke({ total: 0, verified: false });
+  assert.equal(result.verified, true);
+  console.log(JSON.stringify(result));
+} finally {
+  await box.delete();
+}
+```
+
+The result is `{"total":260,"verified":true}`. Replace the calculation with your
+own command, or call `box.prompt()` from a node to run a coding agent.
+
+LangGraph owns the graph state and edges; see its [Annotation reference](https://reference.langchain.com/javascript/langchain-langgraph/index/Annotation/Root).
+For a graph where each worker is a coding agent, see [Agent graphs](/sandbox/agents-graphs).

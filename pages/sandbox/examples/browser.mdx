@@ -1,0 +1,116 @@
+---
+title: Click a page in the sandbox browser
+description: Open a page in a Tangle sandbox, click its button through MCP, verify the new text and save a desktop screenshot.
+---
+
+# Click a page in the sandbox browser
+
+Drive a desktop browser through MCP, using element references from its accessibility
+tree. This program serves a small page inside the sandbox, clicks its button and
+checks that the page changed before saving a screenshot.
+
+The sandbox image must include the desktop capability. Desktop services share the
+sandbox's memory; the example requests enough for the browser and display.
+
+## Run the program
+
+Set `TANGLE_API_KEY` from [your API keys](https://id.tangle.tools/app/keys).
+Save the program below as `browser-check.mts`:
+
+{/* sandbox-proof: skip Installs the local SDKs and runs the complete browser program below. */}
+```bash
+npm install @tangle-network/sandbox @modelcontextprotocol/sdk
+npm install --save-dev tsx
+npx tsx browser-check.mts
+```
+
+{/* sandbox-proof: run */}
+```ts
+import assert from "node:assert/strict";
+import { writeFile } from "node:fs/promises";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+const box = await client.create({
+  capabilities: ["computer_use"],
+  resources: { memoryMB: 4096 },
+  maxLifetimeSeconds: 300,
+});
+const desktop = new Client({ name: "browser-check", version: "1.0.0" });
+try {
+  await box.write("index.html", `<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Report</title>
+<body><h1>Sales report</h1>
+<button onclick="document.getElementById('result').textContent='Report ready'">Generate report</button>
+<p id="result" role="status">Waiting</p></body></html>`);
+  await box.process.spawnExact("python3", ["-m", "http.server", "8000", "--bind", "127.0.0.1"], {
+    timeoutMs: 240_000,
+  });
+  const ready = await box.exec(`python3 - <<'PY'
+import time
+import urllib.request
+deadline = time.monotonic() + 10
+while True:
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:8000/", timeout=1) as response:
+            assert response.status == 200
+        break
+    except OSError:
+        if time.monotonic() >= deadline:
+            raise
+        time.sleep(0.1)
+PY`);
+  assert.equal(ready.exitCode, 0, ready.stderr);
+
+  const endpoint = await box.getMcpEndpoint();
+  await desktop.connect(new StreamableHTTPClientTransport(new URL(endpoint.url), {
+    requestInit: { headers: { Authorization: `Bearer ${endpoint.authToken}` } },
+  }));
+  const call = async (name: string, args: Record<string, unknown> = {}) => {
+    const result = await desktop.callTool({ name, arguments: args });
+    assert.notEqual(result.isError, true, `MCP tool ${name} failed`);
+    return result;
+  };
+  await call("open_url", { url: "http://127.0.0.1:8000/" });
+  const screen = await call("read_screen");
+  const text = screen.content
+    .filter((part) => part.type === "text")
+    .map((part) => part.text)
+    .join("\n");
+  const button = text.match(/\[([^\]]+)\] button "Generate report"/);
+  assert(button, "Generate report button was absent from the accessibility tree");
+  await call("click_element", { ref: button[1] });
+  const deadline = Date.now() + 10_000;
+  while (true) {
+    const changed = await call("read_screen");
+    if (changed.content.some((part) => part.type === "text" && part.text.includes("Report ready"))) break;
+    assert(Date.now() < deadline, "The page did not update after clicking");
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
+  const captured = await call("computer_use", { action: "screenshot" });
+  const image = captured.content.find((part) => part.type === "image");
+  assert(image && image.type === "image" && image.mimeType === "image/png");
+  const png = Buffer.from(image.data, "base64");
+  assert.equal(png.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+  await writeFile("browser.png", png);
+  console.log("Report ready; saved browser.png.");
+} finally {
+  try {
+    await desktop.close();
+  } finally {
+    await box.delete();
+  }
+}
+```
+
+Open `browser.png` to inspect the result. Replace the local URL with your own page
+to automate a browser task. The scoped MCP token stays in memory and grants access
+only to this sandbox's computer-use tools.
+
+See [MCP clients](/sandbox/agents-mcp) to connect the same desktop to a coding agent.

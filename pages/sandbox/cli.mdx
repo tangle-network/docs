@@ -14,6 +14,8 @@ Every command prints JSON with `--json`, so the same commands work in scripts an
 
 The installer brings its own Node.js runtime, so it needs no Node, npm or sudo:
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 curl -fsSL https://sandbox.tangle.tools/install.sh | sh
 export PATH="$HOME/.local/share/tangle-cli/bin:$PATH"
@@ -31,6 +33,8 @@ Never run bare `npx tangle`. That npm name belongs to an unrelated package.
 </Callout>
 
 ## Log in
+
+{/* sandbox-proof: skip Interactive authentication prerequisite */}
 
 ```bash
 tangle auth login
@@ -62,6 +66,8 @@ The CLI loads a `.env` file from the current directory when it starts, so a `TAN
 
 Profiles let one machine hold several accounts:
 
+{/* sandbox-proof: skip Interactive authentication prerequisite */}
+
 ```bash
 tangle auth login --profile work
 tangle auth profiles list
@@ -84,6 +90,8 @@ There is no global `--profile` flag. Set `TANGLE_PROFILE` to pick a profile for 
 
 `tangle use <id-or-name>` saves a default sandbox. `--box <id>` and `TANGLE_SANDBOX` override it.
 The default applies only to the one-argument form of `tangle agent prompt`; every other command takes the sandbox id or name.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle use my-box
@@ -123,6 +131,8 @@ These work before or after any command.
 
 ### Run a coding agent
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --name fixer --git-url https://github.com/tangle-network/sandbox-demo
 tangle agent prompt fixer "The test tagged null-guard fails. Fix the cause." --stream
@@ -137,6 +147,8 @@ tangle sandbox delete fixer --force
 `tangle ssh` works on a sandbox created with `--ssh`, `--ssh-key`, `--ssh-keys` or `--ssh-key-file`.
 `--ssh` alone uploads the first of `~/.ssh/id_ed25519.pub`, `id_ecdsa.pub` or `id_rsa.pub`, and fails if none exists.
 The connection runs over a WebSocket through the Sandbox API, so the sandbox opens no inbound port. The CLI does not check the sandbox's SSH host key.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle sandbox create --name dev --ssh
@@ -153,6 +165,8 @@ With `--json`, stdout carries only the JSON document. These commands print one J
 These commands always print text, even with `--json`: `auth login`, `auth logout`, `sandbox delete`, `ssh-keys delete`, `ssh`, `ssh-proxy`, `agent connect` and `mcp serve`.
 
 An error under `--json` prints this envelope on stdout:
+
+{/* sandbox-proof: skip Configuration or response data; consumed by the adjacent client program */}
 
 ```json
 {
@@ -209,6 +223,8 @@ On `sandbox create`, `--timeout` is the HTTP timeout. The sandbox's own limits a
 `exec`, `ssh` and `sandbox gpu run` pass unknown options to the remote side. Put `--` before the remote command so flags such as `-t` are not read as `tangle` options.
 One argument after `--` runs as a shell script; several arguments are quoted one by one.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle exec my-box -- "npm ci && npm test"
 tangle exec my-box -- ls -la /home/agent
@@ -253,6 +269,8 @@ tangle exec my-box -- ls -la /home/agent
 ## A skill file for coding agents
 
 The CLI ships a `SKILL.md` that teaches a coding agent the commands. Print its path and point your agent at it:
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle skill path

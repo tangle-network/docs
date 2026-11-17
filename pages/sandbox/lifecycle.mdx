@@ -8,6 +8,8 @@ A sandbox is a Linux machine you create, pause, wake and delete from code or the
 
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -27,6 +29,8 @@ try {
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```python
 import os
 from tangle_sandbox import Sandbox, SandboxStatus
@@ -43,6 +47,8 @@ finally:
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --name my-project
 tangle exec my-project -- uname -a
@@ -65,6 +71,8 @@ tangle sandbox delete my-project --force
 | `bare` | `true` gives command execution and lifecycle only, without the agent runtime. |
 | `agent` | `false` keeps files, terminals and processes but provisions no coding agent, model credentials or [startup scripts](/sandbox/startup-scripts). An enabled startup script that applies to the create makes it fail. |
 
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
+
 ```ts
 const { presets, ceiling } = await client.shapes();
 console.log(presets.map((p) => p.name), ceiling);
@@ -83,6 +91,8 @@ The CLI takes the same choices as flags: `--environment`, `--runtime`, `--cpu`, 
 
 Pass an `idempotencyKey` when your code may retry. A second create with the same key joins the first provision instead of starting another sandbox.
 
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
+
 ```ts
 const box = await client.create({
   name: "nightly-eval",
@@ -99,6 +109,8 @@ Both SDKs retry capacity and rate-limit refusals inside the create's time budget
 | `maxLifetimeSeconds` | The sandbox stops when the interval ends. Create and each resume start a new interval; activity does not extend it. The workspace is kept. |
 | `idleTimeoutSeconds` | The sandbox stops after this much inactivity. The workspace is kept. |
 | `deleteAfterStoppedSeconds` | A stopped sandbox is deleted after this long. Omit it for the platform default. |
+
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
 
 ```ts
 const box = await client.create({
@@ -118,6 +130,8 @@ A stopped sandbox keeps its disk and does not bill compute until you resume it. 
 
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -140,6 +154,8 @@ try {
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```python
 import os
 from tangle_sandbox import Sandbox, SandboxStatus
@@ -159,6 +175,8 @@ finally:
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle sandbox stop my-project
 tangle sandbox resume my-project
@@ -174,6 +192,8 @@ The SDK does not resume for you: a command on a stopped sandbox throws `INVALID_
 
 A coding agent's credential does not survive a stop. Pass `backend` again on the first prompt after `resume()`:
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 const again = await client.get(boxId);
 if (!again) throw new Error("sandbox not found");
@@ -185,6 +205,8 @@ const run = await again.prompt("Implement step 1 of your plan.", {
 ```
 
 A resume can also be refused because the platform did not keep some environment values. Branch on the error code and pass the values back:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 import { SandboxError } from "@tangle-network/sandbox";
@@ -207,6 +229,8 @@ try {
 
 ## Find sandboxes
 
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
+
 ```ts
 const box = await client.get("sbx_123"); // null when it does not exist
 const running = await client.list({ status: "running", limit: 20 });
@@ -216,6 +240,8 @@ const team = await client.list({ scope: "team" });
 `list()` filters by `status` (one or several), `scope` (`"personal"`, `"team"`, `"all"` or `` `team:${id}` ``), `limit`, `offset` and `run`. In the CLI, `tangle sandbox list` and `tangle sandbox get <id-or-name>`.
 
 ## Delete
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 const ack = await box.delete();
@@ -228,12 +254,16 @@ await box.delete({ until: "removed" }); // also waits until storage is reclaimed
 
 A sandbox with live [branch children](/sandbox/snapshots#branch-a-running-sandbox) is refused with `409 CHILDREN_EXIST`. Delete the children first, or delete the whole lineage with `cascade`. `box.delete()` and `tangle sandbox delete` have no cascade option; use `deleteMatching` or the REST route:
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 const result = await client.deleteMatching(
   { metadataPrefix: { project: "checkout" } },
   { cascade: true },
 );
 ```
+
+{/* sandbox-proof: skip REST mutation requires the resource IDs and request data from the surrounding steps */}
 
 ```bash
 curl -X DELETE "https://sandbox.tangle.tools/v1/sandboxes/$SANDBOX_ID?cascade=true" \
@@ -245,6 +275,8 @@ curl -X DELETE "https://sandbox.tangle.tools/v1/sandboxes/$SANDBOX_ID?cascade=tr
 ## Python and REST
 
 The Python SDK covers create, `wait_for`, `get`, `list(ListSandboxOptions(status=...))`, `stop`, `resume` and `delete`. It has no `rebuild`, lifecycle operations, env recovery or `delete_matching`, and its `list` has no `scope` or `run` filter. Its create options do not include `delete_after_stopped_seconds`, `cold_timeout_seconds`, `retain` or `cwd`. Send those through the REST API with `client.fetch`, which returns the raw response and does not raise on an error status:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```python
 response = client.fetch(

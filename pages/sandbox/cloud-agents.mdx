@@ -16,6 +16,8 @@ work yourself, and delete the sandbox when you are done.
 
 <Tabs items={["TypeScript", "Python", "CLI"]}>
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```ts
 import { writeFile } from "node:fs/promises";
 import { Sandbox } from "@tangle-network/sandbox";
@@ -44,10 +46,12 @@ try {
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```python
 import os
 
-from tangle_sandbox import BackendConfig, CreateSandboxOptions, GitConfig, Sandbox
+from tangle_sandbox import SandboxStatus, BackendConfig, CreateSandboxOptions, GitConfig, Sandbox
 
 client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
 box = client.create(
@@ -56,8 +60,8 @@ box = client.create(
         backend=BackendConfig(type="claude-code"),
     )
 )
-box.wait_for("running")
 try:
+    box.wait_for(SandboxStatus.RUNNING)
     run = box.prompt("`npm test` fails. Find the cause and fix it.")
     if not run.success:
         raise RuntimeError(run.error)
@@ -70,6 +74,8 @@ finally:
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --name fix-tests --backend claude-code \
   --git-url https://github.com/tangle-network/sandbox-demo
@@ -95,18 +101,24 @@ run:
 
 <Tabs items={["TypeScript", "Python", "CLI"]}>
 <Tabs.Tab>
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 const { backends } = await client.listBackends();
 console.log(backends.map((backend) => backend.type));
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```python
 response = client.fetch("GET", "/v1/backends")
 print([backend["type"] for backend in response.json()["backends"]])
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip curl usage requires the page authentication and resource setup */}
+
 ```bash
 curl -s https://sandbox.tangle.tools/v1/backends \
   -H "Authorization: Bearer $TANGLE_API_KEY"
@@ -135,6 +147,8 @@ OpenCode all take it. The models your key
 can run are listed by `GET /v1/router-models` with your Sandbox key, and on the
 [model list](/gateway/models).
 
+{/* sandbox-proof: skip Replace the repository, token, or resource placeholder before running */}
+
 ```ts
 const box = await client.create({
   backend: { type: "opencode", model: { model: "<model-id>" } },
@@ -144,6 +158,8 @@ const box = await client.create({
 nanocode takes the model as a provider and a model id. With no credential its
 model calls go through Tangle Router on your Tangle balance, and a second
 `prompt()` with the same `sessionId` resumes the same nanocode session:
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```ts
 const nc = await client.create({
@@ -161,6 +177,8 @@ matching requests. See [Secrets](/sandbox/secrets).
 `streamPrompt()` yields events while the agent thinks, edits files and runs
 commands. `applySandboxEventText()` folds them into the response text the same
 way `prompt()` does:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 import { applySandboxEventText } from "@tangle-network/sandbox";
@@ -180,6 +198,8 @@ arrive as `message.part.updated` events whose part has `type: "tool"`.
 
 The sandbox and its conversation outlive your process. Keep the sandbox id and
 the session id, then continue from anywhere:
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```ts
 const again = await client.get(sandboxId);

@@ -4,6 +4,8 @@ Every `SandboxInstance` member that acts inside a running sandbox, and the clien
 
 Every runtime call goes through `ALL /v1/sandboxes/{id}/runtime/{path}`, so any route below can be called over REST with your API key.
 
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -125,6 +127,8 @@ Your server mints a scoped token with `box.mintScopedToken(...)` and sends the b
 
 ### `createSandboxRuntimeClient` from `@tangle-network/sandbox/runtime`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```ts
 import { createSandboxRuntimeClient } from "@tangle-network/sandbox/runtime";
 
@@ -157,6 +161,8 @@ Drives a coding agent's own terminal UI from a browser. See [Agents](/sandbox/sd
 ## Python and REST
 
 Python has `exec`, `read`, `write`, `search` and `box.git` (`status`, `log`, `diff`, `branches`, `add`, `commit`, `push`, `pull`, `checkout`); see [Python SDK](/sandbox/sdk-python). It has no kernel code runs, processes, file transfers, preview links or terminals. Call those runtime routes through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```python
 client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/code/exec", json={"language": "python", "source": "print(2 + 2)"})

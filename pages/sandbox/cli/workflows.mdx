@@ -9,6 +9,8 @@ Validate and deploy workflow files, start and watch runs, retry or cancel them, 
 
 Workflows run on Tangle Platform, so `--base-url` on these commands points at the Platform host. `TANGLE_PLATFORM_URL` sets it for every command, and `TANGLE_HUB_URL` does inside a sandbox.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows validate hello.yml
 tangle workflows apply hello.yml
@@ -62,11 +64,15 @@ List your workflows.
 
 Lists your workflows.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows list
 ```
 
 Request: `GET /v1/workflows`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows list
@@ -75,6 +81,8 @@ tangle workflows list
 ### `tangle workflows fleet`
 
 Fleet overview: every workflow's run tallies over a trailing window, failing-first.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows fleet [options]
@@ -86,6 +94,8 @@ tangle workflows fleet [options]
 
 Request: `GET /v1/workflows/insights/fleet`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows fleet
 ```
@@ -95,6 +105,8 @@ tangle workflows fleet
 Show a workflow's definition and compiled triggers.
 
 Shows a workflow's definition and compiled triggers; `--yaml` prints only the definition.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows get <id> [options]
@@ -106,6 +118,8 @@ tangle workflows get <id> [options]
 
 Request: `GET /v1/workflows/{id}`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows get wf_abc --yaml
 ```
@@ -114,11 +128,15 @@ tangle workflows get wf_abc --yaml
 
 Create a workflow from a YAML file.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle workflows create <file>
 ```
 
 Request: `POST /v1/workflows`
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle workflows create hello.yml
@@ -128,11 +146,15 @@ tangle workflows create hello.yml
 
 Create or update a workflow idempotently, matched by the definition's name.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows apply <file>
 ```
 
 Request: `POST /v1/workflows`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows apply ~/flow.yaml --json
@@ -141,6 +163,8 @@ tangle workflows apply ~/flow.yaml --json
 ### `tangle workflows update`
 
 Replace a workflow's definition from a YAML file.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle workflows update <id> <file> [options]
@@ -152,6 +176,8 @@ tangle workflows update <id> <file> [options]
 
 Request: `PUT /v1/workflows/{id}`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle workflows update wf_abc ~/flow.yaml --json
 ```
@@ -159,6 +185,8 @@ tangle workflows update wf_abc ~/flow.yaml --json
 ### `tangle workflows delete`
 
 Delete a workflow and its triggers.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle workflows delete <id> [options]
@@ -170,6 +198,8 @@ tangle workflows delete <id> [options]
 
 Request: `DELETE /v1/workflows/{id}`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle workflows delete wf_abc
 ```
@@ -177,6 +207,8 @@ tangle workflows delete wf_abc
 ### `tangle workflows validate`
 
 Validate a workflow YAML file without saving it.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows validate <file> [options]
@@ -188,6 +220,8 @@ tangle workflows validate <file> [options]
 
 Request: `POST /v1/workflows/validate`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows validate ~/flow.yaml
 ```
@@ -198,11 +232,15 @@ Print the JSON Schema for the workflow YAML.
 
 Prints the workflow YAML JSON Schema.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows schema
 ```
 
 Request: `GET /v1/workflows/schema`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows schema
@@ -215,6 +253,8 @@ tangle workflows schema
 Trigger an immediate run of a workflow.
 
 Triggers a run; `--wait` polls until it finishes and prints the result.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows run <id> [options]
@@ -230,6 +270,8 @@ tangle workflows run <id> [options]
 
 Request: `POST /v1/workflows/{id}/run`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows run wf_abc --json
 ```
@@ -239,6 +281,8 @@ tangle workflows run wf_abc --json
 List a workflow's run history (newest first).
 
 Lists a workflow's runs, newest first.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows runs <id> [options]
@@ -252,6 +296,8 @@ tangle workflows runs <id> [options]
 
 Request: `GET /v1/workflows/{id}/runs`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows runs wf_abc
 ```
@@ -262,11 +308,15 @@ Show a single run's detail (per-action output and errors).
 
 Shows one run's per-action output and errors.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows run-detail <id> <runId>
 ```
 
 Request: `GET /v1/workflows/{id}/runs/{runId}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows run-detail wf_abc run_1
@@ -278,11 +328,15 @@ Cancel a queued or in-progress run.
 
 Cancels a queued or running run.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows cancel <id> <runId>
 ```
 
 Request: `POST /v1/workflows/{id}/runs/{runId}/cancel`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows cancel wf_abc run_1
@@ -291,6 +345,8 @@ tangle workflows cancel wf_abc run_1
 ### `tangle workflows retry`
 
 Re-run a failed or cancelled run (a fresh run with the same trigger context).
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows retry <id> <runId> [options]
@@ -304,6 +360,8 @@ tangle workflows retry <id> <runId> [options]
 
 Request: `POST /v1/workflows/{id}/runs/{runId}/retry`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows retry wf_abc run_1
 ```
@@ -312,11 +370,15 @@ tangle workflows retry wf_abc run_1
 
 Tail a run's live progress events until it finishes.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows events <id> <runId>
 ```
 
 Request: `GET /v1/workflows/{id}/runs/{runId}/events`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows events wf_abc run_1
@@ -328,11 +390,15 @@ Enable a workflow so its triggers and manual runs fire.
 
 Enables a workflow's triggers and manual runs.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows enable <id>
 ```
 
 Request: `PATCH /v1/workflows/{id}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows enable wf_abc --json
@@ -344,11 +410,15 @@ Disable a workflow (pause its triggers and manual runs).
 
 Pauses a workflow's triggers and manual runs.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows disable <id>
 ```
 
 Request: `PATCH /v1/workflows/{id}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows disable wf_abc
@@ -362,11 +432,15 @@ List the curated starter workflow templates.
 
 Lists the starter workflow templates.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows templates
 ```
 
 Request: `GET /v1/workflows/templates`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows templates
@@ -378,6 +452,8 @@ Create a workflow from a gallery template and print (or save) its YAML.
 
 Creates a workflow from a gallery template and prints or saves its YAML.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows init <template-id> [options]
 ```
@@ -388,6 +464,8 @@ tangle workflows init <template-id> [options]
 | `--file <out>` |  | Write the instantiated workflow YAML to this file instead of stdout |
 
 Request: `POST /v1/workflows/templates/{templateId}/instantiate`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows init pr-review --file ~/out.yml
@@ -401,11 +479,15 @@ List a workflow's definition revision history (newest first).
 
 Lists a workflow's definition revisions.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows revisions <id>
 ```
 
 Request: `GET /v1/workflows/{id}/revisions`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows revisions wf_abc
@@ -417,11 +499,15 @@ Show one revision's metadata and definition YAML.
 
 Shows one revision's metadata and YAML.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows revision <id> <rev>
 ```
 
 Request: `GET /v1/workflows/{id}/revisions/{rev}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows revision wf_abc 3
@@ -431,11 +517,15 @@ tangle workflows revision wf_abc 3
 
 Restore a prior revision's definition as a NEW head revision (re-validated).
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows rollback <id> <rev>
 ```
 
 Request: `POST /v1/workflows/{id}/rollback`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows rollback wf_abc 2 --json
@@ -449,11 +539,15 @@ List every KV entry of a workflow.
 
 Lists every KV entry.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows kv list <id>
 ```
 
 Request: `GET /v1/workflows/{id}/kv`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows kv list wf_abc
@@ -465,11 +559,15 @@ Show one KV entry (value and version).
 
 Shows one KV entry's value and version.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows kv get <id> <key>
 ```
 
 Request: `GET /v1/workflows/{id}/kv/{key}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows kv get wf_abc cursor --json
@@ -481,6 +579,8 @@ Write a KV entry from a JSON value.
 
 Writes a KV entry from a JSON value; `--cas` writes only if the version still matches.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle workflows kv set <id> <key> <json> [options]
 ```
@@ -490,6 +590,8 @@ tangle workflows kv set <id> <key> <json> [options]
 | `--cas <version>` |  | Compare-and-swap: write only if the stored version still equals this |
 
 Request: `PUT /v1/workflows/{id}/kv/{key}`
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle workflows kv set wf_abc cursor '{"cursor":123}'
@@ -503,11 +605,15 @@ Delete a KV entry (idempotent).
 
 Deletes a KV entry; idempotent.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle workflows kv delete <id> <key>
 ```
 
 Request: `DELETE /v1/workflows/{id}/kv/{key}`
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle workflows kv delete wf_abc cursor --json
@@ -521,11 +627,15 @@ List a run's artifact metadata (never the bytes).
 
 Lists a run's artifact metadata.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows artifacts <id> <runId>
 ```
 
 Request: `GET /v1/workflows/{id}/runs/{runId}/artifacts`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows artifacts wf_abc run_1
@@ -534,6 +644,8 @@ tangle workflows artifacts wf_abc run_1
 ### `tangle workflows artifact-download`
 
 Download one run artifact's bytes to a file.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows artifact-download <id> <runId> <artifactId> [options]
@@ -544,6 +656,8 @@ tangle workflows artifact-download <id> <runId> <artifactId> [options]
 | `--out <file>` |  | Destination file (defaults to the artifact ID) |
 
 Request: `GET /v1/workflows/{id}/runs/{runId}/artifacts/{artifactId}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows artifact-download wf_abc run_1 art_1 --out ~/out.bin
@@ -557,11 +671,15 @@ List a workflow's pending human decisions.
 
 Lists pending human decisions.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows decisions <id>
 ```
 
 Request: `GET /v1/workflows/decisions/pending`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows decisions wf_abc
@@ -570,6 +688,8 @@ tangle workflows decisions wf_abc
 ### `tangle workflows decision-resolve`
 
 Answer the decision a run is parked on and resume it.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows decision-resolve <id> <runId> [options]
@@ -580,6 +700,8 @@ tangle workflows decision-resolve <id> <runId> [options]
 | `--choice <choice>` |  | The option to resolve with (one of the decision's options). Required. |
 
 Request: `POST /v1/workflows/{id}/runs/{runId}/decision/resolve`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows decision-resolve wf_abc run_1 --choice deploy --json

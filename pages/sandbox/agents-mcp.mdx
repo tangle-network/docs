@@ -17,6 +17,8 @@ There are two ways to reach a sandbox over the Model Context Protocol:
 `tangle mcp serve` starts an MCP server on stdio for one sandbox. Your MCP
 client starts it as a command.
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 npm install -g @tangle-network/sandbox-cli @modelcontextprotocol/sdk
 tangle sandbox create --name mcp-box
@@ -26,6 +28,8 @@ The CLI loads `@modelcontextprotocol/sdk` when the server starts, so install
 it where the CLI can import it.
 
 Add the server to your client. Claude Desktop and Cursor use the same shape:
+
+{/* sandbox-proof: skip Configuration or response data; consumed by the adjacent client program */}
 
 ```json
 {
@@ -63,6 +67,8 @@ failed call returns an MCP result with `isError: true` and the message.
 `createMcpServer(box, options)` returns `{ server, connect, close }`. Use it
 when your program picks the sandbox or the tools:
 
+{/* sandbox-proof: skip Requires an existing sandbox, Line, or application user ID */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 import { createMcpServer } from "@tangle-network/sandbox/agent";
@@ -94,6 +100,8 @@ over HTTPS. Create it with `capabilities: ["computer_use"]`, or turn on
 **Enable remote desktop** when you create a sandbox in the
 [dashboard](https://sandbox.tangle.tools/dashboard). The desktop needs an image
 that includes it.
+
+{/* sandbox-proof: skip Creates a long-lived computer-use endpoint for an external MCP client */}
 
 ```ts
 import { writeFileSync } from "node:fs";

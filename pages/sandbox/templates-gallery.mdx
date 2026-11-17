@@ -12,6 +12,8 @@ The default image already carries Python 3.12 with numpy, pandas, matplotlib and
 
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -26,6 +28,8 @@ for (const env of await client.environments.list()) {
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```python
 import os
 from tangle_sandbox import Sandbox
@@ -37,6 +41,8 @@ client.close()
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle environments list
 ```
@@ -46,6 +52,8 @@ tangle environments list
 The list holds `universal`, the default, and each of your saved templates as `template:<id>`. `runtimes` says whether an environment can run under `docker`, `firecracker` or both. Pass an id as `environment` at create, or omit it for the default.
 
 ## Start from a public template
+
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
 
 ```ts
 const [template] = await client.publicTemplates.list({ query: "python" });
@@ -65,6 +73,8 @@ try {
 
 Templates are versioned. Pin the version when you need every sandbox to start the same:
 
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
+
 ```ts
 const [version] = await client.publicTemplates.versions(template.id);
 const box = await client.create({
@@ -72,6 +82,8 @@ const box = await client.create({
   publicTemplateVersionId: version.id,
 });
 ```
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle template list
@@ -83,6 +95,8 @@ tangle sandbox create --public-template <slug> --public-template-version <versio
 ## Publish your own template
 
 Set up a sandbox the way you want it, snapshot it, and publish the snapshot. Publication runs as a job: the SDK waits until the template is published and visible.
+
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
 
 ```ts
 const box = await client.create({ name: "duckdb-agent-base" });
@@ -106,6 +120,8 @@ console.log(template.id);
 
 A publication that is interrupted, or a wait you stop with `signal`, throws `PublicTemplatePublishError` with the accepted `job`. The job may still be running. Continue it with the same input:
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 import { PublicTemplatePublishError } from "@tangle-network/sandbox";
 
@@ -119,6 +135,8 @@ try {
   }
 }
 ```
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle template publish "DuckDB coding agent" <snapshot-id> <sandbox-id> --tags duckdb --json
@@ -134,6 +152,8 @@ Over REST, the publish POST answers `202` with `{ job, artifact }`. Read `GET /v
 
 A team template is visible to everyone in the team.
 
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
+
 ```ts
 const tmpl = await client.teams.createTemplate(teamId, {
   name: "checkout-service",
@@ -145,6 +165,8 @@ const box = await client.create({ templateId: tmpl.id, teamId });
 console.log(await client.teams.listTemplates(teamId));
 await client.teams.deleteTemplate(teamId, tmpl.id);
 ```
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle team templates create checkout-service <snapshot-id> --description "Repo cloned"
@@ -158,6 +180,8 @@ Personal templates have no SDK or CLI command. Create them with `POST /v1/templa
 
 `environment` also takes a container image reference:
 
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
+
 ```ts
 const box = await client.create({ environment: "python:3.12-slim", runtime: "docker" });
 ```
@@ -167,6 +191,8 @@ Under `runtime: "firecracker"`, the image must be pinned as `repository@sha256:<
 ### Publish an image from a running sandbox
 
 `box.images.publish` builds the sandbox's workspace with a Dockerfile and pushes it to your registry. The registry credentials go to the builder, never into the sandbox.
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 await box.write("Dockerfile", "FROM python:3.12-slim\nRUN pip install duckdb\n");
@@ -185,6 +211,8 @@ const next = await client.create({ environment: image.image, runtime: "docker" }
 ## Python and REST
 
 Python lists environments and starts from templates with `template_id`, `public_template_id` and `public_template_version_id` on create. It has no public template, team template or image publishing methods. Call those routes with `client.fetch`, which returns the raw response and does not raise on an error status:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```python
 templates = client.fetch("GET", "/v1/public-templates", params={"q": "python"}).json()["templates"]

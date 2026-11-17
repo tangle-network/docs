@@ -10,6 +10,8 @@ The AI SDK runs the multi-step loop; each tool call runs in the sandbox.
 
 ## Install
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 npm install ai @ai-sdk/anthropic @tangle-network/sandbox
 ```
@@ -19,6 +21,8 @@ Any `@ai-sdk/*` provider works. Set that provider's key, such as
 sandbox.
 
 ## Generate text with sandbox tools
+
+{/* sandbox-proof: skip Requires the external agent framework and its provider credentials */}
 
 ```ts
 import { anthropic } from "@ai-sdk/anthropic";
@@ -55,6 +59,8 @@ sandbox SDK does not bundle it.
 
 ## Stream
 
+{/* sandbox-proof: skip Requires the external agent framework and its provider credentials */}
+
 ```ts
 import { streamText, stepCountIs } from "ai";
 
@@ -71,6 +77,8 @@ Tool calls run as the model emits them, and their results go back into the
 conversation.
 
 ## Choose the tools
+
+{/* sandbox-proof: skip Continues the graph, profile, provider, or session setup shown earlier on this page */}
 
 ```ts
 const tools = await vercelAiTools(box, {

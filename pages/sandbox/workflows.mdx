@@ -31,6 +31,8 @@ The [Platform app](https://id.tangle.tools/app/workflows) adds authoring, the fu
 
 ### 1. Log in with the CLI
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 curl -fsSL https://sandbox.tangle.tools/install.sh | sh
 tangle auth login --api-key "$TANGLE_API_KEY"
@@ -42,6 +44,8 @@ Use the same `sk-tan-` key as for sandboxes, from [id.tangle.tools/app/keys](htt
 ### 2. Write a definition
 
 Save this as `hello.yml`. It writes a greeting every weekday morning with one model call and no sandbox:
+
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
 
 ```yaml
 name: hello-workflow
@@ -61,6 +65,8 @@ do:
 
 ### 3. Validate and create
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle workflows validate hello.yml
 tangle workflows create hello.yml
@@ -71,6 +77,8 @@ tangle workflows create hello.yml
 ### 4. Run it and watch
 
 A manual run works with any trigger, so you do not have to wait for the schedule:
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle workflows run <id> --wait
@@ -99,6 +107,8 @@ A workflow that names a provider with no active connection fails validation when
 ## Example: a pull request review loop
 
 A review is drafted, critiqued and revised in a guarded loop until the critic approves. Only then is it posted to GitHub.
+
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
 
 ```yaml
 name: pr-review-loop

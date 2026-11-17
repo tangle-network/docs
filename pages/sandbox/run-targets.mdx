@@ -78,6 +78,8 @@ for. Nothing in the profile changes when you move it between targets.
 Write the agent once as a JSON file. This profile reads a repository and explains it in two
 sentences:
 
+{/* sandbox-proof: skip Configuration or response data; consumed by the adjacent client program */}
+
 ```json filename="repo-explainer.json"
 {
   "name": "repo-explainer",
@@ -101,6 +103,8 @@ sentences:
 Check it before you run it. `validate` exits non-zero on an invalid profile, so it can gate a CI
 job:
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle agent profile validate repo-explainer.json
 # → Profile valid: "repo-explainer"
@@ -112,6 +116,8 @@ The full field list, the CLI and the SDK forms are on [AgentProfiles](/sandbox/c
 
 The profile runs as a coding agent in its own workspace. Create the sandbox with the profile, then
 prompt it:
+
+{/* sandbox-proof: skip Requires the repo-explainer profile file saved in the preceding step */}
 
 ```ts filename="run-in-sandbox.mjs"
 import { readFileSync } from "node:fs";
@@ -135,6 +141,8 @@ try {
 }
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 RESULT: It's the demo repository that tangle.tools examples clone — a small Node.js monorepo
 used as a sandbox playground. src/index.js boots an API server, a background worker queue and a
@@ -151,6 +159,8 @@ checkout. The CLI form is `tangle sandbox create --backend claude-code --profile
 The same profile runs as a worker that a supervisor agent spawns and steers. The supervisor splits
 a task across workers, each in its own sandbox, under one token and iteration budget. Start it from
 the CLI:
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle graph run --task "Fix the failing tests, one worker per package" \

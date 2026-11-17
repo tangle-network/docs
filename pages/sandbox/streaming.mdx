@@ -10,6 +10,8 @@ Show a process's output or a coding agent's work as it happens, in your server a
 
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox, applySandboxEventText } from "@tangle-network/sandbox";
 
@@ -37,6 +39,8 @@ try {
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```python
 import os
 from tangle_sandbox import Sandbox, SandboxStatus, BackendConfig, GitConfig
@@ -57,6 +61,8 @@ finally:
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle agent prompt my-project "Summarize what this repository does." --stream
 ```
@@ -72,6 +78,8 @@ tangle agent prompt my-project "Summarize what this repository does." --stream
 `getSandboxEventText(event)` returns the text one event carries, without folding.
 
 ### Watch tool calls as they happen
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 const seen = new Set<string>();
@@ -93,6 +101,8 @@ Leaving a `streamPrompt` loop before its last event cancels the run. Pass `detac
 
 `dispatchPrompt` returns once the run is admitted. The run continues when your process exits, and any process can read its events later.
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 const sessionId = "issue-482";
 const turnId = "issue-482-turn-1";
@@ -110,6 +120,8 @@ console.log(dispatched.dispatched, dispatched.executionId, dispatched.status);
 
 The platform keeps each session's events. Read them with `box.session(id).events()`; pass `since` with the last event id you delivered to replay everything after it, then continue live.
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 let lastEventId: string | undefined;
 for await (const event of box.session(sessionId).events({ since: lastEventId })) {
@@ -123,6 +135,8 @@ The iterator ends when the session reaches `completed`, `failed` or `cancelled`,
 ### A server route that resumes from `Last-Event-ID`
 
 This Cloudflare Worker serves server-sent events to a browser. When the browser reconnects with `Last-Event-ID`, the route replays from that event.
+
+{/* sandbox-proof: skip Continues the graph, profile, provider, or session setup shown earlier on this page */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox/core";
@@ -183,6 +197,8 @@ Your API key never goes to the browser. Your server mints a short-lived, read-on
 
 On your server, after you check that the session belongs to the signed-in user:
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 const scoped = await box.mintScopedToken({
   scope: "session-runtime",
@@ -197,6 +213,8 @@ return Response.json({
 ```
 
 In the browser:
+
+{/* sandbox-proof: skip Browser application fragment requires its scoped-token server and UI callbacks */}
 
 ```ts
 import { SessionGatewayClient } from "@tangle-network/sandbox/session-gateway";
@@ -235,6 +253,8 @@ Token scopes and lifetimes are on [Authentication](/sandbox/authentication).
 
 ## Stream a process's output
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 const proc = await box.process.spawn("npm test");
 for await (const entry of proc.logs()) {
@@ -248,6 +268,8 @@ console.log("exit", await proc.wait());
 ## Python and REST
 
 Python streams a prompt with `stream_prompt`, which yields `SandboxEvent(type, data, id)`. The `[gateway]` extra (`pip install "tangle-sandbox[gateway]"`) adds a session gateway client. Python has no `dispatch_prompt`, session event replay, process logs or `mint_scoped_token`. Mint the browser token through REST with `client.fetch`, which returns the raw response and does not raise on an error status:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```python
 response = client.fetch(

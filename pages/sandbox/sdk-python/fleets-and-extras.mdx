@@ -82,6 +82,8 @@ Every command a dispatch runs sees `TANGLE_FLEET_ID`, `TANGLE_FLEET_MACHINE_ID`,
 `collect_artifacts` takes `[{"machine_id": ..., "path": ...}]`. Paths must be under `/home/agent`, and each file is capped at 10 MiB unless the entry sets `max_bytes`.
 The sync fleet also accepts `machineId` as the key; `AsyncSandboxFleet` needs `machine_id`.
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 from tangle_sandbox import FleetExecDispatchOptions
 
@@ -97,6 +99,8 @@ files = fleet.collect_artifacts([{"machine_id": m, "path": "/home/agent/id.txt"}
 
 ## The `manageSandboxes` agent tool
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 from tangle_sandbox import SandboxFleetPolicy, create_manage_sandboxes_tool
 
@@ -110,6 +114,8 @@ Create actions use the policy you pass to the factory; the agent cannot supply i
 `create_async_manage_sandboxes_tool` builds the `AsyncSandbox` version.
 
 ## Export traces to your collector
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```python
 from tangle_sandbox import export_trace_bundle, to_otel_json
@@ -131,11 +137,15 @@ The export uses its own HTTP request, so your collector's headers never reach th
 
 ## Session gateway (`[gateway]`)
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 pip install "tangle-sandbox[gateway]"
 ```
 
 `tangle_sandbox.session_gateway` streams a session's live events over a WebSocket, with reconnects, ping tracking, de-duplication and replay from the last event id.
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```python
 from tangle_sandbox.session_gateway import SessionGatewayClient, SessionGatewayClientConfig
@@ -148,6 +158,8 @@ await gateway.connect()
 The token is a session read token minted on your backend with `tangle_sandbox.auth`. Without the extra, constructing a client raises `ImportError` naming the install command.
 
 ## Product tokens (`tangle_sandbox.auth`)
+
+{/* sandbox-proof: skip Requires separately provisioned SANDBOX_SIGNING_SECRET */}
 
 ```python
 from tangle_sandbox.auth import ProductTokenIssuer
@@ -167,11 +179,15 @@ Keep the signing secret on your server; never send it to a browser.
 
 ## Tangle Network operators (`[tangle]`)
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 pip install "tangle-sandbox[tangle]"
 ```
 
 `tangle_sandbox.tangle.TangleSandboxClient` creates and deletes sandboxes through on-chain jobs on Tangle Network operators and returns a normal `SandboxInstance` whose runtime calls go to the operator.
+
+{/* sandbox-proof: skip Requires separately provisioned OPERATOR_KEY */}
 
 ```python
 from tangle_sandbox import CreateSandboxOptions

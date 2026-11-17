@@ -17,6 +17,8 @@ Your plan sets how many sandboxes can run at once, the largest CPU, memory and d
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 const plan = await client.subscription();
 console.log(plan.plan, plan.maxConcurrentSandboxes, plan.limits);
@@ -28,6 +30,8 @@ console.log(ceiling);
 </Tabs.Tab>
 <Tabs.Tab>
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```python
 plan = client.subscription()
 print(plan)
@@ -38,6 +42,8 @@ print(shapes["ceiling"])
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle usage

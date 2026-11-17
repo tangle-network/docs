@@ -10,6 +10,8 @@ import { Callout } from "nextra/components";
 `client.create()`, `client.get()` and `client.list()` return a `SandboxInstance`; `AsyncSandbox` returns an `AsyncSandboxInstance` whose methods are coroutines.
 Each instance caches the sandbox's details. `refresh()`, `wait_for()`, `stop()` and `resume()` update the cache; runtime calls check it and raise `StateError` unless the status is `RUNNING`.
 
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
+
 ```python
 box = client.create()
 box.wait_for(SandboxStatus.RUNNING)
@@ -34,6 +36,8 @@ box.delete()
 
 ### `refresh`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 refresh() -> None
 ```
@@ -43,12 +47,16 @@ Request: `GET /v1/sandboxes/{id}`
 
 ### `wait_for`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 wait_for(status: SandboxStatus | list[SandboxStatus], options: WaitForOptions | None = None) -> None
 ```
 
 Polls until the status is one of the targets. `WaitForOptions(timeout_ms=120000, poll_interval_ms=2000)` are the defaults.
 Raises `StateError` with the sandbox's error when it reaches `FAILED`, and `TimeoutError` after `timeout_ms`. A sandbox that is `EXPIRED` or `DELETED` keeps polling until the timeout.
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```python
 from tangle_sandbox import SandboxStatus, WaitForOptions
@@ -57,6 +65,8 @@ box.wait_for(SandboxStatus.RUNNING, WaitForOptions(timeout_ms=180_000))
 ```
 
 ### `stop`
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```python
 stop() -> None
@@ -67,6 +77,8 @@ Request: `POST /v1/sandboxes/{id}/stop`
 
 ### `resume`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 resume() -> None
 ```
@@ -75,6 +87,8 @@ Starts a stopped sandbox. The status may still be `provisioning`; call `wait_for
 Request: `POST /v1/sandboxes/{id}/resume`
 
 ### `delete`
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```python
 delete() -> None
@@ -87,6 +101,8 @@ Request: `DELETE /v1/sandboxes/{id}`
 ## Commands
 
 ### `exec`
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```python
 exec(command: str, options: ExecOptions | None = None) -> ExecResult
@@ -105,6 +121,8 @@ stderr is merged into stdout, so `stderr` is empty.
 The default directory is `/home/agent`, or the cloned repository when the sandbox was created with `git`.
 Request: `POST /v1/sandboxes/{id}/runtime/process/spawn`
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```python
 from tangle_sandbox import ExecOptions
 
@@ -119,6 +137,8 @@ For background processes, separate stderr or structured code output, see [What P
 
 ### `read`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 read(path: str) -> str
 ```
@@ -128,6 +148,8 @@ Request: `POST /v1/sandboxes/{id}/runtime/files/read`
 
 ### `write`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 write(path: str, content: str) -> None
 ```
@@ -135,12 +157,16 @@ write(path: str, content: str) -> None
 Writes a UTF-8 text file, replacing any content.
 Request: `POST /v1/sandboxes/{id}/runtime/files/write`
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```python
 box.write("orders.csv", "customer,amount\nacme,1500\n")
 print(box.read("orders.csv"))
 ```
 
 ### `search`
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```python
 search(pattern: str, options: SearchOptions | None = None) -> list[SearchMatch]
@@ -155,6 +181,8 @@ If `search` returns no matches for text you know is there, run `grep -rn` throug
 ## Coding agents
 
 ### `prompt`
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```python
 prompt(message: str, options: PromptOptions | None = None) -> PromptResult
@@ -172,6 +200,8 @@ Returns `PromptResult(success, response, error, trace_id, duration_ms, usage)`. 
 
 Request: `POST /v1/sandboxes/{id}/runtime/agents/run/stream`
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```python
 from tangle_sandbox import PromptOptions
 
@@ -184,11 +214,15 @@ if not run.success:
 print(run.usage)
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 TokenUsage(input_tokens=119425, output_tokens=1265)
 ```
 
 ### `stream_prompt`
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```python
 stream_prompt(message: str, options: PromptOptions | None = None) -> Iterator[SandboxEvent]
@@ -203,6 +237,8 @@ Yields `SandboxEvent(type, data, id)` as the agent works. On `AsyncSandboxInstan
 | `trace.id` | `traceId` |
 | `error` | `message` |
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```python
 seen = set()
 for event in box.stream_prompt("The test tagged timezone fails. Fix the cause."):
@@ -214,6 +250,8 @@ for event in box.stream_prompt("The test tagged timezone fails. Fix the cause.")
     if event.type == "result":
         print(event.data.get("finalText"))
 ```
+
+{/* sandbox-proof: skip Example terminal output or API field reference */}
 
 ```text
 1. Bash
@@ -243,6 +281,8 @@ Fixed. ...
 `push` and `pull` use the credentials in the sandbox, such as a token from `GitConfig(auth=GitAuth(token=...))` at create.
 `commit` takes no author, and the sandbox has no git identity, so set one first:
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```python
 changed = [f["path"] for f in box.git.diff("HEAD").files]
 box.exec('git config --global user.name "Docs Example"')
@@ -256,6 +296,8 @@ print(commit.short_sha, commit.message)
 
 ### `snapshot`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 snapshot(options: SnapshotOptions | None = None) -> SnapshotResult
 ```
@@ -266,6 +308,8 @@ Request: `POST /v1/sandboxes/{id}/snapshots`
 
 ### `list_snapshots`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 list_snapshots() -> list[SnapshotInfo]
 ```
@@ -274,6 +318,8 @@ Lists the sandbox's snapshots. A new snapshot takes a few seconds to appear.
 Request: `GET /v1/sandboxes/{id}/snapshots`
 
 ### `restore_paths`
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```python
 restore_paths(snapshot_id: str, paths: list[str]) -> SnapshotResult
@@ -285,6 +331,8 @@ Request: `POST /v1/sandboxes/{id}/snapshots/{snapshotId}/restore`
 ### Start a sandbox from a snapshot
 
 Pass `from_snapshot` with `from_sandbox_id`, the sandbox that took it:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```python
 import time
@@ -310,6 +358,8 @@ print("copy", copy.read("config.json"), end="")
 copy.delete()
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 restored {"retries": 3}
 copy {"retries": 3}
@@ -318,6 +368,8 @@ copy {"retries": 3}
 Reverting a whole sandbox and deleting snapshots are in the TypeScript SDK and the CLI; see [Snapshots and forks](/sandbox/snapshots).
 
 ## Network rules
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```python
 egress_get() -> tuple[EgressPolicy, str]
@@ -331,6 +383,8 @@ The second value says where the policy comes from: `sandbox`, `team` or `platfor
 
 Requests: `GET /v1/sandboxes/{id}`, `PATCH /v1/sandboxes/{id}/egress`, `GET /v1/sandboxes/{id}/egress/denials`
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```python
 from tangle_sandbox import EgressPolicy
 
@@ -343,6 +397,8 @@ policy, source = box.egress_update(
 print(policy.mode, policy.allow_domains, source)
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 refused example.com 1
 strict ['pypi.org', 'example.com'] sandbox
@@ -352,6 +408,8 @@ strict ['pypi.org', 'example.com'] sandbox
 
 ## SSH
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 ssh() -> SSHCredentials
 ```
@@ -360,6 +418,8 @@ Returns `SSHCredentials(host, port, username)` from the cached connection, witho
 Create the sandbox with `ssh_enabled=True` and `ssh_public_keys` or `ssh_key_ids`, or `ssh()` raises `StateError`. For a ready-made command, use `tangle ssh` from the CLI.
 
 ## Traces and reports
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```python
 trace(*, include_intelligence=False) -> SandboxTraceBundle
@@ -377,6 +437,8 @@ Requests: `GET /v1/sandboxes/{id}/trace`, `POST /v1/intelligence/reports`
 
 ## `direct`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 direct() -> SandboxInstance
 ```
@@ -386,11 +448,15 @@ Raises `StateError` when the sandbox has no runtime URL.
 
 ## `fetch`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 fetch(method: str, path: str, *, json=None, params=None, headers=None, timeout=None) -> httpx.Response
 ```
 
 The same raw request as `client.fetch`, on this instance's connection. Use it for routes the SDK does not wrap, such as the MCP endpoint:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```python
 response = box.fetch("GET", f"/v1/sandboxes/{box.id}/mcp?capabilities=computer_use")
@@ -400,6 +466,8 @@ print(response.status_code)
 A sandbox created without `capabilities=["computer_use"]` answers 400 `VALIDATION_ERROR` here.
 
 ## `collaborate`
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```python
 collaborate(path: str, *, access="write") -> dict

@@ -7,6 +7,8 @@ description: "Reference for tangle agent, backend, batch, fleet, mcp, supervise,
 
 Give a coding agent a task in a sandbox, attach your terminal to its own interface, write agent profiles, run batches and fleets, serve a sandbox to an MCP client and run agent graphs.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle agent prompt my-box "Fix the failing test" --stream
 tangle agent prompt my-box "Start on the issue" --interactive --harness codex
@@ -65,6 +67,8 @@ Send a single prompt to the agent. With one arg it's the prompt and the box come
 
 Sends one prompt to the sandbox's agent. Default: waits and prints the response with duration and token counts. `--stream` prints text as it arrives. `--interactive` starts the coding agent's native terminal UI in the sandbox and attaches your terminal to it.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle agent prompt <idOrMessage> [message] [options]
 ```
@@ -88,6 +92,8 @@ tangle agent prompt <idOrMessage> [message] [options]
 
 Request: `POST /v1/sandboxes/{id}/runtime/agents/run/stream`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle agent prompt my-box "Summarize the README" --stream
 ```
@@ -110,6 +116,8 @@ Create a profile, interactively (a wizard), or fully via flags.
 
 Creates an AgentProfile JSON file from flags, or through a prompt wizard when `--name` is omitted on a terminal.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle agent profile create [output] [options]
 ```
@@ -124,6 +132,8 @@ tangle agent profile create [output] [options]
 | `--tools <ref...>` |  | Tool refs: local path or github:`<owner>`/`<repo>`/`<path>`[@`<ref>`] |
 | `--harness <name>` |  | Coding agent hint shown in the run command |
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle agent profile create --name critic --harness codex --json
 ```
@@ -137,9 +147,13 @@ Load and print a profile (local path, https URL, or github:owner/repo/path[@ref]
 
 Loads a profile from a path, https URL or github: ref and prints it as JSON.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle agent profile show <source>
 ```
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle agent profile show ./agent-profile.json
@@ -151,9 +165,13 @@ tangle agent profile show ./agent-profile.json
 
 Validate a profile against the canonical AgentProfile schema.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle agent profile validate <source>
 ```
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle agent profile validate ~/profile.json --json
@@ -169,6 +187,8 @@ tangle agent profile validate ~/profile.json --json
 Print a copy-paste SDK integration snippet for one of: anthropic, openai, vercel-ai, mastra, mcp-local, claude-desktop, cursor, zed (to stream a local agent's telemetry to Intelligence, see 'tangle connect').
 
 Prints a ready-to-paste integration snippet for anthropic, openai, vercel-ai, mastra, mcp-local, claude-desktop, cursor or zed; makes no network call.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle agent connect <framework> [options]
@@ -190,11 +210,15 @@ Get the harness type the sandbox runs.
 
 Shows the harness the sandbox runs. Each prompt starts a fresh agent process, so there is no long-lived backend to restart.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle backend status <sandboxId-or-name>
 ```
 
 Request: `GET /v1/sandboxes/{id}/runtime/backend`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle backend status my-box
@@ -206,6 +230,8 @@ Update backend configuration.
 
 Updates the backend's model.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle backend configure <sandboxId-or-name> [options]
 ```
@@ -215,6 +241,8 @@ tangle backend configure <sandboxId-or-name> [options]
 | `--model <model>` |  | Model id (e.g. provider/model) |
 
 Request: `POST /v1/sandboxes/{id}/runtime/backend/configure`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle backend configure my-box
@@ -229,6 +257,8 @@ Get status of MCP servers.
 
 Shows the status of the backend's MCP servers.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle backend mcp-status <sandboxId-or-name>
 ```
@@ -242,6 +272,8 @@ Request: `GET /v1/sandboxes/{id}/runtime/backend/mcp`
 Execute a batch of tasks. Provide tasks via `--tasks <file.json>` and/or repeated `--task` id=message flags.
 
 Runs a batch of tasks against one or more named backends and prints totals and per-task results.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle batch run [options]
@@ -263,6 +295,8 @@ tangle batch run [options]
 
 Request: `POST /v1/sandboxes/batch/run`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle batch run --request ~/request.json --json
 ```
@@ -279,6 +313,8 @@ tangle batch run --request ~/request.json --json
 Create a sandbox fleet.
 
 Creates a fleet of worker sandboxes from flags or a `--spec` JSON file and prints its machines.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle fleet create [options]
@@ -311,6 +347,8 @@ tangle fleet create [options]
 
 Request: `POST /v1/fleets`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle fleet create --count 4
 ```
@@ -321,6 +359,8 @@ tangle fleet create --count 4
 ### `tangle fleet list`
 
 List the machines of one fleet (fleet id is required).
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle fleet list <fleet-id> [options]
@@ -336,6 +376,8 @@ Show one fleet's manifest (server record).
 
 Prints one fleet's manifest.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fleet get <fleet-id>
 ```
@@ -345,6 +387,8 @@ Request: `GET /v1/fleets/{fleetId}/manifest`
 ### `tangle fleet delete`
 
 Delete a fleet's machine sandboxes and its record.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle fleet delete <fleet-id> [options]
@@ -364,6 +408,8 @@ TTL cleanup of all expired fleets (fleet-wide).
 
 Deletes every expired fleet; `--dry-run` reports what would be removed.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fleet reap [options]
 ```
@@ -379,6 +425,8 @@ Request: `POST /v1/fleets/reap-expired`
 Drop fleet records whose underlying sandboxes vanished.
 
 Drops fleet records whose sandboxes no longer exist; `--dry-run` reports them.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle fleet reconcile [options]
@@ -396,6 +444,8 @@ Snapshot the fleet's shared workspace.
 
 Snapshots the fleet's shared workspace.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fleet workspace snapshot <fleet-id>
 ```
@@ -406,6 +456,8 @@ Request: `POST /v1/fleets/{fleetId}/workspace/snapshots`
 
 Restore the fleet's shared workspace from a snapshot.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fleet workspace restore <fleet-id> <snapshot-id>
 ```
@@ -415,6 +467,8 @@ Request: `POST /v1/fleets/{fleetId}/workspace/snapshots/{snapshotId}/restore`
 ### `tangle fleet workspace reconcile`
 
 Re-mount the shared workspace on all fleet machines.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle fleet workspace reconcile <fleet-id>
@@ -427,6 +481,8 @@ Request: `POST /v1/fleets/{fleetId}/workspace/reconcile`
 Run a shell command across the fleet's machines.
 
 Runs one shell command on every machine of a fleet (or a `--machine` subset) and prints a result table plus each machine's output.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle fleet exec <fleet-id> <command> [options]
@@ -444,6 +500,8 @@ tangle fleet exec <fleet-id> <command> [options]
 ### `tangle fleet run`
 
 Create a fleet of agents, run one turn on every agent, print each result, then delete the fleet.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle fleet run [prompt] [options]
@@ -472,6 +530,8 @@ tangle fleet run [prompt] [options]
 
 Interrupt every agent of a fleet and cancel its child fleets; sandboxes keep running.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fleet cancel <fleet-id>
 ```
@@ -483,6 +543,8 @@ tangle fleet cancel <fleet-id>
 List fleet drivers and their supported features.
 
 Lists fleet drivers and the features each supports.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle fleet capabilities
@@ -496,6 +558,8 @@ Show fleet usage and reliability insights.
 
 Shows a fleet's usage and reliability insights.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fleet usage <fleet-id>
 ```
@@ -508,6 +572,8 @@ Show the fleet's cost estimate.
 
 Shows a fleet's cost estimate.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fleet cost <fleet-id>
 ```
@@ -519,6 +585,8 @@ Request: `GET /v1/fleets/{fleetId}/cost`
 Mint a scoped fleet bearer token (treated as a secret).
 
 Mints a scoped bearer token for a fleet; treat the output as a secret.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle fleet token <fleet-id> [options]
@@ -541,6 +609,8 @@ Run a local MCP server (stdio) backed by the given sandbox (ID or name). Pipe it
 
 Runs a local MCP server on stdio backed by a sandbox, for MCP clients such as Claude Desktop, Cursor or Zed.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle mcp serve <id-or-name> [options]
 ```
@@ -549,6 +619,8 @@ tangle mcp serve <id-or-name> [options]
 | --- | --- | --- |
 | `-s, --session <id>` | `mcp-local` | Session id for kernel scoping |
 | `--name <name>` | `tangle-sandbox` | MCP server name reported to clients |
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle mcp serve my-box
@@ -565,6 +637,8 @@ Run a budget-conserving supervisor that spawns isolated sandbox workers to deliv
 
 Runs a budget-limited supervisor that spawns isolated sandbox workers to deliver a task and reports measured tokens and cost.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle supervise <task> [options]
 ```
@@ -576,6 +650,8 @@ tangle supervise <task> [options]
 | `--max-tokens <n>` | `200000` | Conserved token budget for the whole run |
 | `--max-iterations <n>` | `50` | Conserved iteration budget for the whole run |
 | `--max-workers <n>` |  | Bound the fanout; each worker reserves floor(max-tokens / n) tokens and floor(max-iterations / n) iterations |
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle supervise "Add input validation to POST /users" --harness opencode --max-workers 2
@@ -593,6 +669,8 @@ Design, validate and run one portable graph.
 
 Designs, validates and runs one graph from a plain-language intent; `--name` saves it.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle graph new <intent> [options]
 ```
@@ -601,6 +679,8 @@ tangle graph new <intent> [options]
 | --- | --- | --- |
 | `--seat <seat>` |  | Use `harness/model@effort` for the designer and graph |
 | `--name <name>` |  | Save this graph name |
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle graph new "Write and independently judge a haiku" --name haiku-review
@@ -612,6 +692,8 @@ Analyze retained graph evidence through Braid.
 
 Analyzes a retained graph run through the separately installed Braid CLI.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle graph analyze <run> [options]
 ```
@@ -621,6 +703,8 @@ tangle graph analyze <run> [options]
 | `--profile <name\|path>` |  | Use a canonical analysis AgentProfile, distinct from the Tangle account profile. Required. |
 | `--dry-run` |  | Inspect Braid's selected analysis configuration without dispatch |
 | `--timeout <ms>` | `300000` | Bound the analysis process in milliseconds |
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle graph analyze <run-id> --profile ./profiles/reviewer.json
@@ -634,6 +718,8 @@ tangle graph analyze <run-id> --profile ./profiles/reviewer.json
 Diagnose a failed local graph run; patch and resume it when the graph owns the fix.
 
 Diagnoses a failed local graph run and, when the graph owns the fix, patches and resumes it.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle graph repair <run> [options]
@@ -649,6 +735,8 @@ Measure graph arms on js-issues by offline replay.
 
 Measures graph variants ('arms') by offline replay on a dataset.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle graph improve <graph> [dataset] [options]
 ```
@@ -663,6 +751,8 @@ tangle graph improve <graph> [dataset] [options]
 | `--seat <seat>` |  | Replay seat; repeatable, one per replay |
 | `--docker-host <ssh>` |  | Build, verify and grade on this ssh host |
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle graph improve ~/a.graph.yaml
 ```
@@ -672,6 +762,8 @@ tangle graph improve ~/a.graph.yaml
 Draw a graph file: labelled nodes, routes, loops and stops.
 
 Draws a graph file in the terminal; `--open` writes an offline HTML page and opens it in the browser.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle graph show <name-or-file> [options]
@@ -685,9 +777,13 @@ tangle graph show <name-or-file> [options]
 
 Inspect a live or retained graph run.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle graph inspect <run>
 ```
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle --json graph inspect <run-id>
@@ -698,6 +794,8 @@ tangle --json graph inspect <run-id>
 Run a saved graph over native subscriptions.
 
 Runs a saved graph on the local coding agent subscriptions, or through cloud workflows with `--cloud`.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle graph run <name-or-file> [options]
@@ -713,6 +811,8 @@ tangle graph run <name-or-file> [options]
 | `--seat-credential <credential>` |  | Credential name passed to the seat command after the coding agent |
 | `--param <key=value>` |  | Graph parameter or gate.`<id>`=`<choice>`; repeatable |
 | `--dry-run` |  | Validate and print the graph without starting agents |
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle graph run haiku-review --dry-run --json
@@ -730,6 +830,8 @@ tangle graph run haiku-review --dry-run --json
 Print the absolute path to the SKILL.md shipped with this CLI.
 
 Prints the absolute path of the SKILL.md bundled with the installed CLI.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle skill path

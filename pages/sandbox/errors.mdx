@@ -17,6 +17,8 @@ This page shows where the code appears in each client, which errors to retry, an
 
 The SDK throws `SandboxError`.
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 import { SandboxError } from "@tangle-network/sandbox";
 
@@ -50,6 +52,8 @@ try {
 
 The SDK raises `SandboxError`.
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```python
 from tangle_sandbox import SandboxError
 
@@ -69,6 +73,8 @@ A few argument checks raise a plain `ValueError` before any request is sent.
 
 Without `--json`, the CLI prints one error to stderr with its cause, the next step and a command that fixes it:
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 ✗ <what failed> (HTTP 409) — <cause>
   → next: <next step>
@@ -76,6 +82,8 @@ Without `--json`, the CLI prints one error to stderr with its cause, the next st
 ```
 
 With `--json`, it prints an error document on stdout:
+
+{/* sandbox-proof: skip Configuration or response data; consumed by the adjacent client program */}
 
 ```json
 {
@@ -98,6 +106,8 @@ The exit code tells a script what kind of failure it was; see [CLI exit codes](#
 <Tabs.Tab>
 
 Most routes answer an error with this body:
+
+{/* sandbox-proof: skip Configuration or response data; consumed by the adjacent client program */}
 
 ```json
 {
@@ -132,6 +142,8 @@ The second request joins the first, so you never get two sandboxes.
 In TypeScript, `create({ retry: { capacity: false } })` returns `CAPACITY_EXHAUSTED` at once so you can decide when to try again.
 
 If you send creates yourself, set your own `Idempotency-Key` header and reuse it for every retry of the same create:
+
+{/* sandbox-proof: skip REST mutation requires the resource IDs and request data from the surrounding steps */}
 
 ```bash
 curl -s https://sandbox.tangle.tools/v1/sandboxes \

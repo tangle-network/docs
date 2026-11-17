@@ -8,6 +8,8 @@ Get a real interactive terminal in a sandbox: SSH from your laptop, a PTY driven
 
 <Tabs items={["CLI", "TypeScript", "Python"]} storageKey="sandbox-lang">
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --name dev --ssh
 tangle ssh dev
@@ -15,6 +17,8 @@ tangle sandbox delete dev --force
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires the local profile, SSH key, or workflow file created in the preceding steps */}
+
 ```ts
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -38,6 +42,8 @@ try {
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires the local profile, SSH key, or workflow file created in the preceding steps */}
+
 ```python
 import os
 from pathlib import Path
@@ -63,6 +69,8 @@ finally:
 
 `tangle ssh` runs your local `ssh` through a proxy command that connects over the Sandbox API, so the sandbox needs no public SSH port. The API key travels in the `TANGLE_SSH_PROXY_AUTH_TOKEN` environment variable, never in argv. Host keys are not checked. A stopped sandbox is resumed first. Pass extra `ssh` arguments after the sandbox, `-i <path>` to pick a private key, or `--print` to print the command instead of connecting.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle ssh dev -- -L 5432:localhost:5432   # forward a port
 tangle ssh dev --print
@@ -72,12 +80,16 @@ tangle ssh dev --print
 
 Store a public key once and select it by name at create:
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle ssh-keys add laptop --key-file ~/.ssh/id_ed25519.pub
 tangle ssh-keys list
 tangle sandbox create --ssh-keys laptop
 tangle ssh-keys delete laptop
 ```
+
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
 
 ```ts
 const key = await client.sshKeys.create("laptop", publicKey);
@@ -87,6 +99,8 @@ const box = await client.create({ sshEnabled: true, sshKeyIds: [key.id] });
 ### Build the SSH command in code
 
 `box.sshCommand()` returns a ready `ssh` command and the environment it needs.
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 const { command, env } = await box.sshCommand();
@@ -101,6 +115,8 @@ const { command, env } = await box.sshCommand();
 ## Drive a PTY from your code
 
 `box.terminals.attach` opens a live terminal over a WebSocket. Register your handlers in the call: a reattached terminal replays its screen as soon as it connects.
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 const output: string[] = [];
@@ -135,6 +151,8 @@ The connection id names the terminal. Attaching with the same id reattaches to t
 
 The REST side of `box.terminals` works without holding a WebSocket open:
 
+{/* sandbox-proof: skip Interactive program waits for user input */}
+
 ```ts
 const created = await box.terminals.create({ name: "tests", cols: 80, rows: 24 });
 await box.terminals.input(created.sessionId, "make test\n");
@@ -151,11 +169,15 @@ There are two ways to put a terminal in a browser.
 
 **Your own terminal UI.** Your server mints a short-lived token for one terminal, and the browser dials it. The token's `sessionId` must equal the terminal's connection id, and the token must not be restricted to read-only access.
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 // On your server, after checking the user may use this sandbox.
 const scoped = await box.mintScopedToken({ scope: "session-runtime", sessionId: "web-shell" });
 return Response.json({ token: scoped.token, proxyUrl: scoped.sidecarProxyUrl });
 ```
+
+{/* sandbox-proof: skip Browser terminal fragment requires the application token server and xterm instance */}
 
 ```ts
 // In the browser.
@@ -177,6 +199,8 @@ Terminal tokens are short-lived. Passing a function as `token` lets every reconn
 ## Python and REST
 
 Python has `ssh()`, which returns `host`, `port` and `username`, and the `ssh_enabled`, `ssh_public_keys`, `ssh_key_ids` and `web_terminal_enabled` create options. It has no PTY, terminal manager, stored SSH keys or web-terminal token. Call the routes with `client.fetch`, which returns the raw response and does not raise on an error status:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```python
 client.fetch("POST", "/v1/ssh-keys", json={"name": "laptop", "publicKey": public_key})

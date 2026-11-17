@@ -15,6 +15,8 @@ Sandbox key, or the [model list](/gateway/models).
 Each customer key gets its own sandbox, which the platform keeps, resumes and
 replaces. Save a contract as `msa.md` next to the program.
 
+{/* sandbox-proof: skip Requires a local msa.md contract file supplied by the application */}
+
 ```ts
 import { readFile } from "node:fs/promises";
 import { Sandbox } from "@tangle-network/sandbox";
@@ -70,6 +72,8 @@ cleanup so the customer's next review reuses the sandbox. Guide:
 This program creates a key's sandbox, finds it running, resumes it after a
 stop with the conversation intact, moves it to a new profile version, replaces
 it after a delete, then deletes the sandbox and releases the key.
+
+{/* sandbox-proof: run */}
 
 ```ts
 import {
@@ -158,6 +162,8 @@ generation.
 
 ## Keep a support conversation per customer
 
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -206,6 +212,8 @@ next conversation.
 
 ## Triage a queue of tickets in one call
 
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -237,6 +245,8 @@ and cleans up the sandboxes. Guide: [Batches and hosted runs](/sandbox/runs-and-
 
 ## Research a company with a hosted run
 
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -266,6 +276,8 @@ Prints where the platform ran it and why, the research with a quoted page per
 fact, and the model spend. There is no sandbox to delete.
 
 ## Report what each turn cost
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -299,6 +311,8 @@ your margin. See [Pricing and spend](/sandbox/cost) for sandbox time.
 
 Your loop calls the Tangle Router; the sandbox is its tools. One key pays for
 both.
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox, openaiTools } from "@tangle-network/sandbox/agent";
@@ -349,6 +363,8 @@ Worker keeps the account key.
   browser's `Last-Event-ID`, so a dropped connection loses nothing.
 
 `chat.ts`, the Worker:
+
+{/* sandbox-proof: skip Cloudflare Worker module requires application authentication and a saved sandbox ID */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox/core";
@@ -415,6 +431,8 @@ export default {
 `worker-chat-auth.ts`, the helper module. It checks the browser's token with
 your auth server and derives the session id from the user, conversation and
 turn, so one user can never reach another user's session.
+
+{/* sandbox-proof: skip Worker authentication module requires the deployed application introspection service */}
 
 ```ts
 export interface WorkerChatAuthEnv {
@@ -522,6 +540,8 @@ The browser reads its session's events with a short-lived token your backend
 mints. A dropped connection resumes after the last event the browser received;
 a reload replays the running turn from its first event.
 
+{/* sandbox-proof: skip Browser application fragment needs a scoped-token server and UI callbacks */}
+
 ```ts
 import { SessionGatewayClient } from "@tangle-network/sandbox/session-gateway";
 
@@ -590,6 +610,8 @@ Your backend's token endpoint authenticates the browser, looks up the runtime
 session id it stored for that user, checks the user owns it, and mints a
 read-only token for that one session:
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 const scoped = await box.mintScopedToken({
   scope: "session-runtime",
@@ -610,6 +632,8 @@ The member mails the line; Hub runs the mail as a turn in the member's own
 sandbox and replies in the same email thread. Connect an Inkbox identity in
 Hub first ([Connections](/sandbox/connections)), then set `LINE_CONNECTION_ID`
 and `MEMBER_EMAIL`.
+
+{/* sandbox-proof: skip Requires a provisioned Line transport and receives external messages */}
 
 ```ts
 import { type BackendConfig, type LineMessage, type LinesClient, lineInstanceKey, Sandbox } from "@tangle-network/sandbox";
@@ -725,6 +749,8 @@ Staff see each other's recent exchanges; the supplier sees only its own. Set
 `LINE` to a line id or address you own, and `MEMBER_A` and `MEMBER_B` to E.164
 numbers (or email addresses on an email line).
 
+{/* sandbox-proof: skip Requires a provisioned voice Line and receives external calls */}
+
 ```ts
 import { type BackendConfig, type LinesClient, type LineThread, Sandbox } from "@tangle-network/sandbox";
 
@@ -829,6 +855,8 @@ each question it asks the workspace runs in the caller's own thread session.
 Connect your ph0ny key in Hub and create the ph0ny agent first, then set
 `LINE`, `PH0NY_CONNECTION_ID` and `PH0NY_AGENT_ID`. Set `DISABLE=1` to turn
 voice off.
+
+{/* sandbox-proof: skip Changes voice settings on the existing Line IDs passed on the command line */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";

@@ -16,6 +16,8 @@ deletes its fleet when it finishes. Model ids come from
 
 Four agents with their own tasks share one sandbox and one budget.
 
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -56,6 +58,8 @@ and remaining.
 
 One reviewer per package, each on its own sandbox. Findings arrive as each
 agent ends.
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -102,6 +106,8 @@ of findings by package.
 
 Each agent writes one file; the program collects the files from the agents'
 sandboxes.
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { writeFile } from "node:fs/promises";
@@ -151,6 +157,8 @@ each file's first line.
 
 Cheap models read; a stronger one fixes.
 
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -190,6 +198,8 @@ Prints each agent's model, status, cost and duration, then the fleet's spend.
 
 No agents: five machines run one test file each, at the same time.
 
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -224,6 +234,8 @@ time.
 
 The platform refuses any charge past `budgetUsd`. To stop earlier, watch
 `spend()` and cancel.
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -274,6 +286,8 @@ the soft cap, then each agent's status: `completed`, `cancelled` or
 
 A coordinator and two workers under a create-time policy. Python fleets run
 commands; agent fleets with budgets are TypeScript and CLI only.
+
+{/* sandbox-proof: skip GPU lease requires separately approved accelerator capacity and spend */}
 
 ```python
 import os

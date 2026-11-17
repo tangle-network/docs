@@ -13,6 +13,8 @@ The output under each program is what it printed; ids, versions and the agent's 
 
 You need Python 3.10 or newer and an API key from [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys).
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 pip install tangle-sandbox
 export TANGLE_API_KEY="sk-tan-..."
@@ -40,6 +42,8 @@ Programs that clone a repository use [tangle-network/sandbox-demo](https://githu
 
 Create a sandbox, run Python in it, write and read a file, ask the coding agent one question, and delete it.
 
+{/* sandbox-proof: run */}
+
 ```python
 import os
 
@@ -61,10 +65,14 @@ with Sandbox(
         print(box.read("notes.md"), end="")
 
         turn = box.prompt("Reply with exactly the word OK")
-        print(turn.response if turn.success else turn.error)
+        if not turn.success:
+            raise RuntimeError(turn.error)
+        print(turn.response)
     finally:
         box.delete()
 ```
+
+{/* sandbox-proof: skip Example terminal output or API field reference */}
 
 ```text
 0 499999500000
@@ -77,6 +85,8 @@ Read more: [Python SDK](/sandbox/sdk-python).
 ## Run one command
 
 Run one command and print its exit code and output.
+
+{/* sandbox-proof: run */}
 
 ```python
 import os
@@ -96,6 +106,8 @@ with Sandbox(
         box.delete()
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 0 Linux-6.8.0-146-generic-x86_64-with-glibc2.42
 ```
@@ -107,6 +119,8 @@ Read more: [exec](/sandbox/sdk-python/instance#exec).
 ## Analyse a CSV
 
 Write a CSV and a script into the sandbox and run the script.
+
+{/* sandbox-proof: run */}
 
 ```python
 import json
@@ -139,6 +153,8 @@ with Sandbox(
         box.delete()
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 0 [['acme', 1500.0], ['globex', 1360.0], ['initech', 80.0]]
 ```
@@ -150,6 +166,8 @@ Read more: [Files](/sandbox/sdk-python/instance#files).
 ## Stop and resume
 
 Stop a sandbox and resume it with its files intact.
+
+{/* sandbox-proof: run */}
 
 ```python
 import os
@@ -175,6 +193,8 @@ with Sandbox(
         box.delete()
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 stopped
 first draft
@@ -185,6 +205,8 @@ Read more: [Lifecycle](/sandbox/sdk-python/instance#lifecycle).
 ## Snapshot and restore files
 
 Snapshot a file, break it, restore it from the snapshot, and start a second sandbox from the same snapshot.
+
+{/* sandbox-proof: run */}
 
 ```python
 import os
@@ -224,6 +246,8 @@ with Sandbox(
             copy.delete()
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 restored {"retries": 3}
 copy {"retries": 3}
@@ -234,6 +258,8 @@ Read more: [Snapshots](/sandbox/sdk-python/instance#snapshots).
 ## Find TODOs in a cloned repository
 
 Clone a repository at create, search it with `grep` and read its last commit.
+
+{/* sandbox-proof: run */}
 
 ```python
 import os
@@ -257,6 +283,8 @@ with Sandbox(
         box.delete()
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 packages/api/src/server.js:36:    // TODO: check that the user exists
 packages/cli/src/flags.js:12:      flags[name] = next; // TODO: numbers stay strings
@@ -270,6 +298,8 @@ Read more: [Git](/sandbox/sdk-python/instance#git).
 ## Have a coding agent fix a test
 
 Ask Claude Code to fix a failing test, then run the test and read the diff yourself.
+
+{/* sandbox-proof: run */}
 
 ```python
 import os
@@ -317,6 +347,8 @@ with Sandbox(
         box.delete()
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 tests exit 0
 +2 -1 ['packages/shared/src/format.js']
@@ -330,6 +362,8 @@ Read more: [prompt](/sandbox/sdk-python/instance#prompt), [Run a coding agent](/
 ## Fix and commit
 
 Have Codex fix a test, check it, and commit only the files it changed.
+
+{/* sandbox-proof: run */}
 
 ```python
 import os
@@ -378,6 +412,8 @@ with Sandbox(
         box.delete()
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 changed ['packages/shared/src/format.js']
 8d1ace2 fix: guard a null request body
@@ -388,6 +424,8 @@ Read more: [Git](/sandbox/sdk-python/instance#git).
 ## Watch a coding agent work
 
 Stream a turn and print each tool the agent calls, then its final answer.
+
+{/* sandbox-proof: run */}
 
 ```python
 import os
@@ -430,6 +468,8 @@ with Sandbox(
         box.delete()
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 1. Bash
 2. Bash
@@ -453,6 +493,8 @@ Read more: [stream_prompt](/sandbox/sdk-python/instance#stream_prompt), [Stream 
 ## Lock down the network
 
 Start with only one domain allowed, see the refusal, then allow a second domain while the sandbox runs.
+
+{/* sandbox-proof: run */}
 
 ```python
 import os
@@ -491,6 +533,8 @@ with Sandbox(
         box.delete()
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 example.com exit 7
 refused example.com 1
@@ -505,6 +549,8 @@ Read more: [Network rules](/sandbox/sdk-python/instance#network-rules), [Network
 ## Run a batch across two coding agents
 
 Run two tasks on Claude Code and Codex, each in its own sandbox, and print every result.
+
+{/* sandbox-proof: run */}
 
 ```python
 import os
@@ -533,6 +579,8 @@ with Sandbox(
     print(f"{result.total_success}/{result.total_executions} succeeded")
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 capital claude True Paris
 capital codex True Paris
@@ -546,6 +594,8 @@ Read more: [run_batch](/sandbox/sdk-python/client#run_batch-and-stream_batch), [
 ## Run sandboxes concurrently with asyncio
 
 Create three sandboxes at once with `AsyncSandbox` and gather their results.
+
+{/* sandbox-proof: run */}
 
 ```python
 import asyncio
@@ -577,6 +627,8 @@ async def main() -> None:
 
 asyncio.run(main())
 ```
+
+{/* sandbox-proof: skip Example terminal output or API field reference */}
 
 ```text
 ['3', '2', '1']

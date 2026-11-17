@@ -19,6 +19,8 @@ you choose.
 
 ## Install
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 npm install @tangle-network/sandbox @tangle-network/agent-interface
 ```
@@ -27,6 +29,8 @@ npm install @tangle-network/sandbox @tangle-network/agent-interface
 also exports `Sandbox`.
 
 ## Start two agents side by side
+
+{/* sandbox-proof: run */}
 
 ```ts
 import type { AgentProfile } from "@tangle-network/agent-interface";
@@ -97,6 +101,8 @@ Agents share the sandbox's files by default. One agent sees another's edits
 at once. Nothing merges simultaneous edits to the same file, so coordinate
 which agent writes where.
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 const reviewerProfile = {
   name: "reviewer",
@@ -115,6 +121,8 @@ const reviewer = await box.agents.start({
 An isolated agent works in its own git worktree and branch, so its changes stay
 apart until you commit them. The sandbox needs a git repository, so create it
 with `git`.
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 const isolated = await box.agents.start({
@@ -140,6 +148,8 @@ console.log(merged.success, merged.commitSha, merged.conflicts);
 
 ## Reattach after a restart
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 const reloaded = await client.get(box.id);
 if (!reloaded) throw new Error("The sandbox was deleted.");
@@ -158,6 +168,8 @@ first operation checks the session.
 
 Do not change an active agent's profile. Start a new agent with a new id, try
 it, then retire the old one:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 const plannerV2Profile = {

@@ -8,6 +8,8 @@ Save a sandbox's workspace, roll it back after a bad change, start new sandboxes
 
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -34,6 +36,8 @@ try {
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```python
 import os
 from tangle_sandbox import Sandbox, SandboxStatus, GitConfig, SnapshotOptions
@@ -52,6 +56,8 @@ finally:
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle snapshot create demo --tags clean
 tangle exec demo -- rm -rf packages test
@@ -64,6 +70,8 @@ tangle snapshot revert demo <snapshot-id>
 
 ## Restore all or part of a workspace
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 await box.revertToSnapshot(snapshotId);                    // the whole workspace, in place
 await box.restorePaths(snapshotId, ["src", "package.json"]); // only these paths
@@ -72,6 +80,8 @@ await box.restorePaths(snapshotId, ["src", "package.json"]); // only these paths
 `restorePaths` replaces the listed workspace-relative paths and leaves every other file as it is.
 
 ## Start a new sandbox from a snapshot
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 const copy = await client.create({
@@ -86,12 +96,16 @@ To publish a snapshot so others can start from it, see [Templates and images](/s
 
 ## List and delete snapshots
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 for (const s of await box.listSnapshots()) console.log(s.snapshotId, s.tags, s.sizeBytes);
 
 const { outcome } = await box.deleteSnapshot(snapshotId);
 console.log(outcome); // "deleted", "already_absent" or "unknown"
 ```
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle snapshot list demo
@@ -105,6 +119,8 @@ tangle snapshot delete demo <snapshot-id>
 ## Keep data after delete or share it between sandboxes
 
 Write snapshots to your own S3, GCS or R2 bucket, and they stay there until you delete them, whatever happens to the sandbox.
+
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
 
 ```ts
 const storage = {
@@ -145,6 +161,8 @@ Within the platform, any sandbox you own can start from another sandbox's snapsh
 
 Deleting a sandbox keeps its snapshots. Ones the platform keeps for you stay for about 30 days after the sandbox is deleted, then are removed automatically; there is no command to remove them sooner once the sandbox is gone. You can still create a new sandbox from a kept snapshot during that window, by its snapshot id:
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle snapshot restore <old-sandbox-id> <snapshot-id>
 ```
@@ -154,6 +172,8 @@ Note the snapshot id before you delete the sandbox: after the sandbox is gone, `
 A snapshot copies the whole home folder of the sandbox. If a tool in the box wrote a credential to a file there (for example a model or CLI token on disk), that file is in the snapshot. Keep real credentials out of the box so they cannot be captured: with proxy custody the box holds only a placeholder and the real value stays at the proxy, so it is never in a snapshot.
 
 To not keep a sandbox's snapshots at all, delete each one while the sandbox still exists, before you delete the sandbox:
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle snapshot list <id>
@@ -165,6 +185,8 @@ Snapshots you wrote to your own storage are separate: they stay in your bucket u
 ## Branch a running sandbox
 
 `branch(count)` makes copy-on-write copies of a running sandbox. The parent keeps running, and each child starts with the parent's files.
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -202,6 +224,8 @@ What a child inherits depends on the [runtime](/sandbox/lifecycle#choose-the-ima
 
 `fork(count)` does the same and reports the whole fan-out: `{ children, requestedCount, materializedCount, complete }`. `complete: false` means fewer children started than you asked for. Pass `idempotencyKey` so a retry returns the same children instead of making more.
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 const forked = await parent.fork(5, { idempotencyKey: "run-42", metadata: { experiment: "a" } });
 if (!forked.complete) console.warn(`${forked.materializedCount} of ${forked.requestedCount}`);
@@ -213,6 +237,8 @@ A fan-out larger than the host can hold fails with `BRANCH_FANOUT_EXCEEDS_HOST`,
 A parent with live children cannot be deleted: the delete answers `409 CHILDREN_EXIST`. Delete the children first, or delete the lineage with `cascade=true` through REST or `client.deleteMatching(filter, { cascade: true })`. See [Delete](/sandbox/lifecycle#delete).
 </Callout>
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle branch create demo --count 2 --idempotency-key run-42
 ```
@@ -220,6 +246,8 @@ tangle branch create demo --count 2 --idempotency-key run-42
 ## Python and REST
 
 Python has `snapshot(SnapshotOptions(tags, storage))`, `list_snapshots()`, `restore_paths(snapshot_id, paths)`, and `from_snapshot` with `from_sandbox_id` on create. It has no revert, snapshot delete, restore from storage, branch or fork. Call those routes with `client.fetch`, which returns the raw response and does not raise on an error status:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```python
 client.fetch("POST", f"/v1/sandboxes/{box.id}/snapshots/{snapshot_id}/restore", json={})

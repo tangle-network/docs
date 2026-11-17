@@ -18,6 +18,8 @@ Transports: email, iMessage, SMS, WhatsApp, Telegram and voice.
 Connect the identity or number in Hub first; see
 [Connections](/sandbox/connections). Then make it a line:
 
+{/* sandbox-proof: skip Requires an existing sandbox, Line, or application user ID */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -42,6 +44,8 @@ with `client.lines.numbers(connectionId, "imessage")`.
 Attach with `instance` to give each member their own sandbox. Hub creates a
 member's sandbox on their first message, resumes it when stopped and replaces
 it when deleted.
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```ts
 const attachment = await client.lines.attach({
@@ -94,6 +98,8 @@ and later mail in that thread runs at once.
 
 ## Read what happened
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 for (const thread of await client.lines.threads(line.id).list()) {
   for (const message of await client.lines.threads(line.id).messages(thread.id)) {
@@ -123,6 +129,8 @@ Members of an attached iMessage line can call it. A ph0ny voice agent answers,
 and each question it asks the workspace runs in the caller's own thread
 session, so a call continues the text conversation.
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 const voiced = await client.lines.enableVoice(lineId, {
   ph0nyConnectionId: process.env.PH0NY_CONNECTION_ID!,
@@ -139,6 +147,8 @@ A line with a reply gate takes no calls.
 
 ## Detach and release
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 await client.lines.detach(line.id);   // stop routing; history and the number stay
 await client.lines.release(line.id);  // retire a detached line
@@ -149,6 +159,8 @@ sandboxes and release their keys as on [One sandbox per user](/sandbox/instances
 Releasing a line does not cancel a number you rent from a provider.
 
 ## From the CLI
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle lines providers

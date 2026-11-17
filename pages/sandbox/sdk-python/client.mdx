@@ -10,6 +10,8 @@ import { Callout } from "nextra/components";
 `Sandbox` creates, lists and fetches sandboxes and holds the sub-clients for secrets, environments, teams, batches, fleets and intelligence reports.
 `AsyncSandbox` has the same members as coroutines; `await` each call, and use `async with` and `await client.close()`.
 
+{/* sandbox-proof: run */}
+
 ```python
 import os
 
@@ -24,6 +26,8 @@ with Sandbox(
 ```
 
 ## Constructor
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```python
 Sandbox(api_key: str, base_url: str, *, timeout_ms: int = 30000)
@@ -40,6 +44,8 @@ Every request carries `Authorization: Bearer <api_key>`.
 
 ## `create`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 create(options: CreateSandboxOptions | None = None, **kwargs) -> SandboxInstance
 ```
@@ -48,6 +54,8 @@ Creates a sandbox and returns its instance with the status the API answered: `pe
 Pass a `CreateSandboxOptions` or the same fields as keyword arguments. Call `wait_for(SandboxStatus.RUNNING)` before runtime calls.
 
 Request: `POST /v1/sandboxes`
+
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
 
 ```python
 from tangle_sandbox import BackendConfig, CreateSandboxOptions, GitConfig
@@ -111,6 +119,8 @@ The API also accepts `cwd`, `ephemeral`, `coldTimeoutSeconds`, `deleteAfterStopp
 
 ## `list`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 list(options: ListSandboxOptions | None = None, **kwargs) -> list[SandboxInstance]
 ```
@@ -118,6 +128,8 @@ list(options: ListSandboxOptions | None = None, **kwargs) -> list[SandboxInstanc
 Lists your sandboxes. `ListSandboxOptions(status=..., limit=..., offset=...)`: `status` is one `SandboxStatus` or a list of them; `limit` is 0 to 1000.
 
 Request: `GET /v1/sandboxes`
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```python
 from tangle_sandbox import ListSandboxOptions, SandboxStatus
@@ -127,12 +139,16 @@ running = client.list(ListSandboxOptions(status=SandboxStatus.RUNNING, limit=20)
 
 `list()` returns personal sandboxes. To list team sandboxes, pass `scope` to the REST route: `team`, `team:<id>` or `all`.
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```python
 response = client.fetch("GET", "/v1/sandboxes", params={"scope": "all", "limit": 20})
 names = [s["name"] for s in response.json()["sandboxes"]]
 ```
 
 ## `get`
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```python
 get(sandbox_id: str) -> SandboxInstance | None
@@ -144,6 +160,8 @@ Request: `GET /v1/sandboxes/{id}`
 
 ## `health`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 health() -> bool
 ```
@@ -151,6 +169,8 @@ health() -> bool
 `True` when `GET /health` answers 2xx; any failure returns `False`. The route needs no key, so `health()` does not check yours.
 
 ## `usage`
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```python
 usage() -> UsageInfo
@@ -162,6 +182,8 @@ Request: `GET /usage`
 
 ## `subscription`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 subscription() -> SubscriptionInfo
 ```
@@ -172,6 +194,8 @@ Request: `GET /subscription`
 
 ## `fetch`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 fetch(method: str, path: str, *, json=None, params=None, headers=None, timeout: float | None = None) -> httpx.Response
 ```
@@ -179,16 +203,22 @@ fetch(method: str, path: str, *, json=None, params=None, headers=None, timeout: 
 Sends an authenticated request to any Sandbox API route the SDK does not wrap. It returns the raw `httpx.Response` and does not raise on a 4xx or 5xx; check `status_code`.
 Connection failures and timeouts still raise `NetworkError` and `TimeoutError`, and `GET`, `PUT` and `DELETE` get the SDK's retries.
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```python
 shapes = client.fetch("GET", "/v1/shapes").json()
 print(shapes["default"], [p["name"] for p in shapes["presets"]])
 ```
+
+{/* sandbox-proof: skip Example terminal output or API field reference */}
 
 ```text
 small ['nano', 'small', 'medium', 'large']
 ```
 
 ## `close`
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```python
 close() -> None
@@ -199,6 +229,8 @@ Closes the connection pool. `with Sandbox(...) as client:` and `async with Async
 ## `client.secrets`
 
 Encrypted secrets on your account. Values are never returned.
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```python
 client.secrets.create(name: str, value: str, options: dict | None = None) -> SecretInfo
@@ -213,6 +245,8 @@ Deliver a stored secret with `CreateSandboxOptions(secrets=["NAME"])`. [Secrets]
 Requests: `POST /v1/secrets`, `GET /v1/secrets`, `PUT /v1/secrets/{name}`, `DELETE /v1/secrets/{name}`
 
 ## `client.environments`
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```python
 client.environments.list() -> list[SandboxEnvironment]
@@ -245,6 +279,8 @@ Roles are `owner`, `admin`, `member` and `viewer`. Team secrets, team templates 
 
 ## `run_batch` and `stream_batch`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 run_batch(request: BatchRunRequest, *, idempotency_key: str | None = None) -> BatchResult
 stream_batch(request: BatchRunRequest, *, idempotency_key: str | None = None) -> Iterator[SandboxEvent]
@@ -254,6 +290,8 @@ Runs every task once on every backend, each in its own sandbox, in parallel. `ru
 On `AsyncSandbox`, `stream_batch` returns an async generator: use `async for` without `await`.
 
 Request: `POST /v1/sandboxes/batch/run` (server-sent events)
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```python
 from tangle_sandbox import BatchBackend, BatchRunRequest, BatchTask
@@ -277,6 +315,8 @@ Without `idempotency_key`, disconnecting cancels the run. With one, the same key
 Creates and manages fleets: named groups of sandboxes that run one workload. See [Fleets and optional modules](/sandbox/sdk-python/fleets-and-extras).
 
 ## Intelligence reports
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```python
 client.create_intelligence_report(*, subject_type, subject_id, mode="deterministic", acknowledge_cost=False, budget=None, metadata=None) -> IntelligenceReport

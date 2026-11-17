@@ -8,6 +8,8 @@ Run a shell command and read its exit code and output, run Python or TypeScript 
 
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -28,6 +30,8 @@ try {
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```python
 import os
 from tangle_sandbox import Sandbox, SandboxStatus
@@ -44,6 +48,8 @@ finally:
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle exec my-project -- python3 -c 'import platform; print(platform.platform())'
 echo $?   # the remote exit code
@@ -61,6 +67,8 @@ echo $?   # the remote exit code
 | `sessionId` | Resolves `cwd` inside that task session's isolated workspace. |
 | `signal` | An `AbortSignal` that cancels the call. |
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 const build = await box.exec("npm ci && npm test", {
   cwd: "/home/agent/app",
@@ -76,6 +84,8 @@ For work longer than the exec ceiling, start a [background process](#run-a-long-
 
 `tangle exec <sandbox> -- <command>` writes the remote stdout and stderr to your local streams and exits with the remote exit code. Put `--` before the command so its flags are not read as `tangle` flags. One argument runs as a shell script; several arguments are each shell-quoted and joined.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle exec my-project --cwd /home/agent/app --env CI=true -- npm test
 tangle exec my-project -- 'cd app && npm ci && npm test'
@@ -84,6 +94,8 @@ tangle exec my-project -- 'cd app && npm ci && npm test'
 ## Run code in a kernel
 
 `runCode` runs source in a long-lived kernel for `python`, `node`, `typescript` or `bash`. Variables persist across calls that share a `sessionId` and language.
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 await box.runCode("python", "import pandas as pd\ndf = pd.DataFrame({'a': [1, 2, 3]})", {
@@ -100,6 +112,8 @@ The result adds `durationMs` and `results` to the exit code and output. Each ent
 `cwd` applies when the kernel is created. `idempotencyKey` makes a retried call return the first call's result instead of running twice.
 
 A full example that writes a CSV and sums it:
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -133,6 +147,8 @@ print(json.dumps(sorted(totals.items(), key=lambda kv: -kv[1])))
 
 In the CLI, `tangle run` sends a file, or stdin with `-`, to the same kernels. The language comes from the file extension or `--lang`, and `--session` keeps state between calls. Image results are written to a local directory; `--save-images <dir>` picks it.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle run my-project analysis.py --session analysis
 echo 'print(df.shape)' | tangle run my-project - --lang python --session analysis
@@ -141,6 +157,8 @@ echo 'print(df.shape)' | tangle run my-project - --lang python --session analysi
 ## Run a long-running process
 
 `process.spawn` starts a command in the background and returns a handle at once.
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 const server = await box.process.spawn("python3 -u -m http.server 8000");
@@ -169,6 +187,8 @@ console.log("exit code", await server.wait());
 
 `spawnExact(executable, args, options)` runs a program without a shell, so arguments are passed exactly. Its `stdin` option writes those bytes and then closes stdin. For a program you need to type into, open a [terminal](/sandbox/terminals).
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 const proc = await box.process.spawnExact("python3", ["-c", "import sys; print(sys.stdin.read().upper())"], {
   stdin: "hello from the caller\n",
@@ -179,6 +199,8 @@ console.log(await proc.wait());
 ### Jobs that survive restarts
 
 `process.jobs` runs a process the platform owns. It is admitted durably, retried by your restart policy, and readable from any client after your own process exits.
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 const spec = {
@@ -210,6 +232,8 @@ States are `queued`, `running`, `retrying`, `stopping`, `succeeded`, `failed`, `
 
 ### From the CLI
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle process spawn my-project 'python3 -m http.server 8000'   # prints the pid
 tangle process list my-project
@@ -225,6 +249,8 @@ tangle process kill my-project 4211
 
 The Python `exec` runs the command under `bash`, merges stderr into stdout, raises on timeout, and silently ignores a `cwd` that does not exist. `ExecOptions` takes `cwd`, `env`, `timeout_ms` and `session_id`:
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```python
 from tangle_sandbox import ExecOptions
 
@@ -232,6 +258,8 @@ result = box.exec("ls", ExecOptions(cwd="/tmp", env={"GREETING": "hi"}))
 ```
 
 Python has no `run_code` or process manager. Call the runtime routes through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```python
 response = client.fetch(

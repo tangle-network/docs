@@ -26,6 +26,8 @@ Each team has one owner. Invitations can grant `admin`, `member` or `viewer`.
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
 
+{/* sandbox-proof: skip Creates a persistent account team; use a separately approved test team */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -40,6 +42,8 @@ console.log(team.id, team.currentUserRole);
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip Creates a persistent account team; use a separately approved test team */}
 
 ```python
 import os
@@ -56,6 +60,8 @@ with Sandbox(
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle team create Acme
@@ -75,6 +81,8 @@ Owners and admins invite by email with a role. The invitation carries a token; t
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 const invitation = await client.teams.invite(team.id, {
   email: "bob@example.com",
@@ -87,6 +95,8 @@ await bobClient.teams.acceptInvitation(invitation.token);
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```python
 from tangle_sandbox import InviteTeamMemberOptions
@@ -101,6 +111,8 @@ bob_client.teams.accept_invitation(invitation.token)
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle team invite bob@example.com --role member
@@ -137,6 +149,8 @@ Only the owner can transfer ownership or delete the team. After a transfer the o
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
 
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
+
 ```ts
 const box = await client.create({ name: "shared-box", teamId: team.id });
 
@@ -146,6 +160,8 @@ console.log(shared.map((s) => s.name));
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
 
 ```python
 from tangle_sandbox import CreateSandboxOptions
@@ -159,6 +175,8 @@ print([s["name"] for s in shared.json()["sandboxes"]])
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle team switch Acme
@@ -201,6 +219,8 @@ Team secrets are available to every team sandbox. Owners and admins set, reveal 
 <Tabs items={["TypeScript", "CLI", "REST"]} storageKey="sandbox-lang-rest">
 <Tabs.Tab>
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 await client.teams.upsertSecret(team.id, "NPM_TOKEN", process.env.NPM_TOKEN!);
 const names = (await client.teams.listSecrets(team.id)).map((s) => s.name);
@@ -208,6 +228,8 @@ const names = (await client.teams.listSecrets(team.id)).map((s) => s.name);
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 printf %s "$NPM_TOKEN" | tangle team secret set NPM_TOKEN --value-stdin
@@ -217,6 +239,8 @@ tangle team secret delete NPM_TOKEN --force
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip Example terminal output or API field reference */}
 
 ```text
 GET    /v1/teams/{id}/secrets
@@ -237,6 +261,8 @@ A team template is a snapshot the whole team can start sandboxes from. Owners an
 <Tabs items={["TypeScript", "CLI", "REST"]} storageKey="sandbox-lang-rest">
 <Tabs.Tab>
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 const template = await client.teams.createTemplate(team.id, {
   name: "node-base",
@@ -248,6 +274,8 @@ const templates = await client.teams.listTemplates(team.id);
 </Tabs.Tab>
 <Tabs.Tab>
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle team templates create node-base <snapshot-id> --description "Node 22 with deps"
 tangle team templates list
@@ -256,6 +284,8 @@ tangle team templates delete <template-id> --force
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip Example terminal output or API field reference */}
 
 ```text
 GET    /v1/teams/{id}/templates
@@ -271,6 +301,8 @@ DELETE /v1/teams/{id}/templates/{templateId}
 ## Set network rules for the team
 
 A team can set a default network policy for its sandboxes. Owners and admins set and clear it; this is REST only.
+
+{/* sandbox-proof: skip Example terminal output or API field reference */}
 
 ```text
 GET    /v1/teams/{id}/egress

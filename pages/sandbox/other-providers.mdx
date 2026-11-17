@@ -33,6 +33,8 @@ Create the provider for your cloud:
 
 <Tabs items={["Tangle", "E2B", "Daytona", "ComputeSDK"]}>
 <Tabs.Tab>
+{/* sandbox-proof: skip Client construction reference; it makes no production request */}
+
 ```ts
 import { createTangleProvider } from "@tangle-network/agent-provider-tangle";
 import { Sandbox } from "@tangle-network/sandbox";
@@ -43,6 +45,8 @@ const provider = createTangleProvider({
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires separately provisioned E2B_API_KEY */}
+
 ```ts
 import { createE2BProvider } from "@tangle-network/agent-provider-e2b";
 
@@ -51,6 +55,8 @@ const provider = createE2BProvider({ router: { key: process.env.TANGLE_API_KEY! 
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires separately provisioned DAYTONA_API_KEY */}
+
 ```ts
 import { createDaytonaProvider } from "@tangle-network/agent-provider-daytona";
 
@@ -61,6 +67,8 @@ const provider = createDaytonaProvider({
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires separately provisioned E2B_API_KEY */}
+
 ```ts
 import { e2b } from "@computesdk/e2b";
 import { createComputeSdkProvider } from "@tangle-network/agent-provider-computesdk";
@@ -73,6 +81,8 @@ const provider = createComputeSdkProvider({ compute, router: { key: process.env.
 </Tabs>
 
 Then run the same code on any of them:
+
+{/* sandbox-proof: skip Requires the provider initialized in the preceding provider-selection example */}
 
 ```ts
 import { providerAsSandboxClient } from "@tangle-network/agent-runtime/kernel";
@@ -126,6 +136,8 @@ Sandboxes on other clouds boot an image that carries the coding agents and the
 bridge that runs them. Build it once from the
 [agent-sdk repository](https://github.com/tangle-network/agent-sdk):
 
+{/* sandbox-proof: skip Image build commands require a provider key and the source repository */}
+
 ```bash
 E2B_API_KEY=... pnpm build:sandbox-image --target e2b
 DAYTONA_API_KEY=... pnpm build:sandbox-image --target daytona
@@ -143,6 +155,8 @@ tools with a setup script, and a saved snapshot skips that install.
 `@tangle-network/agent-provider-testkit` checks a provider against a real
 cloud with a real profile: a coding agent, a model, a system prompt, an MCP
 server, a hook, a denied tool, a subagent and mounted files.
+
+{/* sandbox-proof: skip Runs cross-provider conformance; requires external provider setup and model access */}
 
 ```ts
 import { formatLiveReport, runLiveProfileConformance } from "@tangle-network/agent-provider-testkit";

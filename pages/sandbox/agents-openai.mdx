@@ -12,6 +12,8 @@ itself in the sandbox instead, see [Run a coding agent](/sandbox/cloud-agents).
 
 ## Install
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 npm install openai @tangle-network/sandbox
 ```
@@ -19,6 +21,8 @@ npm install openai @tangle-network/sandbox
 Set `OPENAI_API_KEY` for OpenAI and `TANGLE_API_KEY` for the sandbox.
 
 ## Run a tool loop
+
+{/* sandbox-proof: skip Requires the external agent framework and its provider credentials */}
 
 ```ts
 import OpenAI from "openai";
@@ -61,6 +65,8 @@ The same tools work against the Tangle Router with your Tangle key, so one key
 pays for the model and the sandbox. Send the tools with each Chat Completions
 request and run the tool calls it returns:
 
+{/* sandbox-proof: skip Replace the repository, token, or resource placeholder before running */}
+
 ```ts
 const reply = await fetch("https://router.tangle.tools/v1/chat/completions", {
   method: "POST",
@@ -79,6 +85,8 @@ does the [model list](/gateway/models). The complete loop is in
 
 Each tool is a Chat Completions function:
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 {
   type: "function",
@@ -93,6 +101,8 @@ Each tool is a Chat Completions function:
 The default set is `sandbox_run_code`, `sandbox_exec`, `sandbox_read`,
 `sandbox_write`, `sandbox_list` and `sandbox_search`. Restrict it with
 `allow`:
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```ts
 openaiTools(box, { allow: ["sandbox_run_code"] });
@@ -109,6 +119,8 @@ An unknown tool or a failed call comes back as a tool message whose content is
 The pack reads Chat Completions tool calls, `{ id, function: { name, arguments } }`.
 
 ## Types
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```ts
 import type {

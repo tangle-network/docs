@@ -14,6 +14,8 @@ The SDKs call them for `exec`, `read`, `write`, `process`, `git`, `terminals`, `
 
 Every route on this page is under the sandbox's runtime prefix:
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 https://sandbox.tangle.tools/v1/sandboxes/{id}/runtime{path}
 ```
@@ -28,6 +30,8 @@ Errors use the shape in [Error codes](/sandbox/errors).
 <Tabs items={["curl", "Python"]} storageKey="sandbox-lang">
 <Tabs.Tab>
 
+{/* sandbox-proof: skip REST mutation requires the resource IDs and request data from the surrounding steps */}
+
 ```bash
 curl -s -X POST "https://sandbox.tangle.tools/v1/sandboxes/$SANDBOX_ID/runtime/process/spawn" \
   -H "Authorization: Bearer $TANGLE_API_KEY" \
@@ -37,6 +41,8 @@ curl -s -X POST "https://sandbox.tangle.tools/v1/sandboxes/$SANDBOX_ID/runtime/p
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```python
 # client.fetch returns the raw httpx.Response; check status_code yourself.
@@ -52,6 +58,8 @@ print(response.status_code, response.json()["data"]["stdout"])
 </Tabs>
 
 A blocking spawn answers 201 when the command exits:
+
+{/* sandbox-proof: skip Configuration or response data; consumed by the adjacent client program */}
 
 ```json
 {
@@ -209,6 +217,8 @@ See [Ports and preview links](/sandbox/ports-previews).
 | `POST /agents/run/cancel` | Cancels a running turn. |
 
 The body names the turn and carries the prompt as parts. Text parts are base64-encoded UTF-8:
+
+{/* sandbox-proof: skip Configuration or response data; consumed by the adjacent client program */}
 
 ```json
 {

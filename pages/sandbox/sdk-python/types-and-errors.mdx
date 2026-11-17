@@ -10,6 +10,8 @@ import { Callout } from "nextra/components";
 Every type here is a dataclass or enum you import from `tangle_sandbox`.
 Errors are `SandboxError` with a platform `code`; [Error codes](/sandbox/errors) lists every code.
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```python
 from tangle_sandbox import SandboxError
 
@@ -119,6 +121,8 @@ These are `TypedDict`s with the API's camelCase keys.
 
 ## `SandboxError`
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```python
 SandboxError(message, code=None, status=None, **details)
 ```
@@ -134,6 +138,8 @@ SandboxError(message, code=None, status=None, **details)
 | `retry_after_ms`, `eta_seconds`, `capacity_hold` | Set when the service refuses for capacity |
 
 Handle errors by `code`:
+
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
 
 ```python
 from tangle_sandbox import SandboxError

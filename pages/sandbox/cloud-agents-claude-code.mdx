@@ -16,6 +16,8 @@ sandbox's compute. For Codex on a ChatGPT plan, see
 
 On your machine, with Claude Code installed:
 
+{/* sandbox-proof: skip Interactive authentication prerequisite */}
+
 ```bash
 claude setup-token
 ```
@@ -27,16 +29,22 @@ token. Anyone holding the token can use your plan.
 
 <Tabs items={["TypeScript", "Python", "CLI"]}>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires a pre-provisioned account subscription credential */}
+
 ```ts
 await client.secrets.create("CLAUDE_TOKEN", process.env.CLAUDE_CODE_OAUTH_TOKEN!);
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires a pre-provisioned account subscription credential */}
+
 ```python
 client.secrets.create("CLAUDE_TOKEN", os.environ["CLAUDE_CODE_OAUTH_TOKEN"])
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle secret create CLAUDE_TOKEN --value-stdin <<< "$CLAUDE_CODE_OAUTH_TOKEN"
 ```
@@ -49,6 +57,8 @@ tangle secret create CLAUDE_TOKEN --value-stdin <<< "$CLAUDE_CODE_OAUTH_TOKEN"
 
 <Tabs items={["TypeScript", "Python", "CLI"]}>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires a pre-provisioned account subscription credential */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -78,10 +88,12 @@ try {
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires a pre-provisioned account subscription credential */}
+
 ```python
 import os
 
-from tangle_sandbox import BackendConfig, CreateSandboxOptions, GitConfig, PromptOptions, Sandbox
+from tangle_sandbox import SandboxStatus, BackendConfig, CreateSandboxOptions, GitConfig, PromptOptions, Sandbox
 
 client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
 box = client.create(
@@ -94,8 +106,8 @@ box = client.create(
         git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"),
     )
 )
-box.wait_for("running")
 try:
+    box.wait_for(SandboxStatus.RUNNING)
     run = box.prompt("Summarize this repository in five bullets.", PromptOptions(session_id="main"))
     print(run.response if run.success else run.error)
 finally:
@@ -104,6 +116,8 @@ finally:
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --name claude-on-my-plan --backend claude-code \
   --cli-auth CLAUDE_TOKEN --git-url https://github.com/tangle-network/sandbox-demo
@@ -130,6 +144,8 @@ The create request is refused when `cliAuth` names a secret that is not in
 `box.grantNativeCredential()` installs a stored token in a sandbox that is
 already running. The call names the secret; the value never crosses it.
 
+{/* sandbox-proof: skip Requires a pre-provisioned account subscription credential */}
+
 ```ts
 await box.grantNativeCredential({
   harness: "claude-code",
@@ -150,16 +166,22 @@ it:
 
 <Tabs items={["TypeScript", "Python", "CLI"]}>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires a pre-provisioned account subscription credential */}
+
 ```ts
 await client.secrets.update("CLAUDE_TOKEN", process.env.CLAUDE_CODE_OAUTH_TOKEN!);
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires a pre-provisioned account subscription credential */}
+
 ```python
 client.secrets.update("CLAUDE_TOKEN", os.environ["CLAUDE_CODE_OAUTH_TOKEN"])
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 # The CLI has no update command; sandboxes created after this use the new token.
 tangle secret delete CLAUDE_TOKEN --force
@@ -177,6 +199,8 @@ your Claude account settings.
 A workflow's `agent.run` step uses the same token when its profile declares the
 source. Store the token as `CLAUDE_TOKEN`, then set
 `model.metadata.credentialSource: subscription` on a `claude-code` profile:
+
+{/* sandbox-proof: skip Configuration or response data; consumed by the adjacent client program */}
 
 ```yaml
 - id: review
@@ -198,6 +222,8 @@ worker or inference step. See [Workflows](/sandbox/workflows).
 
 Credential fields sit under `backend.model`. The body names the secret; the
 token never appears in it.
+
+{/* sandbox-proof: skip REST mutation requires the resource IDs and request data from the surrounding steps */}
 
 ```bash
 curl -X POST https://sandbox.tangle.tools/v1/sandboxes \

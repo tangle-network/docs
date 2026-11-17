@@ -41,6 +41,8 @@ Clone a repository, install and test it, and delete the sandbox:
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
 
+{/* sandbox-proof: run */}
+
 ```ts filename="from-daytona.mts"
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -65,6 +67,8 @@ try {
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: run */}
 
 ```python filename="from_daytona.py"
 import os
@@ -94,6 +98,8 @@ finally:
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle sandbox create --name demo --git-url https://github.com/tangle-network/sandbox-demo --idle-timeout 900

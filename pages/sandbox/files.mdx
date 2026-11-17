@@ -8,6 +8,8 @@ Put files into a sandbox, read results back, move whole directories in and out, 
 
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -26,6 +28,8 @@ try {
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```python
 import os
 from tangle_sandbox import Sandbox, SandboxStatus
@@ -42,6 +46,8 @@ finally:
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fs upload my-project ./todo.md /home/agent/notes/todo.md
 tangle fs cat my-project /home/agent/notes/todo.md
@@ -55,12 +61,16 @@ tangle fs cat my-project /home/agent/notes/todo.md
 
 When an agent and your code may edit the same file, pass a precondition. `ifHash` takes the SHA-256 from your last read or write and refuses the write if the file changed since. `ifAbsent: true` refuses if the file exists.
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 await box.write("config.json", '{"enabled":true}\n', { ifAbsent: true });
 await box.write("deploy.sh", "#!/bin/sh\necho deploy\n", { mode: 0o755 });
 ```
 
 ### Write many files at once
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 await box.fs.writeMany([
@@ -72,6 +82,8 @@ await box.fs.writeMany([
 A batch is not atomic: some files may be written before one fails.
 
 ## Move binary files and directories
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 await box.fs.upload("./model.bin", "/home/agent/models/model.bin", {
@@ -94,6 +106,8 @@ await box.fs.downloadArchive("/home/agent/output", "./output.tar.gz");
 | `downloadArchive(remoteDir, localPath)` | A directory as `tar.gz`, including hidden files, with a SHA-256 receipt. |
 | `openArchive(remoteDir)` | The same archive as a `ReadableStream`, to pipe to object storage from a Worker. |
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 const archive = await box.fs.openArchive("/home/agent");
 await bucket.put("exports/workspace.tar.gz", archive);
@@ -102,6 +116,8 @@ await bucket.put("exports/workspace.tar.gz", archive);
 The size caps for single requests, uploads and downloads are on [Limits](/sandbox/limits).
 
 ## List, inspect, rename and delete
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 for (const entry of await box.fs.list("/home/agent", { all: true })) {
@@ -130,6 +146,8 @@ await box.fs.delete("/home/agent/cache", { recursive: true });
 
 `search` runs ripgrep and yields matches as they are found. Read it with `for await`.
 
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -154,6 +172,8 @@ Options: `glob`, `cwd`, `maxResults`, `ignoreCase` and `context` (lines before a
 
 ## From the CLI
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fs ls my-project /home/agent --all --long
 tangle fs stat my-project /home/agent/report.md
@@ -171,6 +191,8 @@ tangle search my-project TODO --json   # one match per line
 
 Python has `read`, `write` and `search`. `read` and `write` handle UTF-8 text only, and `search` returns a list:
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```python
 from tangle_sandbox import SearchOptions
 
@@ -179,6 +201,8 @@ for hit in box.search("TODO", SearchOptions(glob="**/*.js")):
 ```
 
 Python has no file manager for binary files, directories, listing or deletion. Use `box.exec` for listing and moving files inside the sandbox, or call the runtime routes with `client.fetch`, which returns the raw response and does not raise on an error status:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```python
 response = client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/files/read", json={"path": "/home/agent/report.md"})

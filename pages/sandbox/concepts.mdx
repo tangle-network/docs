@@ -32,6 +32,8 @@ Read the presets, the default and the largest size your account can get:
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 const { presets, default: defaultPreset, ceiling } = await client.shapes();
 console.log(defaultPreset, ceiling);
@@ -42,6 +44,8 @@ console.log(defaultPreset, ceiling);
 
 The Python SDK has no shapes method. Call the route through `client.fetch`:
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```python
 shapes = client.fetch("GET", "/v1/shapes").json()
 print(shapes["default"], shapes["ceiling"])
@@ -49,6 +53,8 @@ print(shapes["default"], shapes["ceiling"])
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle sandbox shapes
@@ -74,6 +80,8 @@ A create that sends no `resources` gets a smaller disk than the default preset n
 | `failed` | The sandbox could not start or broke. `box.error` holds the reason. |
 | `expired` | The sandbox can no longer run. Treat it like `deleted`. |
 | `deleted` | The sandbox is gone. |
+
+{/* sandbox-proof: skip Architecture diagram source */}
 
 ```mermaid
 stateDiagram-v2

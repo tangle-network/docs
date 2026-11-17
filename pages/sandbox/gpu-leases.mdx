@@ -10,6 +10,8 @@ This works the same for Docker and Firecracker sandboxes, because the GPU is a s
 
 <Tabs items={["CLI", "TypeScript"]} storageKey="sandbox-lang">
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle sandbox gpu run my-project \
   --accelerator-kind nvidia-3090 \
@@ -21,6 +23,8 @@ tangle sandbox gpu run my-project \
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip GPU lease requires separately approved accelerator capacity and spend */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -57,11 +61,15 @@ Detach in a `finally` block. Deleting the sandbox is a separate step.
 
 ## Find a GPU you can lease
 
+{/* sandbox-proof: skip GPU lease requires separately approved accelerator capacity and spend */}
+
 ```ts
 const { usable, statuses } = await box.gpu.providers({ accelerator: { kind: "nvidia-h100" } });
 console.log(usable);
 for (const s of statuses) console.log(s);
 ```
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle sandbox gpu providers my-project --accelerator-kind nvidia-h100
@@ -71,12 +79,16 @@ tangle sandbox gpu providers my-project --accelerator-kind nvidia-h100
 
 `accelerator` is `{ kind, count?, vramGb? }`. Omit `provider` and the platform picks the cheapest eligible offer; the lease's `providerSelection` shows the candidates it compared and why others were rejected. Name a provider when you need that vendor:
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle sandbox gpu run my-project --provider runpod --accelerator-kind nvidia-4090 \
   --max-spend-usd 1 --max-lifetime 900 -- python eval.py
 ```
 
 When no provider can take the lease, the attach fails with code `GPU_PROVIDER_NOT_CONFIGURED`:
+
+{/* sandbox-proof: skip GPU lease requires separately approved accelerator capacity and spend */}
 
 ```ts
 import { SandboxError } from "@tangle-network/sandbox";
@@ -94,6 +106,8 @@ try {
 
 ## Keep a lease across several commands
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox gpu attach my-project \
   --accelerator-kind nvidia-3090 --accelerator-memory 24 \
@@ -104,6 +118,8 @@ tangle sandbox gpu exec my-project <lease-id> --cwd /home/agent -- python train.
 tangle sandbox gpu exec my-project <lease-id> -- python eval.py
 tangle sandbox gpu detach my-project <lease-id>
 ```
+
+{/* sandbox-proof: skip GPU lease requires separately approved accelerator capacity and spend */}
 
 ```ts
 const lease = await box.gpu.attach({ accelerator: { kind: "nvidia-3090", vramGb: 24 }, maxSpendUsd: 2, maxLifetimeSeconds: 1800 });
@@ -120,12 +136,16 @@ await box.gpu.detach(lease.id);
 
 A sandbox can start with a lease. Set `resources.accelerator` and the lease caps:
 
+{/* sandbox-proof: skip GPU lease requires separately approved accelerator capacity and spend */}
+
 ```ts
 const box = await client.create({
   resources: { accelerator: { kind: "nvidia-3090", vramGb: 24 } },
   gpuLease: { maxSpendUsd: 1, maxLifetimeSeconds: 900, idleTimeoutSeconds: 120 },
 });
 ```
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle sandbox create --accelerator-kind nvidia-3090 --accelerator-memory 24 \
@@ -151,6 +171,8 @@ A lease is billed by the second. A closed lease reports:
 
 Fleet workers can each request the same accelerator and caps, for parallel evals where each worker needs its own short GPU burst:
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle fleet create --count 4 \
   --accelerator-kind nvidia-3090 --accelerator-memory 24 \
@@ -162,6 +184,8 @@ Caps apply per worker: four workers with `--gpu-max-spend-usd 1` can spend up to
 ## Python and REST
 
 Python has no GPU lease methods. Call the routes with `client.fetch`, which returns the raw response and does not raise on an error status:
+
+{/* sandbox-proof: skip GPU lease requires separately approved accelerator capacity and spend */}
 
 ```python
 lease = client.fetch(

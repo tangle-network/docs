@@ -32,6 +32,8 @@ The coding agents a deployment offers come from the API, not from this page. Lis
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 const { backends } = await client.listBackends();
 for (const backend of backends) console.log(backend.type, backend.name);
@@ -39,6 +41,8 @@ for (const backend of backends) console.log(backend.type, backend.name);
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```python
 response = client.fetch("GET", "/v1/backends")
@@ -50,6 +54,8 @@ for backend in response.json()["backends"]:
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip curl usage requires the page authentication and resource setup */}
 
 ```bash
 curl -s https://sandbox.tangle.tools/v1/backends \
@@ -103,6 +109,8 @@ Each term has a full explanation in [How sandboxes work](/sandbox/concepts).
 | A browser view of a sandbox or session | A short-lived [scoped token](/sandbox/authentication) |
 
 `box.agents` exists only after you import `@tangle-network/sandbox/agent`, which adds it to every sandbox handle:
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox/agent";

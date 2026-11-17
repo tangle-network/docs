@@ -8,6 +8,8 @@ Start a sandbox with your repository already cloned, public or private, then rea
 
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -30,6 +32,8 @@ try {
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```python
 import os
 from tangle_sandbox import Sandbox, SandboxStatus, GitConfig
@@ -46,6 +50,8 @@ finally:
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --name demo \
   --git-url https://github.com/tangle-network/sandbox-demo --git-ref main --git-depth 1
@@ -71,6 +77,8 @@ The repository is cloned into the workspace, so `exec`, `read` and the coding ag
 
 If your account has connected the repository through the Tangle GitHub App, ask for a read grant instead of passing a token. The platform mints a short-lived token for that one repository, read only, uses it for the clone, and never returns it or writes it to a log.
 
+{/* sandbox-proof: skip Replace the repository, token, or resource placeholder before running */}
+
 ```ts
 const box = await client.create({
   git: { url: "https://github.com/acme/private-service", auth: { grant: "read" } },
@@ -90,6 +98,8 @@ The API key must hold the `git:grant` scope, and the URL must be `https://github
 
 ### With a token
 
+{/* sandbox-proof: skip Replace the repository, token, or resource placeholder before running */}
+
 ```ts
 const box = await client.create({
   git: { url: "https://github.com/acme/private-service", auth: { token: process.env.GITHUB_TOKEN! } },
@@ -99,6 +109,8 @@ const box = await client.create({
 In the CLI, the token never goes in argv: `--git-token-env GITHUB_TOKEN` names an environment variable that holds it, or `--git-token-stdin` reads it from stdin.
 
 ## Work with the repository
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 const status = await box.git.status();
@@ -131,6 +143,8 @@ await box.git.push();
 
 ### Save the agent's change as a patch
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 import { writeFile } from "node:fs/promises";
 
@@ -141,6 +155,8 @@ await writeFile("agent.patch", raw);
 Apply it locally with `git apply agent.patch`.
 
 ### Let a coding agent fix a test, then commit
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -171,6 +187,8 @@ try {
 
 ## From the CLI
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle git status demo
 tangle git diff demo --ref main
@@ -188,6 +206,8 @@ Each command resumes a stopped sandbox first.
 ## Python and REST
 
 Python's `box.git` has the same nine operations: `status`, `log(limit=10)`, `diff(ref=None)`, `add(paths)`, `commit(message, amend=False)`, `push(force=False)`, `pull(rebase=False)`, `branches()` and `checkout(ref, create=False)`. `GitConfig` and `GitAuth` take `url`, `ref`, `depth`, `sparse` and a token. For a read grant from Python, send the create through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+{/* sandbox-proof: skip Replace the repository, token, or resource placeholder before running */}
 
 ```python
 response = client.fetch(

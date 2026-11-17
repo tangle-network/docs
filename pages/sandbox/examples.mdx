@@ -13,6 +13,10 @@ Programs that clone a repository use [tangle-network/sandbox-demo](https://githu
 | Page | Language | What the examples do |
 | --- | --- | --- |
 | [Sandboxes](/sandbox/examples/sandboxes) | TypeScript | Commands, files, lifecycle, snapshots, branches, network rules and preview links. |
+| [Data analysis](/sandbox/examples/data-analysis) | TypeScript, Python | Analyse a CSV, render a PNG chart and download it. |
+| [Browser automation](/sandbox/examples/browser) | TypeScript | Click a page through MCP, check its text and save a screenshot. |
+| [LangGraph](/sandbox/examples/langgraph) | TypeScript | Run a command in a graph node and verify its result in the next. |
+| [GitHub Actions](/sandbox/examples/github-actions) | TypeScript, YAML | Run a sandbox check in CI and upload its report. |
 | [Coding agents](/sandbox/examples/coding-agents) | TypeScript | Claude Code, Codex and OpenCode fixing tests, committing, streaming, racing and running for hours. |
 | [Products](/sandbox/examples/products) | TypeScript | One sandbox per customer, chat routes, batches, hosted runs, per-turn cost and email or iMessage lines. |
 | [Fleets](/sandbox/examples/fleets) | TypeScript, Python | Many agents or commands across many sandboxes under one budget. |
@@ -31,6 +35,10 @@ Programs that clone a repository use [tangle-network/sandbox-demo](https://githu
 
 ### Sandboxes
 
+- [Turn a CSV into a chart](/sandbox/examples/data-analysis)
+- [Click a page in the sandbox browser](/sandbox/examples/browser)
+- [Run a LangGraph node in a sandbox](/sandbox/examples/langgraph)
+- [Run a sandbox from GitHub Actions](/sandbox/examples/github-actions)
 - [Run one command](/sandbox/examples/sandboxes#run-one-command)
 - [Analyse a CSV with Python](/sandbox/examples/sandboxes#analyse-a-csv-with-python)
 - [Stop and resume](/sandbox/examples/sandboxes#stop-and-resume)
@@ -122,6 +130,8 @@ Programs that clone a repository use [tangle-network/sandbox-demo](https://githu
 The TypeScript SDK ships eight short quickstart programs as data, so you can show them in your own app or tooling.
 Each entry has an `id`, a `title`, a one-sentence `summary`, its `language` and the complete `code`.
 
+{/* sandbox-proof: skip SDK example catalog listing; it makes no production request */}
+
 ```ts
 import { quickstartExamples } from "@tangle-network/sandbox/examples";
 
@@ -129,6 +139,8 @@ for (const example of quickstartExamples) {
   console.log(example.id, "-", example.title);
 }
 ```
+
+{/* sandbox-proof: skip Example terminal output or API field reference */}
 
 ```text
 run-code - Run code

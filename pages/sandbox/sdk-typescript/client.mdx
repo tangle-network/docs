@@ -2,6 +2,8 @@
 
 Every public member of the `Sandbox` client: construction, account reads, creating and finding sandboxes, and bulk deletion. Resource managers such as `client.secrets` are on [Resources](/sandbox/sdk-typescript/resources).
 
+{/* sandbox-proof: skip Client construction reference; it makes no production request */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -14,6 +16,8 @@ const client = new Sandbox({
 ## Construction
 
 ### `new Sandbox(config)`
+
+{/* sandbox-proof: skip Client construction reference; it makes no production request */}
 
 ```ts
 new Sandbox({
@@ -45,6 +49,8 @@ A new client with the same settings and another key.
 
 An authenticated request to any Sandbox API path, for routes the SDK does not wrap. `options.timeoutMs` overrides the client timeout for that request.
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 const res = await client.fetch("/v1/startup-scripts");
 console.log(res.status, await res.json());
@@ -64,6 +70,8 @@ console.log(res.status, await res.json());
 | `environments.list()` | Environments and your templates, with the runtimes each accepts. | `GET /v1/environments` |
 | `environments.get(id)` | One environment, or `null`. | `GET /v1/environments` |
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 const { backends } = await client.listBackends();
 console.log(backends.map((b) => b.type));
@@ -77,6 +85,8 @@ console.log(presets, ceiling);
 ### `client.create(options?, requestOptions?): Promise<SandboxInstance>`
 
 Creates a sandbox and resolves once it is running. `requestOptions` is `{ timeoutMs?, signal? }` for the whole create, including the wait. Route: `POST /v1/sandboxes`.
+
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
 
 ```ts
 const box = await client.create({
@@ -190,6 +200,8 @@ The same as `box.delete(options)` for a sandbox you have only the id of. With `{
 
 ### `client.deleteMatching(filter, options?)`
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 const result = await client.deleteMatching(
   { metadataPrefix: { pr: "482" } },
@@ -215,6 +227,8 @@ Deletes every sandbox you own whose metadata value for each key in `metadataPref
 ## Python and REST
 
 The Python client has `create`, `list`, `get`, `usage`, `subscription`, `health` and `close`. `create` returns before the sandbox runs; call `box.wait_for(SandboxStatus.RUNNING)`. It has no `create_isolated`, `shapes`, `list_backends`, `get_identity`, `wait_for_running`, `run_generations` or `delete_matching`. Call those routes through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```python
 backends = client.fetch("GET", "/v1/backends").json()["backends"]

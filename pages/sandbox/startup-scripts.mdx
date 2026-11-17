@@ -8,6 +8,8 @@ Save a script once, and it runs in every matching sandbox you create: install a 
 
 <Tabs items={["curl", "Python", "TypeScript"]} storageKey="sandbox-lang">
 <Tabs.Tab>
+{/* sandbox-proof: skip REST mutation requires the resource IDs and request data from the surrounding steps */}
+
 ```bash
 curl -X POST "https://sandbox.tangle.tools/v1/startup-scripts" \
   -H "Authorization: Bearer $TANGLE_API_KEY" \
@@ -21,6 +23,8 @@ curl -X POST "https://sandbox.tangle.tools/v1/startup-scripts" \
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Registers a persistent account startup script rather than a disposable sandbox */}
+
 ```python
 import os
 from tangle_sandbox import Sandbox
@@ -40,6 +44,8 @@ client.close()
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 const response = await fetch("https://sandbox.tangle.tools/v1/startup-scripts", {
   method: "POST",
@@ -83,6 +89,8 @@ Size caps, defaults and the allowed ranges are on [Limits](/sandbox/limits). Scr
 
 At create, every enabled script whose `environments`, `minCpuCores` and `minRamGB` match the new sandbox runs, in `runOrder`. To run an enabled script that does not match those filters, name it in the create body's `startupScriptIds`:
 
+{/* sandbox-proof: skip REST mutation requires the resource IDs and request data from the surrounding steps */}
+
 ```bash
 SANDBOX_ID=$(curl -s -X POST "https://sandbox.tangle.tools/v1/sandboxes" \
   -H "Authorization: Bearer $TANGLE_API_KEY" \
@@ -113,6 +121,8 @@ A script with `injectSecrets` reads those secrets even when the create did not s
 | `PUT /v1/startup-scripts/{id}` | Update any field. |
 | `PATCH /v1/startup-scripts/{id}/toggle` | Turn a script on or off. |
 | `DELETE /v1/startup-scripts/{id}` | Delete it. |
+
+{/* sandbox-proof: skip REST mutation requires the resource IDs and request data from the surrounding steps */}
 
 ```bash
 curl "https://sandbox.tangle.tools/v1/startup-scripts" -H "Authorization: Bearer $TANGLE_API_KEY"

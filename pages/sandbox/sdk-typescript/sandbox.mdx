@@ -2,6 +2,8 @@
 
 Every `SandboxInstance` member for state, lifecycle, snapshots, branching, network policy, GPU leases and access. Commands, files and terminals are on [Runtime](/sandbox/sdk-typescript/runtime); prompts and sessions are on [Agents](/sandbox/sdk-typescript/agents).
 
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -37,6 +39,8 @@ try {
 ### `waitFor(status, options?): Promise<void>`
 
 Waits for one status or any of several. Options: `timeoutMs`, `pollIntervalMs`, `signal`, `onProgress`. Throws when the sandbox fails or the time runs out.
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 await box.waitFor(["running", "failed"], { timeoutMs: 120_000 });
@@ -146,6 +150,8 @@ Token scopes:
 ## Python and REST
 
 The Python instance has `refresh`, `wait_for`, `stop`, `resume`, `delete`, `snapshot`, `list_snapshots`, `restore_paths`, `ssh`, `egress_get`, `egress_update`, `egress_denials`, `trace` and `export_trace`. It has no branches, operations, env recovery, GPU leases, image publishing, scoped tokens, MCP endpoints or TEE attestation. Call those routes through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```python
 client.fetch("POST", f"/v1/sandboxes/{box.id}/scoped-token", json={"scope": "read-only"})
