@@ -124,6 +124,8 @@ On the default image, `python` and `pip` run from a venv at `~/.local/venv` that
 
 `exec` returns an `exitCode` for a failed command. Check it before taking a snapshot: a successful snapshot can preserve an environment where the install failed.
 
+{/* sandbox-proof: skip Requires the client initialized above and personal-template permissions */}
+
 ```ts
 const box = await client.create();
 let copy;
