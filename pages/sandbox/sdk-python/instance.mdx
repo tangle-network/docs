@@ -44,7 +44,8 @@ with Sandbox(
 | `status` | `SandboxStatus` | Cached status |
 | `connection` | `SandboxConnection \| None` | `runtime_url`, `host_url`, `auth_token`, `auth_token_expires_at`, `ssh`, `web_terminal_url`. `auth_token` opens the sandbox's runtime; keep it secret |
 | `metadata` | `dict` | Your metadata |
-| `created_at`, `started_at`, `last_activity_at`, `expires_at` | `datetime \| None` | Timestamps |
+| `created_at`, `started_at`, `last_activity_at` | `datetime \| None` | Timestamps |
+| `expires_at` | `datetime \| None` | Not reported yet: always `None`, even with a lifetime set |
 | `error` | `str \| None` | Why the sandbox failed, when it did |
 | `git` | `GitCapability` | Git operations; see [Git](#git) |
 

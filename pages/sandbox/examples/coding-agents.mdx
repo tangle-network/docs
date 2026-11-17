@@ -16,7 +16,7 @@ whose tests are tagged so a prompt can name one.
 The agent fixes the code; the program runs the tests itself and writes the
 diff to `fix.patch`.
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: owed model The agent must repair the repository so its tests pass; the synthetic echo model cannot */}
 
 ```ts
 import { writeFile } from "node:fs/promises";
@@ -54,7 +54,7 @@ program. Guide: [Run a coding agent](/sandbox/cloud-agents).
 The agent edits; the program reads what changed, runs the one test, and
 commits.
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: owed model The agent must repair the repository so its tests pass; the synthetic echo model cannot */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -237,7 +237,7 @@ outlive the first process. Guide: [Sessions](/sandbox/sessions).
 
 ## Run a planner and an implementer in one sandbox
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: owed model Starts codex and claude-code sessions on their default models to plan and fix the repository; the proof key allows only the synthetic echo model */}
 
 ```ts
 import type { AgentProfile } from "@tangle-network/agent-interface";
@@ -261,7 +261,6 @@ const implementerProfile = {
 } satisfies AgentProfile;
 
 const box = await client.create({
-  agent: false,
   git: { url: "https://github.com/tangle-network/sandbox-demo" },
 });
 try {
@@ -294,7 +293,7 @@ Prints the plan, the implementation summary and the planner's status. Guide:
 
 The agent installs Playwright and Chromium in its own sandbox and drives them.
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: owed model The agent must install the browser tools and write the screenshot and JSON files the program reads; the synthetic echo model cannot */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";

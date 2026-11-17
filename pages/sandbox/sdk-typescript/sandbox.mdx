@@ -27,7 +27,8 @@ try {
 | `id`, `name`, `metadata` | Identity and your tags. |
 | `status` | `pending`, `provisioning`, `running`, `stopped`, `failed`, `expired` or `deleted`, as of the last read. |
 | `connection` | Runtime URLs and SSH details. Contains tokens: never log it. |
-| `createdAt`, `startedAt`, `lastActivityAt`, `suspendedAt`, `expiresAt` | Timestamps. |
+| `createdAt`, `startedAt`, `lastActivityAt`, `suspendedAt` | Timestamps. |
+| `expiresAt` | Not reported yet: it stays `undefined`, even with `maxLifetimeSeconds`. See [Timers](/sandbox/lifecycle#timers-that-stop-or-delete-a-sandbox). |
 | `error` | Why the sandbox failed, when it did. |
 | `resources` | The granted size and billing shape. Absent means unknown. |
 | `gpuLease` | The create-time GPU lease, if any. |

@@ -46,7 +46,7 @@ Each comparison case runs a coding agent turn, so a comparison of two models on 
 
 Score text you already have against a rubric with a model judge on the Router. No sandbox.
 
-{/* sandbox-proof: skip Requires the agent-eval package and authorized real-model evaluation/Router credentials; synthetic transport does not prove judge or coding-evaluation results. */}
+{/* sandbox-proof: owed model The judge and the evaluated agents must be real Router models; the synthetic echo model does not produce scores or test-passing repairs */}
 
 ```ts
 import { createChatClient, llmJudge } from "@tangle-network/agent-eval/contract";
@@ -96,7 +96,7 @@ Scores come from a model and vary between runs.
 
 Run a coding agent on a question, then have a model judge read its answer and every tool call.
 
-{/* sandbox-proof: skip Requires the agent-eval package and authorized real-model evaluation/Router credentials; synthetic transport does not prove judge or coding-evaluation results. */}
+{/* sandbox-proof: owed model The judge and the evaluated agents must be real Router models; the synthetic echo model does not produce scores or test-passing repairs */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -149,7 +149,7 @@ ptid_... { grounded: 1, economical: 1 } Every cited file:line (server.js:10,21,2
 
 Run the same three failing-test cases on two models with the same coding agent and judge.
 
-{/* sandbox-proof: skip Requires the agent-eval package and authorized real-model evaluation/Router credentials; synthetic transport does not prove judge or coding-evaluation results. */}
+{/* sandbox-proof: owed model The judge and the evaluated agents must be real Router models; the synthetic echo model does not produce scores or test-passing repairs */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -210,7 +210,7 @@ Each number is the share of cases whose tagged test passes after the agent's tur
 
 Run the same cases on Claude Code and Codex and score each by whether the tagged test passes.
 
-{/* sandbox-proof: skip Requires the agent-eval package and authorized real-model evaluation/Router credentials; synthetic transport does not prove judge or coding-evaluation results. */}
+{/* sandbox-proof: owed model The judge and the evaluated agents must be real Router models; the synthetic echo model does not produce scores or test-passing repairs */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -270,7 +270,7 @@ codex 1
 
 Fail the build when a candidate prompt passes fewer cases than the shipped one.
 
-{/* sandbox-proof: skip Requires the agent-eval package and authorized real-model evaluation/Router credentials; synthetic transport does not prove judge or coding-evaluation results. */}
+{/* sandbox-proof: owed model The judge and the evaluated agents must be real Router models; the synthetic echo model does not produce scores or test-passing repairs */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -338,7 +338,7 @@ The script exits 1 when the candidate scores lower, which fails a CI step.
 
 Run a coding agent, then start an intelligence report on the sandbox and wait for it.
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Requires Intelligence account report creation and reads outside this proof runner's Sandbox-only capability */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
