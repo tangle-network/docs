@@ -46,8 +46,8 @@ try {
   await box.write("index.html", `<!doctype html>
 <html lang="en"><meta charset="utf-8"><title>Report</title>
 <body><h1>Sales report</h1>
-<button onclick="document.getElementById('result').textContent='Report ready'">Generate report</button>
-<p id="result" role="status">Waiting</p></body></html>`);
+<button onclick="const result=document.getElementById('result'); result.textContent='Report ready'; result.setAttribute('aria-label', result.textContent)">Generate report</button>
+<p id="result" role="status" aria-label="Waiting">Waiting</p></body></html>`);
   await box.process.spawnExact("python3", ["-m", "http.server", "8000", "--bind", "127.0.0.1"], {
     timeoutMs: 240_000,
   });
@@ -84,7 +84,9 @@ PY`);
     .join("\n");
   const button = text.match(/\[([^\]]+)\] button "Generate report"/);
   assert(button, "Generate report button was absent from the accessibility tree");
+  assert(text.includes('status "Waiting"'), "Waiting status was absent from the accessibility tree");
   await call("click_element", { ref: button[1] });
+  // read_screen includes accessible names; the handler names the status from its rendered text.
   const deadline = Date.now() + 10_000;
   while (true) {
     const changed = await call("read_screen");
