@@ -53,11 +53,17 @@ box = client.create(git=GitConfig(url="https://github.com/tangle-network/sandbox
 owned_snapshot_id = None
 try:
     box.wait_for(SandboxStatus.RUNNING)
+    fixture = "Restored from the captured workspace.\n"
+    box.write("test/restore-proof.txt", fixture)
     clean = box.snapshot(SnapshotOptions(tags=["clean"]))
     owned_snapshot_id = clean.snapshot_id
-    box.exec("rm -rf test")
+    removed = box.exec("rm -rf test")
+    assert removed.exit_code == 0, removed.stderr
     box.restore_paths(clean.snapshot_id, ["test"])
-    print(box.exec("ls test").stdout)
+    assert box.read("test/restore-proof.txt") == fixture
+    listed = box.exec("ls test")
+    assert listed.exit_code == 0, listed.stderr
+    print(listed.stdout)
 finally:
     try:
         if owned_snapshot_id:
@@ -124,7 +130,7 @@ try {
 
 ## Start a new sandbox from a snapshot
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Restoring a snapshot into a new sandbox requires a non-isolated create; this proof admits only fresh isolated allocations */}
 
 ```ts
 import assert from "node:assert/strict";

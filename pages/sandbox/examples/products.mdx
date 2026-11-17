@@ -73,7 +73,7 @@ This program creates a key's sandbox, finds it running, resumes it after a
 stop with the conversation intact, moves it to a new profile version, replaces
 it after a delete, then deletes the sandbox and releases the key.
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Requires persistent instance registry create/update/release operations outside this proof runner's ephemeral Sandbox capability. */}
 
 ```ts
 import {
@@ -162,7 +162,7 @@ generation.
 
 ## Keep a support conversation per customer
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Requires persistent instance registry create/update/release operations outside this proof runner's ephemeral Sandbox capability. */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -212,7 +212,7 @@ next conversation.
 
 ## Triage a queue of tickets in one call
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Requires server-managed batch allocation/custody outside this proof runner's per-program owned Sandbox IDs. */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -245,7 +245,7 @@ and cleans up the sandboxes. Guide: [Batches and hosted runs](/sandbox/runs-and-
 
 ## Research a company with a hosted run
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Requires Platform-hosted run creation and a real model outside the Sandbox-only proof capability. */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -277,7 +277,7 @@ fact, and the model spend. There is no sandbox to delete.
 
 ## Report what each turn cost
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Requires a real model outside the synthetic-only Production Journey key policy; echo does not establish the requested answer. */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";

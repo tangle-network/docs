@@ -148,8 +148,10 @@ const client = new Sandbox({
 
 const box = await client.create({ agent: false, maxLifetimeSeconds: 300, idleTimeoutSeconds: 120, deleteAfterStoppedSeconds: 600 });
 try {
-  assert(box.expiresAt instanceof Date);
-  assert(box.expiresAt.getTime() > Date.now());
+  await box.refresh();
+  const lifetime = JSON.stringify({ id: box.id, status: box.status, createdAt: box.createdAt, expiresAt: box.expiresAt ?? null });
+  assert(box.expiresAt instanceof Date, `No expiry Date after refresh: ${lifetime}`);
+  assert(box.expiresAt.getTime() > Date.now(), `Expiry is not in the future after refresh: ${lifetime}; now=${new Date().toISOString()}`);
   const result = await box.exec("printf 'bounded lifetime\\n'");
   assert.equal(result.exitCode, 0, result.stderr);
   assert.equal(result.stdout.trim(), "bounded lifetime");

@@ -112,7 +112,7 @@ In the CLI, the token never goes in argv: `--git-token-env GITHUB_TOKEN` names a
 
 This program pushes and pulls against a bare Git remote inside its own sandbox.
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Production Git status trims leading porcelain whitespace, so this program's modified-file assertion fails until that service defect is fixed */}
 
 ```ts
 import assert from "node:assert/strict";

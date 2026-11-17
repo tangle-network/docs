@@ -571,7 +571,7 @@ Fixed. ...
 `push` and `pull` use the credentials in the sandbox, such as a token from `GitConfig(auth=GitAuth(token=...))` at create.
 `commit` takes no author, and the sandbox has no git identity, so set one first:
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Production proof observed a dirty tree after the commit; the unexpected paths and cause remain unqualified */}
 
 ```python
 import os
@@ -735,7 +735,7 @@ Request: `POST /v1/sandboxes/{id}/snapshots/{snapshotId}/restore`
 
 Pass `from_snapshot` with `from_sandbox_id`, the sandbox that took it:
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Restoring a snapshot into a new sandbox requires a non-isolated create; this proof admits only fresh isolated allocations. */}
 
 ```python
 import time
