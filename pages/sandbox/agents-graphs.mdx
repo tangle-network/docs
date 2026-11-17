@@ -179,9 +179,17 @@ console.log(ledger);
 
 `sandboxClient` is any object with the SDK's `create` and, optionally, `list`. Wrap the client to set create options the runtime does not, such as a lifetime cap or network rules:
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const sandbox = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
 const sandboxClient = {
   create: (options: Parameters<typeof sandbox.create>[0], request?: Parameters<typeof sandbox.create>[1]) =>
     sandbox.create(
@@ -194,6 +202,22 @@ const sandboxClient = {
     ),
   list: (options?: Parameters<typeof sandbox.list>[0]) => sandbox.list(options),
 };
+
+const box = await sandboxClient.create({
+  agent: false, maxLifetimeSeconds: 60, egressPolicy: { mode: "open" },
+});
+try {
+  const effective = await box.egress.get();
+  assert.equal(effective.policy.mode, "strict");
+  assert.deepEqual(effective.policy.allowDomains, ["registry.npmjs.org"]);
+  assert((await sandboxClient.list()).some((item) => item.id === box.id));
+  const result = await box.exec("printf 'worker defaults applied\n'");
+  assert.equal(result.exitCode, 0, result.stderr);
+  assert.equal(result.stdout.trim(), "worker defaults applied");
+  console.log(effective.policy);
+} finally {
+  await box.delete();
+}
 ```
 
 The runtime deletes each worker sandbox when the worker settles.

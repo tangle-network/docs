@@ -115,16 +115,39 @@ The number of `allowDomains` entries is capped; see [Limits](/sandbox/limits).
 
 A host that resolves to a private or CGNAT address is refused unless you name the ranges it may use. The exception applies only to that domain and those exact ranges, not to other domains at the same address.
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-await box.egress.update({
-  mode: "strict",
-  allowDomains: [
-    "api.github.com",
-    { domain: "build.internal", allowPrivateIps: ["10.203.1.0/24"] },
-  ],
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
 });
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  await box.egress.update({
+    mode: "strict",
+    allowDomains: [
+      "api.github.com",
+      { domain: "build.internal", allowPrivateIps: ["10.203.1.0/24"] },
+    ],
+  });
+  const effective = await box.egress.get();
+  assert.equal(effective.source, "sandbox");
+  assert.equal(effective.policy.mode, "strict");
+  assert(effective.policy.allowDomains?.includes("api.github.com"));
+  const buildRule = effective.policy.allowDomains?.find(
+    (rule) => typeof rule !== "string" && rule.domain === "build.internal",
+  );
+  assert(buildRule && typeof buildRule !== "string");
+  assert.deepEqual(buildRule.allowPrivateIps, ["10.203.1.0/24"]);
+  console.log(buildRule.domain, buildRule.allowPrivateIps);
+} finally {
+  await box.delete();
+}
 ```
 
 ## Change the policy while the sandbox runs

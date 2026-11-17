@@ -67,6 +67,43 @@ failed call returns an MCP result with `isError: true` and the message.
 `createMcpServer(box, options)` returns `{ server, connect, close }`. Use it
 when your program picks the sandbox or the tools:
 
+{/* sandbox-proof: skip Long-running stdio server requires an existing sandbox and an external MCP client to drive and close it */}
+
+```ts
+import { Sandbox } from "@tangle-network/sandbox";
+import { createMcpServer } from "@tangle-network/sandbox/agent";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.get(process.env.SANDBOX_ID!);
+if (!box) throw new Error(`Sandbox ${process.env.SANDBOX_ID} not found`);
+
+const { connect } = await createMcpServer(box, {
+  sessionId: "claude-desktop",
+  allow: ["sandbox_run_code", "sandbox_read"],
+});
+await connect(new StdioServerTransport());
+```
+
+Point the client's `command` at `node` and this file, with `TANGLE_API_KEY`
+and `SANDBOX_ID` in `env`. Without `sessionId`, every caller shares one default
+kernel, so give each client its own session.
+
+## Control the sandbox desktop over MCP
+
+A sandbox created with the desktop capability serves computer use as MCP tools
+over HTTPS. Create it with `capabilities: ["computer_use"]`, or turn on
+**Enable remote desktop** when you create a sandbox in the
+[dashboard](https://sandbox.tangle.tools/dashboard). The desktop needs an image
+that includes it.
+
+This program checks the endpoint's URL, token scope, expiry and client
+configuration. It deletes the sandbox when the check finishes.
+
 {/* sandbox-proof: run */}
 
 ```ts
@@ -89,47 +126,16 @@ try {
   assert(server, "The MCP configuration did not include its server entry");
   assert.equal(server.url, endpoint.url);
   assert.equal(server.headers.Authorization, `Bearer ${endpoint.authToken}`);
-  console.log("Computer-use MCP endpoint is scoped and ready to connect");
+  console.log("Validated hosted MCP endpoint configuration");
 } finally {
   await box.delete();
 }
 ```
 
-Point the client's `command` at `node` and this file, with `TANGLE_API_KEY`
-and `SANDBOX_ID` in `env`. Without `sessionId`, every caller shares one default
-kernel, so give each client its own session.
-
-## Control the sandbox desktop over MCP
-
-A sandbox created with the desktop capability serves computer use as MCP tools
-over HTTPS. Create it with `capabilities: ["computer_use"]`, or turn on
-**Enable remote desktop** when you create a sandbox in the
-[dashboard](https://sandbox.tangle.tools/dashboard). The desktop needs an image
-that includes it.
-
-{/* sandbox-proof: skip Creates a long-lived computer-use endpoint for an external MCP client */}
-
-```ts
-import { writeFileSync } from "node:fs";
-import { Sandbox } from "@tangle-network/sandbox";
-
-const client = new Sandbox({
-  apiKey: process.env.TANGLE_API_KEY!,
-  baseUrl: "https://sandbox.tangle.tools",
-});
-
-const box = await client.create({
-  capabilities: ["computer_use"],
-  resources: { memoryMB: 4096 },
-});
-const endpoint = await box.getMcpEndpoint({ ttlMinutes: 60 });
-writeFileSync("mcp.json", JSON.stringify(endpoint.config, null, 2));
-console.log(endpoint.url, endpoint.expiresAt);
-```
-
 `endpoint.config` is a standard `mcpServers` block with an HTTP entry: the
-sandbox's `/mcp` URL and an `Authorization` header. Paste it into any MCP
-client that speaks the HTTP transport.
+sandbox's `/mcp` URL and an `Authorization` header. To use it with an MCP
+client that speaks the HTTP transport, pass `endpoint.config` to the client
+and keep the sandbox running for that client's session.
 
 | Field | Meaning |
 |---|---|
