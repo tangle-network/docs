@@ -196,11 +196,54 @@ tangle preview publish my-project --port 3000
 
 Python cannot create preview links or expose ports. Use TypeScript, the CLI, or the REST runtime routes through `client.fetch`, which returns the raw response and does not raise on an error status:
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
-response = client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/network/expose", json={"port": 8000})
-print(response.json().get("url"))
+import os
+import time
+import uuid
+from urllib.parse import urlsplit
+import httpx
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 300,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        expected = "preview-" + uuid.uuid4().hex
+        box.write("index.html", expected)
+        spawned = client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/process/spawn", json={
+            "executable": "python3", "args": ["-m", "http.server", "8000", "--bind", "0.0.0.0"],
+            "blocking": False, "timeoutMs": 120_000,
+        }).raise_for_status().json()
+        assert spawned["success"] is True
+        assert spawned["data"]["pid"] > 0
+        response = client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/network/expose", json={"port": 8000})
+        response.raise_for_status()
+        url = response.json()["url"]
+        assert urlsplit(url).scheme == "https"
+        deadline = time.monotonic() + 60
+        served = False
+        while time.monotonic() < deadline:
+            try:
+                public = httpx.get(url, timeout=5)
+                if public.status_code == 200 and public.text == expected:
+                    served = True
+                    break
+            except httpx.HTTPError:
+                pass
+            time.sleep(0.5)
+        assert served, "The exposed port did not serve the owned page before the deadline"
+        print(url)
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 ## Next

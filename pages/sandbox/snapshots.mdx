@@ -369,12 +369,82 @@ tangle branch create demo --count 2 --idempotency-key run-42
 
 Python has `snapshot(SnapshotOptions(tags, storage))`, `list_snapshots()`, `restore_paths(snapshot_id, paths)`, and `from_snapshot` with `from_sandbox_id` on create. It has no revert, snapshot delete, restore from storage, branch or fork. Call those routes with `client.fetch`, which returns the raw response and does not raise on an error status:
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
-client.fetch("POST", f"/v1/sandboxes/{box.id}/snapshots/{snapshot_id}/restore", json={})
-client.fetch("DELETE", f"/v1/sandboxes/{box.id}/snapshots/{snapshot_id}")
-client.fetch("POST", f"/v1/sandboxes/{box.id}/branch", json={"count": 2}, headers={"Idempotency-Key": "run-42"})
+from contextlib import ExitStack
+import os
+import time
+import uuid
+from tangle_sandbox import Sandbox, SandboxStatus, SnapshotOptions
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client, ExitStack() as cleanup:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "runtime": "firecracker", "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    cleanup.callback(lambda: client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status())
+    box = client.get(created["id"])
+    assert box is not None
+    box.wait_for(SandboxStatus.RUNNING)
+    box.write("version.txt", "original\n")
+    snapshot_id = box.snapshot(SnapshotOptions(tags=["rest-example"])).snapshot_id
+
+    def delete_owned_snapshot():
+        if snapshot_id is None:
+            return
+        deadline = time.monotonic() + 30
+        while True:
+            deleted = client.fetch("DELETE", f"/v1/sandboxes/{box.id}/snapshots/{snapshot_id}", timeout=10)
+            if deleted.status_code == 409:
+                hold = deleted.json()
+                if (hold.get("code") == "RESUME_SNAPSHOT_RETAINED"
+                        and hold.get("reason") in ("resume_generation_unconfirmed", "snapshot_delete_in_flight")
+                        and time.monotonic() < deadline):
+                    time.sleep(max(0, min(2, deadline - time.monotonic())))
+                    continue
+            deleted.raise_for_status()
+            assert deleted.json()["outcome"] in ("deleted", "already_absent")
+            return
+
+    cleanup.callback(delete_owned_snapshot)
+    box.write("version.txt", "edited\n")
+    restored = client.fetch("POST", f"/v1/sandboxes/{box.id}/snapshots/{snapshot_id}/restore", json={},
+        headers={"Idempotency-Key": "restore-" + uuid.uuid4().hex}, timeout=120)
+    restored.raise_for_status()
+    if restored.status_code == 202:
+        job = restored.json()
+        job_id = job["jobId"]
+        deadline = time.monotonic() + 120
+        while job["status"] in ("pending", "running") and time.monotonic() < deadline:
+            time.sleep(0.5)
+            job = client.fetch("GET", f"/v1/sandboxes/{box.id}/snapshots/jobs/{job_id}", timeout=10).raise_for_status().json()
+        assert job["status"] == "completed", "Restore status: " + str(job.get("status"))
+        assert job["result"]["success"] is True
+    else:
+        assert restored.status_code == 200
+        assert restored.json()["snapshotId"] == snapshot_id
+    box.refresh()
+    box.wait_for(SandboxStatus.RUNNING)
+    assert box.read("version.txt") == "original\n"
+    delete_owned_snapshot()
+    snapshot_id = None
+
+    forked = client.fetch("POST", f"/v1/sandboxes/{box.id}/branch", json={"count": 2},
+        headers={"Idempotency-Key": "branch-" + uuid.uuid4().hex}, timeout=120).raise_for_status().json()
+    children = forked["children"]
+    for child in children:
+        cleanup.callback(lambda child_id=child["id"]: client.fetch("DELETE", f"/v1/sandboxes/{child_id}").raise_for_status())
+    assert len(children) == 2
+    assert len({child["id"] for child in children}) == 2
+    for child in children:
+        copy = client.get(child["id"])
+        assert copy is not None
+        copy.wait_for(SandboxStatus.RUNNING)
+        assert copy.read("version.txt") == "original\n"
+    print("Restored the workspace, deleted its snapshot, and checked both branches")
 ```
 
 ## Next
