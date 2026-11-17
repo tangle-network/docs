@@ -46,10 +46,10 @@ try {
 
 ```python
 import os
-from tangle_sandbox import Sandbox, SandboxStatus, GitConfig, SnapshotOptions
+from tangle_sandbox import Sandbox, SandboxStatus, SnapshotOptions
 
 client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
-box = client.create(git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"))
+box = client.create()
 owned_snapshot_id = None
 try:
     box.wait_for(SandboxStatus.RUNNING)
@@ -57,13 +57,11 @@ try:
     box.write("test/restore-proof.txt", fixture)
     clean = box.snapshot(SnapshotOptions(tags=["clean"]))
     owned_snapshot_id = clean.snapshot_id
-    removed = box.exec("rm -rf test")
-    assert removed.exit_code == 0, removed.stderr
+    box.write("test/restore-proof.txt", "damaged\n")
+    assert box.read("test/restore-proof.txt") == "damaged\n"
     box.restore_paths(clean.snapshot_id, ["test"])
     assert box.read("test/restore-proof.txt") == fixture
-    listed = box.exec("ls test")
-    assert listed.exit_code == 0, listed.stderr
-    print(listed.stdout)
+    print("restored", fixture.strip())
 finally:
     try:
         if owned_snapshot_id:
@@ -126,7 +124,7 @@ try {
 }
 ```
 
-`restorePaths` replaces the listed workspace-relative paths and leaves every other file as it is.
+`restorePaths` replaces the listed workspace-relative paths and leaves every other file as it is. The paths resolve from the workspace root, like `read` and `write`, not from the cloned repository that `exec` starts in when the sandbox was created with `git`.
 
 ## Start a new sandbox from a snapshot
 

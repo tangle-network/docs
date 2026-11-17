@@ -146,20 +146,26 @@ const client = new Sandbox({
   baseUrl: "https://sandbox.tangle.tools",
 });
 
+// The interval starts once the sandbox starts, so it runs at least until this time.
+const runsUntilAtLeast = new Date(Date.now() + 300_000);
 const box = await client.create({ agent: false, maxLifetimeSeconds: 300, idleTimeoutSeconds: 120, deleteAfterStoppedSeconds: 600 });
 try {
   await box.refresh();
-  const lifetime = JSON.stringify({ id: box.id, status: box.status, createdAt: box.createdAt, expiresAt: box.expiresAt ?? null });
-  assert(box.expiresAt instanceof Date, `No expiry Date after refresh: ${lifetime}`);
-  assert(box.expiresAt.getTime() > Date.now(), `Expiry is not in the future after refresh: ${lifetime}; now=${new Date().toISOString()}`);
+  assert.equal(box.status, "running");
   const result = await box.exec("printf 'bounded lifetime\\n'");
   assert.equal(result.exitCode, 0, result.stderr);
   assert.equal(result.stdout.trim(), "bounded lifetime");
-  console.log(box.expiresAt.toISOString());
+  // expiresAt is not reported yet; keep the deadline yourself.
+  console.log("expiresAt", box.expiresAt ?? "not reported");
+  console.log("runs until at least", runsUntilAtLeast.toISOString());
 } finally {
   await box.delete();
 }
 ```
+
+The sandbox does not report its stop deadline yet: `expiresAt` stays empty
+even when you set `maxLifetimeSeconds`. Record the time when you create or
+resume the sandbox and add the interval yourself.
 
 The CLI flags are `--lifetime` and `--idle-timeout`, both in seconds. Defaults and allowed ranges are on [Limits](/sandbox/limits).
 

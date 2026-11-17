@@ -277,7 +277,7 @@ fact, and the model spend. There is no sandbox to delete.
 
 ## Report what each turn cost
 
-{/* sandbox-proof: skip Requires a real model outside the synthetic-only Production Journey key policy; echo does not establish the requested answer. */}
+{/* sandbox-proof: owed model Requests glm-5.3 for a real answer about the repository; the proof key allows only the synthetic echo model */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -312,7 +312,7 @@ your margin. See [Pricing and spend](/sandbox/cost) for sandbox time.
 Your loop calls the Tangle Router; the sandbox is its tools. One key pays for
 both.
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: owed model Calls the Router directly with a tool-calling model that must drive the sandbox tools; the proof key allows only the synthetic echo model and no direct Router access */}
 
 ```ts
 import { Sandbox, openaiTools } from "@tangle-network/sandbox/agent";
@@ -334,6 +334,7 @@ try {
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({ model: "glm-5.3", messages, tools }),
     });
+    if (!reply.ok) throw new Error(`Router request failed with HTTP ${reply.status}`);
     const { message } = (await reply.json()).choices[0];
     messages.push(message);
     if (!message.tool_calls?.length) {
