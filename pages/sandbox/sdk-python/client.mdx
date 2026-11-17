@@ -27,11 +27,29 @@ with Sandbox(
 
 ## Constructor
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+{/* sandbox-proof: run */}
 
 ```python
-Sandbox(api_key: str, base_url: str, *, timeout_ms: int = 30000)
-AsyncSandbox(api_key: str, base_url: str, *, timeout_ms: int = 30000)
+import asyncio
+import os
+from tangle_sandbox import AsyncSandbox, Sandbox
+
+async def main():
+    async with AsyncSandbox(
+        api_key=os.environ["TANGLE_API_KEY"],
+        base_url="https://sandbox.tangle.tools",
+        timeout_ms=15_000,
+    ) as client:
+        assert await client.health(), "Async client could not reach the Sandbox API"
+    with Sandbox(
+        api_key=os.environ["TANGLE_API_KEY"],
+        base_url="https://sandbox.tangle.tools",
+        timeout_ms=15_000,
+    ) as client:
+        assert client.health(), "Sync client could not reach the Sandbox API"
+    print("Sync and async clients reached the API with explicit request deadlines")
+
+asyncio.run(main())
 ```
 
 | Parameter | Description |
@@ -44,10 +62,28 @@ Every request carries `Authorization: Bearer <api_key>`.
 
 ## `create`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`create(options: CreateSandboxOptions | None = None, **kwargs) -> SandboxInstance`
+
+{/* sandbox-proof: run */}
 
 ```python
-create(options: CreateSandboxOptions | None = None, **kwargs) -> SandboxInstance
+from tangle_sandbox import CreateSandboxOptions
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    box = client.create(CreateSandboxOptions(name="environment-example", env={"JOB_LABEL": "daily-report"}, max_lifetime_seconds=300))
+    try:
+        box.wait_for(SandboxStatus.RUNNING)
+        result = box.exec("printf '%s' \"$JOB_LABEL\"")
+        assert result.exit_code == 0, result.stderr
+        assert result.stdout == "daily-report"
+        print(box.name, result.stdout)
+    finally:
+        box.delete()
 ```
 
 Creates a sandbox and returns its instance with the status the API answered: `pending`, `provisioning` or `running`.
@@ -55,19 +91,25 @@ Pass a `CreateSandboxOptions` or the same fields as keyword arguments. Call `wai
 
 Request: `POST /v1/sandboxes`
 
-{/* sandbox-proof: skip Continues the preceding client initialization example */}
+{/* sandbox-proof: run */}
 
 ```python
 from tangle_sandbox import BackendConfig, CreateSandboxOptions, GitConfig
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
 
-box = client.create(
-    CreateSandboxOptions(
-        name="fixer",
-        git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"),
-        backend=BackendConfig(type="claude-code"),
-        max_lifetime_seconds=3600,
-    )
-)
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    box = client.create(CreateSandboxOptions(name="fixer", git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"), backend=BackendConfig(type="claude-code"), max_lifetime_seconds=300))
+    try:
+        box.wait_for(SandboxStatus.RUNNING)
+        assert box.name == "fixer"
+        assert box.git.status().is_dirty is False
+        print(box.id, box.git.status().branch)
+    finally:
+        box.delete()
 ```
 
 Every create sends an `Idempotency-Key`. Two creates with the same `idempotency_key` return the same sandbox.
@@ -119,39 +161,138 @@ The API also accepts `cwd`, `ephemeral`, `coldTimeoutSeconds`, `deleteAfterStopp
 
 ## `list`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`list(options: ListSandboxOptions | None = None, **kwargs) -> list[SandboxInstance]`
+
+{/* sandbox-proof: run */}
 
 ```python
-list(options: ListSandboxOptions | None = None, **kwargs) -> list[SandboxInstance]
+from tangle_sandbox import ListSandboxOptions
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        second_created = client.fetch("POST", "/v1/sandboxes", json={"agent": False, "maxLifetimeSeconds": 300}).raise_for_status().json()
+        try:
+            second = client.get(second_created["id"])
+            assert second is not None
+            second.wait_for(SandboxStatus.RUNNING)
+            first_page = client.list(ListSandboxOptions(limit=1, offset=0))
+            second_page = client.list(ListSandboxOptions(limit=1, offset=1))
+            assert len(first_page) == 1
+            assert len(second_page) == 1
+            assert first_page[0].id != second_page[0].id
+            for item in first_page + second_page:
+                assert item.id
+                assert isinstance(item.status, SandboxStatus)
+            print([item.id for item in first_page], [item.id for item in second_page])
+        finally:
+            client.fetch("DELETE", f"/v1/sandboxes/{second_created['id']}").raise_for_status()
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Lists your sandboxes. `ListSandboxOptions(status=..., limit=..., offset=...)`: `status` is one `SandboxStatus` or a list of them; `limit` is 0 to 1000.
 
 Request: `GET /v1/sandboxes`
 
-{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
-from tangle_sandbox import ListSandboxOptions, SandboxStatus
+from tangle_sandbox import ListSandboxOptions
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
 
-running = client.list(ListSandboxOptions(status=SandboxStatus.RUNNING, limit=20))
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        running = client.list(ListSandboxOptions(status=SandboxStatus.RUNNING, limit=20))
+        assert any(item.id == box.id for item in running)
+        assert all(item.status == SandboxStatus.RUNNING for item in running)
+        print([item.id for item in running])
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 `list()` returns personal sandboxes. To list team sandboxes, pass `scope` to the REST route: `team`, `team:<id>` or `all`.
 
-{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
-response = client.fetch("GET", "/v1/sandboxes", params={"scope": "all", "limit": 20})
-names = [s["name"] for s in response.json()["sandboxes"]]
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        response = client.fetch("GET", "/v1/sandboxes", params={"scope": "all", "limit": 20})
+        response.raise_for_status()
+        sandboxes = response.json()["sandboxes"]
+        assert any(item["id"] == box.id for item in sandboxes)
+        names = [item["name"] for item in sandboxes]
+        print(names)
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 ## `get`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`get(sandbox_id: str) -> SandboxInstance | None`
+
+{/* sandbox-proof: skip Production proof adds run metadata, so it cannot verify this example's unchanged metadata round-trip assertion */}
 
 ```python
-get(sandbox_id: str) -> SandboxInstance | None
+import uuid
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+        "metadata": {"purpose": "lookup-example"},
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        again = client.get(box.id)
+        assert again is not None
+        assert again.id == box.id
+        assert again.status == SandboxStatus.RUNNING
+        assert again.metadata == {"purpose": "lookup-example"}
+        missing = client.get("docs-missing-" + uuid.uuid4().hex)
+        assert missing is None
+        print(again.id, again.metadata)
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Fetches one sandbox, or `None` when the id does not exist. A deleted sandbox can come back with status `DELETED`.
@@ -160,20 +301,55 @@ Request: `GET /v1/sandboxes/{id}`
 
 ## `health`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`health() -> bool`
+
+{/* sandbox-proof: run */}
 
 ```python
-health() -> bool
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    available = client.health()
+    assert available is True, "Sandbox public health did not answer successfully"
+    print("Sandbox API is available")
 ```
 
 `True` when `GET /health` answers 2xx; any failure returns `False`. The route needs no key, so `health()` does not check yours.
 
 ## `usage`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`usage() -> UsageInfo`
+
+{/* sandbox-proof: run */}
 
 ```python
-usage() -> UsageInfo
+import math
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        usage = client.usage()
+        assert math.isfinite(usage.compute_minutes)
+        assert usage.active_sandboxes >= 1
+        assert usage.total_sandboxes >= usage.active_sandboxes
+        assert usage.period_end > usage.period_start
+        print(usage.compute_minutes, usage.active_sandboxes, usage.period_start.isoformat())
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Compute minutes, active and total sandbox counts, and the reporting period, which is the current day.
@@ -182,10 +358,26 @@ Request: `GET /usage`
 
 ## `subscription`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`subscription() -> SubscriptionInfo`
+
+{/* sandbox-proof: run */}
 
 ```python
-subscription() -> SubscriptionInfo
+import math
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    plan = client.subscription()
+    assert plan.plan in ("free", "pro", "enterprise")
+    assert math.isfinite(plan.credits_available_usd)
+    assert math.isfinite(plan.credits_used_usd)
+    assert isinstance(plan.overage_allowed, bool)
+    assert isinstance(plan.limits, dict)
+    print(plan.plan, plan.status, plan.credits_available_usd, plan.credits_used_usd)
 ```
 
 Plan, status, credit balance and credits used, monthly balance, maximum concurrent sandboxes, whether overage is on, plan limits and period end.
@@ -194,20 +386,56 @@ Request: `GET /subscription`
 
 ## `fetch`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`fetch(method: str, path: str, *, json=None, params=None, headers=None, timeout: float | None = None) -> httpx.Response`
+
+{/* sandbox-proof: run */}
 
 ```python
-fetch(method: str, path: str, *, json=None, params=None, headers=None, timeout: float | None = None) -> httpx.Response
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+        "metadata": {"report": "daily"},
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        response = client.fetch("GET", f"/v1/sandboxes/{box.id}", timeout=10)
+        response.raise_for_status()
+        body = response.json()
+        assert body["id"] == box.id
+        assert body["status"] == "running"
+        assert body["metadata"]["report"] == "daily"
+        print(response.status_code, body["metadata"])
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Sends an authenticated request to any Sandbox API route the SDK does not wrap. It returns the raw `httpx.Response` and does not raise on a 4xx or 5xx; check `status_code`.
 Connection failures and timeouts still raise `NetworkError` and `TimeoutError`, and `GET`, `PUT` and `DELETE` get the SDK's retries.
 
-{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
-shapes = client.fetch("GET", "/v1/shapes").json()
-print(shapes["default"], [p["name"] for p in shapes["presets"]])
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    response = client.fetch("GET", "/v1/shapes")
+    response.raise_for_status()
+    shapes = response.json()
+    assert shapes["presets"]
+    assert any(preset["name"] == shapes["default"] for preset in shapes["presets"])
+    print(shapes["default"], [preset["name"] for preset in shapes["presets"]])
 ```
 
 {/* sandbox-proof: skip Example terminal output or API field reference */}
@@ -218,10 +446,27 @@ small ['nano', 'small', 'medium', 'large']
 
 ## `close`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+{/* sandbox-proof: run */}
 
 ```python
-close() -> None
+import os
+from tangle_sandbox import Sandbox
+
+client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
+try:
+    response = client.fetch("GET", "/v1/environments")
+    response.raise_for_status()
+    assert isinstance(response.json()["environments"], list)
+finally:
+    client.close()
+
+closed = False
+try:
+    client.fetch("GET", "/v1/environments")
+except RuntimeError:
+    closed = True
+assert closed, "The closed transport accepted another HTTP request"
+print("Closed the client after reading the environment catalog")
 ```
 
 Closes the connection pool. `with Sandbox(...) as client:` and `async with AsyncSandbox(...) as client:` call it for you.
@@ -230,7 +475,7 @@ Closes the connection pool. `with Sandbox(...) as client:` and `async with Async
 
 Encrypted secrets on your account. Values are never returned.
 
-{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+{/* sandbox-proof: skip API method signatures for reference; not a complete executable program */}
 
 ```python
 client.secrets.create(name: str, value: str, options: dict | None = None) -> SecretInfo
@@ -246,11 +491,26 @@ Requests: `POST /v1/secrets`, `GET /v1/secrets`, `PUT /v1/secrets/{name}`, `DELE
 
 ## `client.environments`
 
-{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
-client.environments.list() -> list[SandboxEnvironment]
-client.environments.get(env_id: str) -> SandboxEnvironment | None
+import uuid
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    environments = client.environments.list()
+    assert environments, "No development environments were returned"
+    selected = environments[0]
+    again = client.environments.get(selected.id)
+    assert again is not None
+    assert again.id == selected.id
+    assert again.runtimes == selected.runtimes
+    assert client.environments.get("docs-missing-" + uuid.uuid4().hex) is None
+    print(selected.id, selected.runtimes)
 ```
 
 Environments a create can name: `universal` and your templates as `template:<id>`. Each lists the runtimes it supports in `runtimes`. `get` filters the list.
@@ -279,7 +539,7 @@ Roles are `owner`, `admin`, `member` and `viewer`. Team secrets, team templates 
 
 ## `run_batch` and `stream_batch`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+{/* sandbox-proof: skip API method signatures for reference; not a complete executable program */}
 
 ```python
 run_batch(request: BatchRunRequest, *, idempotency_key: str | None = None) -> BatchResult
@@ -316,7 +576,7 @@ Creates and manages fleets: named groups of sandboxes that run one workload. See
 
 ## Intelligence reports
 
-{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+{/* sandbox-proof: skip API method signatures for reference; not a complete executable program */}
 
 ```python
 client.create_intelligence_report(*, subject_type, subject_id, mode="deterministic", acknowledge_cost=False, budget=None, metadata=None) -> IntelligenceReport

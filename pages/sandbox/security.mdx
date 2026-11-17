@@ -38,10 +38,29 @@ Omit `runtime` for the platform default. `environments.list()` shows which runti
 
 A normal sandbox runs with your account's context: your startup scripts run in it, and it can receive your secrets and act on your Hub connections. An isolated sandbox gets none of that.
 
-{/* sandbox-proof: skip Continues the preceding client initialization example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const box = await client.createIsolated({ name: "untrusted-pr-1234" });
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.createIsolated({ agent: false, name: "untrusted-pr-1234", maxLifetimeSeconds: 300 });
+try {
+  const receipt = box.createReceipt();
+  assert.equal(receipt?.ownerContext, "isolated");
+  assert.deepEqual(receipt?.injectedSecrets, []);
+  const result = await box.exec("python3 -c 'print(6 * 7)'");
+  assert.equal(result.exitCode, 0, result.stderr);
+  assert.equal(result.stdout.trim(), "42");
+  console.log("Isolated owner context confirmed");
+} finally {
+  await box.delete();
+}
 ```
 
 `createIsolated` is `create` with `ownerContext: "isolated"`. It selects no secrets, turns SSH off, runs none of your startup scripts and carries no Hub authority. Use it to run code you did not write, such as a pull request from outside your team.

@@ -116,24 +116,47 @@ const { command, env } = await box.sshCommand();
 
 `box.terminals.attach` opens a live terminal over a WebSocket. Register your handlers in the call: a reattached terminal replays its screen as soon as it connects.
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: skip Production proof does not support the WebSocket upgrade used by terminal attachment */}
 
 ```ts
-const output: string[] = [];
-const term = await box.terminals.attach("build-shell", {
-  cols: 120,
-  rows: 32,
-  handlers: {
-    onData: (bytes) => output.push(new TextDecoder().decode(bytes)),
-    onExit: (info) => console.log("exited", info),
-    onClose: (code, reason) => console.log("closed", code, reason),
-  },
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
 });
 
-term.write("cd /home/agent && ls -la\n");
-term.resize(160, 40);
-
-await term.close();
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  const output: string[] = [];
+  const term = await box.terminals.attach("build-shell", {
+    cols: 120, rows: 32,
+    handlers: { onData: (bytes) => output.push(new TextDecoder().decode(bytes)) },
+  });
+  try {
+    term.write("printf 'terminal ready\\n' > /home/agent/terminal.txt; cat /home/agent/terminal.txt\n");
+    term.resize(160, 40);
+    const deadline = Date.now() + 20_000;
+    let completed = false;
+    while (Date.now() < deadline) {
+      if (await box.fs.exists("terminal.txt")) {
+        const content = await box.read("terminal.txt");
+        if (content === "terminal ready\n" && /(?:^|\r?\n)terminal ready\r?\n/.test(output.join(""))) {
+          completed = true;
+          break;
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    assert(completed, "Terminal output and file contents did not arrive before the deadline");
+    console.log("Terminal input, resize, and output succeeded");
+  } finally {
+    await term.close();
+  }
+} finally {
+  await box.delete();
+}
 ```
 
 | Option | Effect |
@@ -151,14 +174,41 @@ The connection id names the terminal. Attaching with the same id reattaches to t
 
 The REST side of `box.terminals` works without holding a WebSocket open:
 
-{/* sandbox-proof: skip Interactive program waits for user input */}
+{/* sandbox-proof: run */}
 
 ```ts
-const created = await box.terminals.create({ name: "tests", cols: 80, rows: 24 });
-await box.terminals.input(created.sessionId, "make test\n");
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
 
-for (const t of await box.terminals.list()) console.log(t.sessionId, t.isRunning, t.lastActivityAt);
-const one = await box.terminals.get(created.sessionId); // null when it is gone
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  const created = await box.terminals.create({ name: "reports", cols: 80, rows: 24 });
+  assert(created.sessionId);
+  await box.terminals.input(created.sessionId, "printf 'report ready\\n' > /home/agent/report-terminal.txt\n");
+  const deadline = Date.now() + 20_000;
+  let completed = false;
+  while (Date.now() < deadline) {
+    if ((await box.fs.exists("report-terminal.txt")) && (await box.read("report-terminal.txt")) === "report ready\n") {
+      completed = true;
+      break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  assert(completed, "Terminal command did not write its report before the deadline");
+  const terminals = await box.terminals.list();
+  assert(terminals.some((item) => item.sessionId === created.sessionId));
+  const one = await box.terminals.get(created.sessionId);
+  assert(one);
+  assert.equal(one.sessionId, created.sessionId);
+  console.log(one.sessionId, one.isRunning);
+} finally {
+  await box.delete();
+}
 ```
 
 ## A terminal in your web page

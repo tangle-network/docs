@@ -220,10 +220,12 @@ with Sandbox(
 ) as client:
     box = client.create()
     copy = None
+    owned_snapshot_id = None
     try:
         box.wait_for(SandboxStatus.RUNNING)
         box.write("config.json", '{"retries": 3}\n')
         clean = box.snapshot(SnapshotOptions(tags=["clean"]))
+        owned_snapshot_id = clean.snapshot_id
 
         # A new snapshot takes a few seconds to appear in the list.
         for _ in range(60):
@@ -241,9 +243,15 @@ with Sandbox(
         copy.wait_for(SandboxStatus.RUNNING)
         print("copy", copy.read("config.json"), end="")
     finally:
-        box.delete()
-        if copy:
-            copy.delete()
+        try:
+            if copy:
+                copy.delete()
+        finally:
+            try:
+                if owned_snapshot_id:
+                    client.fetch("DELETE", f"/v1/sandboxes/{box.id}/snapshots/{owned_snapshot_id}").raise_for_status()
+            finally:
+                box.delete()
 ```
 
 {/* sandbox-proof: skip Example terminal output or API field reference */}

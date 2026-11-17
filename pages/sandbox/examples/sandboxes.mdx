@@ -176,8 +176,10 @@ const client = new Sandbox({
 const box = await client.create({
   git: { url: "https://github.com/tangle-network/sandbox-demo" },
 });
+let ownedSnapshotId: string | undefined;
 try {
   const clean = await box.snapshot({ tags: ["clean"] });
+  ownedSnapshotId = clean.snapshotId;
 
   await box.exec("rm -rf packages test");
   console.log("after", (await box.exec("ls")).stdout.trim().split("\n"));
@@ -186,7 +188,11 @@ try {
   console.log("reverted", (await box.exec("ls")).stdout.trim().split("\n"));
   console.log((await box.exec("npm test 2>&1 | grep -c '^ok'")).stdout.trim(), "tests pass again");
 } finally {
-  await box.delete();
+  try {
+    if (ownedSnapshotId) await box.deleteSnapshot(ownedSnapshotId);
+  } finally {
+    await box.delete();
+  }
 }
 ```
 

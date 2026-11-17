@@ -10,15 +10,38 @@ import { Callout } from "nextra/components";
 Every type here is a dataclass or enum you import from `tangle_sandbox`.
 Errors are `SandboxError` with a platform `code`; [Error codes](/sandbox/errors) lists every code.
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
 from tangle_sandbox import SandboxError
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
 
-try:
-    box.exec("true")
-except SandboxError as error:
-    print(error.code, error.status, error.retryable, error.next_step)
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        missing = False
+        try:
+            box.read("missing.txt")
+        except SandboxError as error:
+            missing = True
+            assert error.status == 404
+            assert error.retryable is False
+            print(error.code, error.status, error.next_step)
+        assert missing, "A missing file did not produce a typed SDK error"
+        box.write("missing.txt", "Restored file contents\n")
+        assert box.read("missing.txt") == "Restored file contents\n"
+        print("Read succeeds after creating the file")
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 ## Status

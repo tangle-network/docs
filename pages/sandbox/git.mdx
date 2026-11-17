@@ -110,25 +110,46 @@ In the CLI, the token never goes in argv: `--git-token-env GITHUB_TOKEN` names a
 
 ## Work with the repository
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+This program pushes and pulls against a bare Git remote inside its own sandbox.
+
+{/* sandbox-proof: run */}
 
 ```ts
-const status = await box.git.status();
-console.log(status.modified, status.untracked, status.ahead, status.behind);
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
 
-const diff = await box.git.diff();
-for (const file of diff.files) console.log(file.status, file.path, `+${file.additions} -${file.deletions}`);
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
 
-await box.git.checkout("fix/null-guard", { create: true });
-await box.git.add(["src/server.js"]);
-const commit = await box.git.commit("fix: guard a null request body");
-console.log(commit.sha, commit.message);
-
-for (const c of await box.git.log(5)) console.log(c.shortSha, c.message);
-for (const b of await box.git.branches()) console.log(b.current ? "*" : " ", b.name);
-
-await box.git.pull({ rebase: true });
-await box.git.push();
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300, git: { url: "https://github.com/tangle-network/sandbox-demo" } });
+try {
+  const prepared = await box.exec("git config user.name 'Docs Example' && git config user.email docs@example.com && git init --bare /home/agent/docs-remote.git && git remote set-url origin /home/agent/docs-remote.git");
+  assert.equal(prepared.exitCode, 0, prepared.stderr);
+  await box.git.checkout("docs/workspace-example", { create: true });
+  const before = await box.read("README.md");
+  await box.write("README.md", `${before}\nWorkspace revision for the Git example.\n`);
+  const status = await box.git.status();
+  assert(status.modified.includes("README.md"));
+  const diff = await box.git.diff();
+  assert(diff.files.some((file) => file.path === "README.md"));
+  await box.git.add(["README.md"]);
+  const commit = await box.git.commit("docs: retain a workspace revision");
+  assert(commit.sha);
+  const tracked = await box.exec("git push --set-upstream origin HEAD");
+  assert.equal(tracked.exitCode, 0, tracked.stderr);
+  await box.git.pull({ rebase: true });
+  await box.git.push();
+  const log = await box.git.log(5);
+  assert(log.some((item) => item.sha === commit.sha));
+  const branches = await box.git.branches();
+  assert(branches.some((branch) => branch.current && branch.name === "docs/workspace-example"));
+  assert.equal((await box.git.status()).isDirty, false);
+  console.log(commit.sha, commit.message);
+} finally {
+  await box.delete();
+}
 ```
 
 | Method | Returns |
@@ -143,13 +164,31 @@ await box.git.push();
 
 ### Save the agent's change as a patch
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
 
-const { raw } = await box.git.diff();
-await writeFile("agent.patch", raw);
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300, git: { url: "https://github.com/tangle-network/sandbox-demo" } });
+try {
+  const path = "README.md";
+  const before = await box.read(path);
+  await box.write(path, `${before}\nDocumentation export example.\n`);
+  const { raw } = await box.git.diff();
+  assert(raw.includes("Documentation export example."));
+  await writeFile("agent.patch", raw);
+  assert.equal(await readFile("agent.patch", "utf8"), raw);
+  console.log("Saved agent.patch");
+} finally {
+  await box.delete();
+}
 ```
 
 Apply it locally with `git apply agent.patch`.

@@ -217,10 +217,31 @@ See [OpenAI](/sandbox/agents-openai), [Anthropic](/sandbox/agents-anthropic), [V
 
 Python has `box.prompt(...)` and `box.stream_prompt(...)`. It has no sessions, dispatch, interactions, interactive sessions or `agents`. Call session routes through `client.fetch`, which returns the raw response and does not raise on an error status:
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
-client.fetch("GET", f"/v1/sandboxes/{box.id}/runtime/agents/sessions")
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        response = client.fetch("GET", f"/v1/sandboxes/{box.id}/runtime/agents/sessions")
+        response.raise_for_status()
+        sessions = response.json()
+        assert isinstance(sessions, list)
+        assert sessions == [], "An agentless new sandbox unexpectedly has native agent sessions"
+        print("Native sessions:", len(sessions))
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 ## Next

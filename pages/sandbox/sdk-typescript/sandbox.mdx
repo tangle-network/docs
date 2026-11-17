@@ -40,10 +40,28 @@ try {
 
 Waits for one status or any of several. Options: `timeoutMs`, `pollIntervalMs`, `signal`, `onProgress`. Throws when the sandbox fails or the time runs out.
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-await box.waitFor(["running", "failed"], { timeoutMs: 120_000 });
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  await box.waitFor(["running", "failed"], { timeoutMs: 120_000 });
+  assert.equal(box.status, "running");
+  await box.stop();
+  await box.waitFor("stopped", { timeoutMs: 30_000 });
+  assert.equal(box.status, "stopped");
+  console.log("Observed running and stopped states");
+} finally {
+  await box.delete();
+}
 ```
 
 `box.events({ eventTypes?, signal? })` streams lifecycle and activity events, and `box.watchProvisioning()` yields provisioning steps and returns the result.

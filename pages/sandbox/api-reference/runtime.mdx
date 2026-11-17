@@ -42,16 +42,33 @@ curl -s -X POST "https://sandbox.tangle.tools/v1/sandboxes/$SANDBOX_ID/runtime/p
 </Tabs.Tab>
 <Tabs.Tab>
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
-# client.fetch returns the raw httpx.Response; check status_code yourself.
-response = client.fetch(
-    "POST",
-    f"/v1/sandboxes/{box.id}/runtime/process/spawn",
-    json={"executable": "bash", "args": ["-c", "ls -la"], "blocking": True, "timeoutMs": 30000},
-)
-print(response.status_code, response.json()["data"]["stdout"])
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("expected.txt", "runtime process listing input\n")
+        response = client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/process/spawn", json={"executable": "bash", "args": ["-c", "ls -la"], "blocking": True, "timeoutMs": 30000})
+        response.raise_for_status()
+        body = response.json()
+        assert body["success"] is True
+        assert body["data"]["exitCode"] == 0
+        assert "expected.txt" in body["data"]["stdout"]
+        print(response.status_code, body["data"]["stdout"])
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 </Tabs.Tab>

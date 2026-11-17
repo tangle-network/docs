@@ -27,15 +27,23 @@ curl -s https://sandbox.tangle.tools/v1/sandboxes \
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
 
-{/* sandbox-proof: skip Client construction reference; it makes no production request */}
+{/* sandbox-proof: run */}
 
 ```ts
+import assert from "node:assert/strict";
 import { Sandbox } from "@tangle-network/sandbox";
 
 const client = new Sandbox({
   apiKey: process.env.TANGLE_API_KEY!,
   baseUrl: "https://sandbox.tangle.tools",
 });
+
+const identity = await client.getIdentity();
+assert(identity.customerId.length > 0);
+assert(identity.billingOwnerId.length > 0);
+assert(identity.apiKeyId === null || typeof identity.apiKeyId === "string");
+assert.equal(typeof identity.billingDelegationAuthorized, "boolean");
+console.log("The API accepted this key and identified its billing owner");
 ```
 
 The SDK reads no environment variables. `TANGLE_API_KEY` in these docs is a convention; pass the key however your app stores secrets.
@@ -44,17 +52,25 @@ The SDK reads no environment variables. `TANGLE_API_KEY` in these docs is a conv
 </Tabs.Tab>
 <Tabs.Tab>
 
-{/* sandbox-proof: skip Client construction reference; it makes no production request */}
+{/* sandbox-proof: run */}
 
 ```python
 import os
+from tangle_sandbox import Sandbox, SandboxStatus
 
-from tangle_sandbox import Sandbox
-
-client = Sandbox(
+with Sandbox(
     api_key=os.environ["TANGLE_API_KEY"],
     base_url="https://sandbox.tangle.tools",
-)
+) as client:
+    response = client.fetch("GET", "/v1/me")
+    response.raise_for_status()
+    body = response.json()
+    assert body["success"] is True
+    identity = body["data"]
+    assert isinstance(identity["customer_id"], str) and identity["customer_id"]
+    assert isinstance(identity["billing_owner_id"], str) and identity["billing_owner_id"]
+    assert isinstance(identity["billing_delegation_authorized"], bool)
+    print("The API accepted this key and returned its billing identity")
 ```
 
 `Sandbox` and `AsyncSandbox` read no environment variables and have no default `base_url`.

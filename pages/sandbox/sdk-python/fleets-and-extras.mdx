@@ -99,13 +99,24 @@ files = fleet.collect_artifacts([{"machine_id": m, "path": "/home/agent/id.txt"}
 
 ## The `manageSandboxes` agent tool
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+{/* sandbox-proof: run */}
 
 ```python
 from tangle_sandbox import SandboxFleetPolicy, create_manage_sandboxes_tool
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
 
-tool = create_manage_sandboxes_tool(client, policy=SandboxFleetPolicy(max_machines=4, max_spend_usd=5))
-print(tool.name)
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    tool = create_manage_sandboxes_tool(client, policy=SandboxFleetPolicy(max_machines=4, max_spend_usd=5))
+    assert tool.name == "manageSandboxes"
+    capabilities = tool.execute({"action": "capabilities"})
+    assert isinstance(capabilities["drivers"], list)
+    assert capabilities["drivers"]
+    assert all(isinstance(driver["driverType"], str) for driver in capabilities["drivers"])
+    print([driver["driverType"] for driver in capabilities["drivers"]])
 ```
 
 `create_manage_sandboxes_tool(client, policy=None)` returns a `ManageSandboxesTool` you can hand to an agent framework: `tool.name` is `manageSandboxes`, `tool.parameters` is its JSON schema, and `tool.execute(input)` runs one action.

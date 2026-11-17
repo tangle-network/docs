@@ -67,15 +67,36 @@ echo $?   # the remote exit code
 | `sessionId` | Resolves `cwd` inside that task session's isolated workspace. |
 | `signal` | An `AbortSignal` that cancels the call. |
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const build = await box.exec("npm ci && npm test", {
-  cwd: "/home/agent/app",
-  env: { CI: "true" },
-  timeoutMs: 5 * 60_000,
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
 });
-if (build.exitCode !== 0) throw new Error(build.stderr || build.stdout);
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  await box.fs.mkdir("app", { recursive: true });
+  await box.write("app/package.json", JSON.stringify({
+    name: "ci-example", version: "1.0.0", private: true,
+    scripts: { test: "node check.cjs" },
+  }));
+  await box.write("app/check.cjs", 'if (process.env.CI !== "true") process.exit(1); console.log("CI environment received");');
+  const lock = await box.exec("npm install --package-lock-only --ignore-scripts", { cwd: "/home/agent/app" });
+  assert.equal(lock.exitCode, 0, lock.stderr);
+  const build = await box.exec("npm ci && npm test", {
+    cwd: "/home/agent/app", env: { CI: "true" }, timeoutMs: 60_000,
+  });
+  assert.equal(build.exitCode, 0, build.stderr || build.stdout);
+  assert(build.stdout.includes("CI environment received"));
+  console.log(build.stdout);
+} finally {
+  await box.delete();
+}
 ```
 
 For work longer than the exec ceiling, start a [background process](#run-a-long-running-process).
@@ -95,16 +116,28 @@ tangle exec my-project -- 'cd app && npm ci && npm test'
 
 `runCode` runs source in a long-lived kernel for `python`, `node`, `typescript` or `bash`. Variables persist across calls that share a `sessionId` and language.
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-await box.runCode("python", "import pandas as pd\ndf = pd.DataFrame({'a': [1, 2, 3]})", {
-  sessionId: "analysis",
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
 });
-const run = await box.runCode("python", "print(df['a'].sum())", {
-  sessionId: "analysis",
-});
-console.log(run.exitCode, run.stdout); // 0 "6\n"
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  const initialized = await box.runCode("python", "values = [1, 2, 3]", { sessionId: "analysis" });
+  assert.equal(initialized.exitCode, 0, initialized.stderr);
+  const run = await box.runCode("python", "print(sum(values))", { sessionId: "analysis" });
+  assert.equal(run.exitCode, 0, run.stderr);
+  assert.equal(run.stdout.trim(), "6");
+  console.log(run.stdout);
+} finally {
+  await box.delete();
+}
 ```
 
 The result adds `durationMs` and `results` to the exit code and output. Each entry in `results` is typed: `text`, `json`, `image`, `html`, `dataframe` or `error`, so a chart or a table arrives as data rather than printed text.
@@ -158,18 +191,39 @@ echo 'print(df.shape)' | tangle run my-project - --lang python --session analysi
 
 `process.spawn` starts a command in the background and returns a handle at once.
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const server = await box.process.spawn("python3 -u -m http.server 8000");
-console.log(server.pid, await server.status());
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
 
-for await (const chunk of server.stdout()) {
-  if (chunk.includes("Serving HTTP")) break;
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  const server = await box.process.spawn("python3 -u -m http.server 8000", { timeoutMs: 30_000 });
+  assert(Number.isInteger(server.pid));
+  try {
+    const status = await server.status();
+    assert.equal(status.running, true);
+    let ready = false;
+    for await (const chunk of server.stdout()) {
+      if (chunk.includes("Serving HTTP")) { ready = true; break; }
+    }
+    assert(ready, "Server exited before its startup message");
+  } finally {
+    await server.kill("SIGTERM");
+  }
+  const exit = await server.wait();
+  assert(Number.isInteger(exit));
+  assert.equal((await server.status()).running, false);
+  console.log("Server stopped with exit code", exit);
+} finally {
+  await box.delete();
 }
-
-await server.kill("SIGTERM");
-console.log("exit code", await server.wait());
 ```
 
 | Handle member | Returns |
@@ -187,41 +241,68 @@ console.log("exit code", await server.wait());
 
 `spawnExact(executable, args, options)` runs a program without a shell, so arguments are passed exactly. Its `stdin` option writes those bytes and then closes stdin. For a program you need to type into, open a [terminal](/sandbox/terminals).
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const proc = await box.process.spawnExact("python3", ["-c", "import sys; print(sys.stdin.read().upper())"], {
-  stdin: "hello from the caller\n",
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
 });
-console.log(await proc.wait());
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  const proc = await box.process.spawnExact("python3", ["-c", "import pathlib,sys; text=sys.stdin.read().upper(); pathlib.Path('upper.txt').write_text(text)"], {
+    stdin: "hello from the caller\n", timeoutMs: 30_000,
+  });
+  assert.equal(await proc.wait(), 0);
+  assert.equal(await box.read("upper.txt"), "HELLO FROM THE CALLER\n");
+  console.log(await box.read("upper.txt"));
+} finally {
+  await box.delete();
+}
 ```
 
 ### Jobs that survive restarts
 
 `process.jobs` runs a process the platform owns. It is admitted durably, retried by your restart policy, and readable from any client after your own process exits.
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const spec = {
-  id: "nightly-index",
-  executable: "/bin/sh",
-  args: ["-c", "python3 build_index.py"],
-  cwd: ".",
-  envKeys: [],
-  deadlineAt: Date.now() + 30 * 60_000,
-  restart: {
-    maxAttempts: 3,
-    initialBackoffMs: 1_000,
-    maxBackoffMs: 10_000,
-    exitCodes: [75],
-    afterInterruption: true,
-  },
-};
-await box.process.jobs.submit(spec);
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
 
-const job = await box.process.jobs.get(spec.id);
-console.log(job?.state, job?.attempt, job?.lastExitCode);
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  await box.write("build_index.py", "from pathlib import Path\nPath('index.txt').write_text('indexed\\n')\n");
+  const spec = {
+    id: "nightly-index", executable: "/bin/sh", args: ["-c", "python3 build_index.py"],
+    cwd: "/home/agent", envKeys: [], deadlineAt: Date.now() + 30_000,
+    restart: { maxAttempts: 3, initialBackoffMs: 1_000, maxBackoffMs: 10_000, exitCodes: [75], afterInterruption: true },
+  };
+  await box.process.jobs.submit(spec);
+  const deadline = Date.now() + 35_000;
+  let job = await box.process.jobs.get(spec.id);
+  while (job && ["queued", "running", "retrying"].includes(job.state) && Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    job = await box.process.jobs.get(spec.id);
+  }
+  assert(job, "Managed job disappeared");
+  assert.equal(job.state, "succeeded");
+  assert.equal(job?.lastExitCode, 0);
+  assert.equal(await box.read("index.txt"), "indexed\n");
+  console.log(job.state, job.attempt);
+} finally {
+  await box.delete();
+}
 ```
 
 States are `queued`, `running`, `retrying`, `stopping`, `succeeded`, `failed`, `cancelled` and `expired`. `jobs.cancel(id)` stops a job, and `jobs.resume(id, options)` retries a failed attempt with the same command, deadline and attempt budget.
@@ -249,25 +330,60 @@ tangle process kill my-project 4211
 
 The Python `exec` runs the command under `bash`, merges stderr into stdout, raises on timeout, and silently ignores a `cwd` that does not exist. `ExecOptions` takes `cwd`, `env`, `timeout_ms` and `session_id`:
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
 from tangle_sandbox import ExecOptions
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
 
-result = box.exec("ls", ExecOptions(cwd="/tmp", env={"GREETING": "hi"}))
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        result = box.exec("printf '%s' \"$GREETING\"", ExecOptions(cwd="/tmp", env={"GREETING": "hi"}))
+        assert result.exit_code == 0, result.stderr
+        assert result.stdout == "hi"
+        print(result.stdout)
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Python has no `run_code` or process manager. Call the runtime routes through `client.fetch`, which returns the raw response and does not raise on an error status:
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
-response = client.fetch(
-    "POST",
-    f"/v1/sandboxes/{box.id}/runtime/code/exec",
-    json={"language": "python", "source": "print(2 + 2)"},
-)
-print(response.json())
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        response = client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/code/exec", json={"language": "python", "source": "print(2 + 2)"})
+        response.raise_for_status()
+        body = response.json()
+        assert body["success"] is True
+        assert body["data"]["exitCode"] == 0, body
+        assert body["data"]["stdout"].strip() == "4", body
+        print(body)
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 ## Next

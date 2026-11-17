@@ -162,11 +162,36 @@ Drives a coding agent's own terminal UI from a browser. See [Agents](/sandbox/sd
 
 Python has `exec`, `read`, `write`, `search` and `box.git` (`status`, `log`, `diff`, `branches`, `add`, `commit`, `push`, `pull`, `checkout`); see [Python SDK](/sandbox/sdk-python). It has no kernel code runs, processes, file transfers, preview links or terminals. Call those runtime routes through `client.fetch`, which returns the raw response and does not raise on an error status:
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
-client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/code/exec", json={"language": "python", "source": "print(2 + 2)"})
-client.fetch("GET", f"/v1/sandboxes/{box.id}/runtime/health")
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        executed = client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/code/exec", json={"language": "python", "source": "print(2 + 2)"})
+        executed.raise_for_status()
+        result = executed.json()
+        assert result["success"] is True
+        assert result["data"]["exitCode"] == 0
+        assert result["data"]["stdout"].strip() == "4"
+        response = client.fetch("GET", f"/v1/sandboxes/{box.id}/runtime/health")
+        response.raise_for_status()
+        health = response.json()
+        assert health["status"] in ("ok", "degraded")
+        print(result["data"]["stdout"].strip(), health["status"])
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 ## Next

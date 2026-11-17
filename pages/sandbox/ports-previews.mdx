@@ -53,17 +53,33 @@ A preview link is public. Anyone with the URL can open it, with no login. Treat 
 
 ## Manage links
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const link = await box.previewLinks.create(3000, { metadata: { purpose: "review" } });
-console.log(link.created, link.status, link.url);
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
 
-const fresh = await box.previewLinks.get(link.previewId);
-console.log(fresh.status, fresh.lastProbe?.httpStatus, fresh.lastProbe?.code);
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
 
-for (const l of await box.previewLinks.list()) console.log(l.port, l.url);
-await box.previewLinks.remove(link.previewId);
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  await box.process.spawnExact("python3", ["-m", "http.server", "3000", "--bind", "0.0.0.0"], { timeoutMs: 120_000 });
+  const link = await box.previewLinks.create(3000, { metadata: { purpose: "review" } });
+  assert.equal(link.port, 3000);
+  await box.previewLinks.waitUntilReady(link.previewId, { timeoutMs: 60_000 });
+  const fresh = await box.previewLinks.get(link.previewId);
+  assert.equal(fresh.status, "ready");
+  const links = await box.previewLinks.list();
+  assert(links.some((item) => item.previewId === link.previewId));
+  await box.previewLinks.remove(link.previewId);
+  assert.equal((await box.previewLinks.list()).some((item) => item.previewId === link.previewId), false);
+  console.log(fresh.status, fresh.lastProbe?.httpStatus);
+} finally {
+  await box.delete();
+}
 ```
 
 `create` returns the existing link when the port already has one; `created` says which happened. `status` is `provisioning`, `ready`, `error` or `disabled`. `get` refreshes the link's last delivery check:
@@ -83,15 +99,35 @@ await box.previewLinks.remove(link.previewId);
 
 `process.ensureDevServer` detects a Node, Rust, Go or Python project, installs dependencies when they are missing, and starts its dev process. A second call returns the server that is already running.
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const server = await box.process.ensureDevServer({ cwd: "app" });
-console.log(server.family, server.command, server.port, server.startedNow);
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
 
-if (server.port) {
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  await box.write("app/package.json", JSON.stringify({
+    name: "dev-server-example", version: "1.0.0", private: true,
+    scripts: { dev: "node server.cjs" },
+  }));
+  await box.write("app/server.cjs", "const http=require('http'); const i=process.argv.indexOf('--port'); const p=i<0?Number(process.env.PORT??3000):Number(process.argv[i+1]); http.createServer((q,s)=>s.end('development ready')).listen(p,'0.0.0.0');");
+  const server = await box.process.ensureDevServer({ cwd: "app" });
+  assert(server.port, "The development server returned no port");
+  assert(server.pid > 0);
   const link = await box.previewLinks.create(server.port);
-  console.log((await box.previewLinks.waitUntilReady(link.previewId)).url);
+  const ready = await box.previewLinks.waitUntilReady(link.previewId, { timeoutMs: 60_000 });
+  const response = await fetch(ready.url, { signal: AbortSignal.timeout(20_000) });
+  assert.equal(response.ok, true);
+  assert((await response.text()).includes("development ready"));
+  console.log(server.family, server.port, server.startedNow);
+} finally {
+  await box.delete();
 }
 ```
 
@@ -101,12 +137,31 @@ In the CLI, `tangle preview start` does both steps, and `tangle preview publish 
 
 `network.exposePort` returns a URL string for a port. `listUrls` returns every exposed port.
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const url = await box.network.exposePort(8000);
-const urls = await box.network.listUrls(); // { 8000: "https://..." }
-const { ports } = await box.network.getConfig();
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  await box.process.spawnExact("python3", ["-m", "http.server", "8000", "--bind", "0.0.0.0"], { timeoutMs: 60_000 });
+  const url = await box.network.exposePort(8000);
+  assert.equal(typeof url, "string");
+  assert(url.length > 0);
+  const urls = await box.network.listUrls();
+  assert.equal(urls[8000], url);
+  const config = await box.network.getConfig();
+  assert(Array.isArray(config.ports));
+  console.log(url, config.ports);
+} finally {
+  await box.delete();
+}
 ```
 
 {/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}

@@ -53,15 +53,25 @@ The list holds `universal`, the default, and each of your saved templates as `te
 
 ## Start from a public template
 
-{/* sandbox-proof: skip Continues the preceding client initialization example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const [template] = await client.publicTemplates.list({ query: "python" });
-if (!template) throw new Error("No matching public template");
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
 
-const box = await client.create({ publicTemplateId: template.id });
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const [template] = await client.publicTemplates.list({ query: "python" });
+assert(template, "No matching public Python template");
+const box = await client.create({ agent: false, publicTemplateId: template.id, maxLifetimeSeconds: 300 });
 try {
-  console.log((await box.exec("ls")).stdout);
+  const result = await box.exec("python3 --version");
+  assert.equal(result.exitCode, 0, result.stderr);
+  assert(result.stdout.includes("Python") || result.stderr.includes("Python"));
+  console.log(template.id, result.stdout || result.stderr);
 } finally {
   await box.delete();
 }
@@ -73,14 +83,30 @@ try {
 
 Templates are versioned. Pin the version when you need every sandbox to start the same:
 
-{/* sandbox-proof: skip Continues the preceding client initialization example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const [version] = await client.publicTemplates.versions(template.id);
-const box = await client.create({
-  publicTemplateId: template.id,
-  publicTemplateVersionId: version.id,
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
 });
+
+const [template] = await client.publicTemplates.list({ query: "python" });
+assert(template, "No matching public Python template");
+const [version] = await client.publicTemplates.versions(template.id);
+assert(version, "The template has no published version");
+const box = await client.create({ agent: false, publicTemplateId: template.id, publicTemplateVersionId: version.id, maxLifetimeSeconds: 300 });
+try {
+  const result = await box.exec("python3 -c 'print(6 * 7)'");
+  assert.equal(result.exitCode, 0, result.stderr);
+  assert.equal(result.stdout.trim(), "42");
+  console.log(template.id, version.id);
+} finally {
+  await box.delete();
+}
 ```
 
 {/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
@@ -180,10 +206,26 @@ Personal templates have no SDK or CLI command. Create them with `POST /v1/templa
 
 `environment` also takes a container image reference:
 
-{/* sandbox-proof: skip Continues the preceding client initialization example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const box = await client.create({ environment: "python:3.12-slim", runtime: "docker" });
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, environment: "python:3.12-slim", runtime: "docker", maxLifetimeSeconds: 300 });
+try {
+  const result = await box.exec("python3 --version");
+  assert.equal(result.exitCode, 0, result.stderr);
+  assert((result.stdout + result.stderr).includes("Python"));
+  console.log(result.stdout || result.stderr);
+} finally {
+  await box.delete();
+}
 ```
 
 Under `runtime: "firecracker"`, the image must be pinned as `repository@sha256:<digest>` and carried by the Firecracker hosts. `environments.list()` shows which runtimes each catalog image supports.

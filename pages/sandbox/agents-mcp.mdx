@@ -67,26 +67,32 @@ failed call returns an MCP result with `isError: true` and the message.
 `createMcpServer(box, options)` returns `{ server, connect, close }`. Use it
 when your program picks the sandbox or the tools:
 
-{/* sandbox-proof: skip Requires an existing sandbox, Line, or application user ID */}
+{/* sandbox-proof: run */}
 
 ```ts
+import assert from "node:assert/strict";
 import { Sandbox } from "@tangle-network/sandbox";
-import { createMcpServer } from "@tangle-network/sandbox/agent";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
 const client = new Sandbox({
   apiKey: process.env.TANGLE_API_KEY!,
   baseUrl: "https://sandbox.tangle.tools",
 });
 
-const box = await client.get(process.env.SANDBOX_ID!);
-if (!box) throw new Error(`Sandbox ${process.env.SANDBOX_ID} not found`);
-
-const { connect } = await createMcpServer(box, {
-  sessionId: "claude-desktop",
-  allow: ["sandbox_run_code", "sandbox_read"],
-});
-await connect(new StdioServerTransport());
+const box = await client.create({ agent: false, capabilities: ["computer_use"], resources: { memoryMB: 4096 }, maxLifetimeSeconds: 300 });
+try {
+  const endpoint = await box.getMcpEndpoint({ capabilities: ["computer_use"], ttlMinutes: 5 });
+  assert(endpoint.url.startsWith("https://"));
+  assert(endpoint.authToken.length > 0);
+  assert(endpoint.capabilities.includes("computer_use"));
+  assert(Date.parse(endpoint.expiresAt) > Date.now());
+  const server = endpoint.config.mcpServers[endpoint.serverName];
+  assert(server, "The MCP configuration did not include its server entry");
+  assert.equal(server.url, endpoint.url);
+  assert.equal(server.headers.Authorization, `Bearer ${endpoint.authToken}`);
+  console.log("Computer-use MCP endpoint is scoped and ready to connect");
+} finally {
+  await box.delete();
+}
 ```
 
 Point the client's `command` at `node` and this file, with `TANGLE_API_KEY`

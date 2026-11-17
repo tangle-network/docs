@@ -17,21 +17,36 @@ This page shows where the code appears in each client, which errors to retry, an
 
 The SDK throws `SandboxError`.
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
 import { SandboxError } from "@tangle-network/sandbox";
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
 
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
 try {
-  await box.exec("npm test");
-} catch (error) {
-  if (!(error instanceof SandboxError)) throw error;
-  if (error.catalogCode === "INVALID_STATE") {
-    await box.resume();
-  } else {
-    console.error(error.code, error.status, error.retryable, error.nextStep, error.requestId);
-    throw error;
+  let missing = false;
+  try {
+    await box.read("not-created.txt");
+  } catch (error) {
+    if (!(error instanceof SandboxError)) throw error;
+    assert.equal(error.status, 404);
+    assert.equal(error.retryable, false);
+    missing = true;
+    console.log(error.code, error.status, error.nextStep);
   }
+  assert(missing, "A missing file did not produce a structured SDK error");
+  await box.write("not-created.txt", "Created after the missing-file response\n");
+  assert.equal(await box.read("not-created.txt"), "Created after the missing-file response\n");
+  console.log("Read succeeds after creating the file");
+} finally {
+  await box.delete();
 }
 ```
 
@@ -52,16 +67,43 @@ try {
 
 The SDK raises `SandboxError`.
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
 from tangle_sandbox import SandboxError
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
 
-try:
-    box.exec("npm test")
-except SandboxError as error:
-    print(error.code, error.status, error.retryable, error.next_step)
-    raise
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.stop()
+        box.wait_for(SandboxStatus.STOPPED)
+        refused = False
+        try:
+            box.exec("python3 -c 'print(42)'")
+        except SandboxError as error:
+            refused = True
+            assert error.code == "INVALID_STATE"
+            assert error.retryable is False
+            print(error.code, error.status, error.retryable, error.next_step)
+        assert refused, "A stopped instance accepted execution"
+        box.resume()
+        box.wait_for(SandboxStatus.RUNNING)
+        recovered = box.exec("python3 -c 'print(42)'")
+        assert recovered.exit_code == 0, recovered.stderr
+        assert recovered.stdout.strip() == "42"
+        print("Execution succeeds after resume")
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 `code`, `status`, `retryable` and `next_step` come from the table below.

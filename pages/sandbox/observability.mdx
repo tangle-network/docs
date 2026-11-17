@@ -87,17 +87,35 @@ for (const r of await session.runs()) {
 
 ## Watch the sandbox itself
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const usage = await box.resourceUsage();
-if (usage) console.log(usage.memoryCurrentMb, usage.memoryPeakMb, usage.memoryLimitMb, usage.cpuUsageUsec);
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
 
-const ports = await box.ports();
-console.log(ports);
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
 
-console.log(await box.runtimeHealth());
-console.log(await box.capabilities());
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  const ran = await box.exec("python3 -c 'print(sum(range(1000)))'");
+  assert.equal(ran.exitCode, 0, ran.stderr);
+  const usage = await box.resourceUsage();
+  assert(usage, "Runtime resource counters were unavailable");
+  assert(Number.isFinite(usage.memoryCurrentMb));
+  console.log(usage.memoryCurrentMb, usage.memoryPeakMb, usage.memoryLimitMb, usage.cpuUsageUsec);
+  const ports = await box.ports();
+  assert(Array.isArray(ports));
+  const health = await box.runtimeHealth();
+  const capabilities = await box.capabilities();
+  assert(health && typeof health === "object");
+  assert(capabilities && typeof capabilities === "object");
+  console.log(ports, health, capabilities);
+} finally {
+  await box.delete();
+}
 ```
 
 | Method | Returns |
@@ -124,14 +142,28 @@ tangle traces runs
 
 ## Usage and spend
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const today = await client.usage();
-console.log(today);
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
 
-const egress = await box.egress.usage();
-console.log(egress);
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  const today = await client.usage();
+  assert(today.activeSandboxes >= 1);
+  const egress = await box.egress.usage();
+  assert(egress.bytes >= 0);
+  assert(egress.accountBytes >= 0);
+  console.log(today, egress);
+} finally {
+  await box.delete();
+}
 ```
 
 `client.usage()` reports today's compute minutes, GPU seconds and cost, and your active and total sandboxes. `box.egress.usage({ month })` reports one sandbox's network egress for a month. `tangle usage` prints the account totals. Rates are on [Pricing](/sandbox/cost).

@@ -10,13 +10,29 @@ import { Callout } from "nextra/components";
 `client.create()`, `client.get()` and `client.list()` return a `SandboxInstance`; `AsyncSandbox` returns an `AsyncSandboxInstance` whose methods are coroutines.
 Each instance caches the sandbox's details. `refresh()`, `wait_for()`, `stop()` and `resume()` update the cache; runtime calls check it and raise `StateError` unless the status is `RUNNING`.
 
-{/* sandbox-proof: skip Continues the preceding client initialization example */}
+{/* sandbox-proof: run */}
 
 ```python
-box = client.create()
-box.wait_for(SandboxStatus.RUNNING)
-print(box.exec("uname -s").stdout.strip())
-box.delete()
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        result = box.exec("uname -s")
+        assert result.exit_code == 0, result.stderr
+        assert result.stdout.strip() == "Linux"
+        print(result.stdout.strip())
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 ## Properties
@@ -36,10 +52,33 @@ box.delete()
 
 ### `refresh`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`refresh() -> None`
+
+{/* sandbox-proof: run */}
 
 ```python
-refresh() -> None
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        assert box.status == SandboxStatus.RUNNING
+        client.fetch("POST", f"/v1/sandboxes/{box.id}/stop").raise_for_status()
+        assert box.status == SandboxStatus.RUNNING
+        box.refresh()
+        assert box.status == SandboxStatus.STOPPED
+        print("Refreshed cached state:", box.status.value)
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Reads the sandbox again and replaces the cached details. Raises `NotFoundError` after the sandbox is deleted.
@@ -47,29 +86,103 @@ Request: `GET /v1/sandboxes/{id}`
 
 ### `wait_for`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`wait_for(status: SandboxStatus | list[SandboxStatus], options: WaitForOptions | None = None) -> None`
+
+{/* sandbox-proof: run */}
 
 ```python
-wait_for(status: SandboxStatus | list[SandboxStatus], options: WaitForOptions | None = None) -> None
+from tangle_sandbox import WaitForOptions
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("resume.txt", "retained through readiness waiting\n")
+        box.stop()
+        box.wait_for(SandboxStatus.STOPPED)
+        client.fetch("POST", f"/v1/sandboxes/{box.id}/resume").raise_for_status()
+        box.wait_for([SandboxStatus.RUNNING, SandboxStatus.FAILED], WaitForOptions(timeout_ms=120_000))
+        assert box.status == SandboxStatus.RUNNING
+        assert box.read("resume.txt") == "retained through readiness waiting\n"
+        print(box.status.value)
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Polls until the status is one of the targets. `WaitForOptions(timeout_ms=120000, poll_interval_ms=2000)` are the defaults.
 Raises `StateError` with the sandbox's error when it reaches `FAILED`, and `TimeoutError` after `timeout_ms`. A sandbox that is `EXPIRED` or `DELETED` keeps polling until the timeout.
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
-from tangle_sandbox import SandboxStatus, WaitForOptions
+from tangle_sandbox import WaitForOptions
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
 
-box.wait_for(SandboxStatus.RUNNING, WaitForOptions(timeout_ms=180_000))
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.wait_for(SandboxStatus.RUNNING, WaitForOptions(timeout_ms=180_000))
+        assert box.status == SandboxStatus.RUNNING
+        box.refresh()
+        assert box.status == SandboxStatus.RUNNING
+        print(box.status.value)
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 ### `stop`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`stop() -> None`
+
+{/* sandbox-proof: run */}
 
 ```python
-stop() -> None
+from tangle_sandbox import StateError
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("checkpoint.txt", "stopped workspace\n")
+        box.stop()
+        box.wait_for(SandboxStatus.STOPPED)
+        refused = False
+        try:
+            box.exec("cat checkpoint.txt")
+        except StateError as error:
+            refused = True
+            assert error.code == "INVALID_STATE"
+        assert refused, "A stopped sandbox accepted exec"
+        print("Stopped sandbox refuses execution")
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Stops the sandbox and keeps its disk. `status` reads `STOPPED` when it returns.
@@ -77,10 +190,36 @@ Request: `POST /v1/sandboxes/{id}/stop`
 
 ### `resume`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`resume() -> None`
+
+{/* sandbox-proof: run */}
 
 ```python
-resume() -> None
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("resume.json", '{"next":"publish"}\n')
+        box.stop()
+        box.wait_for(SandboxStatus.STOPPED)
+        box.resume()
+        box.wait_for(SandboxStatus.RUNNING)
+        result = box.exec("python3 -c \"import json; print(json.load(open('resume.json'))['next'])\"")
+        assert result.exit_code == 0, result.stderr
+        assert result.stdout.strip() == "publish"
+        print(result.stdout.strip())
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Starts a stopped sandbox. The status may still be `provisioning`; call `wait_for(SandboxStatus.RUNNING)` next.
@@ -88,10 +227,32 @@ Request: `POST /v1/sandboxes/{id}/resume`
 
 ### `delete`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`delete() -> None`
+
+{/* sandbox-proof: run */}
 
 ```python
-delete() -> None
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        sandbox_id = box.id
+        box.delete()
+        remaining = client.get(sandbox_id)
+        assert remaining is None or remaining.status == SandboxStatus.DELETED
+        print("Deleted", sandbox_id)
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Deletes the sandbox and its disk for good. The cached `status` does not change.
@@ -102,10 +263,33 @@ Request: `DELETE /v1/sandboxes/{id}`
 
 ### `exec`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`exec(command: str, options: ExecOptions | None = None) -> ExecResult`
+
+{/* sandbox-proof: run */}
 
 ```python
-exec(command: str, options: ExecOptions | None = None) -> ExecResult
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        result = box.exec("python3 -c 'import sys; print(\"partial output\"); print(\"diagnostic\", file=sys.stderr); sys.exit(7)'")
+        assert result.exit_code == 7
+        assert "partial output" in result.stdout.splitlines()
+        assert "diagnostic" in result.stdout.splitlines()
+        assert result.stderr == ""
+        print(result.exit_code, result.stdout.strip(), result.stderr.strip())
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Runs `command` with bash and waits for it. Returns `ExecResult(exit_code, stdout, stderr)`; a non-zero exit code is returned, not raised.
@@ -121,14 +305,33 @@ stderr is merged into stdout, so `stderr` is empty.
 The default directory is `/home/agent`, or the cloned repository when the sandbox was created with `git`.
 Request: `POST /v1/sandboxes/{id}/runtime/process/spawn`
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
+import json
 from tangle_sandbox import ExecOptions
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
 
-result = box.exec("npm test", ExecOptions(cwd="/home/agent/sandbox-demo", timeout_ms=120_000))
-print(result.exit_code)
-print(result.stdout[-500:])
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("app/package.json", json.dumps({"name": "cwd-example", "version": "1.0.0", "scripts": {"test": "node check.cjs"}}))
+        box.write("app/check.cjs", "console.log(process.cwd());\n")
+        result = box.exec("npm test", ExecOptions(cwd="/home/agent/app", timeout_ms=120_000))
+        assert result.exit_code == 0, result.stderr
+        assert "/home/agent/app" in result.stdout
+        print(result.stdout[-500:])
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 For background processes, separate stderr or structured code output, see [What Python can do](/sandbox/sdk-python#what-python-can-do-and-what-to-use-for-the-rest).
@@ -137,10 +340,32 @@ For background processes, separate stderr or structured code output, see [What P
 
 ### `read`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`read(path: str) -> str`
+
+{/* sandbox-proof: run */}
 
 ```python
-read(path: str) -> str
+import json
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("unicode.json", '{"title":"Résumé","total":260}\n')
+        content = box.read("unicode.json")
+        assert json.loads(content) == {"title": "Résumé", "total": 260}
+        print(content, end="")
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Reads a UTF-8 text file. A relative path resolves in the working directory. An absolute path outside the paths the sandbox allows is refused with a 403 error.
@@ -148,28 +373,93 @@ Request: `POST /v1/sandboxes/{id}/runtime/files/read`
 
 ### `write`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`write(path: str, content: str) -> None`
+
+{/* sandbox-proof: run */}
 
 ```python
-write(path: str, content: str) -> None
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("draft/report.md", "First draft\n")
+        box.write("draft/report.md", "Approved report\n")
+        assert box.read("draft/report.md") == "Approved report\n"
+        print(box.read("draft/report.md"), end="")
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Writes a UTF-8 text file, replacing any content.
 Request: `POST /v1/sandboxes/{id}/runtime/files/write`
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
-box.write("orders.csv", "customer,amount\nacme,1500\n")
-print(box.read("orders.csv"))
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        content = "customer,amount\nacme,1500\n"
+        box.write("orders.csv", content)
+        assert box.read("orders.csv") == content
+        print(box.read("orders.csv"))
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 ### `search`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`search(pattern: str, options: SearchOptions | None = None) -> list[SearchMatch]`
+
+{/* sandbox-proof: run */}
 
 ```python
-search(pattern: str, options: SearchOptions | None = None) -> list[SearchMatch]
+from tangle_sandbox import SearchOptions
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("reports/tasks.txt", "TODO: export CSV\nDone: render chart\nTODO: email draft\n")
+        box.write("reports/ignored.log", "TODO: exclude this extension\n")
+        options = SearchOptions(cwd="/home/agent/reports", glob="*.txt", max_results=1, context=1)
+        hits = box.search("TODO:", options)
+        assert len(hits) == 1
+        assert hits[0].path.endswith("tasks.txt")
+        assert "TODO:" in hits[0].text
+        print(hits[0].path, hits[0].line, hits[0].text.strip())
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Searches workspace files for a regular expression with ripgrep. `SearchOptions` takes `glob`, `cwd`, `max_results`, `ignore_case` and `context` (lines before and after).
@@ -182,7 +472,7 @@ If `search` returns no matches for text you know is there, run `grep -rn` throug
 
 ### `prompt`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+{/* sandbox-proof: skip API method signatures for reference; not a complete executable program */}
 
 ```python
 prompt(message: str, options: PromptOptions | None = None) -> PromptResult
@@ -222,7 +512,7 @@ TokenUsage(input_tokens=119425, output_tokens=1265)
 
 ### `stream_prompt`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+{/* sandbox-proof: skip API method signatures for reference; not a complete executable program */}
 
 ```python
 stream_prompt(message: str, options: PromptOptions | None = None) -> Iterator[SandboxEvent]
@@ -281,25 +571,75 @@ Fixed. ...
 `push` and `pull` use the credentials in the sandbox, such as a token from `GitConfig(auth=GitAuth(token=...))` at create.
 `commit` takes no author, and the sandbox has no git identity, so set one first:
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
-changed = [f["path"] for f in box.git.diff("HEAD").files]
-box.exec('git config --global user.name "Docs Example"')
-box.exec("git config --global user.email docs@example.com")
-box.git.add(changed)
-commit = box.git.commit("fix: guard a null request body")
-print(commit.short_sha, commit.message)
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+        "git": {"url": "https://github.com/tangle-network/sandbox-demo"},
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("change.md", "Change to retain in Git.\n")
+        configured = box.exec('git config user.name "Docs Example" && git config user.email docs@example.com')
+        assert configured.exit_code == 0, configured.stderr
+        changed = [entry["path"] for entry in box.git.diff("HEAD").files]
+        assert "change.md" in changed or "change.md" in box.git.status().untracked
+        box.git.add(["change.md"])
+        commit = box.git.commit("docs: retain a workspace change")
+        assert commit.sha
+        assert commit.message.startswith("docs: retain a workspace change")
+        assert box.git.status().is_dirty is False
+        print(commit.short_sha, commit.message)
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 ## Snapshots
 
 ### `snapshot`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`snapshot(options: SnapshotOptions | None = None) -> SnapshotResult`
+
+{/* sandbox-proof: run */}
 
 ```python
-snapshot(options: SnapshotOptions | None = None) -> SnapshotResult
+from datetime import datetime
+from tangle_sandbox import SnapshotOptions
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("capture.txt", "Workspace captured by snapshot\n")
+        snapshot = box.snapshot(SnapshotOptions(tags=["capture-receipt"]))
+        try:
+            assert snapshot.snapshot_id
+            assert isinstance(snapshot.created_at, datetime)
+            assert snapshot.size_bytes is None or snapshot.size_bytes >= 0
+            print(snapshot.snapshot_id, snapshot.created_at.isoformat())
+        finally:
+            client.fetch("DELETE", f"/v1/sandboxes/{box.id}/snapshots/{snapshot.snapshot_id}").raise_for_status()
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Saves the workspace and waits up to 600 s for the save. Returns `snapshot_id`, `created_at`, `size_bytes` and `tags`.
@@ -308,10 +648,44 @@ Request: `POST /v1/sandboxes/{id}/snapshots`
 
 ### `list_snapshots`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`list_snapshots() -> list[SnapshotInfo]`
+
+{/* sandbox-proof: run */}
 
 ```python
-list_snapshots() -> list[SnapshotInfo]
+import time
+from tangle_sandbox import SnapshotOptions
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("list.txt", "snapshot listing input\n")
+        snapshot = box.snapshot(SnapshotOptions(tags=["listing-example"]))
+        try:
+            deadline = time.monotonic() + 60
+            listed = box.list_snapshots()
+            while not any(item.snapshot_id == snapshot.snapshot_id for item in listed):
+                assert time.monotonic() < deadline, "Snapshot was not listed"
+                time.sleep(0.5)
+                listed = box.list_snapshots()
+            own = next(item for item in listed if item.snapshot_id == snapshot.snapshot_id)
+            assert own.sandbox_id == box.id
+            assert "listing-example" in own.tags
+            print(own.snapshot_id, own.tags, own.size_bytes)
+        finally:
+            client.fetch("DELETE", f"/v1/sandboxes/{box.id}/snapshots/{snapshot.snapshot_id}").raise_for_status()
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Lists the sandbox's snapshots. A new snapshot takes a few seconds to appear.
@@ -319,10 +693,39 @@ Request: `GET /v1/sandboxes/{id}/snapshots`
 
 ### `restore_paths`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`restore_paths(snapshot_id: str, paths: list[str]) -> SnapshotResult`
+
+{/* sandbox-proof: run */}
 
 ```python
-restore_paths(snapshot_id: str, paths: list[str]) -> SnapshotResult
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("src/config.json", '{"retries":3}\n')
+        box.write("keep.md", "before\n")
+        snapshot = box.snapshot()
+        try:
+            box.write("src/config.json", '{"retries":0}\n')
+            box.write("keep.md", "keep this later edit\n")
+            box.restore_paths(snapshot.snapshot_id, ["src"])
+            assert box.read("src/config.json") == '{"retries":3}\n'
+            assert box.read("keep.md") == "keep this later edit\n"
+            print("Selected paths restored; other edits retained")
+        finally:
+            client.fetch("DELETE", f"/v1/sandboxes/{box.id}/snapshots/{snapshot.snapshot_id}").raise_for_status()
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Copies the listed workspace paths back from a snapshot into the running sandbox. Wait for the snapshot to appear in `list_snapshots()` first.
@@ -332,30 +735,51 @@ Request: `POST /v1/sandboxes/{id}/snapshots/{snapshotId}/restore`
 
 Pass `from_snapshot` with `from_sandbox_id`, the sandbox that took it:
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
 import time
+from tangle_sandbox import SnapshotOptions
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
 
-from tangle_sandbox import CreateSandboxOptions, SnapshotOptions
-
-box.write("config.json", '{"retries": 3}\n')
-clean = box.snapshot(SnapshotOptions(tags=["clean"]))
-
-# A new snapshot takes a few seconds to appear in the list.
-for _ in range(60):
-    if clean.snapshot_id in [s.snapshot_id for s in box.list_snapshots()]:
-        break
-    time.sleep(1)
-
-box.write("config.json", '{"retries": "oops"}\n')
-box.restore_paths(clean.snapshot_id, ["config.json"])
-print("restored", box.read("config.json"), end="")
-
-copy = client.create(CreateSandboxOptions(from_snapshot=clean.snapshot_id, from_sandbox_id=box.id))
-copy.wait_for(SandboxStatus.RUNNING)
-print("copy", copy.read("config.json"), end="")
-copy.delete()
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    owned_snapshot_id = None
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("config.json", '{"retries": 3}\n')
+        clean = box.snapshot(SnapshotOptions(tags=["clean"]))
+        owned_snapshot_id = clean.snapshot_id
+        deadline = time.monotonic() + 60
+        while clean.snapshot_id not in [item.snapshot_id for item in box.list_snapshots()]:
+            assert time.monotonic() < deadline, "Snapshot did not become visible"
+            time.sleep(0.5)
+        box.write("config.json", '{"retries": "oops"}\n')
+        box.restore_paths(clean.snapshot_id, ["config.json"])
+        assert box.read("config.json") == '{"retries": 3}\n'
+        copy_info = client.fetch("POST", "/v1/sandboxes", json={"agent": False, "maxLifetimeSeconds": 300, "fromSnapshot": clean.snapshot_id, "fromSandboxId": box.id}).raise_for_status().json()
+        try:
+            copy = client.get(copy_info["id"])
+            assert copy is not None
+            copy.wait_for(SandboxStatus.RUNNING)
+            assert copy.read("config.json") == '{"retries": 3}\n'
+            print(copy.id, copy.read("config.json"))
+        finally:
+            client.fetch("DELETE", f"/v1/sandboxes/{copy_info['id']}").raise_for_status()
+    finally:
+        try:
+            if owned_snapshot_id:
+                client.fetch("DELETE", f"/v1/sandboxes/{box.id}/snapshots/{owned_snapshot_id}").raise_for_status()
+        finally:
+            client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 {/* sandbox-proof: skip Example terminal output or API field reference */}
@@ -369,12 +793,42 @@ Reverting a whole sandbox and deleting snapshots are in the TypeScript SDK and t
 
 ## Network rules
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`egress_get() -> tuple[EgressPolicy, str]`
+`egress_update(policy: EgressPolicy) -> tuple[EgressPolicy, str]`
+`egress_denials(limit: int | None = None) -> list[EgressDenial]`
+
+{/* sandbox-proof: run */}
 
 ```python
-egress_get() -> tuple[EgressPolicy, str]
-egress_update(policy: EgressPolicy) -> tuple[EgressPolicy, str]
-egress_denials(limit: int | None = None) -> list[EgressDenial]
+from tangle_sandbox import EgressPolicy
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+        "egressPolicy": {"mode": "blocked"},
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        initial, initial_source = box.egress_get()
+        assert initial.mode == "blocked"
+        policy, source = box.egress_update(EgressPolicy(mode="strict", allow_domains=["example.com"]))
+        assert policy.mode == "strict"
+        assert source == "sandbox"
+        observed, observed_source = box.egress_get()
+        assert observed.mode == "strict"
+        assert "example.com" in observed.allow_domains
+        assert observed_source == source
+        assert isinstance(box.egress_denials(limit=10), list)
+        print(initial_source, observed.mode, observed_source)
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 `EgressPolicy(mode, allow_domains=None, include_implicit_domains=None)`: `mode` is `open`, `strict` or `blocked`. `strict` reaches the listed domains and the sandbox's own model endpoint.
@@ -383,18 +837,36 @@ The second value says where the policy comes from: `sandbox`, `team` or `platfor
 
 Requests: `GET /v1/sandboxes/{id}`, `PATCH /v1/sandboxes/{id}/egress`, `GET /v1/sandboxes/{id}/egress/denials`
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
 from tangle_sandbox import EgressPolicy
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
 
-for denial in box.egress_denials():
-    print("refused", denial.host, denial.count)
-
-policy, source = box.egress_update(
-    EgressPolicy(mode="strict", allow_domains=["pypi.org", "example.com"])
-)
-print(policy.mode, policy.allow_domains, source)
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+        "egressPolicy": {"mode": "blocked"},
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        blocked = box.exec("curl -sS -m 5 https://example.com")
+        assert blocked.exit_code != 0
+        for denial in box.egress_denials():
+            print("refused", denial.host, denial.count)
+        policy, source = box.egress_update(EgressPolicy(mode="strict", allow_domains=["pypi.org", "example.com"]))
+        assert policy.mode == "strict"
+        assert "example.com" in policy.allow_domains
+        assert source == "sandbox"
+        print(policy.mode, policy.allow_domains, source)
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 {/* sandbox-proof: skip Example terminal output or API field reference */}
@@ -408,7 +880,7 @@ strict ['pypi.org', 'example.com'] sandbox
 
 ## SSH
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+{/* sandbox-proof: skip API method signatures for reference; not a complete executable program */}
 
 ```python
 ssh() -> SSHCredentials
@@ -419,7 +891,7 @@ Create the sandbox with `ssh_enabled=True` and `ssh_public_keys` or `ssh_key_ids
 
 ## Traces and reports
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+{/* sandbox-proof: skip API method signatures for reference; not a complete executable program */}
 
 ```python
 trace(*, include_intelligence=False) -> SandboxTraceBundle
@@ -437,10 +909,35 @@ Requests: `GET /v1/sandboxes/{id}/trace`, `POST /v1/intelligence/reports`
 
 ## `direct`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`direct() -> SandboxInstance`
+
+{/* sandbox-proof: skip Production proof proxies runtime connections, so it cannot verify the direct-origin transport shown here */}
 
 ```python
-direct() -> SandboxInstance
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("direct.txt", "read through the runtime origin\n")
+        direct = box.direct()
+        assert direct.id == box.id
+        assert direct.read("direct.txt") == "read through the runtime origin\n"
+        result = direct.exec("python3 -c 'print(17 + 25)'")
+        assert result.exit_code == 0, result.stderr
+        assert result.stdout.strip() == "42"
+        print("Direct runtime command:", result.stdout.strip())
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Returns an instance whose `exec`, file, git and prompt calls go straight to the sandbox's runtime with its own token, skipping the Sandbox API. Network and preview calls still go through the API.
@@ -448,26 +945,71 @@ Raises `StateError` when the sandbox has no runtime URL.
 
 ## `fetch`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+`fetch(method: str, path: str, *, json=None, params=None, headers=None, timeout=None) -> httpx.Response`
+
+{/* sandbox-proof: run */}
 
 ```python
-fetch(method: str, path: str, *, json=None, params=None, headers=None, timeout=None) -> httpx.Response
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        response = box.fetch("GET", f"/v1/sandboxes/{box.id}/runtime/health", timeout=10)
+        response.raise_for_status()
+        health = response.json()
+        assert health["status"] in ("ok", "degraded")
+        assert "timestamp" in health
+        print(health["status"])
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 The same raw request as `client.fetch`, on this instance's connection. Use it for routes the SDK does not wrap, such as the MCP endpoint:
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
-response = box.fetch("GET", f"/v1/sandboxes/{box.id}/mcp?capabilities=computer_use")
-print(response.status_code)
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+        "capabilities": ["computer_use"], "resources": {"memoryMB": 4096},
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        response = box.fetch("GET", f"/v1/sandboxes/{box.id}/mcp?capabilities=computer_use")
+        response.raise_for_status()
+        endpoint = response.json()
+        assert endpoint["url"].startswith("https://")
+        assert endpoint["authToken"]
+        assert "computer_use" in endpoint["capabilities"]
+        print(response.status_code, endpoint["capabilities"])
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 A sandbox created without `capabilities=["computer_use"]` answers 400 `VALIDATION_ERROR` here.
 
 ## `collaborate`
 
-{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+{/* sandbox-proof: skip API method signatures for reference; not a complete executable program */}
 
 ```python
 collaborate(path: str, *, access="write") -> dict

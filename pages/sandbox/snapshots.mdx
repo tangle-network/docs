@@ -22,8 +22,10 @@ const client = new Sandbox({
 const box = await client.create({
   git: { url: "https://github.com/tangle-network/sandbox-demo" },
 });
+let ownedSnapshotId: string | undefined;
 try {
   const clean = await box.snapshot({ tags: ["clean"] });
+  ownedSnapshotId = clean.snapshotId;
 
   await box.exec("rm -rf packages test");
   console.log("after", (await box.exec("ls")).stdout.trim().split("\n"));
@@ -31,7 +33,11 @@ try {
   await box.revertToSnapshot(clean.snapshotId);
   console.log("reverted", (await box.exec("ls")).stdout.trim().split("\n"));
 } finally {
-  await box.delete();
+  try {
+    if (ownedSnapshotId) await box.deleteSnapshot(ownedSnapshotId);
+  } finally {
+    await box.delete();
+  }
 }
 ```
 </Tabs.Tab>
@@ -44,15 +50,23 @@ from tangle_sandbox import Sandbox, SandboxStatus, GitConfig, SnapshotOptions
 
 client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
 box = client.create(git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"))
+owned_snapshot_id = None
 try:
     box.wait_for(SandboxStatus.RUNNING)
     clean = box.snapshot(SnapshotOptions(tags=["clean"]))
+    owned_snapshot_id = clean.snapshot_id
     box.exec("rm -rf test")
     box.restore_paths(clean.snapshot_id, ["test"])
     print(box.exec("ls test").stdout)
 finally:
-    box.delete()
-    client.close()
+    try:
+        if owned_snapshot_id:
+            client.fetch("DELETE", f"/v1/sandboxes/{box.id}/snapshots/{owned_snapshot_id}").raise_for_status()
+    finally:
+        try:
+            box.delete()
+        finally:
+            client.close()
 ```
 </Tabs.Tab>
 <Tabs.Tab>
@@ -70,24 +84,80 @@ tangle snapshot revert demo <snapshot-id>
 
 ## Restore all or part of a workspace
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-await box.revertToSnapshot(snapshotId);                    // the whole workspace, in place
-await box.restorePaths(snapshotId, ["src", "package.json"]); // only these paths
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 600 });
+let ownedSnapshotId: string | undefined;
+try {
+  await box.write("src/version.txt", "original\n");
+  await box.write("package.json", '{"name":"snapshot-example"}\n');
+  const snapshot = await box.snapshot();
+  ownedSnapshotId = snapshot.snapshotId;
+  await box.write("src/version.txt", "damaged\n");
+  await box.revertToSnapshot(snapshot.snapshotId);
+  assert.equal(await box.read("src/version.txt"), "original\n");
+  await box.write("src/version.txt", "changed again\n");
+  await box.write("keep.txt", "keep this change\n");
+  await box.restorePaths(snapshot.snapshotId, ["src", "package.json"]);
+  assert.equal(await box.read("src/version.txt"), "original\n");
+  assert.equal(await box.read("keep.txt"), "keep this change\n");
+  console.log("Verified whole and selected-path restoration");
+} finally {
+  try {
+    if (ownedSnapshotId) await box.deleteSnapshot(ownedSnapshotId);
+  } finally {
+    await box.delete();
+  }
+}
 ```
 
 `restorePaths` replaces the listed workspace-relative paths and leaves every other file as it is.
 
 ## Start a new sandbox from a snapshot
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const copy = await client.create({
-  fromSnapshot: snapshotId,
-  fromSandboxId: box.id,
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
 });
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 600 });
+let ownedSnapshotId: string | undefined;
+try {
+  await box.write("base.txt", "shared setup\n");
+  const snapshot = await box.snapshot();
+  ownedSnapshotId = snapshot.snapshotId;
+  const copy = await client.create({ agent: false, fromSnapshot: snapshot.snapshotId, fromSandboxId: box.id, maxLifetimeSeconds: 300 });
+  try {
+    assert.notEqual(copy.id, box.id);
+    assert.equal(await copy.read("base.txt"), "shared setup\n");
+    await copy.write("base.txt", "copy only\n");
+    assert.equal(await box.read("base.txt"), "shared setup\n");
+    console.log(copy.id, await copy.read("base.txt"));
+  } finally {
+    await copy.delete();
+  }
+} finally {
+  try {
+    if (ownedSnapshotId) await box.deleteSnapshot(ownedSnapshotId);
+  } finally {
+    await box.delete();
+  }
+}
 ```
 
 `fromSandboxId` is required with `fromSnapshot`. The source sandbox is untouched. In the CLI, `tangle snapshot restore <sandbox-id> <snapshot-id>` creates the new sandbox and waits for it to run; the first argument must be a sandbox id, not a name.
@@ -96,13 +166,41 @@ To publish a snapshot so others can start from it, see [Templates and images](/s
 
 ## List and delete snapshots
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-for (const s of await box.listSnapshots()) console.log(s.snapshotId, s.tags, s.sizeBytes);
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
 
-const { outcome } = await box.deleteSnapshot(snapshotId);
-console.log(outcome); // "deleted", "already_absent" or "unknown"
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 600 });
+let ownedSnapshotId: string | undefined;
+try {
+  await box.write("notes.md", "saved draft\n");
+  const snapshot = await box.snapshot({ tags: ["docs-cleanup"] });
+  ownedSnapshotId = snapshot.snapshotId;
+  const deadline = Date.now() + 60_000;
+  let listed = await box.listSnapshots();
+  while (!listed.some((item) => item.snapshotId === snapshot.snapshotId) && Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    listed = await box.listSnapshots();
+  }
+  assert(listed.some((item) => item.snapshotId === snapshot.snapshotId));
+  for (const item of listed) console.log(item.snapshotId, item.tags, item.sizeBytes);
+  const { outcome } = await box.deleteSnapshot(snapshot.snapshotId);
+  assert(["deleted", "already_absent"].includes(outcome));
+  console.log(outcome);
+} finally {
+  try {
+    if (ownedSnapshotId) await box.deleteSnapshot(ownedSnapshotId);
+  } finally {
+    await box.delete();
+  }
+}
 ```
 
 {/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
@@ -224,11 +322,35 @@ What a child inherits depends on the [runtime](/sandbox/lifecycle#choose-the-ima
 
 `fork(count)` does the same and reports the whole fan-out: `{ children, requestedCount, materializedCount, complete }`. `complete: false` means fewer children started than you asked for. Pass `idempotencyKey` so a retry returns the same children instead of making more.
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const forked = await parent.fork(5, { idempotencyKey: "run-42", metadata: { experiment: "a" } });
-if (!forked.complete) console.warn(`${forked.materializedCount} of ${forked.requestedCount}`);
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, runtime: "firecracker", maxLifetimeSeconds: 600 });
+try {
+  await box.write("base.txt", "shared setup\n");
+  const forked = await box.fork(2, { idempotencyKey: `fork-${crypto.randomUUID()}`, metadata: { experiment: "a" } });
+  try {
+    assert.equal(forked.complete, true);
+    assert.equal(forked.materializedCount, 2);
+    assert.equal(forked.requestedCount, 2);
+    for (const child of forked.children) assert.equal(await child.read("base.txt"), "shared setup\n");
+    console.log(forked.materializedCount, "of", forked.requestedCount);
+  } finally {
+    const deleted = await Promise.allSettled(forked.children.map((child) => child.delete()));
+    const failures = deleted.filter((result) => result.status === "rejected");
+    assert.equal(failures.length, 0, "A fork child could not be deleted");
+  }
+} finally {
+  await box.delete();
+}
 ```
 
 A fan-out larger than the host can hold fails with `BRANCH_FANOUT_EXCEEDS_HOST`, and the error's `maxChildren` says how many fit. The allowed `count` is on [Limits](/sandbox/limits).

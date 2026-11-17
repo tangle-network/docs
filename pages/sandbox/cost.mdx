@@ -54,7 +54,7 @@ Leave a timer out and the platform's policy applies. The CLI sets `--lifetime` a
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Requests a lifetime beyond the production proof allocation policy */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -81,7 +81,7 @@ try {
 </Tabs.Tab>
 <Tabs.Tab>
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Requests a lifetime beyond the production proof allocation policy */}
 
 ```python
 import os
@@ -127,11 +127,29 @@ Delete every sandbox you create in a `finally` block. Timers stop a sandbox; onl
 
 Tag the sandboxes a job creates, then delete them all in one call. In TypeScript:
 
-{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+{/* sandbox-proof: skip Metadata-prefix deletion cannot be atomically restricted to this proof program's owned sandbox IDs */}
 
 ```ts
-const result = await client.deleteMatching({ metadataPrefix: { job: "nightly-review" } });
-console.log(result.complete);
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const runKey = `docs-${crypto.randomUUID()}`;
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300, metadata: { job: runKey } });
+try {
+  const result = await client.deleteMatching({ metadataPrefix: { job: runKey } }, { cascade: true });
+  assert.equal(result.complete, true);
+  assert.equal(result.sandboxes.length, 1);
+  assert.equal(result.sandboxes[0].id, box.id);
+  assert.equal(result.sandboxes[0].confirmed, true);
+  console.log(result.complete, result.sandboxes[0].outcome);
+} finally {
+  await box.delete();
+}
 ```
 
 It deletes only your own sandboxes whose metadata values start with the prefixes you pass. `result.complete` is `true` once every match is confirmed gone, and the call is safe to repeat.
@@ -153,11 +171,23 @@ Give each automation its own key with a budget. A runaway loop then stops at tha
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
 
-{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
 const usage = await client.usage();
 const plan = await client.subscription();
+assert(Number.isFinite(usage.computeMinutes));
+assert(Number.isInteger(usage.activeSandboxes));
+assert(Number.isFinite(plan.creditsAvailableUsd));
+assert(Number.isFinite(plan.creditsUsedUsd));
 console.log(usage.computeMinutes, usage.gpuCostUsd, usage.activeSandboxes);
 console.log(plan.creditsAvailableUsd, plan.creditsUsedUsd);
 ```
@@ -192,11 +222,27 @@ The [dashboard billing page](https://sandbox.tangle.tools/dashboard/billing) sho
 
 One sandbox's egress this month, in TypeScript:
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const egress = await box.egress.usage();
-console.log(egress.bytes, egress.chargeUsd, egress.accountBytes, egress.accountIncludedBytes);
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  const egress = await box.egress.usage();
+  assert(Number.isFinite(egress.bytes));
+  assert(Number.isFinite(egress.chargeUsd));
+  assert(Number.isFinite(egress.accountBytes));
+  console.log(egress.bytes, egress.chargeUsd, egress.accountBytes, egress.accountIncludedBytes);
+} finally {
+  await box.delete();
+}
 ```
 
 ## Model spend per turn

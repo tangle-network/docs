@@ -253,14 +253,35 @@ Token scopes and lifetimes are on [Authentication](/sandbox/authentication).
 
 ## Stream a process's output
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const proc = await box.process.spawn("npm test");
-for await (const entry of proc.logs()) {
-  console.log(entry);
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  await box.write("app/package.json", JSON.stringify({ name: "streamed-command", version: "1.0.0", scripts: { test: "node build.cjs" } }));
+  await box.write("app/build.cjs", "const fs=require('fs'); console.log('build started'); console.error('build diagnostic'); fs.writeFileSync('report.txt','ready\\n'); console.log('build finished');");
+  const proc = await box.process.spawn("cd app && npm test", { timeoutMs: 30_000 });
+  const entries = [];
+  for await (const entry of proc.logs()) {
+    assert.notEqual(entry.type, "gap", "Command output was lost before the reader consumed it");
+    entries.push(entry);
+    console.log(entry.type, entry.data);
+  }
+  assert.equal(await proc.wait(), 0);
+  assert(entries.some((entry) => entry.type === "stdout" && entry.data.includes("build finished")));
+  assert(entries.some((entry) => entry.type === "stderr" && entry.data.includes("build diagnostic")));
+  assert.equal(await box.read("app/report.txt"), "ready\n");
+} finally {
+  await box.delete();
 }
-console.log("exit", await proc.wait());
 ```
 
 `logs()` yields `stdout`, `stderr` and `gap` entries; a gap reports how many bytes were dropped. `stdout()` and `stderr()` yield one stream each. In the CLI, `tangle process logs <sandbox> <pid>` follows a process until it exits, and `--json` prints one entry per line.

@@ -71,18 +71,30 @@ tangle sandbox delete my-project --force
 | `bare` | `true` gives command execution and lifecycle only, without the agent runtime. |
 | `agent` | `false` keeps files, terminals and processes but provisions no coding agent, model credentials or [startup scripts](/sandbox/startup-scripts). An enabled startup script that applies to the create makes it fail. |
 
-{/* sandbox-proof: skip Continues the preceding client initialization example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const { presets, ceiling } = await client.shapes();
-console.log(presets.map((p) => p.name), ceiling);
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
 
-const box = await client.create({
-  name: "build-runner",
-  runtime: "firecracker",
-  resources: { cpuCores: 4, memoryMB: 8192, diskGB: 20 },
-  metadata: { project: "checkout", ci: "true" },
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
 });
+
+const { presets, ceiling } = await client.shapes();
+assert(presets.length > 0);
+const box = await client.create({ agent: false, name: "build-runner", runtime: "firecracker", resources: { cpuCores: 4, memoryMB: 8192, diskGB: 20 }, metadata: { project: "checkout", ci: "true" }, maxLifetimeSeconds: 300 });
+try {
+  assert.equal(box.name, "build-runner");
+  assert.equal(box.metadata?.project, "checkout");
+  const result = await box.exec("uname -s");
+  assert.equal(result.exitCode, 0, result.stderr);
+  assert.equal(result.stdout.trim(), "Linux");
+  console.log(presets.map((preset) => preset.name), ceiling, box.resources);
+} finally {
+  await box.delete();
+}
 ```
 
 The CLI takes the same choices as flags: `--environment`, `--runtime`, `--cpu`, `--memory` (MB), `--disk` (GB) and `--metadata KEY=VALUE`. `tangle sandbox shapes` lists the presets your account can use. The size ceiling for your plan is on [Limits](/sandbox/limits).
@@ -91,13 +103,26 @@ The CLI takes the same choices as flags: `--environment`, `--runtime`, `--cpu`, 
 
 Pass an `idempotencyKey` when your code may retry. A second create with the same key joins the first provision instead of starting another sandbox.
 
-{/* sandbox-proof: skip Continues the preceding client initialization example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const box = await client.create({
-  name: "nightly-eval",
-  idempotencyKey: "nightly-eval-2026-11-09",
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
 });
+
+const idempotencyKey = `nightly-eval-${crypto.randomUUID()}`;
+const box = await client.create({ agent: false, name: "nightly-eval", maxLifetimeSeconds: 300, idempotencyKey });
+try {
+  const same = await client.create({ agent: false, name: "nightly-eval", maxLifetimeSeconds: 300, idempotencyKey });
+  assert.equal(same.id, box.id);
+  console.log("Both requests returned", box.id);
+} finally {
+  await box.delete();
+}
 ```
 
 Both SDKs retry capacity and rate-limit refusals inside the create's time budget. When the budget runs out, the timeout error names the key to retry with: `retry create() with idempotencyKey="..." to join it` in TypeScript, `idempotency_key="..."` in Python. Pass `retry: { capacity: false }` in TypeScript to get `CAPACITY_EXHAUSTED` at once and schedule the retry yourself.
@@ -110,14 +135,28 @@ Both SDKs retry capacity and rate-limit refusals inside the create's time budget
 | `idleTimeoutSeconds` | The sandbox stops after this much inactivity. The workspace is kept. |
 | `deleteAfterStoppedSeconds` | A stopped sandbox is deleted after this long. Omit it for the platform default. |
 
-{/* sandbox-proof: skip Continues the preceding client initialization example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const box = await client.create({
-  maxLifetimeSeconds: 3600,
-  idleTimeoutSeconds: 600,
-  deleteAfterStoppedSeconds: 86_400,
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
 });
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300, idleTimeoutSeconds: 120, deleteAfterStoppedSeconds: 600 });
+try {
+  assert(box.expiresAt instanceof Date);
+  assert(box.expiresAt.getTime() > Date.now());
+  const result = await box.exec("printf 'bounded lifetime\\n'");
+  assert.equal(result.exitCode, 0, result.stderr);
+  assert.equal(result.stdout.trim(), "bounded lifetime");
+  console.log(box.expiresAt.toISOString());
+} finally {
+  await box.delete();
+}
 ```
 
 The CLI flags are `--lifetime` and `--idle-timeout`, both in seconds. Defaults and allowed ranges are on [Limits](/sandbox/limits).
@@ -229,38 +268,84 @@ try {
 
 ## Find sandboxes
 
-{/* sandbox-proof: skip Continues the preceding client initialization example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const box = await client.get("sbx_123"); // null when it does not exist
-const running = await client.list({ status: "running", limit: 20 });
-const team = await client.list({ scope: "team" });
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  const again = await client.get(box.id);
+  assert(again, "The created sandbox was missing from get()");
+  assert.equal(again.id, box.id);
+  const running = await client.list({ status: "running", limit: 20 });
+  assert(running.some((item) => item.id === box.id));
+  console.log(again.id, running.map((item) => item.id));
+} finally {
+  await box.delete();
+}
 ```
 
 `list()` filters by `status` (one or several), `scope` (`"personal"`, `"team"`, `"all"` or `` `team:${id}` ``), `limit`, `offset` and `run`. In the CLI, `tangle sandbox list` and `tangle sandbox get <id-or-name>`.
 
 ## Delete
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```ts
-const ack = await box.delete();
-console.log(ack.outcome); // "destroyed", "already_absent" or "unknown"
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
 
-await box.delete({ until: "removed" }); // also waits until storage is reclaimed
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  const ack = await box.delete();
+  assert(["destroyed", "already_absent"].includes(ack.outcome));
+  const removed = await box.delete({ until: "removed" });
+  assert(["destroyed", "already_absent"].includes(removed.outcome));
+  console.log(ack.outcome, removed.outcome);
+} finally {
+  await box.delete();
+}
 ```
 
 `delete()` resolves when the sandbox is gone and billing has stopped; `removal` reads `"pending"` until its storage is reclaimed. `until: "removed"` waits for that too.
 
 A sandbox with live [branch children](/sandbox/snapshots#branch-a-running-sandbox) is refused with `409 CHILDREN_EXIST`. Delete the children first, or delete the whole lineage with `cascade`. `box.delete()` and `tangle sandbox delete` have no cascade option; use `deleteMatching` or the REST route:
 
-{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+{/* sandbox-proof: skip Metadata-prefix deletion cannot be atomically restricted to this proof program's owned sandbox IDs */}
 
 ```ts
-const result = await client.deleteMatching(
-  { metadataPrefix: { project: "checkout" } },
-  { cascade: true },
-);
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const runKey = `docs-${crypto.randomUUID()}`;
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300, metadata: { project: runKey } });
+try {
+  const result = await client.deleteMatching({ metadataPrefix: { project: runKey } }, { cascade: true });
+  assert.equal(result.complete, true);
+  assert.equal(result.sandboxes.length, 1);
+  assert.equal(result.sandboxes[0].id, box.id);
+  assert.equal(result.sandboxes[0].confirmed, true);
+  console.log(result.complete, result.sandboxes[0].outcome);
+} finally {
+  await box.delete();
+}
 ```
 
 {/* sandbox-proof: skip REST mutation requires the resource IDs and request data from the surrounding steps */}
@@ -276,17 +361,28 @@ curl -X DELETE "https://sandbox.tangle.tools/v1/sandboxes/$SANDBOX_ID?cascade=tr
 
 The Python SDK covers create, `wait_for`, `get`, `list(ListSandboxOptions(status=...))`, `stop`, `resume` and `delete`. It has no `rebuild`, lifecycle operations, env recovery or `delete_matching`, and its `list` has no `scope` or `run` filter. Its create options do not include `delete_after_stopped_seconds`, `cold_timeout_seconds`, `retain` or `cwd`. Send those through the REST API with `client.fetch`, which returns the raw response and does not raise on an error status:
 
-{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+{/* sandbox-proof: run */}
 
 ```python
-response = client.fetch(
-    "POST",
-    "/v1/sandboxes",
-    json={"name": "nightly", "deleteAfterStoppedSeconds": 86400},
-)
-print(response.status_code, response.json())
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
 
-response = client.fetch("DELETE", f"/v1/sandboxes/{box.id}", params={"cascade": "true"})
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={"agent": False, "name": "nightly", "maxLifetimeSeconds": 300, "deleteAfterStoppedSeconds": 600})
+    created.raise_for_status()
+    sandbox_id = created.json()["id"]
+    try:
+        box = client.get(sandbox_id)
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        assert box.name == "nightly"
+        print(created.status_code, box.id)
+    finally:
+        removed = client.fetch("DELETE", f"/v1/sandboxes/{sandbox_id}", params={"cascade": "true"})
+        removed.raise_for_status()
 ```
 
 The states a sandbox moves through are drawn in [How sandboxes work](/sandbox/concepts).
