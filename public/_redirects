@@ -57,3 +57,5 @@
 /sandbox/sdk/agents-sessions      /sandbox/sessions                            301
 /sandbox/sdk/parallel             /sandbox/agents-fleet                        301
 /gateway/free-tier  /gateway/pricing  301
+# The Sandbox API spec is the one its own release builds and serves; never a copy here.
+/sandbox-openapi.json  https://sandbox.tangle.tools/openapi.json  200
