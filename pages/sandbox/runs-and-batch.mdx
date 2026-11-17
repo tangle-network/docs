@@ -18,7 +18,7 @@ Two calls run agent work without managing sandboxes yourself:
 
 <Tabs items={["TypeScript", "Python", "CLI"]}>
 <Tabs.Tab>
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Requires server-managed batch allocation/custody outside this proof runner's per-program owned Sandbox IDs. */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -48,7 +48,7 @@ console.log(`${batch.totalSuccess}/${batch.totalTasks} done, ${batch.totalRetrie
 ```
 </Tabs.Tab>
 <Tabs.Tab>
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Requires server-managed batch allocation/custody outside this proof runner's per-program owned Sandbox IDs. */}
 
 ```python
 import os

@@ -206,7 +206,7 @@ Read more: [Lifecycle](/sandbox/sdk-python/instance#lifecycle).
 
 Snapshot a file, break it, restore it from the snapshot, and start a second sandbox from the same snapshot.
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Restoring a snapshot into a new sandbox requires a non-isolated create; this proof admits only fresh isolated allocations. */}
 
 ```python
 import os
@@ -371,7 +371,7 @@ Read more: [prompt](/sandbox/sdk-python/instance#prompt), [Run a coding agent](/
 
 Have Codex fix a test, check it, and commit only the files it changed.
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Requires a tool-capable model to modify the repository and make the tagged test pass; synthetic echo cannot perform this task. */}
 
 ```python
 import os
@@ -558,7 +558,7 @@ Read more: [Network rules](/sandbox/sdk-python/instance#network-rules), [Network
 
 Run two tasks on Claude Code and Codex, each in its own sandbox, and print every result.
 
-{/* sandbox-proof: run */}
+{/* sandbox-proof: skip Requires server-managed batch allocation/custody outside this proof runner's per-program owned Sandbox IDs. */}
 
 ```python
 import os
