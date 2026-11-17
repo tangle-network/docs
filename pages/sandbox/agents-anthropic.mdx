@@ -12,6 +12,8 @@ instead, see [Run a coding agent](/sandbox/cloud-agents).
 
 ## Install
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 npm install @anthropic-ai/sdk @tangle-network/sandbox
 ```
@@ -20,6 +22,8 @@ Set `ANTHROPIC_API_KEY` for the Anthropic SDK and `TANGLE_API_KEY` for the
 sandbox.
 
 ## Run a tool loop
+
+{/* sandbox-proof: skip Requires the external agent framework and its provider credentials */}
 
 ```ts
 import Anthropic from "@anthropic-ai/sdk";
@@ -70,6 +74,8 @@ kernel.
 
 ## Choose the tools
 
+{/* sandbox-proof: skip Continues the graph, profile, provider, or session setup shown earlier on this page */}
+
 ```ts
 const { tools, handleAssistantMessage } = anthropicTools(box, {
   sessionId: "chat-1",
@@ -97,6 +103,8 @@ An unknown tool name, or an error thrown while running a tool, comes back as a
 Claude can react.
 
 ## Types
+
+{/* sandbox-proof: skip SDK import reference; makes no production request */}
 
 ```ts
 import type {

@@ -18,6 +18,8 @@ Two calls run agent work without managing sandboxes yourself:
 
 <Tabs items={["TypeScript", "Python", "CLI"]}>
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -46,6 +48,8 @@ console.log(`${batch.totalSuccess}/${batch.totalTasks} done, ${batch.totalRetrie
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```python
 import os
 
@@ -68,6 +72,8 @@ with Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tan
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle batch run --backend classifier=claude-code \
   --task t1="Classify: export button does nothing in Safari" \
@@ -104,6 +110,8 @@ one unchanged request.
 `streamBatch()` (Python: `stream_batch()`) yields every event as the batch
 runs, including `task.completed` and `task.failed`:
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 for await (const event of client.streamBatch(request, { idempotencyKey })) {
   if (event.type === "task.completed" || event.type === "task.failed") {
@@ -127,6 +135,8 @@ platform reads the profile and the grants and picks where it runs:
 | `inference` | One model call is enough: no tools, files or session. |
 | `worker` | The only tools are Hub connections, stored objects and public HTTPS reads. |
 | `sandbox` | The profile needs files, a shell, a coding agent or MCP servers. |
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```ts
 const run = await client.run({

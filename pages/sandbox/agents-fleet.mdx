@@ -19,6 +19,8 @@ programs are in [fleet examples](/sandbox/examples/fleets).
 
 <Tabs items={["TypeScript", "CLI"]}>
 <Tabs.Tab>
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 const fleet = await client.fleets.create({
   agents: [
@@ -44,6 +46,8 @@ try {
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fleet run "Write a prime checker in Python with tests, run the tests and report the result." \
   --agents 3 --placement dedicated --max-spend-usd 1
@@ -91,6 +95,8 @@ sandbox when it writes to the repository or runs untrusted code.
 `fleet.run()` starts one turn on each agent at once and yields events as they
 happen. `fleet.runAll()` waits and returns every result.
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```ts
 for await (const event of fleet.run()) {
   if (event.type === "agent.started") console.log("started", event.agentId);
@@ -117,6 +123,8 @@ charge made through the fleet counts against the budget, from any process, and
 a charge past it is refused. A turn that hits the budget ends
 `budget_exhausted`; turns already running are refused at their next charge.
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```ts
 const spend = await fleet.spend();
 // { capUsd, spentUsd, inFlightUsd, reservedForChildrenUsd, remainingUsd }
@@ -129,6 +137,8 @@ sandbox with another key is billed to that key, outside the budget.
 To stop everyone before the budget runs out, watch `spend()` and call
 `cancel()`:
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```ts
 const { interrupted, children, failures } = await fleet.cancel();
 ```
@@ -138,6 +148,8 @@ session, and cancels child fleets. The sandboxes keep running until
 `delete()`.
 
 ## Collect files from the agents
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```ts
 const files = await fleet.collectArtifacts(
@@ -153,6 +165,8 @@ for (const file of files) console.log(file.label, file.content.length);
 ## Run commands across machines
 
 Without agents, a fleet is a set of machines you run commands on:
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```ts
 const files = ["cli", "dates", "format"];
@@ -200,6 +214,8 @@ created, and cancelling or deleting the parent reaches the child.
 
 ## Find a fleet later
 
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
+
 ```ts
 const fleet = await client.fleets.list({ fleetId: "release-review" });
 await fleet.delete();
@@ -212,6 +228,8 @@ the id.
 
 Python fleets run commands across machines. Agent fleets with `run()` and
 budgets are TypeScript and CLI only.
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```python
 fleet = client.fleets.create_with_coordinator(

@@ -2,6 +2,8 @@
 
 Every member for running a coding agent in a sandbox: one-shot prompts, streams, durable sessions, human answers, the agent's own terminal UI, and several agents side by side.
 
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -28,6 +30,8 @@ try {
 ## Choose the coding agent
 
 `backend` on `create`, or per prompt, selects the coding agent:
+
+{/* sandbox-proof: skip Continues the graph, profile, provider, or session setup shown earlier on this page */}
 
 ```ts
 backend: {
@@ -174,6 +178,8 @@ When `interactions` asks for it, the agent pauses for you.
 
 `box.agents` exists after `import "@tangle-network/sandbox/agent"`.
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 import "@tangle-network/sandbox/agent";
 
@@ -211,8 +217,31 @@ See [OpenAI](/sandbox/agents-openai), [Anthropic](/sandbox/agents-anthropic), [V
 
 Python has `box.prompt(...)` and `box.stream_prompt(...)`. It has no sessions, dispatch, interactions, interactive sessions or `agents`. Call session routes through `client.fetch`, which returns the raw response and does not raise on an error status:
 
+{/* sandbox-proof: run */}
+
 ```python
-client.fetch("GET", f"/v1/sandboxes/{box.id}/runtime/agents/sessions")
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        response = client.fetch("GET", f"/v1/sandboxes/{box.id}/runtime/agents/sessions")
+        response.raise_for_status()
+        sessions = response.json()
+        assert isinstance(sessions, list)
+        assert sessions == [], "An agentless new sandbox unexpectedly has native agent sessions"
+        print("Native sessions:", len(sessions))
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 ## Next

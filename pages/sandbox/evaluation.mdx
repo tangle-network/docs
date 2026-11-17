@@ -10,6 +10,8 @@ each result with a judge, and reports the scores so you can compare one change
 against another. The sandbox runs the agent; agent-eval runs in your own
 TypeScript process.
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 npm install @tangle-network/agent-eval @tangle-network/sandbox
 ```
@@ -27,6 +29,8 @@ agent-eval needs Node.js 20.19 or later.
 `defineAgentEval` takes the cases, the agent and the judge. The agent receives
 the surface and one case and returns an artifact; here, the exit code of the
 test that case names.
+
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
 
 ```ts
 import { defineAgentEval, type Scenario } from "@tangle-network/agent-eval/contract";
@@ -86,6 +90,8 @@ Model ids come from `GET /v1/router-models` with your Sandbox key, or the
 `llmJudge` scores an artifact against a rubric with a model on the Tangle
 Router. It works on any text, with or without a sandbox.
 
+{/* sandbox-proof: skip Continues the graph, profile, provider, or session setup shown earlier on this page */}
+
 ```ts
 import { createChatClient, llmJudge } from "@tangle-network/agent-eval/contract";
 
@@ -123,6 +129,8 @@ hand before you let it decide a release.
 Score the shipped surface and the candidate on the same cases, and exit
 non-zero when the candidate scores lower:
 
+{/* sandbox-proof: skip Continues the graph, profile, provider, or session setup shown earlier on this page */}
+
 ```ts
 const score = async (surface: string) =>
   (await evalKit.evaluate({ surface })).aggregates.byJudge.suite?.mean ?? 0;
@@ -145,6 +153,8 @@ tuning.
 
 Every sandbox turn is traced. An Intelligence report reads a sandbox's traces
 and reports what the agent did:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 const job = await client.intelligence.createReport({

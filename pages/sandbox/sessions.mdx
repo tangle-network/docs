@@ -20,6 +20,8 @@ conversation.
 
 <Tabs items={["TypeScript", "Python", "CLI"]}>
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -35,17 +37,20 @@ const box = await client.create({
 try {
   await box.prompt("Read the codebase and plan OAuth login.", { sessionId: "oauth" });
   const run = await box.session("oauth").prompt("Implement step 1 of your plan.");
-  console.log(run.success ? run.response : run.error);
+  if (!run.success) throw new Error(run.error ?? "Agent turn failed");
+  console.log(run.response);
 } finally {
   await box.delete();
 }
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```python
 import os
 
-from tangle_sandbox import BackendConfig, CreateSandboxOptions, GitConfig, PromptOptions, Sandbox
+from tangle_sandbox import SandboxStatus, BackendConfig, CreateSandboxOptions, GitConfig, PromptOptions, Sandbox
 
 client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
 box = client.create(
@@ -54,17 +59,21 @@ box = client.create(
         backend=BackendConfig(type="claude-code"),
     )
 )
-box.wait_for("running")
 try:
+    box.wait_for(SandboxStatus.RUNNING)
     box.prompt("Read the codebase and plan OAuth login.", PromptOptions(session_id="oauth"))
     run = box.prompt("Implement step 1 of your plan.", PromptOptions(session_id="oauth"))
-    print(run.response if run.success else run.error)
+    if not run.success:
+        raise RuntimeError(run.error)
+    print(run.response)
 finally:
     box.delete()
     client.close()
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle agent prompt <sandbox-id> "Read the codebase and plan OAuth login." --session oauth
 tangle agent prompt <sandbox-id> "Implement step 1 of your plan." --session oauth --stream
@@ -80,6 +89,8 @@ side by side.
 `box.prompt()` needs a running sandbox; it does not resume one. Resume a
 stopped sandbox first, then send the backend again with the turn so the
 resumed session has its credential:
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```ts
 const backend = { type: "claude-code" } as const;
@@ -101,6 +112,8 @@ const run = await again.prompt("Implement step 2 of your plan.", {
 working in the sandbox after your process exits. Any process can collect the
 result or replay the events.
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 const run = await box.dispatchPrompt("Upgrade each dependency and run the tests.", {
   sessionId: "upgrade-deps",
@@ -116,6 +129,8 @@ console.log(result.status, result.response);
 `session(id).events({ since })` yields the session's events from the event id
 you pass, then follows live ones. Pass the last event id your client saw to
 pick up exactly where it stopped:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 for await (const event of box.session("upgrade-deps").events({ since: lastEventId })) {
@@ -133,6 +148,8 @@ A `sessionId` stops a second run only while the first is in flight. Once the
 turn finishes, the same call starts a new turn. To make a retry safe after the
 turn finishes, pass a `turnId`: the platform caches each completed turn under
 its `turnId`.
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 const turnId = request.headers.get("x-turn-id")!;
@@ -155,6 +172,8 @@ already completed or a run already in flight on the session.
 Callers that run in short steps, such as a Worker request, a queue consumer or
 a workflow step, call `driveTurn()` once per step. Each call settles, checks or
 starts the turn and returns without waiting:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 const tick = await box.driveTurn("Write the release notes.", {
@@ -188,6 +207,8 @@ To answer in the agent's own UI instead, open the session in
 
 ## List, fork and delete sessions
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 const sessions = await box.sessions();
 const status = await box.session("oauth").status(); // null when the id is unknown
@@ -214,6 +235,8 @@ The pattern for a chat route on Cloudflare Workers or any server:
    `Last-Event-ID` from the browser as `since`.
 
 The account key stays on the server. The browser sends its own user token.
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 const cached = await box.findCompletedTurn(turnId, { sessionId });

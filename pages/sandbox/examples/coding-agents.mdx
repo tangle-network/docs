@@ -16,6 +16,8 @@ whose tests are tagged so a prompt can name one.
 The agent fixes the code; the program runs the tests itself and writes the
 diff to `fix.patch`.
 
+{/* sandbox-proof: run */}
+
 ```ts
 import { writeFile } from "node:fs/promises";
 import { Sandbox } from "@tangle-network/sandbox";
@@ -52,6 +54,8 @@ program. Guide: [Run a coding agent](/sandbox/cloud-agents).
 The agent edits; the program reads what changed, runs the one test, and
 commits.
 
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -83,6 +87,8 @@ Prints the changed files, then the new commit. To push, give the sandbox a
 GitHub token; see [Git](/sandbox/git).
 
 ## Watch each tool call as it happens
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -117,6 +123,8 @@ then the agent's final answer. Guide: [Streaming](/sandbox/streaming).
 
 ## Stream the agent's text
 
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -143,6 +151,8 @@ Writes the agent's reply to the terminal as it is generated.
 ## Race two coding agents on one task
 
 Each agent gets its own sandbox with the same repository.
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -187,6 +197,8 @@ and cost. For more agents or a shared budget, use a
 The first run starts the task and exits. The second, from any process, reads
 the result and deletes the sandbox.
 
+{/* sandbox-proof: skip Durable dispatch requires a second invocation with the saved execution ID */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -224,6 +236,8 @@ the sandbox on the collect run, not in `finally`, because the sandbox must
 outlive the first process. Guide: [Sessions](/sandbox/sessions).
 
 ## Run a planner and an implementer in one sandbox
+
+{/* sandbox-proof: run */}
 
 ```ts
 import type { AgentProfile } from "@tangle-network/agent-interface";
@@ -279,6 +293,8 @@ Prints the plan, the implementation summary and the planner's status. Guide:
 ## Drive a browser
 
 The agent installs Playwright and Chromium in its own sandbox and drives them.
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";

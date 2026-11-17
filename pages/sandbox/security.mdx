@@ -11,6 +11,8 @@ What separates your sandbox from other workloads, what data leaves it, and how t
 | `docker` | A container on the host's kernel. |
 | `firecracker` | A microVM with its own kernel. Choose it for untrusted code. |
 
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -36,8 +38,29 @@ Omit `runtime` for the platform default. `environments.list()` shows which runti
 
 A normal sandbox runs with your account's context: your startup scripts run in it, and it can receive your secrets and act on your Hub connections. An isolated sandbox gets none of that.
 
+{/* sandbox-proof: run */}
+
 ```ts
-const box = await client.createIsolated({ name: "untrusted-pr-1234" });
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.createIsolated({ agent: false, name: "untrusted-pr-1234", maxLifetimeSeconds: 300 });
+try {
+  const receipt = box.createReceipt();
+  assert.equal(receipt?.ownerContext, "isolated");
+  assert.deepEqual(receipt?.injectedSecrets, []);
+  const result = await box.exec("python3 -c 'print(6 * 7)'");
+  assert.equal(result.exitCode, 0, result.stderr);
+  assert.equal(result.stdout.trim(), "42");
+  console.log("Isolated owner context confirmed");
+} finally {
+  await box.delete();
+}
 ```
 
 `createIsolated` is `create` with `ownerContext: "isolated"`. It selects no secrets, turns SSH off, runs none of your startup scripts and carries no Hub authority. Use it to run code you did not write, such as a pull request from outside your team.
@@ -45,6 +68,8 @@ const box = await client.createIsolated({ name: "untrusted-pr-1234" });
 An isolated create must be a fresh personal workspace. It is refused if it also names a team, a template, a snapshot, startup scripts, SSH keys, stored secrets, profile connections or a git [read grant](/sandbox/git#with-a-connected-github-account).
 
 ## Keep personal data out of model requests and logs
+
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
 
 ```ts
 const box = await client.create({
@@ -65,6 +90,8 @@ These settings act at the sandbox's boundary. Files in the workspace and snapsho
 
 ## Run under HIPAA
 
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
+
 ```ts
 const box = await client.create({ compliance: { hipaa: true } });
 ```
@@ -84,6 +111,8 @@ A confidential sandbox runs on a Tangle network operator inside a trusted execut
 
 <Tabs items={["TypeScript", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 import { createConfidentialSandbox } from "@tangle-network/sandbox";
 
@@ -105,6 +134,8 @@ try {
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --driver tangle --tee tdx --attestation-nonce auto --require-attestation
 tangle sandbox attestation <sandbox-id> --nonce auto
@@ -140,6 +171,8 @@ The SDK returns the evidence; it does not check it against the hardware vendor's
 ## Python and REST
 
 Python can set `runtime`, `egress_policy` and `privacy` at create. It cannot send `compliance`, drops `confidential`, and has no `create_isolated` or TEE attestation methods. Send those through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```python
 client.fetch("POST", "/v1/sandboxes", json={"ownerContext": "isolated", "secrets": [], "sshEnabled": False})

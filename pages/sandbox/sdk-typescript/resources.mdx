@@ -2,6 +2,8 @@
 
 Every account-level manager on the `Sandbox` client: stored credentials, SSH keys, teams, environments and templates, per-customer instances, fleets, batch runs, profile runs, messaging lines and intelligence reports.
 
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -63,6 +65,8 @@ Pass `teamId` to `create` for a team sandbox. Route: `/v1/teams`.
 `Image` and `ImageBuilder` describe an image and generate its Dockerfile. The shared build endpoint refuses builds with `IMAGE_BUILDS_DISABLED`; publish an image from a sandbox with `box.images.publish` or bring your own. See [Templates and images](/sandbox/templates-gallery).
 
 ## One sandbox per customer: `client.instances`
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```ts
 const instance = await client.instances.ensure({
@@ -133,6 +137,8 @@ A report that would cost more than `budget.maxUsd` is refused with `402` before 
 ## Python and REST
 
 Python has `client.secrets` (`create`, `list`, `update`, `delete`), `client.environments` (`list`, `get`), `client.teams` (teams, members and invitations), `client.fleets`, `run_batch`, `stream_batch` and the intelligence report methods; see [Python fleets and extras](/sandbox/sdk-python/fleets-and-extras). It has no SSH keys, team secrets, team templates, public templates, instances, lines or profile runs. Call those routes through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```python
 client.fetch("GET", f"/v1/teams/{team_id}/secrets")

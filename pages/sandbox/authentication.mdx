@@ -17,6 +17,8 @@ Create a key at [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys). Ke
 
 Send the key as a bearer token:
 
+{/* sandbox-proof: skip curl usage requires the page authentication and resource setup */}
+
 ```bash
 curl -s https://sandbox.tangle.tools/v1/sandboxes \
   -H "Authorization: Bearer $TANGLE_API_KEY"
@@ -25,13 +27,23 @@ curl -s https://sandbox.tangle.tools/v1/sandboxes \
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
 
+{/* sandbox-proof: run */}
+
 ```ts
+import assert from "node:assert/strict";
 import { Sandbox } from "@tangle-network/sandbox";
 
 const client = new Sandbox({
   apiKey: process.env.TANGLE_API_KEY!,
   baseUrl: "https://sandbox.tangle.tools",
 });
+
+const identity = await client.getIdentity();
+assert(identity.customerId.length > 0);
+assert(identity.billingOwnerId.length > 0);
+assert(identity.apiKeyId === null || typeof identity.apiKeyId === "string");
+assert.equal(typeof identity.billingDelegationAuthorized, "boolean");
+console.log("The API accepted this key and identified its billing owner");
 ```
 
 The SDK reads no environment variables. `TANGLE_API_KEY` in these docs is a convention; pass the key however your app stores secrets.
@@ -40,21 +52,33 @@ The SDK reads no environment variables. `TANGLE_API_KEY` in these docs is a conv
 </Tabs.Tab>
 <Tabs.Tab>
 
+{/* sandbox-proof: run */}
+
 ```python
 import os
+from tangle_sandbox import Sandbox, SandboxStatus
 
-from tangle_sandbox import Sandbox
-
-client = Sandbox(
+with Sandbox(
     api_key=os.environ["TANGLE_API_KEY"],
     base_url="https://sandbox.tangle.tools",
-)
+) as client:
+    response = client.fetch("GET", "/v1/me")
+    response.raise_for_status()
+    body = response.json()
+    assert body["success"] is True
+    identity = body["data"]
+    assert isinstance(identity["customer_id"], str) and identity["customer_id"]
+    assert isinstance(identity["billing_owner_id"], str) and identity["billing_owner_id"]
+    assert isinstance(identity["billing_delegation_authorized"], bool)
+    print("The API accepted this key and returned its billing identity")
 ```
 
 `Sandbox` and `AsyncSandbox` read no environment variables and have no default `base_url`.
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 export TANGLE_API_KEY="sk-tan-..."
@@ -72,6 +96,8 @@ Never put it in browser JavaScript, local storage, a URL or an error message. Br
 ### Limit what a key can do
 
 `tangle keys create` creates a key with limits and prints it once:
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle keys create ci-agents --product sandbox --budget-usd 25 --rpm-limit 120 --expires-in-days 30
@@ -127,6 +153,8 @@ There is no global `--profile` flag.
 
 A browser never receives your account key. Your server checks that the user owns the sandbox and session, mints a short-lived token for exactly that access, and returns only the token.
 
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
+
 ```ts filename="server.ts"
 const box = await client.get(ownedSandboxId);
 if (!box) throw new Error("Sandbox not found");
@@ -158,6 +186,8 @@ Your server chooses `ownedRuntimeSessionId` from its own records. Never mint a t
 
 In the browser, build the runtime client from those fields:
 
+{/* sandbox-proof: skip Browser application fragment requires its runtime-token server */}
+
 ```ts filename="browser.ts"
 import { createSandboxRuntimeClient } from "@tangle-network/sandbox/runtime";
 
@@ -185,6 +215,8 @@ Scoped tokens are a TypeScript SDK feature. From Python or another language, cal
 For a chat view that survives reloads and network changes, mint a read-only `session-runtime` token and pass `sidecarProxyUrl` to `SessionGatewayClient`.
 It replays the running turn after a reconnect and asks your server for a fresh token when the old one expires.
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts filename="server.ts"
 const scoped = await box.mintScopedToken({
   scope: "session-runtime",
@@ -197,6 +229,8 @@ return {
   url: scoped.sidecarProxyUrl,
 };
 ```
+
+{/* sandbox-proof: skip Browser application fragment requires its session-token server and UI callbacks */}
 
 ```ts filename="browser.ts"
 import { SessionGatewayClient } from "@tangle-network/sandbox/session-gateway";

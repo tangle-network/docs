@@ -85,6 +85,22 @@ const meta: Meta = {
     title: "Examples",
   },
   examples: "Examples",
+  "examples/data-analysis": {
+    title: "Data analysis",
+    href: "/sandbox/examples/data-analysis",
+  },
+  "examples/browser": {
+    title: "Browser automation",
+    href: "/sandbox/examples/browser",
+  },
+  "examples/langgraph": {
+    title: "LangGraph",
+    href: "/sandbox/examples/langgraph",
+  },
+  "examples/github-actions": {
+    title: "GitHub Actions",
+    href: "/sandbox/examples/github-actions",
+  },
   "-- reference": {
     type: "separator",
     title: "Reference",

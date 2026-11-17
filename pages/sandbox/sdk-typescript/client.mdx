@@ -2,6 +2,8 @@
 
 Every public member of the `Sandbox` client: construction, account reads, creating and finding sandboxes, and bulk deletion. Resource managers such as `client.secrets` are on [Resources](/sandbox/sdk-typescript/resources).
 
+{/* sandbox-proof: skip Client construction reference; it makes no production request */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -15,16 +17,27 @@ const client = new Sandbox({
 
 ### `new Sandbox(config)`
 
+{/* sandbox-proof: run */}
+
 ```ts
-new Sandbox({
-  apiKey: string,
-  baseUrl: string,
-  platformUrl?: string,
-  timeoutMs?: number,
-  signal?: AbortSignal,
-  onTiming?: SdkTimingHook,
-  directExec?: boolean,
-})
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const timings: Array<{ name: string; status?: number; durMs: number }> = [];
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+  timeoutMs: 15_000,
+  signal: AbortSignal.timeout(20_000),
+  directExec: false,
+  onTiming: (entry) => timings.push(entry),
+});
+const identity = await client.getIdentity();
+assert(identity.customerId);
+assert.equal(client.directExec, false);
+assert(timings.some((entry) => entry.name === "sdk.request" && entry.status === 200));
+assert(timings.every((entry) => entry.durMs >= 0));
+console.log(timings.map((entry) => ({ name: entry.name, status: entry.status, durationMs: entry.durMs })));
 ```
 
 | Option | Meaning |
@@ -45,9 +58,22 @@ A new client with the same settings and another key.
 
 An authenticated request to any Sandbox API path, for routes the SDK does not wrap. `options.timeoutMs` overrides the client timeout for that request.
 
+{/* sandbox-proof: run */}
+
 ```ts
-const res = await client.fetch("/v1/startup-scripts");
-console.log(res.status, await res.json());
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const response = await client.fetch("/v1/startup-scripts");
+assert.equal(response.ok, true);
+const scripts = await response.json();
+assert(scripts && typeof scripts === "object");
+console.log(JSON.stringify(scripts));
 ```
 
 ## Account
@@ -64,12 +90,24 @@ console.log(res.status, await res.json());
 | `environments.list()` | Environments and your templates, with the runtimes each accepts. | `GET /v1/environments` |
 | `environments.get(id)` | One environment, or `null`. | `GET /v1/environments` |
 
-```ts
-const { backends } = await client.listBackends();
-console.log(backends.map((b) => b.type));
+{/* sandbox-proof: run */}
 
+```ts
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const { backends } = await client.listBackends();
+assert(Array.isArray(backends));
+assert(backends.every((backend) => typeof backend.type === "string"));
 const { presets, ceiling } = await client.shapes();
-console.log(presets, ceiling);
+assert(presets.length > 0);
+assert(presets.every((preset) => typeof preset.name === "string"));
+console.log(backends.map((backend) => backend.type), presets.map((preset) => preset.name), ceiling);
 ```
 
 ## Create
@@ -78,16 +116,29 @@ console.log(presets, ceiling);
 
 Creates a sandbox and resolves once it is running. `requestOptions` is `{ timeoutMs?, signal? }` for the whole create, including the wait. Route: `POST /v1/sandboxes`.
 
+{/* sandbox-proof: run */}
+
 ```ts
-const box = await client.create({
-  name: "review-482",
-  git: { url: "https://github.com/tangle-network/sandbox-demo" },
-  backend: { type: "claude-code" },
-  resources: { cpuCores: 2, memoryMB: 4096 },
-  maxLifetimeSeconds: 3600,
-  metadata: { pr: "482" },
-  idempotencyKey: "review-482",
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
 });
+
+const idempotencyKey = `review-482-${crypto.randomUUID()}`;
+const box = await client.create({ agent: false, name: "review-482", git: { url: "https://github.com/tangle-network/sandbox-demo" }, resources: { cpuCores: 2, memoryMB: 4096 }, maxLifetimeSeconds: 300, metadata: { pr: "482" }, idempotencyKey });
+try {
+  const same = await client.create({ agent: false, name: "review-482", git: { url: "https://github.com/tangle-network/sandbox-demo" }, resources: { cpuCores: 2, memoryMB: 4096 }, maxLifetimeSeconds: 300, metadata: { pr: "482" }, idempotencyKey });
+  assert.equal(same.id, box.id);
+  assert.equal(box.metadata?.pr, "482");
+  const status = await box.git.status();
+  assert.equal(status.isDirty, false);
+  console.log(box.id, box.name, status.branch);
+} finally {
+  await box.delete();
+}
 ```
 
 A timeout leaves the provision running on the server; the error names the `idempotencyKey` to retry with so the retry joins it.
@@ -190,11 +241,29 @@ The same as `box.delete(options)` for a sandbox you have only the id of. With `{
 
 ### `client.deleteMatching(filter, options?)`
 
+{/* sandbox-proof: skip Metadata-prefix deletion cannot be atomically restricted to this proof program's owned sandbox IDs */}
+
 ```ts
-const result = await client.deleteMatching(
-  { metadataPrefix: { pr: "482" } },
-  { cascade: true, until: "removed" },
-);
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const runKey = `docs-${crypto.randomUUID()}`;
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300, metadata: { pr: runKey } });
+try {
+  const result = await client.deleteMatching({ metadataPrefix: { pr: runKey } }, { cascade: true });
+  assert.equal(result.complete, true);
+  assert.equal(result.sandboxes.length, 1);
+  assert.equal(result.sandboxes[0].id, box.id);
+  assert.equal(result.sandboxes[0].confirmed, true);
+  console.log(result.complete, result.sandboxes[0].outcome);
+} finally {
+  await box.delete();
+}
 ```
 
 Deletes every sandbox you own whose metadata value for each key in `metadataPrefix` starts with the given prefix. `cascade: true` also deletes branch children, which otherwise block a parent's delete with `CHILDREN_EXIST`. Each sandbox reports `destroyed`, `already_absent` or `failed`.
@@ -215,6 +284,8 @@ Deletes every sandbox you own whose metadata value for each key in `metadataPref
 ## Python and REST
 
 The Python client has `create`, `list`, `get`, `usage`, `subscription`, `health` and `close`. `create` returns before the sandbox runs; call `box.wait_for(SandboxStatus.RUNNING)`. It has no `create_isolated`, `shapes`, `list_backends`, `get_identity`, `wait_for_running`, `run_generations` or `delete_matching`. Call those routes through `client.fetch`, which returns the raw response and does not raise on an error status:
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```python
 backends = client.fetch("GET", "/v1/backends").json()["backends"]

@@ -7,6 +7,8 @@ description: "Reference for tangle auth, keys, secret, team, template and enviro
 
 Log in, manage profiles, mint and revoke API keys, store secrets, run a team and publish templates.
 
+{/* sandbox-proof: skip Interactive authentication prerequisite */}
+
 ```bash
 tangle auth login
 tangle keys create ci-agents --budget-usd 25 --expires-in-days 30
@@ -70,6 +72,8 @@ Authenticate with browser login, device code, or an API key.
 
 Authenticates and stores a credential for a profile. Default: browser login through a 127.0.0.1 loopback callback; `--no-browser`: device code; global `--api-key`: validates the key against GET /v1/account/me and stores it.
 
+{/* sandbox-proof: skip Interactive authentication prerequisite */}
+
 ```bash
 tangle auth login [options]
 ```
@@ -82,6 +86,8 @@ tangle auth login [options]
 | `--app <app>` | `sandbox` | Product to authorize (sandbox or solve) |
 
 Request: `POST /auth/cli/exchange`
+
+{/* sandbox-proof: skip Interactive authentication prerequisite */}
 
 ```bash
 tangle auth login
@@ -101,6 +107,8 @@ Remove stored credentials.
 
 Removes the profile's stored credential from the OS keychain and the credentials file, keeping its base URL and team settings.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle auth logout [options]
 ```
@@ -109,6 +117,8 @@ tangle auth logout [options]
 | --- | --- | --- |
 | `--profile <name>` |  | Profile name |
 | `--app <app>` | `sandbox` | Product credentials to remove (sandbox or solve) |
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle auth logout
@@ -122,6 +132,8 @@ Show current authentication status.
 
 Checks the stored or supplied credential against the sandbox API and probes the platform control plane with the same profile.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle auth status [options]
 ```
@@ -132,6 +144,8 @@ tangle auth status [options]
 | `--app <app>` | `sandbox` | Product credentials to check (sandbox or solve) |
 
 Request: `GET /v1/account/me`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle auth status
@@ -147,9 +161,13 @@ List configured profiles.
 
 Lists every profile with whether it is active, its base URL and where its credential lives.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle auth profiles list
 ```
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle auth profiles list
@@ -163,9 +181,13 @@ Set the active profile.
 
 Sets the active profile in ~/.tangle/config.json.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle auth profiles use <name>
 ```
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle auth profiles use staging
@@ -179,9 +201,13 @@ Show the active profile.
 
 Shows the active profile, its base URL and credential source.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle auth profiles current
 ```
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle auth profiles current
@@ -197,6 +223,8 @@ List your active API keys.
 
 Lists your active platform API keys.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle keys list [options]
 ```
@@ -206,6 +234,8 @@ tangle keys list [options]
 | `--platform-url <url>` |  | Override the platform URL (id.tangle.tools) |
 
 Request: `GET /v1/keys`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle keys list
@@ -219,6 +249,8 @@ tangle keys list
 Create a new API key.
 
 Creates a platform API key with optional product, budget, rate and expiry limits and prints the key once.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle keys create <name> [options]
@@ -234,6 +266,8 @@ tangle keys create <name> [options]
 
 Request: `POST /v1/keys`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle keys create ci-agents --budget-usd 25
 ```
@@ -246,6 +280,8 @@ Revoke an API key.
 
 Revokes a platform API key after confirmation.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle keys revoke <keyId> [options]
 ```
@@ -256,6 +292,8 @@ tangle keys revoke <keyId> [options]
 | `--platform-url <url>` |  | Override the platform URL (id.tangle.tools) |
 
 Request: `DELETE /v1/keys/{keyId}`
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle keys revoke key_1
@@ -272,6 +310,8 @@ Create a new secret.
 
 Creates an account secret; the value comes from the argument, from stdin with `--value-stdin`, or from a hidden prompt.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle secret create <name> [value] [options]
 ```
@@ -281,6 +321,8 @@ tangle secret create <name> [value] [options]
 | `--value-stdin` |  | Read secret value from stdin |
 
 Request: `POST /v1/secrets`
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle secret create API_KEY
@@ -296,11 +338,15 @@ List all secrets.
 
 Lists secret names with created and updated times; values are never printed.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle secret list
 ```
 
 Request: `GET /v1/secrets`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle secret list
@@ -312,6 +358,8 @@ Delete a secret.
 
 Deletes a secret after a y/N confirmation.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle secret delete <name> [options]
 ```
@@ -321,6 +369,8 @@ tangle secret delete <name> [options]
 | `--force` |  | Skip confirmation prompt |
 
 Request: `DELETE /v1/secrets/{name}`
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle secret delete API_KEY
@@ -334,6 +384,8 @@ tangle secret delete API_KEY
 
 List teams for the current account.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle team list [options]
 ```
@@ -344,6 +396,8 @@ tangle team list [options]
 
 Request: `GET /v1/teams`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle team list
 ```
@@ -353,6 +407,8 @@ tangle team list
 Create a team.
 
 Creates a team and makes it active unless `--no-switch`.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle team create <name> [options]
@@ -366,6 +422,8 @@ tangle team create <name> [options]
 
 Request: `POST /v1/teams`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle team create Acme
 ```
@@ -375,6 +433,8 @@ tangle team create Acme
 Set the active team for the current profile.
 
 Sets the active team (by id or name) for the profile.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle team switch <team> [options]
@@ -386,6 +446,8 @@ tangle team switch <team> [options]
 
 Request: `GET /v1/teams/{teamId}`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle team switch Acme
 ```
@@ -396,6 +458,8 @@ Show the active team for the current profile.
 
 Shows the profile's active team.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle team current [options]
 ```
@@ -403,6 +467,8 @@ tangle team current [options]
 | Flag | Default | Description |
 | --- | --- | --- |
 | `--profile <profile>` |  | Credential profile |
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle team current
@@ -414,6 +480,8 @@ Clear the active team for the current profile.
 
 Clears the profile's active team.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle team clear [options]
 ```
@@ -421,6 +489,8 @@ tangle team clear [options]
 | Flag | Default | Description |
 | --- | --- | --- |
 | `--profile <profile>` |  | Credential profile |
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle team clear
@@ -432,6 +502,8 @@ List team members.
 
 Lists members of a team (default: the active team).
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle team members [team] [options]
 ```
@@ -442,6 +514,8 @@ tangle team members [team] [options]
 
 Request: `GET /v1/teams/{teamId}/members`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle team members
 ```
@@ -451,6 +525,8 @@ tangle team members
 Update a team member role.
 
 Changes a member's role to admin, member or viewer.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle team update-member <member-id> [options]
@@ -464,6 +540,8 @@ tangle team update-member <member-id> [options]
 
 Request: `PATCH /v1/teams/{teamId}/members/{memberId}`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle team update-member mem_1 --role viewer --json
 ```
@@ -473,6 +551,8 @@ tangle team update-member mem_1 --role viewer --json
 Invite a user to a team.
 
 Invites an email address to a team with a role (default member).
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle team invite <email> [options]
@@ -487,6 +567,8 @@ tangle team invite <email> [options]
 
 Request: `POST /v1/teams/{teamId}/invitations`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle team invite bob@example.com --role member
 ```
@@ -496,6 +578,8 @@ tangle team invite bob@example.com --role member
 Leave a team as the current user.
 
 Leaves a team after confirmation.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle team leave [team] [options]
@@ -508,6 +592,8 @@ tangle team leave [team] [options]
 
 Request: `POST /v1/teams/{teamId}/leave`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle team leave
 ```
@@ -517,6 +603,8 @@ tangle team leave
 ### `tangle team transfer`
 
 Transfer team ownership to another active member.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle team transfer <new-owner-customer-id> [team] [options]
@@ -529,6 +617,8 @@ tangle team transfer <new-owner-customer-id> [team] [options]
 
 Request: `POST /v1/teams/{teamId}/transfer`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle team transfer cust_123 --force
 ```
@@ -538,6 +628,8 @@ tangle team transfer cust_123 --force
 List team secret names.
 
 Lists team secret names.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle team secret list [team] [options]
@@ -549,6 +641,8 @@ tangle team secret list [team] [options]
 
 Request: `GET /v1/teams/{teamId}/secrets`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle team secret list
 ```
@@ -558,6 +652,8 @@ tangle team secret list
 Create or replace a team secret.
 
 Creates or replaces a team secret from the argument or stdin.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle team secret set <name> [value] [options]
@@ -571,6 +667,8 @@ tangle team secret set <name> [value] [options]
 
 Request: `PUT /v1/teams/{teamId}/secrets/{name}`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle team secret set NPM_TOKEN
 ```
@@ -580,6 +678,8 @@ tangle team secret set NPM_TOKEN
 Delete a team secret.
 
 Deletes a team secret after confirmation.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle team secret delete <name> [options]
@@ -593,6 +693,8 @@ tangle team secret delete <name> [options]
 
 Request: `DELETE /v1/teams/{teamId}/secrets/{name}`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle team secret delete NPM_TOKEN
 ```
@@ -602,6 +704,8 @@ tangle team secret delete NPM_TOKEN
 Reveal a team secret value.
 
 Prints a team secret's value.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle team secret reveal <name> [options]
@@ -614,6 +718,8 @@ tangle team secret reveal <name> [options]
 
 Request: `POST /v1/teams/{teamId}/secrets/{name}/reveal`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle team secret reveal NPM_TOKEN
 ```
@@ -623,6 +729,8 @@ tangle team secret reveal NPM_TOKEN
 List a team's golden-path templates.
 
 Lists a team's templates.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle team templates list [team] [options]
@@ -634,6 +742,8 @@ tangle team templates list [team] [options]
 
 Request: `GET /v1/teams/{teamId}/templates`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle team templates list
 ```
@@ -643,6 +753,8 @@ tangle team templates list
 Create a golden-path template from a snapshot.
 
 Creates a team template from a snapshot.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle team templates create <name> <snapshot-id> [options]
@@ -658,6 +770,8 @@ tangle team templates create <name> <snapshot-id> [options]
 
 Request: `POST /v1/teams/{teamId}/templates`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle team templates create Node snap_1
 ```
@@ -667,6 +781,8 @@ tangle team templates create Node snap_1
 Delete a team golden-path template.
 
 Deletes a team template after confirmation.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle team templates delete <template-id> [options]
@@ -680,6 +796,8 @@ tangle team templates delete <template-id> [options]
 
 Request: `DELETE /v1/teams/{teamId}/templates/{templateId}`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle team templates delete tpl_1
 ```
@@ -689,6 +807,8 @@ tangle team templates delete tpl_1
 List pending and historical team invitations.
 
 Lists pending and past invitations of a team.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle team invitations [team] [options]
@@ -700,6 +820,8 @@ tangle team invitations [team] [options]
 
 Request: `GET /v1/teams/{teamId}/invitations`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle team invitations
 ```
@@ -709,6 +831,8 @@ tangle team invitations
 Accept a team invitation.
 
 Accepts an invitation token and makes the team active unless `--no-switch`.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle team accept <token> [options]
@@ -721,6 +845,8 @@ tangle team accept <token> [options]
 
 Request: `POST /v1/teams/invitations/{token}/accept`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle team accept invite-token
 ```
@@ -730,6 +856,8 @@ tangle team accept invite-token
 Revoke a pending team invitation.
 
 Revokes a pending invitation.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle team revoke-invitation <invitation-id> [options]
@@ -741,6 +869,8 @@ tangle team revoke-invitation <invitation-id> [options]
 
 Request: `DELETE /v1/teams/invitations/{invitationId}`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle team revoke-invitation inv_1
 ```
@@ -750,6 +880,8 @@ tangle team revoke-invitation inv_1
 Remove a member from a team.
 
 Removes a member from a team.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle team remove-member <member-id> [options]
@@ -762,6 +894,8 @@ tangle team remove-member <member-id> [options]
 
 Request: `DELETE /v1/teams/{teamId}/members/{memberId}`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle team remove-member mem_1
 ```
@@ -771,6 +905,8 @@ tangle team remove-member mem_1
 ### `tangle template list`
 
 Lists public templates, filtered by `--query` or `--tag`, or only featured ones.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle template list [options]
@@ -784,6 +920,8 @@ tangle template list [options]
 
 Request: `GET /v1/public-templates`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle template list --featured
 ```
@@ -795,11 +933,15 @@ tangle template list --featured
 
 Shows one public template by id or slug.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle template get <id-or-slug>
 ```
 
 Request: `GET /v1/public-templates/{idOrSlug}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle template get <id-or-slug>
@@ -809,11 +951,15 @@ tangle template get <id-or-slug>
 
 Lists a public template's versions.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle template versions <id-or-slug>
 ```
 
 Request: `GET /v1/public-templates/{idOrSlug}/versions`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle template versions <id-or-slug>
@@ -822,6 +968,8 @@ tangle template versions <id-or-slug>
 ### `tangle template publish`
 
 Publishes a snapshot of a sandbox as a new public template and waits for the publication job.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle template publish <name> <snapshot-id> <sandbox-id> [options]
@@ -841,6 +989,8 @@ tangle template publish <name> <snapshot-id> <sandbox-id> [options]
 
 Request: `POST /v1/public-templates`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle template publish <name> <snapshot-id> <sandbox-id>
 ```
@@ -851,6 +1001,8 @@ tangle template publish <name> <snapshot-id> <sandbox-id>
 ### `tangle template publish-version`
 
 Publishes a snapshot as a new version of an existing public template.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle template publish-version <id-or-slug> <snapshot-id> <sandbox-id> [options]
@@ -866,6 +1018,8 @@ tangle template publish-version <id-or-slug> <snapshot-id> <sandbox-id> [options
 
 Request: `POST /v1/public-templates/{idOrSlug}/versions`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle template publish-version <id-or-slug> <snapshot-id> <sandbox-id>
 ```
@@ -880,6 +1034,8 @@ List available environments.
 
 Lists available environments.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle environments list
 ```
@@ -887,6 +1043,8 @@ tangle environments list
 Aliases: `ls`
 
 Request: `GET /v1/environments`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle environments list
@@ -900,11 +1058,15 @@ Get environment details.
 
 Shows one environment's details.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle environments get <id>
 ```
 
 Request: `GET /v1/environments`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle environments get universal

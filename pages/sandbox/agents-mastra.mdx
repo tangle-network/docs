@@ -11,6 +11,8 @@ the sandbox.
 
 ## Install
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 npm install @mastra/core @tangle-network/sandbox
 ```
@@ -19,6 +21,8 @@ Set the key for your model provider, such as `OPENAI_API_KEY`, and
 `TANGLE_API_KEY` for the sandbox.
 
 ## Run an agent
+
+{/* sandbox-proof: skip Requires the external agent framework and its provider credentials */}
 
 ```ts
 import { Agent } from "@mastra/core/agent";
@@ -59,6 +63,8 @@ Python and Node in the same session. [Templates and images](/sandbox/templates-g
 lists what the default image includes.
 
 ## Choose the tools
+
+{/* sandbox-proof: skip Continues the graph, profile, provider, or session setup shown earlier on this page */}
 
 ```ts
 const tools = await mastraTools(box, {

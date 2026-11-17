@@ -7,6 +7,8 @@ description: "Reference for tangle fs, search, git, process, preview and run: mo
 
 Move files in and out of a sandbox, search its code, run git, start and watch long-running processes, share a port as a public link and run code in a kernel.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle fs upload my-box ./data.csv /home/agent/data.csv
 tangle process spawn my-box "npm run dev"
@@ -59,11 +61,15 @@ Upload a file to a sandbox.
 
 Uploads one local file to a sandbox path.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fs upload <sandbox-id-or-name> <local-path> <remote-path>
 ```
 
 Request: `POST {runtimeUrl}/fs/upload-session`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle fs upload my-box ./data.csv /home/agent/data.csv
@@ -80,11 +86,15 @@ Download a file from a sandbox.
 
 Downloads one sandbox file to a local path.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fs download <sandbox-id-or-name> <remote-path> <local-path>
 ```
 
 Request: `GET {runtimeUrl}/fs/download/{path}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle fs download my-box /home/agent/report.txt ./report.txt
@@ -99,6 +109,8 @@ List directory contents.
 
 Lists a directory (default '.'); `-l` adds mode, owner, group, size and date; `-a` includes hidden files.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fs ls <sandbox-id-or-name> [path] [options]
 ```
@@ -109,6 +121,8 @@ tangle fs ls <sandbox-id-or-name> [path] [options]
 | `-a, --all` |  | Include hidden files |
 
 Request: `GET {runtimeUrl}/fs/list/{path}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle fs ls my-box /
@@ -123,11 +137,15 @@ Get file or directory information.
 
 Shows a path's size, type, permissions, owner and times.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fs stat <sandbox-id-or-name> <path>
 ```
 
 Request: `GET {runtimeUrl}/fs/stat/{path}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle fs stat my-box /home/agent/f.ts
@@ -141,11 +159,15 @@ Print file contents.
 
 Prints a file's contents.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fs cat <sandbox-id-or-name> <path>
 ```
 
 Request: `POST {runtimeUrl}/files/read`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle fs cat my-box /home/agent/README.md
@@ -160,6 +182,8 @@ Delete a file or directory.
 
 Deletes a file, or a directory with `-r`.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fs rm <sandbox-id-or-name> <path> [options]
 ```
@@ -169,6 +193,8 @@ tangle fs rm <sandbox-id-or-name> <path> [options]
 | `-r, --recursive` |  | Delete directories recursively |
 
 Request: `DELETE {runtimeUrl}/fs/{path}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle fs rm my-box /home/agent/old --recursive
@@ -183,6 +209,8 @@ Create a directory.
 
 Creates a directory; `-p` creates parents.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fs mkdir <sandbox-id-or-name> <path> [options]
 ```
@@ -192,6 +220,8 @@ tangle fs mkdir <sandbox-id-or-name> <path> [options]
 | `-p, --parents` |  | Create parent directories as needed |
 
 Request: `POST {runtimeUrl}/fs/mkdir/{path}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle fs mkdir my-box /home/agent/new --parents
@@ -206,11 +236,15 @@ Check if a path exists.
 
 Prints 'exists' or 'not found'.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fs exists <sandbox-id-or-name> <path>
 ```
 
 Request: `GET {runtimeUrl}/fs/exists/{path}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle fs exists my-box /home/agent/present
@@ -227,6 +261,8 @@ Search for text patterns in sandbox files (ripgrep).
 
 Searches sandbox files with ripgrep and prints path:line:column: text per match.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle search <id-or-name> <pattern> [options]
 ```
@@ -238,6 +274,8 @@ tangle search <id-or-name> <pattern> [options]
 | `-i, --ignore-case` |  | Case-insensitive search |
 
 Request: `POST {runtimeUrl}/search`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle search my-box TODO
@@ -254,11 +292,15 @@ Show git repository status.
 
 Shows branch, HEAD, dirty state, ahead/behind and staged, modified and untracked files.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle git status <id-or-name>
 ```
 
 Request: `GET {runtimeUrl}/git/status`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle git status my-box
@@ -271,6 +313,8 @@ tangle git status my-box
 Show commit log.
 
 Shows recent commits (default 10).
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle git log <id-or-name> [options]
@@ -290,6 +334,8 @@ Show diff.
 
 Shows the diff, optionally against `--ref`.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle git diff <id-or-name> [options]
 ```
@@ -308,11 +354,15 @@ Stage files.
 
 Stages paths.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle git add <id-or-name> <paths...>
 ```
 
 Request: `POST {runtimeUrl}/git/add`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle git add my-box src/index.js
@@ -326,6 +376,8 @@ Create a commit.
 
 Creates a commit; `-m` is required.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle git commit <id-or-name> [options]
 ```
@@ -336,6 +388,8 @@ tangle git commit <id-or-name> [options]
 | `--amend` |  | Amend the previous commit |
 
 Request: `POST {runtimeUrl}/git/commit`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle git commit my-box -m "msg"
@@ -349,6 +403,8 @@ Push to remote.
 
 Pushes to the remote; `--force` force-pushes.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle git push <id-or-name> [options]
 ```
@@ -358,6 +414,8 @@ tangle git push <id-or-name> [options]
 | `--force` |  | Force push |
 
 Request: `POST {runtimeUrl}/git/push`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle git push my-box
@@ -370,6 +428,8 @@ tangle git push my-box
 Pull from remote.
 
 Pulls from the remote; `--rebase` rebases.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle git pull <id-or-name> [options]
@@ -389,6 +449,8 @@ List branches.
 
 Lists branches.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle git branches <id-or-name>
 ```
@@ -402,6 +464,8 @@ Request: `GET {runtimeUrl}/git/branches`
 Checkout a branch or ref.
 
 Checks out a ref; `-b` creates the branch.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle git checkout <id-or-name> <ref> [options]
@@ -422,6 +486,8 @@ Request: `POST {runtimeUrl}/git/checkout`
 Spawn a process without blocking (returns PID).
 
 Starts a command in the background and prints its PID; `--blocking` waits like `tangle exec`.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle process spawn <id-or-name> <command> [options]
@@ -446,6 +512,8 @@ List all processes in a sandbox.
 
 Lists processes with PID, command, status, exit code and start time.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle process list <id-or-name> [options]
 ```
@@ -457,6 +525,8 @@ Aliases: `ls`
 | `--running` |  | Show only running processes |
 
 Request: `GET {runtimeUrl}/process`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle process list my-box
@@ -472,6 +542,8 @@ Get detailed info about a process.
 
 Shows one process's command, working directory, status, exit code and times.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle process get <id-or-name> <pid>
 ```
@@ -486,6 +558,8 @@ Request: `GET {runtimeUrl}/process/{pid}`
 Kill a process.
 
 Sends a signal (default SIGTERM) to a process, or its whole tree with `--tree`.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle process kill <id-or-name> <pid> [options]
@@ -506,6 +580,8 @@ Request: `DELETE {runtimeUrl}/process/{pid}`
 Stream buffered and live process logs until the process exits.
 
 Prints buffered and live logs of a process until it exits.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle process logs <id-or-name> <pid> [options]
@@ -528,6 +604,8 @@ Request: `GET {runtimeUrl}/process/{pid}/logs`
 
 Start/reuse a managed development server and publish its ready preview.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle preview start [id-or-name] [options]
 ```
@@ -547,6 +625,8 @@ List active preview links for a sandbox.
 
 Lists a sandbox's preview links.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle preview list [id-or-name] [options]
 ```
@@ -559,6 +639,8 @@ Aliases: `ls`
 
 Request: `GET /v1/sandboxes/{id}/runtime/preview-links`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle preview list my-box
 ```
@@ -569,6 +651,8 @@ tangle preview list my-box
 ### `tangle preview publish`
 
 Publish one existing HTTP service; never starts or replaces a process.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle preview publish [id-or-name] [options]
@@ -584,11 +668,15 @@ tangle preview publish [id-or-name] [options]
 
 Create a preview link for a port.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle preview create <id-or-name> <port>
 ```
 
 Request: `POST /v1/sandboxes/{id}/runtime/preview-links`
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle preview create my-box 3000
@@ -600,6 +688,8 @@ Remove a preview link.
 
 Removes a preview link.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle preview remove <id-or-name> <preview-id>
 ```
@@ -607,6 +697,8 @@ tangle preview remove <id-or-name> <preview-id>
 Aliases: `rm`
 
 Request: `DELETE /v1/sandboxes/{id}/runtime/preview-links/{previewId}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle preview rm my-box <preview-id>
@@ -621,6 +713,8 @@ tangle preview rm my-box <preview-id>
 Run code in a persistent kernel inside a sandbox. Variables persist across calls in the same `--session`.
 
 Runs a source file, or stdin with '-', in a persistent language kernel (python, node, typescript, bash) inside a sandbox; variables persist across calls that share `--session`.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle run <id-or-name> [file] [options]

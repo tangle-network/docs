@@ -14,6 +14,8 @@ The last sections run sandboxes through the agent-runtime provider interface and
 
 You need Node.js 22 or newer and an API key from [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys).
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 npm install @tangle-network/sandbox @tangle-network/agent-eval @tangle-network/agent-runtime @tangle-network/agent-provider-tangle tsx
 export TANGLE_API_KEY="sk-tan-..."
@@ -43,6 +45,8 @@ Each comparison case runs a coding agent turn, so a comparison of two models on 
 ### Grade replies with a rubric
 
 Score text you already have against a rubric with a model judge on the Router. No sandbox.
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { createChatClient, llmJudge } from "@tangle-network/agent-eval/contract";
@@ -78,6 +82,8 @@ for (const reply of replies) {
 }
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 1.00 { answers: 1, honest: 1 } Sorry about that. Send a photo of the damage and
 0.25 { answers: 0.3, honest: 0.2 } Refunds are not possible, but here is 10% off yo
@@ -89,6 +95,8 @@ Scores come from a model and vary between runs.
 ### Score an agent's run
 
 Run a coding agent on a question, then have a model judge read its answer and every tool call.
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -129,6 +137,8 @@ try {
 }
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 ptid_... { grounded: 1, economical: 1 } Every cited file:line (server.js:10,21,22,28,29,37,45; validate.js:2,5) matches the actual file contents exactly, and the four tool calls ... each served a distinct purpose with no repeated work.
 ```
@@ -138,6 +148,8 @@ ptid_... { grounded: 1, economical: 1 } Every cited file:line (server.js:10,21,2
 ### Compare two models
 
 Run the same three failing-test cases on two models with the same coding agent and judge.
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -185,6 +197,8 @@ for (const model of ["glm-5.3", "deepseek/deepseek-v4.1-flash"]) {
 }
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 glm-5.3 0.6666666666666666
 deepseek/deepseek-v4.1-flash 1
@@ -195,6 +209,8 @@ Each number is the share of cases whose tagged test passes after the agent's tur
 ### Compare two coding agents
 
 Run the same cases on Claude Code and Codex and score each by whether the tagged test passes.
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -242,6 +258,8 @@ for (const harness of ["claude-code", "codex"]) {
 }
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 claude-code 1
 codex 1
@@ -251,6 +269,8 @@ codex 1
 ### Gate a prompt change in CI
 
 Fail the build when a candidate prompt passes fewer cases than the shipped one.
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -306,6 +326,8 @@ if (after < before) {
 }
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 { shipped: 1, candidate: 1 }
 ```
@@ -315,6 +337,8 @@ The script exits 1 when the candidate scores lower, which fails a CI step.
 ### Ask what an agent did
 
 Run a coding agent, then start an intelligence report on the sandbox and wait for it.
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -344,6 +368,8 @@ try {
 }
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 true 9 tool calls
 completed 0
@@ -358,6 +384,8 @@ completed 0
 ### Run an agent through agent-runtime
 
 Create a sandbox through the agent-runtime provider interface, so the same code can target another provider.
+
+{/* sandbox-proof: skip Production proof does not grant backend profiles; this provider example requires profile creation */}
 
 ```ts
 import { createTangleProvider } from "@tangle-network/agent-provider-tangle";
@@ -397,6 +425,8 @@ The `done` event carries the run's total cost in USD.
 
 Measure create, first command and delete through the provider interface.
 
+{/* sandbox-proof: skip Production proof does not grant backend profiles; this provider example requires profile creation */}
+
 ```ts
 import { createTangleProvider } from "@tangle-network/agent-provider-tangle";
 import { providerAsSandboxClient } from "@tangle-network/agent-runtime/kernel";
@@ -428,6 +458,8 @@ try {
 }
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 create 1578 ms
 first command 281 ms
@@ -439,6 +471,8 @@ Times depend on region, shape and load; run it a few times before you compare.
 ## Run an agent graph from the CLI
 
 `haiku-review.yaml` ships with the CLI. A poet writes a haiku, an independent critic counts its syllables, and the run passes only when the critic approves a five, seven, five poem.
+
+{/* sandbox-proof: skip Graph YAML requires a runtime invocation and model configuration */}
 
 ```yaml
 graph: haiku-review
@@ -483,6 +517,8 @@ check:
     - { node: critic, pointer: /syllables/1, equals: 7 }
     - { node: critic, pointer: /syllables/2, equals: 5 }
 ```
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle graph show haiku-review.yaml

@@ -12,6 +12,8 @@ Templates are also the quickest way to learn the format; the [YAML reference](/s
 
 ## Create a workflow from a template
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle workflows templates
 tangle workflows init pr-review --param lens=security --file pr-review.yml
@@ -25,6 +27,8 @@ Every template starts disabled, so nothing runs until you turn it on.
 If the template needs a provider you have not connected, `init` creates nothing, lists each connection it needs with its link, and exits with code 1. Connect them, for example with `tangle hub connect github`, and run the same command again.
 
 ## Edit it and turn it on
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle workflows get <id> --yaml > wf.yml

@@ -16,6 +16,8 @@ compute. For Claude Code on a Claude plan, see
 
 ### 1. Sign in locally
 
+{/* sandbox-proof: skip Interactive Codex authentication prerequisite */}
+
 ```bash
 codex login
 ```
@@ -27,6 +29,8 @@ use your ChatGPT plan.
 
 <Tabs items={["TypeScript", "Python", "CLI"]}>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires a pre-provisioned account subscription credential */}
+
 ```ts
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -39,6 +43,8 @@ await client.secrets.create(
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires a pre-provisioned account subscription credential */}
+
 ```python
 from pathlib import Path
 
@@ -46,6 +52,8 @@ client.secrets.create("CODEX_AUTH", (Path.home() / ".codex/auth.json").read_text
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Local credential or environment setup prerequisite */}
+
 ```bash
 tangle secret create CODEX_AUTH --value-stdin < ~/.codex/auth.json
 ```
@@ -56,6 +64,8 @@ tangle secret create CODEX_AUTH --value-stdin < ~/.codex/auth.json
 
 <Tabs items={["TypeScript", "Python", "CLI"]}>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires a pre-provisioned account subscription credential */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -85,10 +95,12 @@ try {
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires a pre-provisioned account subscription credential */}
+
 ```python
 import os
 
-from tangle_sandbox import BackendConfig, CreateSandboxOptions, GitConfig, PromptOptions, Sandbox
+from tangle_sandbox import SandboxStatus, BackendConfig, CreateSandboxOptions, GitConfig, PromptOptions, Sandbox
 
 client = Sandbox(api_key=os.environ["TANGLE_API_KEY"], base_url="https://sandbox.tangle.tools")
 box = client.create(
@@ -101,8 +113,8 @@ box = client.create(
         git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"),
     )
 )
-box.wait_for("running")
 try:
+    box.wait_for(SandboxStatus.RUNNING)
     run = box.prompt("Add input validation to the signup handler.", PromptOptions(session_id="main"))
     print(run.response if run.success else run.error)
 finally:
@@ -111,6 +123,8 @@ finally:
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --name codex-on-my-plan --backend codex --cli-auth CODEX_AUTH \
   --git-url https://github.com/tangle-network/sandbox-demo
@@ -136,6 +150,8 @@ with `apiKey`, `apiKeyEnv`, `baseUrl` or `authFiles`.
 
 Store the key as a secret and name it with `apiKeyEnv`. The key stays out of
 the create request, and the platform mints no Router key for the sandbox.
+
+{/* sandbox-proof: skip Requires separately provisioned OPENAI_API_KEY */}
 
 ```ts
 await client.secrets.create("OPENAI_KEY", process.env.OPENAI_API_KEY!);
@@ -163,16 +179,22 @@ After `codex login` writes a new file, replace the stored value.
 
 <Tabs items={["TypeScript", "Python", "CLI"]}>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires a pre-provisioned account subscription credential */}
+
 ```ts
 await client.secrets.update("CODEX_AUTH", readFileSync(join(homedir(), ".codex/auth.json"), "utf8"));
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires a pre-provisioned account subscription credential */}
+
 ```python
 client.secrets.update("CODEX_AUTH", (Path.home() / ".codex/auth.json").read_text())
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Local credential or environment setup prerequisite */}
+
 ```bash
 # The CLI has no update command; sandboxes created after this use the new login.
 tangle secret delete CODEX_AUTH --force
@@ -193,6 +215,8 @@ account stored the login as `CODEX_AUTH`. The run creates its sandbox with
 [Workflows](/sandbox/workflows).
 
 ## From HTTP
+
+{/* sandbox-proof: skip REST mutation requires the resource IDs and request data from the surrounding steps */}
 
 ```bash
 curl -X POST https://sandbox.tangle.tools/v1/sandboxes \

@@ -18,6 +18,8 @@ budget over the whole tree. For a fixed set of agents with their own tasks, use
 
 ## Supervise from the CLI
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle supervise "Add input validation to every API route and cover it with tests" \
   --harness codex --max-tokens 200000 --max-iterations 50 --max-workers 4
@@ -39,11 +41,15 @@ them.
 
 ## Supervise from TypeScript
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 npm install @tangle-network/agent-runtime @tangle-network/agent-interface @tangle-network/sandbox
 ```
 
 agent-runtime needs Node.js 22.19 or later.
+
+{/* sandbox-proof: skip Supervisor requires Router access and an independently bounded worker budget */}
 
 ```ts
 import { randomUUID } from "node:crypto";

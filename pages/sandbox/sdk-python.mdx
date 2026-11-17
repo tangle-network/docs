@@ -19,6 +19,8 @@ import { Callout } from "nextra/components";
 
 The SDK needs Python 3.10 or newer.
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 pip install tangle-sandbox
 ```
@@ -32,6 +34,8 @@ pip install tangle-sandbox
 Everything else, including fleets, batches, secrets, teams and trace export, is in the base install.
 
 ## Create a client
+
+{/* sandbox-proof: skip Client construction reference; it makes no production request */}
 
 ```python
 import os
@@ -50,6 +54,8 @@ Keys start with `sk-tan-`; create one at [id.tangle.tools/app/keys](https://id.t
 `timeout_ms` (default 30000) bounds each request. Use the client as a context manager, or call `client.close()`, to close its connection pool.
 
 ## Run your first sandbox
+
+{/* sandbox-proof: run */}
 
 ```python
 import os
@@ -72,10 +78,14 @@ with Sandbox(
         print(box.read("notes.md").strip())
 
         turn = box.prompt("Reply with exactly the word OK")
-        print(turn.response if turn.success else turn.error)
+        if not turn.success:
+            raise RuntimeError(turn.error)
+        print(turn.response)
     finally:
         box.delete()
 ```
+
+{/* sandbox-proof: skip Example terminal output or API field reference */}
 
 ```text
 0 499999500000
@@ -89,6 +99,8 @@ A sandbox created without a `backend` runs the `opencode` coding agent. [Run a c
 
 `stop()` keeps the disk and stops billing for compute. `resume()` starts it again; wait for `RUNNING` before the next runtime call.
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```python
 box.write("notes.md", "first draft\n")
 box.stop()
@@ -99,12 +111,16 @@ box.wait_for(SandboxStatus.RUNNING)
 print(box.read("notes.md").strip())
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 stopped
 first draft
 ```
 
 ## Async client
+
+{/* sandbox-proof: run */}
 
 ```python
 import asyncio
@@ -134,6 +150,8 @@ async def main() -> None:
 
 asyncio.run(main())
 ```
+
+{/* sandbox-proof: skip Example terminal output or API field reference */}
 
 ```text
 ['3', '2', '1']
@@ -197,6 +215,8 @@ For anything below, use the TypeScript SDK or the CLI, or call the REST route wi
 | List every fleet | `client.fleets` | `tangle fleet list` | `GET /v1/fleets` |
 
 For example, list the coding agents the service offers:
+
+{/* sandbox-proof: skip Uses the client initialized in the preceding example */}
 
 ```python
 response = client.fetch("GET", "/v1/backends")

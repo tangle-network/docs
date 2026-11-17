@@ -7,6 +7,8 @@ description: "Reference for tangle intelligence, traces, connect, opencode-expor
 
 Read intelligence reports for sandboxes and fleets, list and fetch traces, send a local coding agent's telemetry to Tangle Intelligence, and enter Solve competitions.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle intelligence sandbox my-box
 tangle traces list
@@ -52,6 +54,8 @@ Connect local agent CLIs to Tangle Intelligence.
 
 Installs native hook files for local agent CLIs in a workspace so they emit traces to Tangle Intelligence, then sends a smoke trace.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle intelligence connect [agent] [options]
 ```
@@ -68,6 +72,8 @@ Aliases: `connect-agent`
 | `--hook-command <command>` | `tangle intelligence hook` | Command native hooks should run |
 | `--no-smoke` |  | Skip the install smoke trace |
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle intelligence connect codex --workspace ~/repo --no-smoke
 ```
@@ -77,6 +83,8 @@ tangle intelligence connect codex --workspace ~/repo --no-smoke
 ### `tangle intelligence doctor`
 
 Check whether your agent traces carry CONTENT or are metadata-only.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle intelligence doctor [options]
@@ -91,6 +99,8 @@ tangle intelligence doctor [options]
 Emit one local agent hook event to Tangle Intelligence.
 
 Emits one local agent hook event as OTLP; native agent hooks call it.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle intelligence hook [options]
@@ -114,6 +124,8 @@ tangle intelligence hook [options]
 
 Create an intelligence report for one sandbox.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle intelligence sandbox <sandbox-id> [options]
 ```
@@ -126,6 +138,8 @@ tangle intelligence sandbox <sandbox-id> [options]
 
 Request: `POST /v1/intelligence/reports`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle intelligence sandbox my-box
 ```
@@ -133,6 +147,8 @@ tangle intelligence sandbox my-box
 ### `tangle intelligence fleet`
 
 Create an intelligence report for a sandbox fleet.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle intelligence fleet <fleet-id> [options]
@@ -146,6 +162,8 @@ tangle intelligence fleet <fleet-id> [options]
 
 Request: `POST /v1/intelligence/reports`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle intelligence fleet fleet_1
 ```
@@ -155,6 +173,8 @@ tangle intelligence fleet fleet_1
 Create a trace intelligence report.
 
 Creates an intelligence report for a sandbox or fleet subject.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle intelligence create [options]
@@ -170,6 +190,8 @@ tangle intelligence create [options]
 
 Request: `POST /v1/intelligence/reports`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle intelligence create --subject-type fleet --subject-id fleet_1
 ```
@@ -180,11 +202,15 @@ Get an intelligence report.
 
 Shows one intelligence report.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle intelligence get <job-id>
 ```
 
 Request: `GET /v1/intelligence/reports/{jobId}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle intelligence get job_1
@@ -195,6 +221,8 @@ tangle intelligence get job_1
 List intelligence reports.
 
 Lists intelligence reports.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle intelligence list [options]
@@ -208,6 +236,8 @@ tangle intelligence list [options]
 
 Request: `GET /v1/intelligence/reports`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle intelligence list
 ```
@@ -219,6 +249,8 @@ tangle intelligence list
 List trace summaries (one row per trace), newest first.
 
 Lists trace summaries, newest first, with filters.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle traces list [options]
@@ -237,6 +269,8 @@ tangle traces list [options]
 
 Request: `GET /v1/traces`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle traces list
 ```
@@ -248,6 +282,8 @@ tangle traces list
 Show one trace's spans. Streams NDJSON to stdout with `--ndjson`.
 
 Shows one trace's spans; `--ndjson` streams all spans as NDJSON.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle traces get <traceId> [options]
@@ -261,6 +297,8 @@ tangle traces get <traceId> [options]
 
 Request: `GET /v1/traces/{traceId}/spans`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle traces get trace_1 --json
 ```
@@ -272,6 +310,8 @@ tangle traces get trace_1 --json
 List eval-runs, newest first.
 
 Lists eval runs, newest first.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle traces runs list [options]
@@ -290,6 +330,8 @@ tangle traces runs list [options]
 
 Request: `GET /v1/runs`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle traces runs list
 ```
@@ -300,11 +342,15 @@ Show a single eval-run.
 
 Shows one eval run.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle traces runs get <runId>
 ```
 
 Request: `GET /v1/runs/{runId}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle traces runs get run_1
@@ -317,6 +363,8 @@ tangle traces runs get run_1
 Connect a local coding agent's telemetry to Tangle Intelligence, content on (for SDK integration snippets, see 'tangle agent connect').
 
 Configures a local coding agent (claude-code, codex, opencode, openclaw, hermes, nanoclaw) to send telemetry with content to Tangle Intelligence; `--verify` checks that content arrives.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle connect [agent] [options]
@@ -347,6 +395,8 @@ Export a running OpenCode's content to Tangle Intelligence (standalone shim).
 
 Runs until Ctrl-C, forwarding a running OpenCode server's events with content to Tangle Intelligence.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle opencode-exporter [options]
 ```
@@ -367,6 +417,8 @@ Clone the pinned competition repository.
 
 Clones a competition's pinned repository.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle solve clone <competition> [directory] [options]
 ```
@@ -382,6 +434,8 @@ Run the competition checker and record its evidence.
 
 Runs the competition checker in a directory and records its evidence.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle solve run [competition] [options]
 ```
@@ -393,6 +447,8 @@ tangle solve run [competition] [options]
 ### `tangle solve submit`
 
 Submit checker evidence through the device account and Tempo.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle solve submit [competition] [options]
@@ -413,6 +469,8 @@ Show the local Solve signing account.
 
 Shows the local Solve signing account; `--create` creates it.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle solve account [options]
 ```
@@ -421,6 +479,8 @@ tangle solve account [options]
 | --- | --- | --- |
 | `--create` |  | Create the account if it does not exist |
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle solve account --json
 ```
@@ -428,6 +488,8 @@ tangle solve account --json
 ### `tangle solve device list`
 
 List your devices and whether each may submit jobs on Tempo.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle solve device list [options]
@@ -443,6 +505,8 @@ tangle solve device list [options]
 Permanently revoke a device; the local device is revoked with its own key.
 
 Permanently revokes a device after confirmation.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle solve device revoke <address> [options]

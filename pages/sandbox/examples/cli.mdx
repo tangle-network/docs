@@ -12,6 +12,8 @@ it. Every flag is listed in the [CLI reference](/sandbox/cli).
 
 ## Fix a test and keep the patch
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --name fixer --backend claude-code \
   --git-url https://github.com/tangle-network/sandbox-demo
@@ -27,6 +29,8 @@ command's exit code, so a script can stop when the tests still fail. Guide:
 
 ## Pair with a coding agent in its own terminal UI
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --name pair --backend claude-code \
   --git-url https://github.com/tangle-network/sandbox-demo
@@ -40,6 +44,8 @@ The CLI prints a dashboard link where you can watch and drive the same session
 in a browser. Guide: [Interactive mode](/sandbox/interactive).
 
 ## Continue one conversation over several turns
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle sandbox create --name planner --backend codex \
@@ -57,6 +63,8 @@ still there. Guide: [Sessions](/sandbox/sessions).
 
 ## Try a change and roll it back
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --name trial --backend codex \
   --git-url https://github.com/tangle-network/sandbox-demo
@@ -73,6 +81,8 @@ disk back as it was. Guide: [Snapshots](/sandbox/snapshots).
 
 ## Triage a list of tickets in one batch
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle batch run --backend triage=claude-code \
   --task t1="Classify as frontend, backend or email: export button does nothing in Safari" \
@@ -87,6 +97,8 @@ Guide: [Batches and hosted runs](/sandbox/runs-and-batch).
 
 ## Run several agents under a budget
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fleet run "Write a prime checker in Python with tests, run the tests and report the result." \
   --agents 3 --placement dedicated --max-spend-usd 1
@@ -94,6 +106,8 @@ tangle fleet run "Write a prime checker in Python with tests, run the tests and 
 
 To give each agent its own task and coding agent, such as Claude Code, Codex or
 OpenCode, write the agents to a file:
+
+{/* sandbox-proof: skip Configuration or response data; consumed by the adjacent client program */}
 
 ```json
 [
@@ -103,6 +117,8 @@ OpenCode, write the agents to a file:
 ]
 ```
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fleet run --agents agents.json --placement dedicated --max-spend-usd 1
 ```
@@ -111,6 +127,8 @@ Prints one line per agent with its coding agent, model, status, time, cost and
 answer, then deletes the fleet. Guide: [Fleets](/sandbox/agents-fleet).
 
 ## Supervise workers under one budget
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle supervise "Write a small URL shortener in Node with tests, and make the tests pass" \
@@ -122,6 +140,8 @@ token or iteration budget runs out. It prints the result, tokens and cost.
 Guide: [agent-runtime](/sandbox/agent-runtime).
 
 ## Let an agent read your GitHub issues
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle hub connect github
@@ -139,6 +159,8 @@ every other action follows its permission (`allow`, `ask` or `deny`). Guide:
 [Connections](/sandbox/connections).
 
 ## Script with JSON output
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 id=$(tangle sandbox create --backend claude-code --json | jq -r .id)

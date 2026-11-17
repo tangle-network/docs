@@ -16,6 +16,8 @@ Use a graph when the roles and their order are known ahead of time. For many ind
 
 `haiku-review.yaml` ships with the CLI. A poet writes a haiku, an independent critic counts its syllables, and the run passes only when the critic approves a five, seven, five poem. The key parts:
 
+{/* sandbox-proof: skip Graph YAML requires a runtime invocation and model configuration */}
+
 ```yaml
 graph: haiku-review
 params:
@@ -51,6 +53,8 @@ check:
 
 The whole file, with its output, is in [Evaluation and runtime examples](/sandbox/examples/evals-and-runtime#run-an-agent-graph-from-the-cli). It is also in the installed package at `node_modules/@tangle-network/sandbox-cli/examples/haiku-review.yaml`.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle graph show haiku-review.yaml
 tangle graph run haiku-review.yaml --param topic="first snow"
@@ -71,6 +75,8 @@ tangle graph inspect <run-id>
 A graph can declare gates: points where a person picks one of a fixed set of choices. In a terminal, `graph run` asks you when it reaches one.
 In a script, answer ahead of time with `--param gate.<gate-id>=<choice>`:
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle graph run release.yaml --param gate.ship=approve
 ```
@@ -79,6 +85,8 @@ A gate with no answer and no terminal fails with `GATE_ANSWER_REQUIRED`, and a c
 
 ## Build a graph in TypeScript
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 npm install @tangle-network/agent-runtime @tangle-network/sandbox
 ```
@@ -86,6 +94,8 @@ npm install @tangle-network/agent-runtime @tangle-network/sandbox
 `@tangle-network/agent-runtime` needs Node 22.19 or later. Save the program as `graph.mts` and run it with `npx tsx graph.mts`.
 
 The lead runs on the Tangle Router and delegates once. The coder runs OpenCode in a sandbox, runs a command and reports what it wrote.
+
+{/* sandbox-proof: skip Graph requires Router model access and a separate worker budget */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -169,6 +179,8 @@ console.log(ledger);
 
 `sandboxClient` is any object with the SDK's `create` and, optionally, `list`. Wrap the client to set create options the runtime does not, such as a lifetime cap or network rules:
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 const sandboxClient = {
   create: (options: Parameters<typeof sandbox.create>[0], request?: Parameters<typeof sandbox.create>[1]) =>
@@ -189,6 +201,8 @@ The runtime deletes each worker sandbox when the worker settles.
 ### Read why a run failed
 
 `result.kind` is `"winner"` when the deliverable check passed. When a worker fails, the reason is in the spawn journal. Pass a journal and a blob store to keep it:
+
+{/* sandbox-proof: skip Continues the graph, profile, provider, or session setup shown earlier on this page */}
 
 ```ts
 import {

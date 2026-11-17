@@ -13,6 +13,8 @@ The SDKs and the CLI call this HTTP API. Call it directly from any language, or 
 
 Every route is on `https://sandbox.tangle.tools`. Send your account API key as a bearer token:
 
+{/* sandbox-proof: skip HTTP request notation; use the adjacent SDK or curl command */}
+
 ```http
 Authorization: Bearer sk-tan-...
 ```
@@ -25,6 +27,8 @@ Create a sandbox, run a command in it, and delete it:
 
 <Tabs items={["curl", "Python"]} storageKey="sandbox-lang">
 <Tabs.Tab>
+
+{/* sandbox-proof: skip REST mutation requires the resource IDs and request data from the surrounding steps */}
 
 ```bash
 API=https://sandbox.tangle.tools
@@ -45,6 +49,8 @@ curl -s -X DELETE "$API/v1/sandboxes/$SANDBOX_ID" -H "$AUTH"
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: run */}
 
 ```python
 import os

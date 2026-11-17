@@ -7,6 +7,8 @@ description: "Reference for tangle hub, lines and context: connect accounts such
 
 Hub holds your connections to outside accounts, such as GitHub, and runs their tools with your approval rules. Lines give an agent a phone number or mailbox.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle hub connect github
 tangle hub tools search "create issue"
@@ -60,11 +62,15 @@ Show Hub auth and connection status.
 
 Shows Hub authentication and connection status.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle hub status
 ```
 
 Request: `GET /v1/hub/status`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle hub status
@@ -76,6 +82,8 @@ Connect a provider account.
 
 Starts OAuth for a provider, opens the authorization URL in a browser (or prints it with `--no-browser`) and exits.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle hub connect <provider> [options]
 ```
@@ -86,6 +94,8 @@ tangle hub connect <provider> [options]
 | `--parameter <key=value>` |  | Provider-specific OAuth value. Repeatable. |
 
 Request: `POST /v1/hub/connections/{provider}/start`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle hub connect github
@@ -101,11 +111,15 @@ List Hub provider connections.
 
 Lists Hub provider connections.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle hub connections
 ```
 
 Request: `GET /v1/hub/connections`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle hub connections
@@ -117,6 +131,8 @@ Revoke a Hub provider connection.
 
 Revokes a connection after confirmation (`--force` skips).
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle hub connections revoke <connection-id> [options]
 ```
@@ -126,6 +142,8 @@ tangle hub connections revoke <connection-id> [options]
 | `--force` |  | Skip confirmation prompt |
 
 Request: `DELETE /v1/hub/connections/{connectionId}`
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle hub connections revoke hubconn_github_abc123
@@ -137,11 +155,15 @@ List Hub tool sources.
 
 Lists tool sources (providers).
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle hub tools sources
 ```
 
 Request: `GET /v1/hub/tools/sources`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle hub tools sources
@@ -153,11 +175,15 @@ Describe a Hub tool.
 
 Prints a tool's input and output schema.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle hub tools describe <path>
 ```
 
 Request: `POST /v1/hub/tools/describe`
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle hub tools describe github.issues.create
@@ -169,6 +195,8 @@ Search Hub tools.
 
 Searches tools, optionally within one provider.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle hub tools search <query...> [options]
 ```
@@ -179,6 +207,8 @@ tangle hub tools search <query...> [options]
 
 Request: `POST /v1/hub/tools/search`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle hub tools search "create issue"
 ```
@@ -188,6 +218,8 @@ tangle hub tools search "create issue"
 Execute a Hub tool.
 
 Executes a Hub tool: path tokens followed by a JSON input argument.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle hub call <args...> [options]
@@ -211,6 +243,8 @@ Execute a Hub tool.
 
 Same as `tangle hub call`; runs a Hub tool, not a sandbox command.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle hub exec <args...> [options]
 ```
@@ -232,6 +266,8 @@ Resolve a Hub approval created by a paused execution.
 
 Accepts or declines the approval a paused execution created; it does not rerun the execution.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle hub resume <approval-id> [options]
 ```
@@ -243,6 +279,8 @@ tangle hub resume <approval-id> [options]
 | `--cancel` |  | Unsupported for approval-backed Hub resume |
 
 Request: `POST /v1/hub/approvals/{approvalId}/approve`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle hub resume appr_123
@@ -256,11 +294,15 @@ List pending Hub execution approvals.
 
 Lists pending approvals.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle hub approvals list
 ```
 
 Request: `GET /v1/hub/approvals`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle hub approvals list
@@ -272,11 +314,15 @@ Approve a pending Hub execution approval.
 
 Approves a pending approval.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle hub approvals approve <approval-id>
 ```
 
 Request: `POST /v1/hub/approvals/{approvalId}/approve`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle hub approvals approve appr_123 --json
@@ -288,11 +334,15 @@ Deny a pending Hub execution approval.
 
 Denies a pending approval.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle hub approvals deny <approval-id>
 ```
 
 Request: `POST /v1/hub/approvals/{approvalId}/deny`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle hub approvals deny appr_123 --json
@@ -304,6 +354,8 @@ List Hub permissions for a connection.
 
 Lists permissions for one connection.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle hub permissions list [options]
 ```
@@ -314,6 +366,8 @@ tangle hub permissions list [options]
 
 Request: `GET /v1/hub/policies`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle hub permissions list --connection hubconn_github_abc123
 ```
@@ -323,6 +377,8 @@ tangle hub permissions list --connection hubconn_github_abc123
 Set Hub permission for one action.
 
 Sets allow, ask or deny for one action on a connection.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle hub permissions set [options]
@@ -336,6 +392,8 @@ tangle hub permissions set [options]
 
 Request: `PUT /v1/hub/policies`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle hub permissions set --connection hubconn_github_abc123 --action github.issues.create --decision ask
 ```
@@ -345,6 +403,8 @@ tangle hub permissions set --connection hubconn_github_abc123 --action github.is
 Revoke a bulk `--allow-writes` grant for a connection (deletes only the auto-granted write rows; manual permissions are untouched).
 
 Removes the write grants that `--allow-writes` added for a connection; manual permissions stay.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle hub permissions revert-writes [options]
@@ -356,6 +416,8 @@ tangle hub permissions revert-writes [options]
 
 Request: `POST /v1/hub/policies/revert-writes`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle hub permissions revert-writes --connection hubconn_github_abc123
 ```
@@ -366,6 +428,8 @@ tangle hub permissions revert-writes --connection hubconn_github_abc123
 
 List provider transports supported by this Hub deployment.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle lines providers
 ```
@@ -373,6 +437,8 @@ tangle lines providers
 ### `tangle lines list`
 
 List owned lines, optionally for a saved agent profile or sandbox.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle lines list [options]
@@ -387,6 +453,8 @@ tangle lines list [options]
 
 Inspect a line and its current attachment.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle lines get <line-id>
 ```
@@ -396,6 +464,8 @@ tangle lines get <line-id>
 Discover owned provider numbers; this does not purchase or reserve a number.
 
 Lists owned provider numbers for a connection; it does not buy or reserve a number.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle lines numbers <connection-id> [options]
@@ -408,6 +478,8 @@ tangle lines numbers <connection-id> [options]
 ### `tangle lines connect`
 
 Bind an owned number or identity through Hub; no provider rental is purchased.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle lines connect <connection-id> [options]
@@ -424,6 +496,8 @@ tangle lines connect <connection-id> [options]
 
 Request: `POST /v1/lines`
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle lines connect conn_p --transport voice --number-id pn_voice --reference support --yes --json
 ```
@@ -435,6 +509,8 @@ tangle lines connect conn_p --transport voice --number-id pn_voice --reference s
 Attach a saved agent to any sandbox, or use an isolated on-demand member instance.
 
 Attaches a saved agent profile to a line, on an existing sandbox or an isolated on-demand instance.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle lines attach <line-id> [options]
@@ -457,6 +533,8 @@ Stop dispatch; preserve history and provider rental.
 
 Stops dispatch on a line while keeping its history and provider rental.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle lines detach <line-id> [options]
 ```
@@ -468,6 +546,8 @@ tangle lines detach <line-id> [options]
 ### `tangle lines release`
 
 Retire a detached Hub line; does not cancel provider rental.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle lines release <line-id> [options]
@@ -483,6 +563,8 @@ List this line's separate participant threads.
 
 Lists a line's participant threads.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle lines threads <line-id>
 ```
@@ -493,6 +575,8 @@ Read one authorized participant thread.
 
 Reads one participant thread.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle lines messages <line-id> <thread-id>
 ```
@@ -500,6 +584,8 @@ tangle lines messages <line-id> <thread-id>
 ### `tangle lines members`
 
 List names, roles and consent on this line.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle lines members [options]
@@ -514,6 +600,8 @@ tangle lines members [options]
 ### `tangle lines send`
 
 Send to a consenting member through Hub.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle lines send <to-member> <text> [options]
@@ -532,6 +620,8 @@ tangle lines send <to-member> <text> [options]
 
 Wake the agent at a future time to write your reminder.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle lines remind <text> [options]
 ```
@@ -549,6 +639,8 @@ tangle lines remind <text> [options]
 ### `tangle context`
 
 Show live line identity, members, consent, reminders and quotas.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle context

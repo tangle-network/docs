@@ -8,6 +8,8 @@ description: "Reference for tangle sandbox, use, exec, ssh, ssh-keys, snapshot, 
 Create, inspect, stop, resume and delete sandboxes; run commands in them; open a shell; and save, restore and branch their disks.
 Each command lists its flags with defaults, the API request it sends and an example.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --name my-box --ssh
 tangle exec my-box -- uname -a
@@ -55,6 +57,8 @@ A sandbox that hits either limit stops and is not deleted. `exec`, `ssh` and the
 Create a new sandbox.
 
 Creates a sandbox from flags and, by default, waits up to 120000 ms for it to reach running, then prints its details, SSH command line and URLs.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle sandbox create [options]
@@ -128,6 +132,8 @@ tangle sandbox create [options]
 
 Request: `POST /v1/sandboxes`
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --name my-box --ssh --git-url https://github.com/tangle-network/sandbox-demo
 ```
@@ -150,6 +156,8 @@ Get sandbox details.
 
 Prints one sandbox's details: id, name, status, resources, created and expiry times, SSH command line, web terminal URL and runtime URL.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle sandbox get <id-or-name> [options]
 ```
@@ -159,6 +167,8 @@ tangle sandbox get <id-or-name> [options]
 | `--profile` |  | Show the active agent profile provenance (name, hash, skills) |
 
 Request: `GET /v1/sandboxes/{id}`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle sandbox get my-box
@@ -174,6 +184,8 @@ List all sandboxes.
 
 Lists sandboxes in the active scope as a table of ID, status, created time and name.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle sandbox list [options]
 ```
@@ -187,6 +199,8 @@ tangle sandbox list [options]
 | `--all-scopes` |  | List personal and team sandboxes |
 
 Request: `GET /v1/sandboxes`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle sandbox list
@@ -202,11 +216,15 @@ List the named sandbox sizes, the default, and this account's ceiling.
 
 Lists the named sandbox sizes, marks the default and whether each fits this account's ceiling.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle sandbox shapes
 ```
 
 Request: `GET /v1/shapes`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle sandbox shapes
@@ -220,6 +238,8 @@ Fetch TEE attestation evidence for a sandbox.
 
 Fetches TEE attestation evidence for a confidential sandbox, optionally bound to a nonce.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle sandbox attestation <id-or-name> [options]
 ```
@@ -229,6 +249,8 @@ tangle sandbox attestation <id-or-name> [options]
 | `--nonce <hex\|auto>` |  | Nonce to bind into a fresh attestation report; use auto to generate one |
 
 Request: `GET /v1/sandboxes/{id}/tee/attestation`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle sandbox attestation my-box
@@ -245,6 +267,8 @@ Stop a running sandbox.
 
 Stops a running sandbox and waits for the stop to finish.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle sandbox stop <id-or-name> [options]
 ```
@@ -255,6 +279,8 @@ tangle sandbox stop <id-or-name> [options]
 | `--no-wait` |  | Return once the stop is accepted and print the operation to poll |
 
 Request: `POST /v1/sandboxes/{id}/stop`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle sandbox stop my-box
@@ -269,6 +295,8 @@ Resume a stopped sandbox.
 
 Resumes a stopped sandbox and waits for it to run.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle sandbox resume <id-or-name> [options]
 ```
@@ -279,6 +307,8 @@ tangle sandbox resume <id-or-name> [options]
 | `-t, --timeout <ms>` | `120000` | Resume timeout in milliseconds; a cold resume re-provisions the sandbox, so this defaults higher than other commands (default 120000) |
 
 Request: `POST /v1/sandboxes/{id}/resume`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle sandbox resume my-box
@@ -292,6 +322,8 @@ Delete a sandbox.
 
 Deletes a sandbox after a y/N confirmation and reports whether it was deleted or already gone.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox delete <id-or-name> [options]
 ```
@@ -303,6 +335,8 @@ tangle sandbox delete <id-or-name> [options]
 | `--retry-cleanup` |  | Retry server-side cleanup after the sandbox disappeared from get/list |
 
 Request: `DELETE /v1/sandboxes/{id}`
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle sandbox delete my-box
@@ -320,6 +354,8 @@ Expose a port and get a public URL.
 
 Exposes a sandbox port and prints its public URL.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle sandbox expose <id-or-name> [options]
 ```
@@ -329,6 +365,8 @@ tangle sandbox expose <id-or-name> [options]
 | `-p, --port <port>` | `8000` | Port to expose |
 
 Request: `POST /v1/sandboxes/{id}/runtime/network/expose`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle sandbox expose my-box --port 3000
@@ -343,11 +381,15 @@ List exposed port URLs for a sandbox.
 
 Lists exposed ports and their public URLs.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle sandbox urls <id-or-name>
 ```
 
 Request: `GET /v1/sandboxes/{id}/runtime/network/urls`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle sandbox urls my-box
@@ -361,11 +403,15 @@ Show runtime network state (exposed ports) for a sandbox. Outbound policy is the
 
 Shows the sandbox's exposed ports.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle sandbox network <id-or-name>
 ```
 
 Request: `GET /v1/sandboxes/{id}/runtime/network`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle sandbox network my-box
@@ -380,6 +426,8 @@ tangle sandbox network my-box
 Set or show the active sandbox (used when a command omits the id).
 
 Sets, shows or clears the active sandbox id in ~/.tangle/config.json.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle use [id] [options]
@@ -401,6 +449,8 @@ Execute a command in a sandbox.
 
 Runs a command in a sandbox and waits for it, writing remote stdout and stderr to the matching local streams and exiting with the remote exit code.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle exec <id-or-name> <command...> [options]
 ```
@@ -412,6 +462,8 @@ tangle exec <id-or-name> <command...> [options]
 | `-t, --timeout <ms>` | `60000` | Timeout in milliseconds |
 
 Request: `POST /v1/sandboxes/{id}/runtime/process/spawn`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle exec my-box -- npm test
@@ -431,6 +483,8 @@ Open SSH session to a sandbox.
 
 Opens an interactive OpenSSH session to a sandbox through the sandbox API's WebSocket SSH proxy.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle ssh <ref> [sshArgs...] [options]
 ```
@@ -441,6 +495,8 @@ tangle ssh <ref> [sshArgs...] [options]
 | `--print` |  | Print SSH command instead of connecting |
 
 Request: `GET /v1/sandboxes/{id}/runtime/ssh`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle ssh my-box
@@ -459,6 +515,8 @@ SSH proxy helper that pipes stdin/stdout to WebSocket.
 
 Bridges stdin/stdout to a sandbox SSH WebSocket; used as an ssh ProxyCommand.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle ssh-proxy <runtime-url>
 ```
@@ -474,6 +532,8 @@ List SSH keys.
 
 Lists stored SSH keys.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle ssh-keys list
 ```
@@ -487,6 +547,8 @@ Request: `GET /v1/ssh-keys`
 Add SSH key.
 
 Stores an SSH public key read from `--key-file` under a name.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle ssh-keys add <name> [options]
@@ -507,6 +569,8 @@ Delete SSH key.
 
 Deletes a stored SSH key by name or id.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle ssh-keys delete <name>
 ```
@@ -523,6 +587,8 @@ Create a snapshot of a sandbox.
 
 Snapshots a sandbox and prints the snapshot id and size.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle snapshot create <sandbox-id-or-name> [options]
 ```
@@ -533,6 +599,8 @@ tangle snapshot create <sandbox-id-or-name> [options]
 | `--no-wait` |  | Return once the snapshot is accepted and print the operation to poll |
 
 Request: `POST /v1/sandboxes/{id}/snapshots`
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle snapshot create my-box --tags green-tests
@@ -546,11 +614,15 @@ List snapshots for a sandbox.
 
 Lists a sandbox's snapshots with id, created time, size and source sandbox.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle snapshot list <sandbox-id-or-name>
 ```
 
 Request: `GET /v1/sandboxes/{id}/snapshots`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle snapshot list my-box
@@ -562,6 +634,8 @@ Create a new sandbox from a snapshot.
 
 Creates a NEW sandbox from a snapshot and waits up to 120000 ms for it to run; the source sandbox is untouched.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle snapshot restore <sandbox-id> <snapshot-id> [options]
 ```
@@ -571,6 +645,8 @@ tangle snapshot restore <sandbox-id> <snapshot-id> [options]
 | `--billing-owner <userId>` |  | Platform user that pays for the restored sandbox. The API accepts this only from a first-party service key that is listed as a billing delegate, and refuses such a key that names no payer. |
 
 Request: `POST /v1/sandboxes`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle snapshot restore <sandbox-id> <snapshot-id>
@@ -584,11 +660,15 @@ tangle snapshot restore <sandbox-id> <snapshot-id>
 
 Revert an existing sandbox to a snapshot.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle snapshot revert <sandbox-id-or-name> <snapshot-id>
 ```
 
 Request: `POST /v1/sandboxes/{id}/snapshots/{snapshotId}/restore`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle snapshot revert my-box <snap-id>
@@ -602,11 +682,15 @@ Delete a sandbox snapshot.
 
 Deletes a snapshot and reports whether it was deleted or already gone.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle snapshot delete <sandbox-id-or-name> <snapshot-id>
 ```
 
 Request: `DELETE /v1/sandboxes/{id}/snapshots/{snapshotId}`
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle snapshot delete <sandbox-id> <snapshot-id>
@@ -619,6 +703,8 @@ tangle snapshot delete <sandbox-id> <snapshot-id>
 Branch a running sandbox into N copy-on-write children.
 
 Branches a running sandbox into N copy-on-write children; the parent keeps running.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle branch create <sandbox-id-or-name> [options]
@@ -642,11 +728,15 @@ Show account usage and billing information.
 
 Shows account usage (active and total sandboxes, compute minutes, GPU seconds and spend) and the subscription.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle usage
 ```
 
 Request: `GET /usage`
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle usage

@@ -17,6 +17,8 @@ request, and the platform mints no Router key for the sandbox.
 
 ## Z.ai GLM Coding Plan
 
+{/* sandbox-proof: skip Requires separately provisioned ZAI_API_KEY */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -62,6 +64,8 @@ plan. Use the model ids from your plan's model list.
 `/chat/completions`, and `model` to the id that provider lists. Like the Z.ai
 recipe, this runs OpenCode, not Claude Code or Codex.
 
+{/* sandbox-proof: skip Replace the repository, token, or resource placeholder before running */}
+
 ```ts
 await client.secrets.create("MOONSHOT_KEY", process.env.MOONSHOT_API_KEY!);
 
@@ -98,6 +102,8 @@ These values configure OpenCode only; Claude Code and Codex have their own pages
 
 Egress activity lists every host the sandbox reached, so you can confirm the
 agent called your provider:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 const activity = await box.egress.activity({ limit: 100 });

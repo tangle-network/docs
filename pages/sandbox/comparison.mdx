@@ -19,11 +19,13 @@ Each competitor cell links to that provider's documentation as of November 2026.
 | Snapshots | Yes | [Yes](https://docs.e2b.dev/sandbox/snapshots.md) | [Yes](https://www.daytona.io/docs/en/snapshots.md) | [Yes](https://modal.com/docs/guide/sandbox-snapshots) | [Yes](https://vercel.com/docs/sandbox/concepts/snapshots) | [Yes](https://developers.cloudflare.com/sandbox/files/save-and-restore-a-workspace/) | [Yes](https://docs.runloop.ai/docs/devboxes/snapshots) |
 | Fork a running sandbox | Yes | [Yes](https://docs.e2b.dev/sandbox/fork.md) | [Yes](https://www.daytona.io/docs/en/sandboxes.md#fork-sandboxes) | [No](https://modal.com/llms.txt) | [Yes](https://vercel.com/changelog/vercel-sandbox-supports-forking) | [No](https://developers.cloudflare.com/sandbox/llms.txt) | [No](https://docs.runloop.ai/docs/devboxes/snapshots) |
 | Outbound network allowlist | Yes | [Yes](https://docs.e2b.dev/network/internet-access.md) | [Yes](https://www.daytona.io/docs/en/network-limits.md) | [Yes](https://modal.com/docs/guide/sandbox-networking) | [Yes](https://vercel.com/changelog/full-sandbox-egress-firewall-now-available-on-hobby-plan) | [Yes](https://developers.cloudflare.com/sandbox/network/) | [Yes](https://docs.runloop.ai/docs/network-policies) |
-| Volumes or mounted storage | No | [Yes](https://docs.e2b.dev/volumes.md) | [Yes](https://www.daytona.io/docs/en/volumes.md) | [Yes](https://modal.com/docs/guide/volumes.md) | [Yes](https://vercel.com/docs/sandbox/concepts/drives) | [Yes](https://developers.cloudflare.com/sandbox/files/mount-an-r2-bucket/) | [Yes](https://docs.runloop.ai/docs/devboxes/mounts/overview) |
+| Attachable shared volumes | No | [Yes](https://docs.e2b.dev/volumes.md) | [Yes](https://www.daytona.io/docs/en/volumes.md) | [Yes](https://modal.com/docs/guide/volumes.md) | [Yes](https://vercel.com/docs/sandbox/concepts/drives) | [Yes](https://developers.cloudflare.com/sandbox/files/mount-an-r2-bucket/) | [Yes](https://docs.runloop.ai/docs/devboxes/mounts/overview) |
 | Lifecycle webhooks | No | [Yes](https://docs.e2b.dev/sandbox/lifecycle-events-webhooks.md) | [Yes](https://www.daytona.io/docs/en/webhooks.md) | [No](https://modal.com/llms.txt) | [No](https://vercel.com/docs/sandbox) | [No](https://developers.cloudflare.com/sandbox/manage/run-code-when-a-sandbox-stops/) | [No](https://docs.runloop.ai/llms.txt) |
 | GPUs | Yes | [No](https://docs.e2b.dev/faq/gpu-support.md) | [Yes](https://www.daytona.io/docs/en/gpu-sandboxes.md) | [Yes](https://modal.com/docs/guide/gpu.md) | [No](https://vercel.com/docs/sandbox) | [No](https://developers.cloudflare.com/sandbox/llms.txt) | [Yes](https://docs.runloop.ai/docs/devboxes/overview) |
 
 The Tangle column links to its own guides below.
+The sandbox workspace persists across stops; it is separate from an attachable shared volume.
+See [what survives a stop](/sandbox/concepts#what-survives-a-stop).
 
 | Tangle feature | Guide |
 |---|---|

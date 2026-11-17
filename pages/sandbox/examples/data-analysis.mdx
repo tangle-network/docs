@@ -1,0 +1,84 @@
+---
+title: Turn a CSV into a chart
+description: Analyse a CSV with Python in a Tangle sandbox, render a PNG with Matplotlib and download it to your machine.
+---
+
+# Turn a CSV into a chart
+
+Write a CSV into a sandbox, total its sales by product and download a PNG chart.
+Python and Matplotlib run in the sandbox; the TypeScript program runs on your machine.
+
+## Run the program
+
+Set `TANGLE_API_KEY` from [your API keys](https://id.tangle.tools/app/keys).
+Install the SDK and save the program below as `sales-chart.mts`:
+
+{/* sandbox-proof: skip Installs the local SDK and runs the complete program below. */}
+```bash
+npm install @tangle-network/sandbox
+npm install --save-dev tsx
+npx tsx sales-chart.mts
+```
+
+{/* sandbox-proof: run */}
+```ts
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  const setup = await box.exec("python3 -m venv .chart-venv");
+  assert.equal(setup.exitCode, 0, setup.stderr);
+  const install = await box.exec(
+    ".chart-venv/bin/python -m pip install --quiet matplotlib",
+    { timeoutMs: 120_000 },
+  );
+  assert.equal(install.exitCode, 0, install.stderr);
+
+  await box.write("sales.csv", "product,usd\nBooks,120\nPens,45\nBooks,80\nPens,15\n");
+  await box.write("chart.py", `
+import csv
+import json
+from collections import defaultdict
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+totals = defaultdict(float)
+with open("sales.csv", newline="") as source:
+    for row in csv.DictReader(source):
+        totals[row["product"]] += float(row["usd"])
+assert dict(totals) == {"Books": 200.0, "Pens": 60.0}
+fig, ax = plt.subplots(figsize=(6, 4), layout="constrained")
+bars = ax.bar(list(totals), list(totals.values()), color="#6557ff")
+ax.bar_label(bars, fmt="$%.0f")
+ax.set(title="Sales by product", ylabel="Sales (USD)", ylim=(0, 240))
+fig.savefig("sales.png", dpi=150)
+plt.close(fig)
+print(json.dumps(dict(totals), sort_keys=True))
+`);
+  const result = await box.exec(".chart-venv/bin/python chart.py");
+  assert.equal(result.exitCode, 0, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout), { Books: 200, Pens: 60 });
+
+  await box.fs.download("sales.png", "sales.png", { maxBytes: 1_000_000 });
+  const png = await readFile("sales.png");
+  assert.equal(png.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+  assert.equal(png.readUInt32BE(16), 900);
+  assert.equal(png.readUInt32BE(20), 600);
+  console.log("Books: USD 200; Pens: USD 60. Saved sales.png (900 × 600 pixels).");
+} finally {
+  await box.delete();
+}
+```
+
+Open `sales.png` on your machine. Replace the CSV with your own data to keep the
+analysis and plotting dependencies isolated from your application.
+
+See [Files](/sandbox/files) for uploads and downloads and [Python examples](/sandbox/examples/python)
+for more analysis programs.

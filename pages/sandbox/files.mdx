@@ -8,6 +8,8 @@ Put files into a sandbox, read results back, move whole directories in and out, 
 
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -26,6 +28,8 @@ try {
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: run */}
+
 ```python
 import os
 from tangle_sandbox import Sandbox, SandboxStatus
@@ -42,6 +46,8 @@ finally:
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fs upload my-project ./todo.md /home/agent/notes/todo.md
 tangle fs cat my-project /home/agent/notes/todo.md
@@ -55,33 +61,104 @@ tangle fs cat my-project /home/agent/notes/todo.md
 
 When an agent and your code may edit the same file, pass a precondition. `ifHash` takes the SHA-256 from your last read or write and refuses the write if the file changed since. `ifAbsent: true` refuses if the file exists.
 
+{/* sandbox-proof: run */}
+
 ```ts
-await box.write("config.json", '{"enabled":true}\n', { ifAbsent: true });
-await box.write("deploy.sh", "#!/bin/sh\necho deploy\n", { mode: 0o755 });
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  await box.write("config.json", '{"enabled":true}\n', { ifAbsent: true });
+  assert.deepEqual(JSON.parse(await box.read("config.json")), { enabled: true });
+  await box.write("deploy.sh", "#!/bin/sh\necho deploy\n", { mode: 0o755 });
+  const ran = await box.exec("./deploy.sh");
+  assert.equal(ran.exitCode, 0, ran.stderr);
+  assert.equal(ran.stdout.trim(), "deploy");
+  console.log("Created config and executable script");
+} finally {
+  await box.delete();
+}
 ```
 
 ### Write many files at once
 
+{/* sandbox-proof: run */}
+
 ```ts
-await box.fs.writeMany([
-  { path: "skills/review.md", content: reviewSkill },
-  { path: ".claude/skills/audit.md", content: auditSkill },
-]);
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  const reviewSkill = "---\nname: review\ndescription: Review changed files\n---\nInspect the diff.\n";
+  const auditSkill = "---\nname: audit\ndescription: Inspect dependency changes\n---\nRead package manifests.\n";
+  await box.fs.writeMany([
+    { path: "skills/review.md", content: reviewSkill },
+    { path: ".claude/skills/audit.md", content: auditSkill },
+  ]);
+  assert.equal(await box.read("skills/review.md"), reviewSkill);
+  assert.equal(await box.read(".claude/skills/audit.md"), auditSkill);
+  console.log("Wrote both skill files");
+} finally {
+  await box.delete();
+}
 ```
 
 A batch is not atomic: some files may be written before one fails.
 
 ## Move binary files and directories
 
-```ts
-await box.fs.upload("./model.bin", "/home/agent/models/model.bin", {
-  onProgress: (p) => console.log(`${p.percentage.toFixed(1)}%`),
-});
-await box.fs.uploadDir("./project", "/home/agent/project");
+{/* sandbox-proof: run */}
 
-await box.fs.download("/home/agent/front.png", "front.png");
-await box.fs.downloadDir("/home/agent/output", "./local-output");
-await box.fs.downloadArchive("/home/agent/output", "./output.tar.gz");
+```ts
+import { mkdtemp, mkdir, readFile, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const local = await mkdtemp(join(tmpdir(), "sandbox-transfer-"));
+try {
+  const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+  try {
+    await mkdir(join(local, "project"));
+    await writeFile(join(local, "model.bin"), Buffer.from([0, 1, 2, 255]));
+    await writeFile(join(local, "project", "report.txt"), "sales: 260\n");
+    await box.fs.upload(join(local, "model.bin"), "/home/agent/models/model.bin", {
+      onProgress: (p) => console.log(`${p.percentage.toFixed(1)}%`),
+    });
+    await box.fs.uploadDir(join(local, "project"), "/home/agent/project");
+    assert.equal(await box.read("project/report.txt"), "sales: 260\n");
+    await box.fs.download("/home/agent/models/model.bin", join(local, "download.bin"));
+    assert.deepEqual(await readFile(join(local, "download.bin")), Buffer.from([0, 1, 2, 255]));
+    await box.fs.downloadDir("/home/agent/project", join(local, "local-output"));
+    assert.equal(await readFile(join(local, "local-output", "report.txt"), "utf8"), "sales: 260\n");
+    await box.fs.downloadArchive("/home/agent/project", join(local, "output.tar.gz"));
+    const archive = await readFile(join(local, "output.tar.gz"));
+    assert.equal(archive.subarray(0, 2).toString("hex"), "1f8b");
+    console.log("Verified binary, directory, and archive transfers");
+  } finally {
+    await box.delete();
+  }
+} finally {
+  await rm(local, { recursive: true, force: true });
+}
 ```
 
 | Method | Use it for |
@@ -94,28 +171,84 @@ await box.fs.downloadArchive("/home/agent/output", "./output.tar.gz");
 | `downloadArchive(remoteDir, localPath)` | A directory as `tar.gz`, including hidden files, with a SHA-256 receipt. |
 | `openArchive(remoteDir)` | The same archive as a `ReadableStream`, to pipe to object storage from a Worker. |
 
+This program streams an owned directory into `reports.tar.gz` and checks its contents.
+
+{/* sandbox-proof: run */}
+
 ```ts
-const archive = await box.fs.openArchive("/home/agent");
-await bucket.put("exports/workspace.tar.gz", archive);
+import { open, readFile } from "node:fs/promises";
+import { gunzipSync } from "node:zlib";
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  await box.write("reports/summary.txt", "daily sales: USD 260\n");
+  const archive = await box.fs.openArchive("/home/agent/reports");
+  const reader = archive.getReader();
+  const output = await open("reports.tar.gz", "w");
+  try {
+    while (true) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      await output.write(chunk.value);
+    }
+  } finally {
+    reader.releaseLock();
+    await output.close();
+  }
+  const compressed = await readFile("reports.tar.gz");
+  assert.equal(compressed.subarray(0, 2).toString("hex"), "1f8b");
+  const tar = gunzipSync(compressed);
+  assert(tar.includes(Buffer.from("summary.txt")));
+  assert(tar.includes(Buffer.from("daily sales: USD 260\n")));
+  console.log("Streamed reports.tar.gz and verified its report contents");
+} finally {
+  await box.delete();
+}
 ```
 
 The size caps for single requests, uploads and downloads are on [Limits](/sandbox/limits).
 
 ## List, inspect, rename and delete
 
+{/* sandbox-proof: run */}
+
 ```ts
-for (const entry of await box.fs.list("/home/agent", { all: true })) {
-  console.log(entry.isDir ? "DIR " : "FILE", entry.name, entry.size);
-}
+import assert from "node:assert/strict";
+import { Sandbox } from "@tangle-network/sandbox";
 
-const info = await box.fs.stat("/home/agent/models/model.bin");
-console.log(info.size, info.modTime);
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
 
-if (!(await box.fs.exists("/home/agent/cache"))) {
-  await box.fs.mkdir("/home/agent/cache", { recursive: true });
+const box = await client.create({ agent: false, maxLifetimeSeconds: 300 });
+try {
+  await box.write("models/model.bin", "model-v1");
+  await box.write("report.tmp", "sales: 260\n");
+  const entries = await box.fs.list("/home/agent", { all: true });
+  assert(entries.some((entry) => entry.name === "models" && entry.isDir));
+  const info = await box.fs.stat("/home/agent/models/model.bin");
+  assert.equal(info.size, 8);
+  if (!(await box.fs.exists("/home/agent/cache"))) {
+    await box.fs.mkdir("/home/agent/cache", { recursive: true });
+  }
+  assert(await box.fs.exists("/home/agent/cache"));
+  await box.fs.rename("/home/agent/report.tmp", "/home/agent/report.md");
+  assert.equal(await box.read("report.md"), "sales: 260\n");
+  assert.equal(await box.fs.exists("report.tmp"), false);
+  await box.fs.delete("/home/agent/cache", { recursive: true });
+  assert.equal(await box.fs.exists("cache"), false);
+  console.log(entries.map((entry) => entry.name));
+} finally {
+  await box.delete();
 }
-await box.fs.rename("/home/agent/report.tmp", "/home/agent/report.md");
-await box.fs.delete("/home/agent/cache", { recursive: true });
 ```
 
 `list`, `stat`, `delete` and `rename` throw `NOT_FOUND` for a missing path. `delete` needs `recursive: true` for a non-empty directory. `rename` replaces a regular file atomically and fails across filesystems.
@@ -129,6 +262,8 @@ await box.fs.delete("/home/agent/cache", { recursive: true });
 ## Search the workspace
 
 `search` runs ripgrep and yields matches as they are found. Read it with `for await`.
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -154,6 +289,8 @@ Options: `glob`, `cwd`, `maxResults`, `ignoreCase` and `context` (lines before a
 
 ## From the CLI
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle fs ls my-project /home/agent --all --long
 tangle fs stat my-project /home/agent/report.md
@@ -171,18 +308,61 @@ tangle search my-project TODO --json   # one match per line
 
 Python has `read`, `write` and `search`. `read` and `write` handle UTF-8 text only, and `search` returns a list:
 
+{/* sandbox-proof: run */}
+
 ```python
 from tangle_sandbox import SearchOptions
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
 
-for hit in box.search("TODO", SearchOptions(glob="**/*.js")):
-    print(hit.path, hit.line, hit.text.strip())
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("src/tasks.js", "// TODO: ship the report\n")
+        hits = box.search("TODO", SearchOptions(glob="**/*.js"))
+        assert any(hit.path.endswith("tasks.js") and "ship the report" in hit.text for hit in hits)
+        for hit in hits:
+            print(hit.path, hit.line, hit.text.strip())
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 Python has no file manager for binary files, directories, listing or deletion. Use `box.exec` for listing and moving files inside the sandbox, or call the runtime routes with `client.fetch`, which returns the raw response and does not raise on an error status:
 
+{/* sandbox-proof: run */}
+
 ```python
-response = client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/files/read", json={"path": "/home/agent/report.md"})
-print(response.json())
+import os
+from tangle_sandbox import Sandbox, SandboxStatus
+
+with Sandbox(
+    api_key=os.environ["TANGLE_API_KEY"],
+    base_url="https://sandbox.tangle.tools",
+) as client:
+    created = client.fetch("POST", "/v1/sandboxes", json={
+        "agent": False, "maxLifetimeSeconds": 600,
+    }).raise_for_status().json()
+    try:
+        box = client.get(created["id"])
+        assert box is not None
+        box.wait_for(SandboxStatus.RUNNING)
+        box.write("/home/agent/report.md", "Sales report: USD 260\n")
+        response = client.fetch("POST", f"/v1/sandboxes/{box.id}/runtime/files/read", json={"path": "/home/agent/report.md", "encoding": "utf8"})
+        response.raise_for_status()
+        payload = response.json()
+        assert payload["success"] is True
+        assert payload["data"]["content"] == "Sales report: USD 260\n"
+        print(response.text)
+    finally:
+        client.fetch("DELETE", f"/v1/sandboxes/{created['id']}").raise_for_status()
 ```
 
 ## Next

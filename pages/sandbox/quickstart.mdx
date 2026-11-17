@@ -14,6 +14,8 @@ Every step has a TypeScript, Python and CLI tab.
 
 Create a key at [id.tangle.tools/app/keys](https://id.tangle.tools/app/keys). Keys start with `sk-tan-`.
 
+{/* sandbox-proof: skip Local credential or environment setup prerequisite */}
+
 ```bash
 export TANGLE_API_KEY="sk-tan-..."
 ```
@@ -25,6 +27,8 @@ Browser code gets a short-lived token instead; see [API keys and tokens](/sandbo
 
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
+
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
 
 ```bash
 npm install @tangle-network/sandbox tsx
@@ -38,6 +42,8 @@ Top-level `await` needs a module, and a `.ts` file in a new npm project compiles
 
 The package is [`tangle-sandbox` on PyPI](https://pypi.org/project/tangle-sandbox/) and needs Python 3.10 or newer.
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 pip install tangle-sandbox
 ```
@@ -46,6 +52,8 @@ pip install tangle-sandbox
 <Tabs.Tab>
 
 The installer brings its own Node.js runtime, so it needs no Node, npm or sudo, on macOS or Linux.
+
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
 
 ```bash
 curl -fsSL https://sandbox.tangle.tools/install.sh | sh
@@ -72,6 +80,8 @@ With Node.js 22.19 or newer you can install the same CLI with `npm install -g @t
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
 
+{/* sandbox-proof: run */}
+
 ```ts filename="run-code.mts"
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -89,9 +99,13 @@ try {
 }
 ```
 
+{/* sandbox-proof: skip Local invocation requires the program saved in the preceding code block */}
+
 ```bash
 npx tsx run-code.mts
 ```
+
+{/* sandbox-proof: skip Example terminal output or API field reference */}
 
 ```text
 0 499999500000
@@ -101,6 +115,8 @@ npx tsx run-code.mts
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: run */}
 
 ```python filename="run_code.py"
 import os
@@ -123,6 +139,8 @@ finally:
     client.close()
 ```
 
+{/* sandbox-proof: skip Example terminal output or API field reference */}
+
 ```text
 0 499999500000
 ```
@@ -132,10 +150,14 @@ Pass `SandboxStatus.RUNNING`, not the string `"running"`: the string form raises
 </Tabs.Tab>
 <Tabs.Tab>
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --name hello --idle-timeout 900
 tangle exec hello -- python3 -c 'print(sum(range(1_000_000)))'
 ```
+
+{/* sandbox-proof: skip Example terminal output or API field reference */}
 
 ```text
 ✓ Sandbox created: <sandbox id>
@@ -160,6 +182,8 @@ A new sandbox has a coding agent installed. Unless you give it your own credenti
 <Tabs items={["TypeScript", "Python", "CLI"]} storageKey="sandbox-lang">
 <Tabs.Tab>
 
+{/* sandbox-proof: run */}
+
 ```ts filename="prompt.mts"
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -173,7 +197,8 @@ try {
   const run = await box.prompt(
     "Write fizzbuzz.py for 1 to 15, run it, and reply with its output.",
   );
-  console.log(run.success ? run.response : run.error);
+  if (!run.success) throw new Error(run.error ?? "Agent turn failed");
+  console.log(run.response);
 
   const file = await box.exec("cat fizzbuzz.py");
   console.log(file.stdout);
@@ -184,6 +209,8 @@ try {
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: run */}
 
 ```python filename="prompt.py"
 import os
@@ -199,7 +226,9 @@ box = client.create(name="fizzbuzz")
 try:
     box.wait_for(SandboxStatus.RUNNING)
     result = box.prompt("Write fizzbuzz.py for 1 to 15, run it, and reply with its output.")
-    print(result.response if result.success else result.error)
+    if not result.success:
+        raise RuntimeError(result.error)
+    print(result.response)
     print(box.exec("cat fizzbuzz.py").stdout)
 finally:
     box.delete()
@@ -208,6 +237,8 @@ finally:
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle agent prompt --box hello --stream "Write fizzbuzz.py for 1 to 15, run it, and reply with its output."

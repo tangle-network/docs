@@ -15,6 +15,8 @@ return a result, use [`prompt()`](/sandbox/cloud-agents) instead.
 
 ## Start an interactive session
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --name pair --backend claude-code \
   --git-url https://github.com/tangle-network/sandbox-demo
@@ -28,6 +30,8 @@ resumed first.
 The session runs the sandbox's configured coding agent. Every sandbox ships the
 full set, so `--harness` picks another one for this session only:
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle agent prompt <sandbox-id> "Review the last commit." --interactive --harness codex
 ```
@@ -38,6 +42,8 @@ The accepted `--harness` values are listed in the
 
 With one argument, the argument is the prompt and the sandbox comes from
 `--box`, the `TANGLE_SANDBOX` variable, or the active sandbox:
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle use <sandbox-id>
@@ -53,6 +59,8 @@ tangle agent prompt "Add a test for the date parser." --interactive
 | `--connection <spec>` | Grant a Hub connection as tools. See [Connections](/sandbox/connections). |
 
 ## What you see
+
+{/* sandbox-proof: skip Example terminal output or API field reference */}
 
 ```text
 Interactive claude-code session running.
@@ -93,9 +101,13 @@ Your terminal attaches only when stdin and stdout are both terminals. In CI or
 a pipe, add `--json`: the CLI starts the session, prints one JSON object, and
 returns.
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle agent prompt <sandbox-id> "Upgrade the test runner." --interactive --json
 ```
+
+{/* sandbox-proof: skip Configuration or response data; consumed by the adjacent client program */}
 
 ```json
 {
@@ -131,6 +143,8 @@ it waits for:
 it with the exact profile and first prompt, then attach a terminal stream. The
 start request is built with two helpers from `@tangle-network/agent-interface`,
 the same way the CLI builds it.
+
+{/* sandbox-proof: skip Interactive program waits for user input */}
 
 ```ts
 import {

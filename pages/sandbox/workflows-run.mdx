@@ -13,6 +13,8 @@ plain HTTP. All three use your `sk-tan-…` API key.
 
 `triage.yml` runs one agent in a sandbox each time its webhook is called:
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 name: triage-note
 on:
@@ -29,6 +31,8 @@ do:
 See the [YAML reference](/sandbox/workflows-yaml) for every trigger and action.
 
 ## From the terminal
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle workflows validate triage.yml          # exits 1 when the file is invalid
@@ -50,9 +54,13 @@ Every `workflows` command accepts `--json` for scripts. [Workflow commands](/san
 
 Workflows live on Tangle Platform, and `@tangle-network/hub-sdk` is its client. The Sandbox SDK has no workflow API.
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 npm install @tangle-network/hub-sdk
 ```
+
+{/* sandbox-proof: skip Requires the local profile, SSH key, or workflow file created in the preceding steps */}
 
 ```ts
 import { readFileSync } from "node:fs";
@@ -94,6 +102,8 @@ returns as soon as the run leaves `queued` or `running`, which includes
 An `agent.run` step records its execution timeline: messages, tool calls, and
 results, paged by round.
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```ts
 let after: number | undefined;
 do {
@@ -125,6 +135,8 @@ Responses are wrapped as `{ "success": true, "data": … }`.
 A workflow with a webhook trigger also gets its own URL. Create returns the
 hook URL and its token once; the posted JSON object becomes `${trigger.*}`, so
 `{ "text": "…" }` fills `${trigger.text}`:
+
+{/* sandbox-proof: skip REST mutation requires the resource IDs and request data from the surrounding steps */}
 
 ```bash
 curl -X POST "https://id.tangle.tools/v1/hooks/$WORKFLOW_ID" \

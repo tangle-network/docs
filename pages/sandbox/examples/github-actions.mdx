@@ -1,0 +1,91 @@
+---
+title: Run a sandbox from GitHub Actions
+description: Run a command in a Tangle sandbox from GitHub Actions, fail the job on a bad result and upload its report.
+---
+
+# Run a sandbox from GitHub Actions
+
+Use a sandbox when a CI step needs an isolated machine. This program runs a Python
+calculation, checks its result and saves a report for GitHub Actions to retain.
+The `finally` block deletes the sandbox even when a check fails.
+
+## Add the program
+
+Save this as `scripts/sandbox-check.mts` in your repository:
+
+{/* sandbox-proof: run */}
+```ts
+import assert from "node:assert/strict";
+import { writeFile } from "node:fs/promises";
+import { Sandbox } from "@tangle-network/sandbox";
+
+const client = new Sandbox({
+  apiKey: process.env.TANGLE_API_KEY!,
+  baseUrl: "https://sandbox.tangle.tools",
+});
+const box = await client.create({ agent: false, maxLifetimeSeconds: 180 });
+try {
+  const result = await box.exec("python3 -c 'print(sum(range(101)))'");
+  assert.equal(result.exitCode, 0, result.stderr);
+  assert.equal(result.stdout.trim(), "5050");
+  await writeFile(
+    "sandbox-report.json",
+    JSON.stringify({ passed: true, total: Number(result.stdout.trim()) }, null, 2),
+  );
+  console.log("Sandbox check passed; saved sandbox-report.json.");
+} finally {
+  await box.delete();
+}
+```
+
+Install dependencies and commit the resulting lockfile with the program:
+
+{/* sandbox-proof: skip Repository setup; the complete program above is the executable check. */}
+```bash
+npm install @tangle-network/sandbox
+npm install --save-dev tsx
+```
+
+## Add the workflow
+
+Create a repository secret named `TANGLE_API_KEY` using a key from
+[your API keys](https://id.tangle.tools/app/keys).
+Save this as `.github/workflows/sandbox-check.yml`:
+
+{/* sandbox-proof: skip GitHub Actions workflow configuration; it runs the complete program above with a repository secret. */}
+```yaml
+name: Sandbox check
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    if: github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - name: Run the sandbox check
+        env:
+          TANGLE_API_KEY: ${{ secrets.TANGLE_API_KEY }}
+        run: npx tsx scripts/sandbox-check.mts
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sandbox-report
+          path: sandbox-report.json
+```
+
+Fork pull requests cannot read repository secrets. Run this job on trusted branches
+or approve a separate trusted run; keep the key out of source files and logs.
+See [GitHub's encrypted secrets guide](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions).
+
+The same program runs locally with `npx tsx scripts/sandbox-check.mts` and
+`TANGLE_API_KEY` in your environment. For larger suites, see [Fleets](/sandbox/examples/fleets).

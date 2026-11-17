@@ -17,6 +17,8 @@ OpenCode or Pi.
 
 Save this as `agents/reviewer.json`:
 
+{/* sandbox-proof: skip Configuration or response data; consumed by the adjacent client program */}
+
 ```json
 {
   "name": "reviewer",
@@ -58,6 +60,8 @@ GitHub, `{ "kind": "github", "repository", "path", "ref" }`.
 
 <Tabs items={["TypeScript", "Python", "CLI"]}>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires the local profile, SSH key, or workflow file created in the preceding steps */}
+
 ```ts
 import { readFileSync } from "node:fs";
 import { Sandbox } from "@tangle-network/sandbox";
@@ -82,11 +86,13 @@ try {
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip Requires the local profile, SSH key, or workflow file created in the preceding steps */}
+
 ```python
 import json
 import os
 
-from tangle_sandbox import BackendConfig, CreateSandboxOptions, GitConfig, PromptOptions, Sandbox
+from tangle_sandbox import SandboxStatus, BackendConfig, CreateSandboxOptions, GitConfig, PromptOptions, Sandbox
 
 reviewer = json.load(open("agents/reviewer.json"))
 
@@ -97,8 +103,8 @@ box = client.create(
         git=GitConfig(url="https://github.com/tangle-network/sandbox-demo"),
     )
 )
-box.wait_for("running")
 try:
+    box.wait_for(SandboxStatus.RUNNING)
     review = box.prompt("Review the last commit.", PromptOptions(session_id="review"))
     print(review.response)
 finally:
@@ -107,6 +113,8 @@ finally:
 ```
 </Tabs.Tab>
 <Tabs.Tab>
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --name pr-reviewer --backend claude-code \
   --profile agents/reviewer.json --git-url https://github.com/tangle-network/sandbox-demo
@@ -126,6 +134,8 @@ Tangle Router with no credential.
 with `.` or `/` or ends in `.json`. Any other value is a profile name from the
 platform catalog: built-in profiles plus the ones you stored.
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle sandbox create --backend claude-code --profile ./agents/reviewer.json
 tangle sandbox create --backend claude-code --profile <catalog-name>
@@ -137,6 +147,8 @@ takes a local JSON file, an `https://` URL, or
 `github:<owner>/<repo>/<path>[@<ref>]`, so a team can share one profile from a
 repository:
 
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
+
 ```bash
 tangle agent prompt <sandbox-id> "Review the last commit." \
   --profile github:<owner>/<repo>/agents/reviewer.json@main
@@ -147,6 +159,8 @@ override the profile for that turn.
 
 ## Create and check a profile
 
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
+
 ```bash
 tangle agent profile create agents/reviewer.json
 ```
@@ -155,6 +169,8 @@ On a terminal, `create` asks for each field. With `--name` it skips the
 questions and uses the flags: `--description`, `--model`, `--system-prompt`,
 `--skills`, `--tools` and `--harness`. It writes the profile and prints the
 command that runs it.
+
+{/* sandbox-proof: skip CLI usage requires an installed authenticated tangle client and page resource setup */}
 
 ```bash
 tangle agent profile show agents/reviewer.json      # prints the profile as JSON
@@ -168,6 +184,8 @@ job.
 
 A sandbox can host several agents, each with its own profile, in one checkout.
 Import `@tangle-network/sandbox/agent` to add `box.agents`:
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox/agent";
@@ -188,6 +206,8 @@ The SDK handle that applied a profile records what it applied.
 effective one, and when it was materialized. When the profile changes during a
 session, the base stays and the effective changes.
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 const provenance = box.getProfileProvenance();
 // { base: { name, sha256 }, effective: { name, sha256 }, materializedAt }
@@ -196,6 +216,8 @@ const provenance = box.getProfileProvenance();
 The results of `box.revertToSnapshot()` and `box.restorePaths()` carry the same
 record. It is a record kept by your SDK process, not a signed attestation. To
 save the sandbox's files, take a snapshot:
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle snapshot create <sandbox-id> --tags reviewer-v1

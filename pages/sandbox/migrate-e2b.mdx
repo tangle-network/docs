@@ -40,6 +40,8 @@ Create a sandbox, write a file, run it, share a port and delete the sandbox:
 <Tabs items={["TypeScript", "Python"]} storageKey="sandbox-lang">
 <Tabs.Tab>
 
+{/* sandbox-proof: run */}
+
 ```ts filename="from-e2b.mts"
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -66,6 +68,8 @@ try {
 
 </Tabs.Tab>
 <Tabs.Tab>
+
+{/* sandbox-proof: run */}
 
 ```python filename="from_e2b.py"
 import os
@@ -102,6 +106,8 @@ finally:
 ## Call the E2B-compatible REST routes
 
 If your code calls E2B's REST API over HTTP, point it at `https://sandbox.tangle.tools/e2b` and send your Tangle key in `X-API-Key`:
+
+{/* sandbox-proof: skip REST mutation requires the resource IDs and request data from the surrounding steps */}
 
 ```bash
 curl -s https://sandbox.tangle.tools/e2b/templates \

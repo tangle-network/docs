@@ -12,6 +12,8 @@ sandbox.
 
 ## Ensure a sandbox for a key
 
+{/* sandbox-proof: skip Creates a persistent named customer instance; cleanup belongs to the application */}
+
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
 
@@ -55,6 +57,8 @@ backend comes from `profile`.
 session. It returns while the agent is still working; calling it again with
 the same `turnId` picks up that turn, never a second one.
 
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
+
 ```ts
 async function ask(turnId: string, text: string) {
   let turn = await instance.turn(text, { thread: "orders", turnId });
@@ -85,6 +89,8 @@ session id a thread uses, `<thread>-<version>`. Use your message id as the
 `instance.box` is the sandbox itself, for files, commands and everything else
 on a [sandbox](/sandbox/commands):
 
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
+
 ```ts
 await instance.box.write("contracts/msa.md", contract);
 ```
@@ -93,6 +99,8 @@ await instance.box.write("contracts/msa.md", contract);
 
 `client.instances.get(key)` reads a key's record. `client.instances.release(key)`
 forgets the key and leaves its sandbox running, so delete the sandbox first:
+
+{/* sandbox-proof: skip Continues the preceding client initialization example */}
 
 ```ts
 const record = await client.instances.get("customer:4821");

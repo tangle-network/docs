@@ -11,6 +11,8 @@ Tangle Platform compiles a definition when you create or update it and rejects a
 
 ## Top-level shape
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 name: pr-review                      # required, at most 100 characters
 description: Review every opened PR  # optional, at most 1000 characters
@@ -49,6 +51,8 @@ Kinds can mix, such as an event and a schedule. Entries that would store the sam
 Each `provider_event` entry stores one trigger per sub-action, and a workflow holds at most 100 of those in total, so a few entries with long `actions` lists can reach that limit first.
 Different events carry different payloads; combine them in the body with `default(...)`, whose fallback can be another path, instead of copying the workflow.
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 # Run on a pull request change or on a comment that mentions @agent.
 on:
@@ -70,6 +74,8 @@ on:
 
 Every `on` entry takes its own optional `enabled`, default `true`. It turns that one trigger off while the others keep firing, so you can silence a noisy `pull_request` entry and keep the nightly schedule without deleting the entry.
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 on:
   - provider_event:
@@ -88,6 +94,8 @@ on:
 - A `schedule` that is off keeps its next time but never fires. Turning it back on waits for the next cron slot instead of firing at the old time.
 
 ### `provider_event`: a connected provider starts the run
+
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
 
 ```yaml
 on:
@@ -126,6 +134,8 @@ Every GitHub payload also carries `repository.full_name` and `repository.owner.l
 
 ### `schedule`: cron
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 on:
   schedule:
@@ -145,6 +155,8 @@ A schedule turned off this way reads `enabled: false`, `authoredEnabled: true`, 
 A workflow saved from a signed-in session can schedule with no end.
 
 ### `webhook`: the workflow's own URL
+
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
 
 ```yaml
 on:
@@ -180,6 +192,8 @@ A skipped step's `${steps[N]}` resolves to nothing; later positions do not shift
 ### `agent.run`
 
 Starts a sandbox and runs an agent on a prompt until it finishes, recording its model, tokens and cost. Give the agent a role: at least one of `profile` or `skills`.
+
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
 
 ```yaml
 - agent.run:
@@ -238,6 +252,8 @@ Use `inference` for a step whose whole job is turning a prompt into text, such a
 
 Runs your TypeScript module in a new sandbox, with Node type stripping and no build step.
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 - id: tally
   script.run:
@@ -273,6 +289,8 @@ Return small JSON summaries by value and save reports, CSV files and dumps as ar
 
 `HubClient` is the simplest way for a script to call a connected provider, with no tokens, base URLs or paging to handle:
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 - id: fetch
   script.run:
@@ -292,6 +310,8 @@ Find an action with `hub.tools.search("list recent gmail messages", { provider: 
 
 Starts a sandbox and returns its id as `${steps[N].sandboxId}`. It does not run an agent or capture output; its `prompt` is a note that never runs. For a step that produces a result, use `agent.run`.
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 - id: box
   sandbox.spawn:
@@ -308,6 +328,8 @@ Starts a sandbox and returns its id as `${steps[N].sandboxId}`. It does not run 
 
 Saves a started sandbox's disk in the workflow's snapshot list, so later runs restore it instead of starting cold:
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 do:
   - id: box
@@ -321,6 +343,8 @@ The snapshot is filed under the step its `sandbox` value points at: `${steps.box
 ### `integration.invoke`
 
 Calls a connected provider from Tangle Platform, with no sandbox:
+
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
 
 ```yaml
 - integration.invoke:
@@ -359,6 +383,8 @@ A refusal never falls back to your own token, because that is the identity the w
 
 Posts a signed HTTPS request:
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 - notify:
     url: "https://example.com/hook"     # https only; private and loopback addresses are refused
@@ -369,6 +395,8 @@ Posts a signed HTTPS request:
 The body is signed with HMAC. The output is `{ status }`, the HTTP status number. Any response outside 2xx fails the step, and redirects are not followed, so a 3xx fails it too. The step's `retry` and `onError` then decide what happens.
 
 Every request carries the signature, the event name and the delivery's identity:
+
+{/* sandbox-proof: skip Example terminal output or API field reference */}
 
 ```text
 Content-Type: application/json
@@ -381,6 +409,8 @@ Idempotency-Key: wf_<runId>_a<step>
 A retry of a `notify` step repeats only the request, never the steps before it.
 
 The body is your `payload` with every `${...}` expanded, plus the run's identity. `deliveryId` carries the same value as the `Idempotency-Key` header:
+
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
 
 ```json
 {
@@ -404,12 +434,16 @@ Until you do, treat a delivery as a signal only and read the real state back fro
 
 #### Mint a signing key
 
+{/* sandbox-proof: skip REST mutation requires the resource IDs and request data from the surrounding steps */}
+
 ```bash
 curl -sX POST https://id.tangle.tools/v1/workflows/notify-secrets \
   -H "authorization: Bearer $TANGLE_API_KEY" \
   -H "content-type: application/json" \
   -d '{"label":"acme-billing-hook","receiverUrl":"https://acme.example/hooks/billing"}'
 ```
+
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
 
 ```json
 {
@@ -440,6 +474,8 @@ A step whose `url` builds its path from a `${...}` expression names no single re
 
 #### Rotate a signing key
 
+{/* sandbox-proof: skip REST command contains a placeholder URL, key, or resource ID */}
+
 ```bash
 curl -sX POST https://id.tangle.tools/v1/workflows/notify-secrets/wns_.../rotate \
   -H "authorization: Bearer $TANGLE_API_KEY"
@@ -449,6 +485,8 @@ Rotating replaces the value and keeps the id, so no workflow needs an edit. For 
 `DELETE /v1/workflows/notify-secrets/{id}/previous` ends that window early, which is the right move when the old value leaked.
 
 #### Verify a delivery
+
+{/* sandbox-proof: skip SDK type, configuration, or error-handling fragment; requires the surrounding example */}
 
 ```ts
 import { createHmac, timingSafeEqual } from "node:crypto";
@@ -497,6 +535,8 @@ Make the handler idempotent: record each `deliveryId` (or `Idempotency-Key`) you
 
 Runs Tangle's trace analyst over a saved step trace and returns structured findings, for loops that steer themselves:
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 - id: work
   agent.run:
@@ -517,6 +557,8 @@ The output is `{ findings, rootCauses, analyzedAt }`. `findings` is a list, so `
 ### `decision`
 
 Pauses the run until a person picks an option. The run waits with status `waiting`; the pick becomes `${steps[N].choice}`, and a later step routes on it with an `if`.
+
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
 
 ```yaml
 - decision:
@@ -542,6 +584,8 @@ A waiting decision can be answered four ways. Each resumes the run with the pick
 If nobody answers, `timeout` and `onTimeout` decide. A gate that must not wait forever should set `timeout`, `onTimeout: default` and a safe `default`, as above.
 
 Post the question to a channel and take the answer from it:
+
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
 
 ```yaml
 - decision:
@@ -575,6 +619,8 @@ Rules:
 
 `line` texts the question from one of your Hub lines to one member, who answers by text:
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 - decision:
     title: "Ship build ${steps.build.version}?"
@@ -592,6 +638,8 @@ Rules:
 - With `line`, every option must be 1 to 32 characters of `a-z`, `0-9`, `_` or `-`, start with a letter or digit, and differ from the others ignoring case.
 
 When the run reaches the decision, Tangle sends one text from the line:
+
+{/* sandbox-proof: skip Example terminal output or API field reference */}
 
 ```text
 D42 · Ship build 1.4.2?
@@ -619,6 +667,8 @@ The member answers `D42 ship` or `D42 ship tag it first`. The code and option ar
 
 ### `wait.timer`
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 - wait.timer: { seconds: 3600 }   # 1 to 2592000 (30 days)
 ```
@@ -629,6 +679,8 @@ The run waits, holding no worker, then resumes with `{ waited: true, seconds }`.
 
 Waits for a matching event. The matching delivery is consumed: it resumes the waiting run instead of starting a new one, and its payload becomes the step output.
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 # Wait for the next call to this workflow's own webhook; needs an on: webhook trigger.
 on: { webhook: {} }
@@ -638,6 +690,8 @@ do:
       match: { path: "trigger.status", op: eq, value: completed }
       timeoutSeconds: 86400          # optional: fail the wait when this passes first
 ```
+
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
 
 ```yaml
 # Or wait for a provider event on your connection; any trigger works.
@@ -657,6 +711,8 @@ do:
 
 Starts a run of another workflow you own and waits until it finishes:
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 - id: review
   workflow.run:
@@ -671,6 +727,8 @@ Rules for all three waits: top level only (never inside `parallel` or `foreach`)
 ### `parallel`
 
 Runs a list of steps at the same time:
+
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
 
 ```yaml
 - parallel:
@@ -696,6 +754,8 @@ Every branch is attempted, and a failed branch is recorded on its result (`${ste
 
 Runs one step for each item of a list:
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 - foreach:
     items: "${steps.fetch.result}"   # one ${...} that resolves to a list, or a literal list of up to 50
@@ -715,6 +775,8 @@ When each item needs several operations, do the whole job in one `agent.run` wit
 ## Graph (`id`, `needs`, `join`)
 
 A plain `do` list is a chain: each step depends on the one before it. `id` and `needs` let you build any graph, including loops with guarded edges:
+
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
 
 ```yaml
 do:
@@ -776,6 +838,8 @@ Point a guarded edge back at an earlier step to loop, such as draft, review, ste
 In a loop, `${steps.<id>}` is always the step's latest visit. The `history` root reads earlier ones: `${history.<id>[0].text}` is the first visit's output, and `${history.<id>}` lists every visit, oldest first.
 
 ## Control flow (`if`, `retry`, `onError`)
+
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
 
 ```yaml
 - id: gate
@@ -849,6 +913,8 @@ Calls do not nest, so `${join(pluck(trigger.payload.pull_request.labels, "name")
 
 One condition shape serves the trigger `when`, a step's `if`, a `needs[].when` edge and the `match` of `wait.event` and `decision`: a tree of `all`, `any` and `not` over comparisons `{ path, op, value }`.
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 when:
   all:
@@ -882,6 +948,8 @@ What each condition can read:
 
 **Artifacts.** A `script.run` should return small JSON and save anything large as an artifact:
 
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
+
 ```yaml
 source: |
   import { emitFile, readArtifact } from "../artifacts.mjs";
@@ -895,6 +963,8 @@ The returned reference is a small object (`{ $artifact, name, contentType, byteS
 A later script parses it (`const ref = JSON.parse(input.report)`) and calls `await readArtifact(ref)` for the bytes; `.text()` decodes them. Limits: 25 MB per artifact and 20 artifacts per run.
 
 **State.** All runs of a workflow share one key-value store for progress markers, cursors and keys a later run must see. Step outputs belong to one run; state is the workflow's memory across runs.
+
+{/* sandbox-proof: skip Workflow YAML configuration; requires registration and trigger input */}
 
 ```yaml
 source: |
@@ -920,6 +990,8 @@ A run that waits and resumes reads the value at resume time, not the value when 
 ## Revisions and rollback
 
 Every create and update compiles the YAML and adds a numbered revision. A rollback restores an earlier revision as a new latest revision, so the history only grows and a rollback is itself recorded.
+
+{/* sandbox-proof: skip CLI mutation requires the account and resource setup described on this page */}
 
 ```bash
 tangle workflows revisions <id>          # list revisions

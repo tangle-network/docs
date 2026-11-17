@@ -6,6 +6,8 @@ import { Callout } from "nextra/components";
 
 ## Install
 
+{/* sandbox-proof: skip Local dependency or CLI installation prerequisite */}
+
 ```bash
 npm install @tangle-network/sandbox
 ```
@@ -13,6 +15,8 @@ npm install @tangle-network/sandbox
 The package is ESM. Optional integrations, such as the agent framework tool packs, use optional peer dependencies: install only the framework you use.
 
 ## Create a client
+
+{/* sandbox-proof: run */}
 
 ```ts
 import { Sandbox } from "@tangle-network/sandbox";
@@ -72,6 +76,8 @@ Never ship your API key or a sandbox's `connection.authToken` to a browser. Mint
 
 `@tangle-network/sandbox/agent` works by side effect: `box.agents` exists only after you import it.
 
+{/* sandbox-proof: skip SDK import reference; makes no production request */}
+
 ```ts
 import "@tangle-network/sandbox/agent";
 ```
@@ -79,6 +85,8 @@ import "@tangle-network/sandbox/agent";
 ## Handle errors
 
 Every SDK failure is a `SandboxError`. Branch on `error.code`, the server's code, or `error.catalogCode`, the platform's error class. The subclasses such as `NotFoundError` and `StateError` are deprecated aliases.
+
+{/* sandbox-proof: skip Uses the sandbox created in the preceding example */}
 
 ```ts
 import { SandboxError } from "@tangle-network/sandbox";
@@ -124,6 +132,8 @@ Pass `idempotencyKey` to `create`, `snapshot`, `stop`, `delete`, `fork` and proc
 ## Timeouts
 
 `SDK_TIMEOUTS` exports the default timeout of each operation. Pass `timeoutMs` to a call to change it. The values are on [Limits](/sandbox/limits).
+
+{/* sandbox-proof: skip SDK timeout constant example; it makes no production request */}
 
 ```ts
 import { SDK_TIMEOUTS } from "@tangle-network/sandbox";
