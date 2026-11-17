@@ -37,7 +37,7 @@ On a plan that refuses overage, new sandboxes and prompts are refused once the a
 
 ## Stopped sandboxes and snapshots
 
-A stopped sandbox does not bill compute. It keeps its disk until you delete it or until `deleteAfterStoppedSeconds` passes.
+A stopped sandbox does not bill compute, disk and the hourly minimum included. It keeps its disk without charge until you delete it or until `deleteAfterStoppedSeconds` passes. An attached GPU lease bills until it is detached or its time cap passes.
 
 Deleting a sandbox does not delete the snapshots you saved from it. They stay until you delete them; see [Snapshots and forks](/sandbox/snapshots).
 

@@ -109,7 +109,7 @@ In Python, `create()` returns earlier, so call `wait_for(SandboxStatus.RUNNING)`
 Leave a timer out and the platform's policy applies.
 The CLI sets its own defaults: `--lifetime 3600` and `--idle-timeout 900`, in seconds.
 
-A stopped sandbox does not bill compute. A sandbox you forget to delete stays on your account until `deleteAfterStoppedSeconds` runs out, so delete sandboxes in a `finally` block.
+A stopped sandbox does not bill compute, disk and the hourly minimum included. A sandbox you forget to delete stays on your account until `deleteAfterStoppedSeconds` runs out, so delete sandboxes in a `finally` block.
 See [Create, stop and delete](/sandbox/lifecycle) and [Pricing and spend](/sandbox/cost).
 
 ## What survives a stop
