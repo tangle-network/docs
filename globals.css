@@ -206,3 +206,15 @@
   font-weight: 800;
   font-style: normal;
 }
+
+/* Nextra's section links also apply to custom landing and page headings. */
+:is(h1, h2, h3, h4, h5, h6)[id] {
+  scroll-margin-top: calc(var(--nextra-navbar-height, 4rem) + 0.75rem);
+}
+:is(h1, h2, h3, h4, h5, h6):hover > .subheading-anchor,
+.subheading-anchor:focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  .subheading-anchor { opacity: 1; }
+}

@@ -1,3 +1,6 @@
+import type { ComponentPropsWithoutRef } from "react";
+import { getComponents } from "nextra-theme-docs";
+import SectionLink from "./components/SectionLink";
 import { socialMetadata } from "@tangle-network/brand/social";
 import { useRouter } from "next/router";
 import { DocsThemeConfig, ThemeSwitch, useConfig } from "nextra-theme-docs";
@@ -85,7 +88,16 @@ function Head() {
   );
 }
 
+const ThemeTitle = getComponents({}).h1!;
+
 const theme: DocsThemeConfig = {
+  components: {
+    h1: ({ id = "page-title", children, ...props }: ComponentPropsWithoutRef<"h1">) => (
+      <ThemeTitle id={id} {...props}>
+        {children}<SectionLink id={id} />
+      </ThemeTitle>
+    ),
+  },
   docsRepositoryBase: "https://github.com/tangle-network/tangle-docs/tree/main",
   toc: {
     float: true,

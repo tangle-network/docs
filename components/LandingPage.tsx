@@ -1,3 +1,5 @@
+import SectionLink from "./SectionLink";
+
 const startingPoints = [
   {
     name: "Sandbox",
@@ -23,8 +25,8 @@ const startingPoints = [
 const LandingPage = () => {
   return (
     <main className="mx-auto max-w-5xl px-5 pb-20 pt-16 sm:px-8 sm:pt-24">
-      <h1 className="max-w-3xl text-4xl font-normal leading-tight text-gray-900 dark:text-white sm:text-5xl">
-        Build and run AI agents on Tangle
+      <h1 id="page-title" className="max-w-3xl text-4xl font-normal leading-tight text-gray-900 dark:text-white sm:text-5xl">
+        Build and run AI agents on Tangle<SectionLink id="page-title" />
       </h1>
       <p className="mt-6 max-w-3xl text-lg leading-relaxed text-gray-700 dark:text-gray-300">
         One key. One bill. Compute sandboxes, model inference, and the platform
@@ -36,7 +38,7 @@ const LandingPage = () => {
           id="start-here"
           className="text-2xl font-semibold text-gray-900 dark:text-white"
         >
-          Start with a live service
+          Start with a live service<SectionLink id="start-here" />
         </h2>
         <ul className="mt-5 divide-y divide-gray-200 border-y border-gray-200 dark:divide-gray-800 dark:border-gray-800">
           {startingPoints.map((point) => (
@@ -62,8 +64,8 @@ const LandingPage = () => {
       </section>
 
       <section className="mt-10 max-w-3xl">
-        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-          What can you do?
+        <h2 id="what-can-you-do" className="text-2xl font-semibold text-gray-900 dark:text-white">
+          What can you do?<SectionLink id="what-can-you-do" />
         </h2>
         <div className="mt-5 space-y-4 text-gray-700 dark:text-gray-300">
           <p>

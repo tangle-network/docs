@@ -1,3 +1,4 @@
+import SectionLink from "./SectionLink";
 import React from "react";
 import DiscordButton from "./DiscordButton";
 
@@ -17,7 +18,9 @@ const DiscordBanner = () => {
             />
           </svg>
           <div>
-            <h2 className="text-lg font-semibold text-white">Need Help?</h2>
+            <h2 id="need-help" className="text-lg font-semibold text-white">
+              Need Help?<SectionLink id="need-help" />
+            </h2>
             <p className="text-sm max-w-72 text-gray-400 dark:text-gray-300">
               Ask questions, get to know the project and community in Discord.
             </p>
