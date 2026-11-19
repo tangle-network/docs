@@ -211,6 +211,7 @@
 :is(h1, h2, h3, h4, h5, h6)[id] {
   scroll-margin-top: calc(var(--nextra-navbar-height, 4rem) + 0.75rem);
 }
+.subheading-anchor::after { color: inherit; }
 :is(h1, h2, h3, h4, h5, h6):hover > .subheading-anchor,
 .subheading-anchor:focus-visible {
   opacity: 1;

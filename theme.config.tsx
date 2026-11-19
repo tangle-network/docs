@@ -1,9 +1,8 @@
-import type { ComponentPropsWithoutRef } from "react";
-import { getComponents } from "nextra-theme-docs";
+import type { ComponentPropsWithoutRef, ComponentType } from "react";
 import SectionLink from "./components/SectionLink";
 import { socialMetadata } from "@tangle-network/brand/social";
 import { useRouter } from "next/router";
-import { DocsThemeConfig, ThemeSwitch, useConfig } from "nextra-theme-docs";
+import { getComponents, DocsThemeConfig, ThemeSwitch, useConfig } from "nextra-theme-docs";
 import Footer from "./components/Footer";
 import HeaderLogo from "./components/HeaderLogo";
 import HelpDiscordBtn from "./components/HelpDiscordBtn";
@@ -88,13 +87,15 @@ function Head() {
   );
 }
 
-const ThemeTitle = getComponents({}).h1!;
+type TitleProps = ComponentPropsWithoutRef<"h1">;
+const ThemeTitle = getComponents({}).h1 as ComponentType<TitleProps>;
 
 const theme: DocsThemeConfig = {
   components: {
-    h1: ({ id = "page-title", children, ...props }: ComponentPropsWithoutRef<"h1">) => (
+    h1: ({ id = "page-title", children, ...props }: TitleProps) => (
       <ThemeTitle id={id} {...props}>
-        {children}<SectionLink id={id} />
+        {children}
+        <SectionLink id={id} />
       </ThemeTitle>
     ),
   },
