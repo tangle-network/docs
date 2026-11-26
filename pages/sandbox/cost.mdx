@@ -34,6 +34,8 @@ The sandbox rate card gives USD per vCPU-hour, per GB-hour of memory and per GB-
 
 The egress terms list each plan's `includedBytes` and whether overage is `billed` at `usdPerGb` per 10^9 bytes or `refused`.
 On a plan that refuses overage, new sandboxes and prompts are refused once the account reaches its allowance, and nothing is charged.
+On a billed plan, the overage is debited from the account's credit balance, and new sandboxes and prompts are refused when the balance runs out, until credits are added.
+Refusal does not cut the network of a sandbox that is running.
 
 ## Stopped sandboxes and snapshots
 

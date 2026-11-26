@@ -170,7 +170,7 @@ Counts for the billing owner of the credential, not for one sandbox.
 
 `GET /v1/usage/egress`
 
-The account's egress for one calendar month (UTC) as the meter recorded it: the account total, the plan's allowance, the overage beyond it, each sandbox's bytes, and what the meter has charged or reserved. Paid plans include 2 TB per account per month, shared by its sandboxes, then bill per decimal GB; Free accounts are capped at 100 GiB per month and never charged.
+The account's egress for one calendar month (UTC) as the meter recorded it: the account total, the plan's allowance, the overage beyond it, each sandbox's bytes, and what the meter has charged or reserved. Paid plans include 2 TB per account per month, shared by its sandboxes, then bill per decimal GB from the account's credit balance, refusing new sandboxes and prompts when it runs out; Free accounts are capped at 100 GiB per month and never charged.
 
 | Parameter | In | Required | Type | Description |
 |---|---|---|---|---|
@@ -326,7 +326,7 @@ Any method on any other path under /v1/billing answers 410: send the same reques
 
 `GET /v1/pricing/egress`
 
-Each plan's monthly egress allowance and the price beyond it. Public: no credential is required. Outbound bytes from each sandbox are counted per UTC calendar month; inbound traffic is free. Every plan's allowance is per account (`scope: account`), shared by its sandboxes: `overage: billed` plans pay `usdPerGb` per decimal GB (10^9 bytes) beyond `includedBytes`; `overage: refused` plans are refused new sandboxes and prompts at it and never charged. Computed from the allowances quota admission enforces and the rates this deployment bills.
+Each plan's monthly egress allowance and the price beyond it. Public: no credential is required. Outbound bytes from each sandbox are counted per UTC calendar month; inbound traffic is free. Every plan's allowance is per account (`scope: account`), shared by its sandboxes: `overage: billed` plans pay `usdPerGb` per decimal GB (10^9 bytes) beyond `includedBytes`, debited from the account's credit balance; when the balance runs out, new sandboxes and prompts are refused until credits are added. `overage: refused` plans are refused new sandboxes and prompts at it and never charged. Refusal does not cut a running sandbox's network. Computed from the allowances quota admission enforces and the rates this deployment bills.
 
 | Status | Meaning |
 |---|---|
