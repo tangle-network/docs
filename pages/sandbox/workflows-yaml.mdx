@@ -273,7 +273,7 @@ Runs your TypeScript module in a new sandbox, with Node type stripping and no bu
 - `${...}` inside `source` is read as a mapping expression before the script runs. Build strings by concatenation, never with JavaScript template literals that contain `${}`.
 - The script's stdout is kept on the step as `logs`, inline up to 64 KiB and as an artifact past that.
 - **Network.** The sandbox starts with strict network rules. It reaches the default hosts (package registries, git hosts, model APIs) and the endpoints the run gives the script: the Sandbox API (`TANGLE_SANDBOX_API_URL`) for starting more sandboxes, the Platform API for artifacts and state, and Tangle Hub when `connections` are granted.
-  List any other host in `egress.allowDomains`: exact lowercase public host names, at most 16, with no wildcards, IP addresses, ports or `localhost`. There is no open mode, and a host not listed fails with HTTP 403. `egress` is rejected with `execution: isolate`, which has no network.
+  List any other host in `egress.allowDomains`: exact lowercase public host names, at most 16, with no wildcards, IP addresses, ports or `localhost`. There is no open mode, and a host not listed fails with HTTP 403. Scripts run only in this sandbox; isolate execution isn't offered.
 
 The script lands at `.wf-script/src/index.mts` in the sandbox, and these modules sit read-only one directory above it:
 
